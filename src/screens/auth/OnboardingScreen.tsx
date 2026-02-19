@@ -22,6 +22,11 @@ const slides = [
     title: 'Practice Daily',
     subtitle: 'Build speaking confidence with personalized lessons and exercises!',
   },
+  {
+    image: require('../../../assets/5thscreenicon.png'),
+    title: 'Start Today',
+    subtitle: 'Join Accentify and transform the way you communicate!',
+  },
 ];
 
 const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
@@ -77,7 +82,11 @@ const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.nextButton}
           onPress={handleNext}
         >
-          <Text style={styles.nextArrow}>→</Text>
+          {currentSlide === slides.length - 1 ? (
+            <Text style={styles.buttonText}>Get Started</Text>
+          ) : (
+            <Text style={styles.nextArrow}>→</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -162,6 +171,11 @@ const styles = StyleSheet.create({
   },
   nextArrow: {
     fontSize: 28,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  buttonText: {
+    fontSize: 16,
     color: colors.white,
     fontWeight: '600',
   },
