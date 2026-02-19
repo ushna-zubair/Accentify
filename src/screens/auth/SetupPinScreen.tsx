@@ -7,24 +7,33 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
-import colors from '../../theme/colors';
 import CustomButton from '../../components/CustomButton';
+import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupPin'>;
+
+const keypad = ['1','2','3','4','5','6','7','8','9','*','0','backspace'];
 
 const SetupPinScreen: React.FC<Props> = ({ navigation }) => {
   const [pin, setPin] = useState<string[]>(['', '', '', '']);
 
   const handleKeypadPress = (digit: string) => {
     if (digit === 'backspace') {
-      const lastFilledIndex = pin.lastIndexOf((val) => val !== '');
+      let lastFilledIndex = -1;
+      for (let i = pin.length - 1; i >= 0; i--) {
+        if (pin[i] !== '') {
+          lastFilledIndex = i;
+          break;
+        }
+      }
       if (lastFilledIndex >= 0) {
         const newPin = [...pin];
         newPin[lastFilledIndex] = '';
         setPin(newPin);
       }
-    } else {
+    } else if (digit !== '*') {
       const firstEmptyIndex = pin.indexOf('');
       if (firstEmptyIndex < 4) {
         const newPin = [...pin];
@@ -34,72 +43,43 @@ const SetupPinScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleContinue = () => {
-    const pinString = pin.join('');
-    if (pinString.length === 4) {
-      navigation.navigate('SetupFaceID');
-    }
-  };
-
-  const keypadLayout = [
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-    ['7', '8', '9'],
-    ['*', '0', 'backspace'],
-  ];
+  const isComplete = pin.every((d) => d !== '');
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backButton}>← Set Up Your Pin</Text>
-        </TouchableOpacity>
-      </View>
+      <View style={styles.content}>
+        <Text style={styles.title}>Set Your PIN</Text>
+        <Text style={styles.subtitle}>Enter a 4-digit pin for extra security.</Text>
 
-      {/* Title */}
-      <View style={styles.titleSection}>
-        <Text style={styles.mainTitle}>Secure your account with a quick PIN</Text>
-      </View>
+        <View style={styles.pinRow}>
+          {pin.map((digit, index) => (
+            <View key={index} style={[styles.pinDot, digit && styles.pinDotFilled]} />
+          ))}
+        </View>
 
-      {/* PIN Input Display */}
-      <View style={styles.pinDisplayContainer}>
-        {pin.map((digit, index) => (
-          <View key={index} style={styles.pinDot}>
-            {digit !== '' && <View style={styles.pinDotFilled} />}
-          </View>
-        ))}
-      </View>
+        <View style={styles.keypad}>
+          {keypad.map((key) => (
+            <TouchableOpacity
+              key={key}
+              style={styles.keypadButton}
+              onPress={() => handleKeypadPress(key)}
+            >
+              {key === 'backspace' ? (
+                <FontAwesome5 name="backspace" size={18} color={colors.text} />
+              ) : (
+                <Text style={styles.keypadText}>{key}</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
 
-      {/* Continue Button */}
-      <View style={styles.continueButtonContainer}>
-        <CustomButton
-          title="Continue →"
-          onPress={handleContinue}
-          variant="primary"
-          disabled={pin.join('').length !== 4}
-        />
-      </View>
-
-      {/* Numeric Keypad */}
-      <View style={styles.keypadContainer}>
-        {keypadLayout.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.keypadRow}>
-            {row.map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={styles.keypadButton}
-                onPress={() => handleKeypadPress(key)}
-              >
-                {key === 'backspace' ? (
-                  <Text style={styles.backspaceIcon}>⌫</Text>
-                ) : (
-                  <Text style={styles.keypadNumber}>{key}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            title="Continue"
+            onPress={() => navigation.navigate('SetupFaceID')}
+            disabled={!isComplete}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -110,81 +90,65 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
+  content: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 16,
-  },
-  backButton: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  titleSection: {
-    paddingHorizontal: 24,
-    marginBottom: 32,
-  },
-  mainTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: colors.text,
-    lineHeight: 22,
-  },
-  pinDisplayContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    paddingVertical: 30,
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 40,
   },
-  pinDot: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: '#E8E8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
   },
-  pinDotFilled: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-  },
-  continueButtonContainer: {
-    paddingHorizontal: 24,
+  subtitle: {
+    fontSize: 14,
+    color: colors.textLight,
+    textAlign: 'center',
     marginBottom: 24,
   },
-  keypadContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  keypadRow: {
+  pinRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
     gap: 12,
+    marginBottom: 24,
+  },
+  pinDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    borderColor: colors.inputBorder,
+  },
+  pinDotFilled: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  keypad: {
+    width: '100%',
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
   },
   keypadButton: {
-    flex: 1,
-    aspectRatio: 1,
+    width: '30%',
+    height: 52,
     borderRadius: 12,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
   },
-  keypadNumber: {
-    fontSize: 20,
-    fontWeight: '600',
+  keypadText: {
+    fontSize: 18,
     color: colors.text,
+    fontWeight: '600',
   },
-  backspaceIcon: {
-    fontSize: 20,
+  buttonContainer: {
+    width: '100%',
   },
 });
 

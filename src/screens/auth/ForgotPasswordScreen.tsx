@@ -4,104 +4,61 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   SafeAreaView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
-import colors from '../../theme/colors';
 import CustomButton from '../../components/CustomButton';
+import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
-type ResetMethod = 'email' | 'sms';
-
 const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
-  const [selectedMethod, setSelectedMethod] = useState<ResetMethod>('email');
-
-  const handleContinue = () => {
-    navigation.navigate('OTPVerification');
-  };
+  const [method, setMethod] = useState<'email' | 'sms'>('email');
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Forgot Password</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={styles.content}>
+        <FontAwesome5 name="mobile-alt" size={52} color={colors.primary} />
+        <Text style={styles.title}>Forgot Password</Text>
+        <Text style={styles.subtitle}>Select which contact method you want to reset your password</Text>
 
-        {/* Illustration Placeholder */}
-        <View style={styles.illustrationContainer}>
-          <View style={styles.illustration}>
-            <Text style={styles.illustrationText}>📱💬</Text>
+        <TouchableOpacity
+          style={[styles.methodCard, method === 'email' && styles.methodCardSelected]}
+          onPress={() => setMethod('email')}
+        >
+          <View style={styles.methodIconWrapper}>
+            <FontAwesome5 name="envelope" size={20} color={colors.primary} />
           </View>
+          <View style={styles.methodInfo}>
+            <Text style={styles.methodTitle}>Via Email</Text>
+            <Text style={styles.methodText}>user@example.com</Text>
+          </View>
+          <View style={styles.radioCircle}>
+            {method === 'email' && <View style={styles.radioDot} />}
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.methodCard, method === 'sms' && styles.methodCardSelected]}
+          onPress={() => setMethod('sms')}
+        >
+          <View style={styles.methodIconWrapper}>
+            <FontAwesome5 name="sms" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.methodInfo}>
+            <Text style={styles.methodTitle}>Via SMS</Text>
+            <Text style={styles.methodText}>+1 *** *** 4232</Text>
+          </View>
+          <View style={styles.radioCircle}>
+            {method === 'sms' && <View style={styles.radioDot} />}
+          </View>
+        </TouchableOpacity>
+
+        <View style={styles.buttonContainer}>
+          <CustomButton title="Continue" onPress={() => navigation.navigate('OTPVerification')} />
         </View>
-
-        {/* Title */}
-        <View style={styles.titleSection}>
-          <Text style={styles.mainTitle}>Choose a way to reset your password</Text>
-        </View>
-
-        {/* Method Options */}
-        <View style={styles.methodsContainer}>
-          {/* Email Option */}
-          <TouchableOpacity
-            style={[
-              styles.methodOption,
-              selectedMethod === 'email' && styles.methodOptionSelected,
-            ]}
-            onPress={() => setSelectedMethod('email')}
-          >
-            <View style={styles.methodContent}>
-              <View
-                style={[
-                  styles.methodIcon,
-                  selectedMethod === 'email' && styles.methodIconSelected,
-                ]}
-              >
-                <Text style={styles.icon}>✉️</Text>
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodLabel}>Via Email</Text>
-                <Text style={styles.methodValue}>YunArianDamamoglu@gmail.com</Text>
-              </View>
-            </View>
-            {selectedMethod === 'email' && <View style={styles.radioButton} />}
-          </TouchableOpacity>
-
-          {/* SMS Option */}
-          <TouchableOpacity
-            style={[
-              styles.methodOption,
-              selectedMethod === 'sms' && styles.methodOptionSelected,
-            ]}
-            onPress={() => setSelectedMethod('sms')}
-          >
-            <View style={styles.methodContent}>
-              <View
-                style={[
-                  styles.methodIcon,
-                  selectedMethod === 'sms' && styles.methodIconSelected,
-                ]}
-              >
-                <Text style={styles.icon}>📱</Text>
-              </View>
-              <View style={styles.methodInfo}>
-                <Text style={styles.methodLabel}>Via SMS</Text>
-                <Text style={styles.methodValue}>(+1) 570-789-432</Text>
-              </View>
-            </View>
-            {selectedMethod === 'sms' && <View style={styles.radioButton} />}
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-
-      {/* Continue Button */}
-      <View style={styles.footer}>
-        <CustomButton title="Continue →" onPress={handleContinue} variant="primary" />
       </View>
     </SafeAreaView>
   );
@@ -112,108 +69,79 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
+  content: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 20,
-    paddingBottom: 80,
+    paddingVertical: 40,
+    alignItems: 'center',
   },
-  header: {
-    marginBottom: 32,
-  },
-  backButton: {
-    fontSize: 16,
-    fontWeight: '600',
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
     color: colors.text,
+    marginTop: 16,
+    marginBottom: 8,
   },
-  illustrationContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
+  subtitle: {
+    fontSize: 14,
+    color: colors.textLight,
+    textAlign: 'center',
+    marginBottom: 28,
   },
-  illustration: {
-    width: 120,
-    height: 120,
-    borderRadius: 30,
-    backgroundColor: '#FFE4E1',
+  methodCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 1.5,
+    borderColor: colors.inputBorder,
+    borderRadius: 14,
+    padding: 16,
+    width: '100%',
     marginBottom: 16,
   },
-  illustrationText: {
-    fontSize: 50,
-  },
-  titleSection: {
-    marginBottom: 32,
-  },
-  mainTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-    lineHeight: 24,
-  },
-  methodsContainer: {
-    gap: 12,
-  },
-  methodOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#E8E8E8',
-  },
-  methodOptionSelected: {
-    backgroundColor: '#F8F0FF',
+  methodCardSelected: {
     borderColor: colors.primary,
   },
-  methodContent: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  methodIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#F0F0F0',
+  methodIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.inputBg,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  methodIconSelected: {
-    backgroundColor: '#E8D5F2',
-  },
-  icon: {
-    fontSize: 24,
+    marginRight: 12,
   },
   methodInfo: {
     flex: 1,
   },
-  methodLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+  methodTitle: {
+    fontSize: 16,
     color: colors.text,
-    marginBottom: 4,
+    fontWeight: '600',
+    marginBottom: 2,
   },
-  methodValue: {
+  methodText: {
     fontSize: 13,
     color: colors.textMuted,
-    fontWeight: '500',
   },
-  radioButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  radioCircle: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.primary,
   },
-  footer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: colors.background,
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
+  buttonContainer: {
+    marginTop: 24,
+    width: '100%',
   },
 });
 

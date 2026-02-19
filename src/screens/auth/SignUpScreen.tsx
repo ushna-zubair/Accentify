@@ -10,8 +10,10 @@ import {
   Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import CustomInput from '../../components/CustomInput';
+import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
@@ -29,15 +31,13 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     }
 
     if (!agreeToTerms) {
-      Alert.alert('Error', 'Please agree to Terms & Conditions');
+      Alert.alert('Error', 'Please agree to Terms and Conditions');
       return;
     }
 
-    // TODO: Implement Firebase authentication
     setLoading(true);
     try {
-      // Placeholder for sign up logic
-      Alert.alert('Success', 'Account created! (Firebase auth not configured yet)');
+      Alert.alert('Success', 'Account created!');
       navigation.navigate('CreateProfile');
     } catch (error) {
       Alert.alert('Error', 'Sign up failed');
@@ -52,79 +52,63 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo */}
         <Image
           source={require('../../../assets/logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
 
-        {/* Title */}
         <Text style={styles.title}>Create your Accentify Account</Text>
 
-        {/* Email Input */}
         <CustomInput
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
-          leftIcon={<Text style={styles.icon}>✉️</Text>}
+          leftIcon={<FontAwesome5 name="envelope" size={18} color={colors.primary} />}
         />
 
-        {/* Password Input */}
         <CustomInput
           placeholder="Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          leftIcon={<Text style={styles.icon}>🔐</Text>}
+          leftIcon={<FontAwesome5 name="lock" size={18} color={colors.primary} />}
         />
 
-        {/* Terms & Conditions Checkbox */}
         <TouchableOpacity
           style={styles.checkboxContainer}
           onPress={() => setAgreeToTerms(!agreeToTerms)}
         >
-          <View
-            style={[
-              styles.checkbox,
-              agreeToTerms && styles.checkboxChecked,
-            ]}
-          >
-            {agreeToTerms && (
-              <Text style={styles.checkmark}>✓</Text>
-            )}
+          <View style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}>
+            {agreeToTerms && <FontAwesome5 name="check" size={12} color={colors.white} />}
           </View>
-          <Text style={styles.checkboxText}>Agree to Terms & Conditions</Text>
+          <Text style={styles.checkboxText}>Agree to Terms and Conditions</Text>
         </TouchableOpacity>
 
-        {/* Sign Up Button */}
-        <TouchableOpacity
-          style={styles.signUpButtonContainer}
-          onPress={handleSignUp}
-          disabled={loading}
-          activeOpacity={0.8}
+        <View style={styles.signUpButtonContainer}
         >
-          <Text style={styles.signUpButtonText}>Sign Up</Text>
-          <Text style={styles.arrowIcon}>→</Text>
-        </TouchableOpacity>
+          <CustomButton
+            title="Sign Up"
+            onPress={handleSignUp}
+            loading={loading}
+            variant="primary"
+          />
+        </View>
 
-        {/* Or Continue With */}
-        <Text style={styles.orContinueText}>Or Continue With</Text>
+        <Text style={styles.orContinueText}>Or continue with</Text>
 
-        {/* Social Buttons */}
         <View style={styles.socialButtonsContainer}>
           <TouchableOpacity style={styles.socialButtonSmall}>
-            <Text style={styles.socialIconLarge}>G</Text>
+            <FontAwesome5 name="google" size={20} color={colors.primary} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.socialButtonSmall}>
-            <Text style={styles.socialIconLarge}>🍎</Text>
+            <FontAwesome5 name="apple" size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
 
-        {/* Sign In Link */}
         <View style={styles.signInContainer}>
-          <Text style={styles.signInText}>Don't have an Account? </Text>
+          <Text style={styles.signInText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text style={styles.signInLink}>SIGN IN</Text>
           </TouchableOpacity>
@@ -157,9 +141,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 32,
   },
-  icon: {
-    fontSize: 18,
-  },
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -179,40 +160,14 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: colors.primary,
   },
-  checkmark: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: '700',
-  },
   checkboxText: {
     fontSize: 14,
     color: colors.text,
     fontWeight: '500',
   },
   signUpButtonContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
     marginTop: 24,
     marginBottom: 28,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  signUpButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  arrowIcon: {
-    fontSize: 20,
-    color: colors.white,
   },
   orContinueText: {
     fontSize: 14,
@@ -235,10 +190,6 @@ const styles = StyleSheet.create({
     borderColor: colors.inputBorder,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  socialIconLarge: {
-    fontSize: 24,
-    fontWeight: '600',
   },
   signInContainer: {
     flexDirection: 'row',

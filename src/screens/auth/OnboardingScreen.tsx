@@ -1,91 +1,133 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  SafeAreaView,
+  FlatList,
+  Dimensions,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+} from 'react-native';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Onboarding'>;
 
+const { width } = Dimensions.get('window');
+
 const slides = [
   {
+    id: '1',
     image: require('../../../assets/2ndscreen-logo.png'),
     title: 'Speak Confidently',
-    subtitle: 'AI-powered practice to improve your accent and fluency!',
+    subtitle: 'Practice daily and improve pronunciation with real feedback.',
   },
   {
+    id: '2',
     image: require('../../../assets/3rdscreelogo.png'),
     title: 'Learn Smartly',
-    subtitle: 'Get instant feedback, correct pronunciation, and track your progress!',
+    subtitle: 'Personalized lessons tailored to your speaking goals.',
   },
   {
+    id: '3',
     image: require('../../../assets/4thscreenlogo.png'),
     title: 'Practice Daily',
-    subtitle: 'Build speaking confidence with personalized lessons and exercises!',
+    subtitle: 'Build consistency with fun, bite-sized sessions.',
   },
   {
+    id: '4',
     image: require('../../../assets/5thscreenicon.png'),
     title: 'Start Today',
-    subtitle: 'Join Accentify and transform the way you communicate!',
+    subtitle: 'Join a community of confident English speakers.',
   },
 ];
 
 const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const flatListRef = useRef<FlatList>(null);
+  const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 });
+  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+    const firstViewable = viewableItems.find((item) => item.index !== null);
+    if (firstViewable?.index !== null && firstViewable?.index !== undefined) {
+      setCurrentSlide(firstViewable.index);
+    }
+  });
+
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const index = Math.round(event.nativeEvent.contentOffset.x / width);
+    if (index !== currentSlide) {
+      setCurrentSlide(index);
+    }
+  };
 
   const handleNext = () => {
     if (currentSlide < slides.length - 1) {
-      setCurrentSlide(currentSlide + 1);
+      flatListRef.current?.scrollToIndex({ index: currentSlide + 1, animated: true });
     } else {
       navigation.navigate('Login');
     }
   };
 
+  const handleScrollToIndexFailed = (info: {
+    index: number;
+    highestMeasuredFrameIndex: number;
+    averageItemLength: number;
+  }) => {
+    flatListRef.current?.scrollToOffset({
+      offset: info.averageItemLength * info.index,
+      animated: true,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Skip Button */}
-      <TouchableOpacity 
-        style={styles.skipButton}
-        onPress={() => navigation.navigate('Login')}
-      >
+      <TouchableOpacity style={styles.skipButton} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.skipText}>Skip</Text>
       </TouchableOpacity>
 
-      {/* Main Content */}
-      <View style={styles.content}>
-        <Image
-          source={slides[currentSlide].image}
-          style={styles.image}
-          resizeMode="contain"
-        />
-        
-        <Text style={styles.title}>{slides[currentSlide].title}</Text>
-        <Text style={styles.subtitle}>
-          {slides[currentSlide].subtitle}
-        </Text>
-      </View>
+      <FlatList
+        ref={flatListRef}
+        data={slides}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={(item) => item.id}
+        onMomentumScrollEnd={handleScroll}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        viewabilityConfig={viewabilityConfig.current}
+        onViewableItemsChanged={onViewableItemsChanged.current}
+        getItemLayout={(_, index) => ({ length: width, offset: width * index, index })}
+        onScrollToIndexFailed={handleScrollToIndexFailed}
+        renderItem={({ item }) => (
+          <View style={[styles.slide, { width }]}>
+            <Image source={item.image} style={styles.image} />
+            <Text style={styles.title}>{item.title}</Text>
+            <Text style={styles.subtitle}>{item.subtitle}</Text>
+          </View>
+        )}
+      />
 
-      {/* Bottom Navigation */}
       <View style={styles.bottomContainer}>
         <View style={styles.pagination}>
           {slides.map((_, index) => (
             <View
               key={index}
-              style={[
-                styles.dot,
-                index === currentSlide && styles.dotActive,
-              ]}
+              style={[styles.dot, currentSlide === index && styles.dotActive]}
             />
           ))}
         </View>
 
-        <TouchableOpacity 
-          style={styles.nextButton}
-          onPress={handleNext}
-        >
+        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
           {currentSlide === slides.length - 1 ? (
             <Text style={styles.buttonText}>Get Started</Text>
           ) : (
-            <Text style={styles.nextArrow}>→</Text>
+            <FontAwesome5 name="arrow-right" size={20} color={colors.white} />
           )}
         </TouchableOpacity>
       </View>
@@ -110,22 +152,23 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontWeight: '500',
   },
-  content: {
+  slide: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 40,
   },
   image: {
-    width: 350,
-    height: 350,
+    width: 300,
+    height: 300,
     marginBottom: 20,
+    resizeMode: 'contain',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: colors.text,
-    marginTop: 20,
+    textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
@@ -157,27 +200,25 @@ const styles = StyleSheet.create({
     width: 24,
   },
   nextButton: {
-    width: 56,
+    minWidth: 56,
     height: 56,
+    paddingHorizontal: 18,
     borderRadius: 28,
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  nextArrow: {
-    fontSize: 28,
-    color: colors.white,
-    fontWeight: '600',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 8,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 });
 

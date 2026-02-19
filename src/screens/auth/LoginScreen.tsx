@@ -8,33 +8,74 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../../config/firebase';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import CustomButton from '../../components/CustomButton';
-import CustomInput from '../../components/CustomInput';
 import colors from '../../theme/colors';
+
+// Configure Google Sign-In
+GoogleSignin.configure({
+  webClientId: '104124924088-xxx.apps.googleusercontent.com',
+  offlineAccess: true,
+});
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSignIn = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  const handleSignInWithAccount = () => {
+    navigation.navigate('SetYourFingerprint');
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true);
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+
+      if (userInfo.data?.idToken) {
+        const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
+        const result = await signInWithCredential(auth, credential);
+
+        const userRef = doc(db, 'users', result.user.uid);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+          await setDoc(userRef, {
+            email: result.user.email,
+            role: 'learner',
+            fullName: userInfo.data.user.name || '',
+            profileComplete: false,
+            createdAt: serverTimestamp(),
+          });
+        }
+
+        navigation.navigate('SetYourFingerprint');
+      } else {
+        Alert.alert('Error', 'Failed to get ID token from Google');
+      }
+    } catch (error: any) {
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      }
+      if (error.code === statusCodes.IN_PROGRESS) {
+        Alert.alert('Error', 'Sign in is in progress');
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Play Services not available');
+      } else {
+        Alert.alert('Error', error.message || 'Google Sign-In failed');
+      }
+    } finally {
+      setLoading(false);
     }
-
-    // TODO: Connect to Firebase authentication
-    // useAuth().signIn(email, password);
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'CreateProfile' as any }],
-    });
   };
 
   return (
@@ -43,90 +84,55 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo/Icon */}
         <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>🅰️</Text>
-        </View>
-
-        {/* Welcome Title */}
-        <Text style={styles.title}>Welcome Back</Text>
-
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Login to Your Account to Continue Your Journey
-        </Text>
-
-        {/* Email Input */}
-        <View style={styles.inputsContainer}>
-          <CustomInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            leftIcon={<Text style={styles.icon}>✉️</Text>}
-          />
-
-          {/* Password Input */}
-          <CustomInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            leftIcon={<Text style={styles.icon}>🔐</Text>}
-            rightIcon={
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️'}</Text>
-              </TouchableOpacity>
-            }
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
           />
         </View>
 
-        {/* Remember Me & Forgot Password */}
-        <View style={styles.optionsContainer}>
+        <Text style={styles.title}>Welcome to Accentify</Text>
+        <Text style={styles.subtitle}>Sign in or continue with a quick option</Text>
+
+        <View style={styles.socialButtonsContainer}>
           <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setRememberMe(!rememberMe)}
+            style={styles.socialButton}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
           >
-            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-              {rememberMe && <Text style={styles.checkmark}>✓</Text>}
-            </View>
-            <Text style={styles.rememberText}>Remember Me</Text>
+            {loading ? (
+              <ActivityIndicator color={colors.primary} />
+            ) : (
+              <>
+                <View style={[styles.socialIconWrap, styles.googleIconWrap]}>
+                  <FontAwesome5 name="google" size={18} color="#4285F4" />
+                </View>
+                <Text style={styles.socialLabel}>Continue with Google</Text>
+              </>
+            )}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+          <TouchableOpacity style={styles.socialButton}>
+            <View style={styles.socialIconWrap}>
+              <FontAwesome5 name="apple" size={18} color="#111111" />
+            </View>
+            <Text style={styles.socialLabel}>Continue with Apple</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Sign In Button */}
         <View style={styles.signInButtonContainer}>
           <CustomButton
-            title="Sign In →"
-            onPress={handleSignIn}
+            title="Sign In with Your Account →"
+            onPress={handleSignInWithAccount}
             variant="primary"
+            style={styles.primaryCta}
+            textStyle={styles.primaryCtaText}
           />
         </View>
 
-        {/* Divider */}
-        <View style={styles.dividerContainer}>
-          <View style={styles.divider} />
-          <Text style={styles.dividerText}>Or Continue With</Text>
-          <View style={styles.divider} />
-        </View>
-
-        {/* Social Login Buttons */}
-        <View style={styles.socialButtonsContainer}>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialIcon}>G</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialIcon}>🍎</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Sign Up Link */}
         <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Don't have an Account? </Text>
+          <Text style={styles.signUpText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.signUpLink}>SIGN UP</Text>
           </TouchableOpacity>
@@ -142,16 +148,19 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingVertical: 40,
+    justifyContent: 'space-between',
   },
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 32,
     marginTop: 16,
   },
-  logoText: {
-    fontSize: 60,
+  logo: {
+    width: 120,
+    height: 120,
   },
   title: {
     fontSize: 28,
@@ -164,94 +173,49 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textMuted,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 40,
     lineHeight: 20,
   },
-  inputsContainer: {
-    gap: 16,
-    marginBottom: 20,
+  socialButtonsContainer: {
+    gap: 12,
+    marginBottom: 32,
   },
-  icon: {
-    fontSize: 18,
-  },
-  eyeIcon: {
-    fontSize: 16,
-  },
-  optionsContainer: {
+  socialButton: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderWidth: 2,
-    borderColor: colors.primary,
-    borderRadius: 4,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    borderRadius: 12,
+    paddingVertical: 14,
+    gap: 12,
   },
-  checkboxChecked: {
-    backgroundColor: colors.primary,
+  socialIconWrap: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.inputBg,
   },
-  checkmark: {
-    color: colors.white,
-    fontSize: 12,
-    fontWeight: '600',
+  googleIconWrap: {
+    backgroundColor: '#E8F0FE',
   },
-  rememberText: {
-    fontSize: 13,
+  socialLabel: {
+    fontSize: 15,
     color: colors.text,
     fontWeight: '500',
-  },
-  forgotPasswordText: {
-    fontSize: 13,
-    color: colors.primary,
-    fontWeight: '600',
   },
   signInButtonContainer: {
     marginBottom: 32,
   },
-  dividerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-    gap: 12,
+  primaryCta: {
+    height: 60,
   },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E8E8E8',
-  },
-  dividerText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    fontWeight: '500',
-  },
-  socialButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-    marginBottom: 32,
-  },
-  socialButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  socialIcon: {
-    fontSize: 28,
+  primaryCtaText: {
+    fontSize: 16,
+    letterSpacing: 0.5,
   },
   signUpContainer: {
     flexDirection: 'row',

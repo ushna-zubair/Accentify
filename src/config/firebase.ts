@@ -2,15 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-// TODO: Replace these placeholder values with your actual Firebase config.
-// Go to Firebase Console → Your Project → Project Settings → Your Apps → SDK setup and configuration
 const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_AUTH_DOMAIN',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_STORAGE_BUCKET',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
+  apiKey: "AIzaSyADW4-QogGi0N3pq_V8OPFZndSICCJ5YpM",
+  authDomain: "accentify-capstone.firebaseapp.com",
+  projectId: "accentify-capstone",
+  storageBucket: "accentify-capstone.firebasestorage.app",
+  messagingSenderId: "104124924088",
+  appId: "1:104124924088:web:cab0cca9dbb1f2e4de344d",
+  measurementId: "G-Z33LPZ97MT"
 };
 
 const app = initializeApp(firebaseConfig);

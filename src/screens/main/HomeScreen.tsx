@@ -1,12 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { MainStackParamList } from '../../navigation/AppNavigator';
 import colors from '../../theme/colors';
 
-type Props = NativeStackScreenProps<MainStackParamList, 'Home'>;
-
-const HomeScreen: React.FC<Props> = () => {
+const HomeScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.text}>HomeScreen</Text>

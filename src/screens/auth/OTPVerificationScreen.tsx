@@ -1,29 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   SafeAreaView,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
-import colors from '../../theme/colors';
 import CustomButton from '../../components/CustomButton';
 import OTPInput from '../../components/OTPInput';
+import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
+
+const keypad = ['1','2','3','4','5','6','7','8','9','*','0','backspace'];
 
 const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
   const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(58);
   const [canResend, setCanResend] = useState(false);
-  const otpInputRef = useRef<any>(null);
 
   useEffect(() => {
     if (resendTimer > 0) {
-      const timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+      const timer = setTimeout(() => setResendTimer((prev) => prev - 1), 1000);
       return () => clearTimeout(timer);
     } else {
       setCanResend(true);
@@ -32,13 +33,19 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleKeypadPress = (digit: string) => {
     if (digit === 'backspace') {
-      const lastFilledIndex = otp.lastIndexOf((val) => val !== '');
+      let lastFilledIndex = -1;
+      for (let i = otp.length - 1; i >= 0; i--) {
+        if (otp[i] !== '') {
+          lastFilledIndex = i;
+          break;
+        }
+      }
       if (lastFilledIndex >= 0) {
         const newOtp = [...otp];
         newOtp[lastFilledIndex] = '';
         setOtp(newOtp);
       }
-    } else {
+    } else if (digit !== '*') {
       const firstEmptyIndex = otp.indexOf('');
       if (firstEmptyIndex < 6) {
         const newOtp = [...otp];
@@ -48,93 +55,44 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleVerify = () => {
-    const otpString = otp.join('');
-    if (otpString.length === 6) {
-      navigation.navigate('CreateNewPassword');
-    }
-  };
-
-  const handleResend = () => {
-    if (canResend) {
-      setResendTimer(58);
-      setCanResend(false);
-      setOtp(['', '', '', '', '', '']);
-    }
-  };
-
-  const keypadLayout = [
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-    ['7', '8', '9'],
-    ['*', '0', 'backspace'],
-  ];
+  const isComplete = otp.every((d) => d !== '');
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backButton}>← Forgot Password</Text>
-          </TouchableOpacity>
+      <View style={styles.content}>
+        <Text style={styles.title}>OTP Verification</Text>
+        <Text style={styles.subtitle}>Enter the 6-digit code sent to your phone</Text>
+        <Text style={styles.phoneText}>(+1) *** *** 4232</Text>
+
+        <OTPInput value={otp} />
+
+        <Text style={styles.resendText}>
+          {canResend ? 'Resend Code' : `Resend Code in ${resendTimer}s`}
+        </Text>
+
+        <View style={styles.keypad}>
+          {keypad.map((key) => (
+            <TouchableOpacity
+              key={key}
+              style={styles.keypadButton}
+              onPress={() => handleKeypadPress(key)}
+            >
+              {key === 'backspace' ? (
+                <FontAwesome5 name="backspace" size={18} color={colors.text} />
+              ) : (
+                <Text style={styles.keypadText}>{key}</Text>
+              )}
+            </TouchableOpacity>
+          ))}
         </View>
 
-        {/* Phone Number Display */}
-        <View style={styles.phoneSection}>
-          <Text style={styles.phoneLabel}>Code has been Sent to (+1) ***-****-+32</Text>
-        </View>
-
-        {/* OTP Input */}
-        <View style={styles.otpContainer}>
-          <OTPInput
-            ref={otpInputRef}
-            value={otp}
-            onChange={setOtp}
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            title="Verify"
+            onPress={() => navigation.navigate('CreateNewPassword')}
+            disabled={!isComplete}
           />
         </View>
-
-        {/* Resend Timer */}
-        <View style={styles.resendSection}>
-          {canResend ? (
-            <TouchableOpacity onPress={handleResend}>
-              <Text style={styles.resendText}>Resend Code</Text>
-            </TouchableOpacity>
-          ) : (
-            <Text style={styles.timerText}>Resend Code in {resendTimer}s</Text>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Verify Button */}
-      <View style={styles.verifySection}>
-        <CustomButton
-          title="Verify →"
-          onPress={handleVerify}
-          variant="primary"
-          disabled={otp.join('').length !== 6}
-        />
-      </View>
-
-      {/* Numeric Keypad */}
-      <View style={styles.keypadContainer}>
-        {keypadLayout.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.keypadRow}>
-            {row.map((key) => (
-              <TouchableOpacity
-                key={key}
-                style={styles.keypadButton}
-                onPress={() => handleKeypadPress(key)}
-              >
-                {key === 'backspace' ? (
-                  <Text style={styles.backspaceIcon}>⌫</Text>
-                ) : (
-                  <Text style={styles.keypadNumber}>{key}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
-        ))}
       </View>
     </SafeAreaView>
   );
@@ -145,80 +103,59 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  scrollContent: {
+  content: {
+    flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 20,
-    paddingBottom: 20,
+    paddingVertical: 30,
+    alignItems: 'center',
   },
-  header: {
-    marginBottom: 24,
-  },
-  backButton: {
-    fontSize: 16,
-    fontWeight: '600',
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
     color: colors.text,
+    marginBottom: 8,
   },
-  phoneSection: {
-    marginBottom: 32,
-  },
-  phoneLabel: {
+  subtitle: {
     fontSize: 14,
-    color: colors.text,
-    fontWeight: '500',
+    color: colors.textLight,
+    textAlign: 'center',
+    marginBottom: 6,
   },
-  otpContainer: {
-    marginBottom: 24,
-    alignItems: 'center',
-  },
-  resendSection: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  timerText: {
-    fontSize: 13,
+  phoneText: {
+    fontSize: 14,
     color: colors.textMuted,
-    fontWeight: '500',
+    marginBottom: 24,
   },
   resendText: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.primary,
-    fontWeight: '600',
+    marginBottom: 24,
   },
-  verifySection: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#EFEFEF',
-    backgroundColor: colors.background,
-  },
-  keypadContainer: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    backgroundColor: colors.background,
-  },
-  keypadRow: {
+  keypad: {
+    width: '100%',
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 12,
-    gap: 12,
+    marginBottom: 24,
   },
   keypadButton: {
-    flex: 1,
-    aspectRatio: 1,
+    width: '30%',
+    height: 52,
     borderRadius: 12,
     backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: '#E8E8E8',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
   },
-  keypadNumber: {
-    fontSize: 20,
-    fontWeight: '600',
+  keypadText: {
+    fontSize: 18,
     color: colors.text,
+    fontWeight: '600',
   },
-  backspaceIcon: {
-    fontSize: 20,
+  buttonContainer: {
+    width: '100%',
   },
 });
 
