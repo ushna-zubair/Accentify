@@ -26,10 +26,25 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [nickName, setNickName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const validateEmail = (emailText: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailText && !emailRegex.test(emailText)) {
+      setEmailError('Please enter a valid email-address');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (text) validateEmail(text);
+  };
 
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
@@ -41,6 +56,11 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   const handleContinue = async () => {
     if (!fullName || !nickName || !dateOfBirth || !email || !selectedGender) {
       Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    if (emailError) {
+      Alert.alert('Error', 'Please fix email validation errors');
       return;
     }
 
@@ -123,9 +143,10 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
         <CustomInput
           placeholder="Email"
           value={email}
-          onChangeText={setEmail}
+          onChangeText={handleEmailChange}
           keyboardType="email-address"
           leftIcon={<Text style={styles.fieldIcon}>✉️</Text>}
+          error={emailError}
         />
 
         {/* Country Selector */}
