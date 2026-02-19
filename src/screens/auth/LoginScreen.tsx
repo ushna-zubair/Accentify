@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,65 +7,122 @@ import {
   TouchableOpacity,
   SafeAreaView,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import CustomButton from '../../components/CustomButton';
+import CustomInput from '../../components/CustomInput';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const handleSignIn = () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+
+    // TODO: Connect to Firebase authentication
+    // useAuth().signIn(email, password);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: 'CreateProfile' as any }],
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Logo */}
-        <Image
-          source={require('../../../assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        {/* Logo/Icon */}
+        <View style={styles.logoContainer}>
+          <Text style={styles.logoText}>🅰️</Text>
+        </View>
 
         {/* Welcome Title */}
-        <Text style={styles.title}>Welcome to Accentify</Text>
+        <Text style={styles.title}>Welcome Back</Text>
 
         {/* Subtitle */}
         <Text style={styles.subtitle}>
-          Sign in or continue with a quick option
+          Login to Your Account to Continue Your Journey
         </Text>
 
-        {/* Social Login Buttons */}
-        <View style={styles.socialButtonsContainer}>
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialIcon}>G</Text>
-            <Text style={styles.socialText}>Continue with Google</Text>
+        {/* Email Input */}
+        <View style={styles.inputsContainer}>
+          <CustomInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            leftIcon={<Text style={styles.icon}>✉️</Text>}
+          />
+
+          {/* Password Input */}
+          <CustomInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            leftIcon={<Text style={styles.icon}>🔐</Text>}
+            rightIcon={
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️'}</Text>
+              </TouchableOpacity>
+            }
+          />
+        </View>
+
+        {/* Remember Me & Forgot Password */}
+        <View style={styles.optionsContainer}>
+          <TouchableOpacity
+            style={styles.checkboxContainer}
+            onPress={() => setRememberMe(!rememberMe)}
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              {rememberMe && <Text style={styles.checkmark}>✓</Text>}
+            </View>
+            <Text style={styles.rememberText}>Remember Me</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.socialButton}>
-            <Text style={styles.socialIcon}>🍎</Text>
-            <Text style={styles.socialText}>Continue with Apple</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Sign In Button */}
+        <View style={styles.signInButtonContainer}>
+          <CustomButton
+            title="Sign In →"
+            onPress={handleSignIn}
+            variant="primary"
+          />
         </View>
 
         {/* Divider */}
         <View style={styles.dividerContainer}>
           <View style={styles.divider} />
-          <Text style={styles.dividerText}>or</Text>
+          <Text style={styles.dividerText}>Or Continue With</Text>
           <View style={styles.divider} />
         </View>
 
-        {/* Sign In Button */}
-        <TouchableOpacity
-          style={styles.signInButtonContainer}
-          onPress={() => navigation.navigate('CreateProfile')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.signInButtonText}>Sign In with Your Account</Text>
-          <Text style={styles.arrowIcon}>→</Text>
-        </TouchableOpacity>
+        {/* Social Login Buttons */}
+        <View style={styles.socialButtonsContainer}>
+          <TouchableOpacity style={styles.socialButton}>
+            <Text style={styles.socialIcon}>G</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.socialButton}>
+            <Text style={styles.socialIcon}>🍎</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Sign Up Link */}
         <View style={styles.signUpContainer}>
@@ -85,16 +142,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 40,
-    justifyContent: 'space-between',
+    paddingVertical: 20,
   },
-  logo: {
-    width: 80,
-    height: 80,
-    alignSelf: 'center',
-    marginBottom: 30,
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 24,
+    marginTop: 16,
+  },
+  logoText: {
+    fontSize: 60,
   },
   title: {
     fontSize: 28,
@@ -105,73 +162,96 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: colors.textLight,
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 32,
     lineHeight: 20,
   },
-  socialButtonsContainer: {
-    gap: 12,
+  inputsContainer: {
+    gap: 16,
     marginBottom: 20,
   },
-  socialButton: {
+  icon: {
+    fontSize: 18,
+  },
+  eyeIcon: {
+    fontSize: 16,
+  },
+  optionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    borderRadius: 12,
-    paddingVertical: 14,
-    gap: 12,
+    gap: 8,
   },
-  socialIcon: {
-    fontSize: 20,
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+  },
+  checkmark: {
+    color: colors.white,
+    fontSize: 12,
     fontWeight: '600',
   },
-  socialText: {
-    fontSize: 15,
+  rememberText: {
+    fontSize: 13,
     color: colors.text,
     fontWeight: '500',
+  },
+  forgotPasswordText: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  signInButtonContainer: {
+    marginBottom: 32,
   },
   dividerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginBottom: 24,
     gap: 12,
   },
   divider: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.inputBorder,
+    backgroundColor: '#E8E8E8',
   },
   dividerText: {
+    fontSize: 12,
     color: colors.textMuted,
-    fontSize: 13,
+    fontWeight: '500',
   },
-  signInButtonContainer: {
+  socialButtonsContainer: {
     flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 16,
+    marginBottom: 32,
+  },
+  socialButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.primary,
-    borderRadius: 999,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    marginBottom: 24,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    justifyContent: 'center',
   },
-  signInButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  arrowIcon: {
-    fontSize: 20,
-    color: colors.white,
+  socialIcon: {
+    fontSize: 28,
   },
   signUpContainer: {
     flexDirection: 'row',
@@ -179,11 +259,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   signUpText: {
-    fontSize: 14,
-    color: colors.textLight,
+    fontSize: 13,
+    color: colors.text,
   },
   signUpLink: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.primary,
     fontWeight: '700',
   },
