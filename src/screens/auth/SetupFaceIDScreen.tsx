@@ -9,16 +9,16 @@ import colors from '../../theme/colors';
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupFaceID'>;
 
 const SetupFaceIDScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { profile, appPin } = route.params;
+  const { profile, appPin, learningGoals, nativeLanguage, englishLevel } = route.params;
 
   const handleEnable = () => {
     // Navigate to TwoFactorAuth with biometrics enabled
-    navigation.navigate('TwoFactorAuth', { profile, appPin, biometricsEnabled: true });
+    navigation.navigate('TwoFactorAuth', { profile, appPin, learningGoals, nativeLanguage, englishLevel, biometricsEnabled: true });
   };
 
   const handleSkip = () => {
     // Navigate to TwoFactorAuth with biometrics disabled
-    navigation.navigate('TwoFactorAuth', { profile, appPin, biometricsEnabled: false });
+    navigation.navigate('TwoFactorAuth', { profile, appPin, learningGoals, nativeLanguage, englishLevel, biometricsEnabled: false });
   };
 
   return (

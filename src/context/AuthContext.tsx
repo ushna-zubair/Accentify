@@ -33,6 +33,11 @@ export interface OnboardingPayload {
     biometricsEnabled: boolean;
     twoFactorEnabled: boolean;
   };
+  studyPlan: {
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+  };
 }
 
 interface AuthContextType {
@@ -117,6 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tutor_personality: 'friendly coach',
         accessibility_mode: false,
         cultural_context: true,
+      },
+      studyPlan: {
+        learningGoals: data.studyPlan.learningGoals,
+        nativeLanguage: data.studyPlan.nativeLanguage,
+        englishLevel: data.studyPlan.englishLevel,
       },
     });
 

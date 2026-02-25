@@ -14,6 +14,9 @@ import CreateNewPasswordScreen from '../screens/auth/CreateNewPasswordScreen';
 import SetupPinScreen from '../screens/auth/SetupPinScreen';
 import SetupFaceIDScreen from '../screens/auth/SetupFaceIDScreen';
 import TwoFactorAuthScreen from '../screens/auth/TwoFactorAuthScreen';
+import LearningGoalsScreen from '../screens/auth/LearningGoalsScreen';
+import NativeLanguageScreen from '../screens/auth/NativeLanguageScreen';
+import EnglishLevelScreen from '../screens/auth/EnglishLevelScreen';
 const SetYourFingerprintScreen = require('../screens/auth/SetYourFingerprintScreen').default;
 
 // Main Screens
@@ -29,6 +32,13 @@ export type ProfileData = {
   profilePictureUrl: string;
 };
 
+// Study plan data collected across onboarding screens
+export type StudyPlanData = {
+  learningGoals: string[];
+  nativeLanguage: string;
+  englishLevel: string;
+};
+
 // Navigation Types
 export type AuthStackParamList = {
   Splash: undefined;
@@ -39,9 +49,12 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   OTPVerification: undefined;
   CreateNewPassword: undefined;
-  SetupPin: { profile: ProfileData };
-  SetupFaceID: { profile: ProfileData; appPin: string | null };
-  TwoFactorAuth: { profile: ProfileData; appPin: string | null; biometricsEnabled: boolean };
+  LearningGoals: { profile: ProfileData };
+  NativeLanguage: { profile: ProfileData; learningGoals: string[] };
+  EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
+  SetupPin: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string };
+  SetupFaceID: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null };
+  TwoFactorAuth: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
   SetYourFingerprint: undefined;
 };
 
@@ -72,6 +85,9 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
       <AuthStack.Screen name="CreateProfile" component={CreateProfileScreen} />
+      <AuthStack.Screen name="LearningGoals" component={LearningGoalsScreen} />
+      <AuthStack.Screen name="NativeLanguage" component={NativeLanguageScreen} />
+      <AuthStack.Screen name="EnglishLevel" component={EnglishLevelScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <AuthStack.Screen name="OTPVerification" component={OTPVerificationScreen} />
       <AuthStack.Screen name="CreateNewPassword" component={CreateNewPasswordScreen} />

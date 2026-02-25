@@ -17,7 +17,7 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SetupPin'>;
 const keypad = ['1','2','3','4','5','6','7','8','9','*','0','backspace'];
 
 const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { profile } = route.params;
+  const { profile, learningGoals, nativeLanguage, englishLevel } = route.params;
   const [pin, setPin] = useState<string[]>(['', '', '', '']);
 
   const handleKeypadPress = (digit: string) => {
@@ -79,6 +79,9 @@ const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
             title="Continue"
             onPress={() => navigation.navigate('SetupFaceID', {
               profile,
+              learningGoals,
+              nativeLanguage,
+              englishLevel,
               appPin: pin.join(''),
             })}
             disabled={!isComplete}

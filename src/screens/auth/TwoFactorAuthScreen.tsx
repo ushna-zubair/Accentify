@@ -10,7 +10,7 @@ import colors from '../../theme/colors';
 type Props = NativeStackScreenProps<AuthStackParamList, 'TwoFactorAuth'>;
 
 const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { profile, appPin, biometricsEnabled } = route.params;
+  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { completeOnboarding } = useAuth();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -26,6 +26,11 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
           appPin: appPin,
           biometricsEnabled: biometricsEnabled,
           twoFactorEnabled: twoFactorEnabled,
+        },
+        studyPlan: {
+          learningGoals: learningGoals,
+          nativeLanguage: nativeLanguage,
+          englishLevel: englishLevel,
         },
       });
 

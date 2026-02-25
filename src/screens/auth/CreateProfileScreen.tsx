@@ -186,8 +186,8 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
     const callingCode = selectedCountry?.callingCode || '+1';
     const fullPhoneNumber = phoneNumber ? `${callingCode}${phoneNumber}` : '';
 
-    // Pass collected profile data to the next screen (SetupPin)
-    navigation.navigate('SetupPin', {
+    // Pass collected profile data to the next screen (LearningGoals)
+    navigation.navigate('LearningGoals', {
       profile: {
         fullName,
         nickName,
