@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../config/firebase';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
@@ -37,10 +39,23 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      Alert.alert('Success', 'Account created!');
+      // Create the Firebase Auth account only
+      // The full Firestore document is written at END of onboarding (TwoFactorAuth screen)
+      await createUserWithEmailAndPassword(auth, email, password);
+
+      Alert.alert('Success', 'Account created! Let\'s set up your profile.');
       navigation.navigate('CreateProfile');
-    } catch (error) {
-      Alert.alert('Error', 'Sign up failed');
+    } catch (error: any) {
+      // Handle specific Firebase Auth error codes
+      let message = 'Sign up failed. Please try again.';
+      if (error.code === 'auth/email-already-in-use') {
+        message = 'This email is already registered. Please sign in instead.';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/weak-password') {
+        message = 'Password should be at least 6 characters.';
+      }
+      Alert.alert('Sign Up Error', message);
     } finally {
       setLoading(false);
     }

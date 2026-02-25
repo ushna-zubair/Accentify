@@ -19,6 +19,16 @@ const SetYourFingerprintScreen = require('../screens/auth/SetYourFingerprintScre
 // Main Screens
 import { HomeScreen } from '../screens/main';
 
+// Onboarding profile data passed between screens during sign-up flow
+export type ProfileData = {
+  fullName: string;
+  nickName: string;
+  dateOfBirth: string;
+  phoneNumber: string;
+  gender: string;
+  profilePictureUrl: string;
+};
+
 // Navigation Types
 export type AuthStackParamList = {
   Splash: undefined;
@@ -29,9 +39,9 @@ export type AuthStackParamList = {
   ForgotPassword: undefined;
   OTPVerification: undefined;
   CreateNewPassword: undefined;
-  SetupPin: undefined;
-  SetupFaceID: undefined;
-  TwoFactorAuth: undefined;
+  SetupPin: { profile: ProfileData };
+  SetupFaceID: { profile: ProfileData; appPin: string | null };
+  TwoFactorAuth: { profile: ProfileData; appPin: string | null; biometricsEnabled: boolean };
   SetYourFingerprint: undefined;
 };
 

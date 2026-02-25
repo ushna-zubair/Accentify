@@ -19,6 +19,22 @@ export interface UserProfile {
   createdAt?: any;
 }
 
+export interface OnboardingPayload {
+  profile: {
+    fullName: string;
+    nickName: string;
+    dateOfBirth: string;
+    phoneNumber: string;
+    gender: string;
+    profilePictureUrl: string;
+  };
+  security: {
+    appPin: string | null;
+    biometricsEnabled: boolean;
+    twoFactorEnabled: boolean;
+  };
+}
+
 interface AuthContextType {
   currentUser: User | null;
   userRole: UserRole | null;
@@ -28,6 +44,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   fetchUserRole: (uid: string) => Promise<UserRole | null>;
+  completeOnboarding: (data: OnboardingPayload) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,16 +73,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (email: string, password: string) => {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      
-      // Create user profile in Firestore
-      await setDoc(doc(db, 'users', result.user.uid), {
-        email: result.user.email,
-        role: 'learner' as UserRole,
-        fullName: '',
-        profileComplete: false,
-        createdAt: serverTimestamp(),
-      });
+      // Only create the Firebase Auth account here
+      // The full Firestore document is written at the end of onboarding via completeOnboarding()
+      await createUserWithEmailAndPassword(auth, email, password);
     } catch (error) {
       throw error;
     }
@@ -78,6 +88,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       throw error;
     }
+  };
+
+  // Called at the END of the multi-step onboarding to write the complete Firestore document
+  const completeOnboarding = async (data: OnboardingPayload) => {
+    if (!currentUser) throw new Error('No authenticated user found');
+
+    // Write the COMPLETE user document — Document ID MUST match the Auth user.uid
+    await setDoc(doc(db, 'users', currentUser.uid), {
+      email: currentUser.email,
+      role: 'learner' as UserRole, // CRITICAL: Default role must be learner
+      createdAt: serverTimestamp(),
+      termsAccepted: true, // From the Sign Up UI checkbox
+      profile: {
+        fullName: data.profile.fullName,
+        nickName: data.profile.nickName,
+        dateOfBirth: data.profile.dateOfBirth,   // Format: YYYY-MM-DD
+        phoneNumber: data.profile.phoneNumber,
+        gender: data.profile.gender,
+        profilePictureUrl: data.profile.profilePictureUrl,
+      },
+      security: {
+        appPin: data.security.appPin,
+        biometricsEnabled: data.security.biometricsEnabled,
+        twoFactorEnabled: data.security.twoFactorEnabled,
+      },
+      preferences: {
+        tutor_personality: 'friendly coach',
+        accessibility_mode: false,
+        cultural_context: true,
+      },
+    });
+
+    // Fetch role to update context state — triggers AppNavigator to show LearnerNavigator
+    await fetchUserRole(currentUser.uid);
   };
 
   const signOut = async () => {
@@ -114,6 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     fetchUserRole,
+    completeOnboarding,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

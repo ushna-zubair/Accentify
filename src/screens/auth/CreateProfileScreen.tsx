@@ -64,6 +64,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -172,26 +173,30 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
     country.name.toLowerCase().includes(countryQuery.trim().toLowerCase())
   );
 
-  const handleContinue = async () => {
-    if (!fullName || !nickName || !dateOfBirth || !email || !selectedGender) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const handleContinue = () => {
+    if (!fullName || !nickName || !dateOfBirth || !selectedGender) {
+      Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
-    if (emailError) {
-      Alert.alert('Error', 'Please fix email validation errors');
-      return;
-    }
+    // Format date of birth as YYYY-MM-DD
+    const formattedDOB = dateOfBirth.toISOString().split('T')[0];
 
-    setLoading(true);
-    try {
-      Alert.alert('Success', 'Profile created!');
-      navigation.navigate('SetYourFingerprint');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to create profile');
-    } finally {
-      setLoading(false);
-    }
+    // Compose phone number with country calling code
+    const callingCode = selectedCountry?.callingCode || '+1';
+    const fullPhoneNumber = phoneNumber ? `${callingCode}${phoneNumber}` : '';
+
+    // Pass collected profile data to the next screen (SetupPin)
+    navigation.navigate('SetupPin', {
+      profile: {
+        fullName,
+        nickName,
+        dateOfBirth: formattedDOB,
+        phoneNumber: fullPhoneNumber,
+        gender: selectedGender,
+        profilePictureUrl: '', // Will be set when profile picture upload is implemented
+      },
+    });
   };
 
   const requestCameraPermission = async () => {
@@ -443,6 +448,14 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
             {selectedCountry?.name || 'Select Country'}
           </Text>
         </TouchableOpacity>
+
+        <CustomInput
+          placeholder="Phone Number"
+          value={phoneNumber}
+          onChangeText={setPhoneNumber}
+          keyboardType="phone-pad"
+          leftIcon={<FontAwesome5 name="phone" size={18} color={colors.primary} />}
+        />
 
         <TouchableOpacity
           onPress={() => setShowGenderModal(true)}

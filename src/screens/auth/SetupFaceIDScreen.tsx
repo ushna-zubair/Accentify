@@ -8,7 +8,19 @@ import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupFaceID'>;
 
-const SetupFaceIDScreen: React.FC<Props> = ({ navigation }) => {
+const SetupFaceIDScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { profile, appPin } = route.params;
+
+  const handleEnable = () => {
+    // Navigate to TwoFactorAuth with biometrics enabled
+    navigation.navigate('TwoFactorAuth', { profile, appPin, biometricsEnabled: true });
+  };
+
+  const handleSkip = () => {
+    // Navigate to TwoFactorAuth with biometrics disabled
+    navigation.navigate('TwoFactorAuth', { profile, appPin, biometricsEnabled: false });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -17,9 +29,9 @@ const SetupFaceIDScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.subtitle}>Enable Face ID for quick and secure access.</Text>
 
         <View style={styles.buttonContainer}>
-          <CustomButton title="Enable Face ID" onPress={() => navigation.navigate('TwoFactorAuth')} />
+          <CustomButton title="Enable Face ID" onPress={handleEnable} />
         </View>
-        <Text style={styles.skip} onPress={() => navigation.navigate('TwoFactorAuth')}>Skip for now</Text>
+        <Text style={styles.skip} onPress={handleSkip}>Skip for now</Text>
       </View>
     </SafeAreaView>
   );

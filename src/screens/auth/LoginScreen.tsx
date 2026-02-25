@@ -12,32 +12,101 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
-import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
+import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
+import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
-
-// Configure Google Sign-In
-GoogleSignin.configure({
-  webClientId: '104124924088-xxx.apps.googleusercontent.com',
-  offlineAccess: true,
-});
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSignInWithAccount = () => {
-    navigation.navigate('SetYourFingerprint');
+  const handleSignInWithAccount = async () => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter your email and password.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Step 1: Authenticate with Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Step 2: Fetch the user's Firestore document to read their role
+      const userDocRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userDocRef);
+
+      if (!userSnap.exists()) {
+        Alert.alert('Error', 'User profile not found. Please contact support.');
+        return;
+      }
+
+      const userData = userSnap.data();
+      const role = userData.role;
+
+      // Step 3: Route based on the user's role
+      if (role === 'learner') {
+        // If role === 'learner', navigate to Learner Dashboard
+        navigation.navigate('SetYourFingerprint');
+      } else if (role === 'content_author') {
+        // If role === 'content_author', navigate to CMS Dashboard
+        // TODO: navigation.navigate('CMSDashboard');
+        navigation.navigate('SetYourFingerprint');
+      } else if (role === 'admin') {
+        // If role === 'admin', navigate to Admin Panel
+        // TODO: navigation.navigate('AdminPanel');
+        navigation.navigate('SetYourFingerprint');
+      } else {
+        // Fallback for unknown roles
+        navigation.navigate('SetYourFingerprint');
+      }
+    } catch (error: any) {
+      // Handle specific Firebase Auth error codes
+      let message = 'Sign in failed. Please try again.';
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        message = 'Invalid email or password.';
+      } else if (error.code === 'auth/invalid-email') {
+        message = 'Please enter a valid email address.';
+      } else if (error.code === 'auth/too-many-requests') {
+        message = 'Too many failed attempts. Please try again later.';
+      }
+      Alert.alert('Sign In Error', message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleSignIn = async () => {
+    let GoogleSignin: any;
+    let statusCodes: any;
+
     try {
       setLoading(true);
+
+      try {
+        const googleSigninModule = await import('@react-native-google-signin/google-signin');
+        GoogleSignin = googleSigninModule.GoogleSignin;
+        statusCodes = googleSigninModule.statusCodes;
+
+        GoogleSignin.configure({
+          webClientId: '104124924088-xxx.apps.googleusercontent.com',
+          offlineAccess: true,
+        });
+      } catch {
+        Alert.alert(
+          'Google Sign-In unavailable',
+          'Google Sign-In is not available in Expo Go. Use a development build or sign in with your account.'
+        );
+        return;
+      }
+
       await GoogleSignin.hasPlayServices();
       const userInfo = await GoogleSignin.signIn();
 
@@ -94,6 +163,23 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <Text style={styles.title}>Welcome to Accentify</Text>
         <Text style={styles.subtitle}>Sign in or continue with a quick option</Text>
+
+        <View style={styles.emailPasswordContainer}>
+          <CustomInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            leftIcon={<FontAwesome5 name="envelope" size={18} color={colors.primary} />}
+          />
+          <CustomInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            leftIcon={<FontAwesome5 name="lock" size={18} color={colors.primary} />}
+          />
+        </View>
 
         <View style={styles.socialButtonsContainer}>
           <TouchableOpacity
@@ -230,6 +316,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.primary,
     fontWeight: '700',
+  },
+  emailPasswordContainer: {
+    gap: 12,
+    marginBottom: 24,
   },
 });
 
