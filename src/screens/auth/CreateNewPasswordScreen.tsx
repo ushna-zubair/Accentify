@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   Alert,
+  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import CustomInput from '../../components/CustomInput';
-import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateNewPassword'>;
@@ -47,34 +47,64 @@ const CreateNewPasswordScreen: React.FC<Props> = ({ navigation }) => {
     }
     setError('');
     Alert.alert('Success', 'Password updated');
-    navigation.navigate('SetupPin');
+    navigation.navigate('Login');
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <FontAwesome5 name="shield-alt" size={48} color={colors.primary} />
-        <Text style={styles.title}>Create New Password</Text>
-        <Text style={styles.subtitle}>Your new password must be different from previous passwords.</Text>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <FontAwesome5 name="arrow-left" size={18} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Create New Password</Text>
+          <View style={{ width: 32 }} />
+        </View>
 
-        <CustomInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          leftIcon={<FontAwesome5 name="lock" size={18} color={colors.primary} />}
-        />
-        <CustomInput
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          leftIcon={<FontAwesome5 name="lock" size={18} color={colors.primary} />}
-          error={error}
-        />
+        {/* Shield Illustration */}
+        <View style={styles.illustrationContainer}>
+          <View style={styles.shieldOuter}>
+            <View style={styles.shieldInner}>
+              <FontAwesome5 name="lock" size={36} color="#A78BFA" />
+            </View>
+          </View>
+        </View>
 
-        <View style={styles.buttonContainer}>
-          <CustomButton title="Continue" onPress={handleContinue} />
+        {/* Subtitle */}
+        <Text style={styles.subtitle}>Create Your New Password</Text>
+
+        {/* Password Inputs */}
+        <View style={styles.inputsContainer}>
+          <CustomInput
+            placeholder="Password"
+            value={password}
+            onChangeText={(text) => { setPassword(text); setError(''); }}
+            secureTextEntry
+            leftIcon={<FontAwesome5 name="lock" size={16} color={colors.textMuted} />}
+          />
+          <CustomInput
+            placeholder="Password"
+            value={confirmPassword}
+            onChangeText={(text) => { setConfirmPassword(text); setError(''); }}
+            secureTextEntry
+            leftIcon={<FontAwesome5 name="lock" size={16} color={colors.textMuted} />}
+            error={error}
+          />
+        </View>
+
+        {/* Continue Button */}
+        <View style={styles.bottomContainer}>
+          <TouchableOpacity
+            style={styles.continueButton}
+            onPress={handleContinue}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.continueButtonText}>Continue</Text>
+            <View style={styles.arrowCircle}>
+              <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+            </View>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -89,25 +119,113 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 40,
-    alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
+  /* ── Header ── */
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: colors.text,
-    marginTop: 16,
-    marginBottom: 8,
   },
+  /* ── Illustration ── */
+  illustrationContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 24,
+    marginBottom: 28,
+  },
+  shieldOuter: {
+    width: 140,
+    height: 160,
+    backgroundColor: '#7C3AED',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    // Shield-like shape approximation with border radii
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    borderBottomLeftRadius: 60,
+    borderBottomRightRadius: 60,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  shieldInner: {
+    width: 110,
+    height: 128,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    borderBottomLeftRadius: 48,
+    borderBottomRightRadius: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.15)',
+  },
+  /* ── Subtitle ── */
   subtitle: {
-    fontSize: 14,
-    color: colors.textLight,
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 24,
   },
-  buttonContainer: {
+  /* ── Inputs ── */
+  inputsContainer: {
     width: '100%',
-    marginTop: 16,
+    gap: 8,
+  },
+  /* ── Continue Button ── */
+  bottomContainer: {
+    marginTop: 'auto',
+    paddingBottom: 32,
+    paddingTop: 20,
+    alignItems: 'center',
+  },
+  continueButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 999,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    gap: 12,
+    minWidth: 200,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  continueButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  arrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

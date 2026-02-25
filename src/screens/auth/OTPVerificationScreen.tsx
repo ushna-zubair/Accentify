@@ -1,27 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
+  Animated,
+  Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
-import CustomButton from '../../components/CustomButton';
-import OTPInput from '../../components/OTPInput';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
 
-const keypad = ['1','2','3','4','5','6','7','8','9','*','0','backspace'];
+const OTP_LENGTH = 4;
 
 const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
-  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
+  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
   const [resendTimer, setResendTimer] = useState(58);
   const [canResend, setCanResend] = useState(false);
 
+  // Blinking cursor animation
+  const cursorAnim = useRef(new Animated.Value(1)).current;
+  useEffect(() => {
+    const blink = Animated.loop(
+      Animated.sequence([
+        Animated.timing(cursorAnim, { toValue: 0, duration: 500, easing: Easing.step0, useNativeDriver: true }),
+        Animated.timing(cursorAnim, { toValue: 1, duration: 500, easing: Easing.step0, useNativeDriver: true }),
+      ])
+    );
+    blink.start();
+    return () => blink.stop();
+  }, [cursorAnim]);
+
+  // Countdown timer
   useEffect(() => {
     if (resendTimer > 0) {
       const timer = setTimeout(() => setResendTimer((prev) => prev - 1), 1000);
@@ -31,8 +45,8 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [resendTimer]);
 
-  const handleKeypadPress = (digit: string) => {
-    if (digit === 'backspace') {
+  const handleKeypadPress = (key: string) => {
+    if (key === 'backspace') {
       let lastFilledIndex = -1;
       for (let i = otp.length - 1; i >= 0; i--) {
         if (otp[i] !== '') {
@@ -45,53 +59,118 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
         newOtp[lastFilledIndex] = '';
         setOtp(newOtp);
       }
-    } else if (digit !== '*') {
+    } else if (key !== '') {
       const firstEmptyIndex = otp.indexOf('');
-      if (firstEmptyIndex < 6) {
+      if (firstEmptyIndex >= 0 && firstEmptyIndex < OTP_LENGTH) {
         const newOtp = [...otp];
-        newOtp[firstEmptyIndex] = digit;
+        newOtp[firstEmptyIndex] = key;
         setOtp(newOtp);
       }
     }
   };
 
+  const handleResend = () => {
+    if (canResend) {
+      setResendTimer(58);
+      setCanResend(false);
+      // TODO: trigger resend OTP API call
+    }
+  };
+
   const isComplete = otp.every((d) => d !== '');
+  const activeIndex = otp.indexOf('');
+
+  // Keypad layout: 1-9, empty, 0, backspace
+  const keypadRows = [
+    ['1', '2', '3'],
+    ['4', '5', '6'],
+    ['7', '8', '9'],
+    ['', '0', 'backspace'],
+  ];
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>OTP Verification</Text>
-        <Text style={styles.subtitle}>Enter the 6-digit code sent to your phone</Text>
-        <Text style={styles.phoneText}>(+1) *** *** 4232</Text>
-
-        <OTPInput value={otp} />
-
-        <Text style={styles.resendText}>
-          {canResend ? 'Resend Code' : `Resend Code in ${resendTimer}s`}
-        </Text>
-
-        <View style={styles.keypad}>
-          {keypad.map((key) => (
-            <TouchableOpacity
-              key={key}
-              style={styles.keypadButton}
-              onPress={() => handleKeypadPress(key)}
-            >
-              {key === 'backspace' ? (
-                <FontAwesome5 name="backspace" size={18} color={colors.text} />
-              ) : (
-                <Text style={styles.keypadText}>{key}</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <FontAwesome5 name="arrow-left" size={18} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Forgot Password</Text>
+          <View style={{ width: 32 }} />
         </View>
 
-        <View style={styles.buttonContainer}>
-          <CustomButton
-            title="Verify"
-            onPress={() => navigation.navigate('CreateNewPassword')}
-            disabled={!isComplete}
-          />
+        {/* Subtitle */}
+        <Text style={styles.subtitle}>
+          Code has been Sent to (+61) ***-***-*32
+        </Text>
+
+        {/* OTP Boxes */}
+        <View style={styles.otpRow}>
+          {otp.map((digit, index) => {
+            const isFilled = digit !== '';
+            const isActive = index === activeIndex;
+            return (
+              <View
+                key={index}
+                style={[
+                  styles.otpBox,
+                  isFilled && styles.otpBoxFilled,
+                  isActive && styles.otpBoxActive,
+                ]}
+              >
+                {isFilled ? (
+                  <Text style={styles.otpDigit}>*</Text>
+                ) : isActive ? (
+                  <Animated.View style={[styles.cursor, { opacity: cursorAnim }]} />
+                ) : null}
+              </View>
+            );
+          })}
+        </View>
+
+        {/* Resend Timer */}
+        <TouchableOpacity onPress={handleResend} disabled={!canResend}>
+          <Text style={styles.resendText}>
+            {canResend ? 'Resend Code' : 'Resend Code in '}
+            {!canResend && <Text style={styles.resendBold}>{resendTimer}s</Text>}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Verify Button */}
+        <TouchableOpacity
+          style={[styles.verifyButton, !isComplete && styles.verifyButtonDisabled]}
+          onPress={() => navigation.navigate('CreateNewPassword')}
+          activeOpacity={0.8}
+          disabled={!isComplete}
+        >
+          <Text style={styles.verifyButtonText}>Verify</Text>
+          <View style={styles.arrowCircle}>
+            <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+          </View>
+        </TouchableOpacity>
+
+        {/* Custom Keypad */}
+        <View style={styles.keypad}>
+          {keypadRows.map((row, rowIndex) => (
+            <View key={rowIndex} style={styles.keypadRow}>
+              {row.map((key, colIndex) => (
+                <TouchableOpacity
+                  key={`${rowIndex}-${colIndex}`}
+                  style={styles.keypadButton}
+                  onPress={() => handleKeypadPress(key)}
+                  activeOpacity={key === '' ? 1 : 0.5}
+                  disabled={key === ''}
+                >
+                  {key === 'backspace' ? (
+                    <FontAwesome5 name="backspace" size={20} color={colors.text} />
+                  ) : (
+                    <Text style={styles.keypadText}>{key}</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          ))}
         </View>
       </View>
     </SafeAreaView>
@@ -106,56 +185,139 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 30,
     alignItems: 'center',
   },
-  title: {
-    fontSize: 24,
+  /* ── Header ── */
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 18,
     fontWeight: '700',
     color: colors.text,
-    marginBottom: 8,
   },
+  /* ── Subtitle ── */
   subtitle: {
     fontSize: 14,
     color: colors.textLight,
     textAlign: 'center',
-    marginBottom: 6,
+    marginTop: 32,
+    marginBottom: 28,
+    lineHeight: 20,
   },
-  phoneText: {
-    fontSize: 14,
-    color: colors.textMuted,
-    marginBottom: 24,
-  },
-  resendText: {
-    fontSize: 12,
-    color: colors.primary,
-    marginBottom: 24,
-  },
-  keypad: {
-    width: '100%',
+  /* ── OTP Boxes ── */
+  otpRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    gap: 14,
     marginBottom: 24,
   },
-  keypadButton: {
-    width: '30%',
-    height: 52,
-    borderRadius: 12,
+  otpBox: {
+    width: 62,
+    height: 62,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.inputBorder,
     backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
+  },
+  otpBoxFilled: {
+    borderColor: colors.primary,
+    backgroundColor: '#F5F3FF',
+  },
+  otpBoxActive: {
+    borderColor: colors.primary,
+  },
+  otpDigit: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+  },
+  cursor: {
+    width: 2,
+    height: 22,
+    backgroundColor: colors.primary,
+    borderRadius: 1,
+  },
+  /* ── Resend ── */
+  resendText: {
+    fontSize: 13,
+    color: colors.textLight,
+    marginBottom: 28,
+  },
+  resendBold: {
+    fontWeight: '700',
+    color: colors.text,
+    textDecorationLine: 'underline',
+  },
+  /* ── Verify Button ── */
+  verifyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 999,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    gap: 12,
+    minWidth: 200,
+    marginBottom: 32,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  verifyButtonDisabled: {
+    opacity: 0.6,
+  },
+  verifyButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  arrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  /* ── Keypad ── */
+  keypad: {
+    width: '100%',
+    marginTop: 'auto',
+    paddingBottom: 16,
+  },
+  keypadRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  keypadButton: {
+    width: '30%',
+    height: 56,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   keypadText: {
-    fontSize: 18,
+    fontSize: 24,
     color: colors.text,
-    fontWeight: '600',
-  },
-  buttonContainer: {
-    width: '100%',
+    fontWeight: '500',
   },
 });
 
