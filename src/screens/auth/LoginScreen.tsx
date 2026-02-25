@@ -17,7 +17,6 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import CustomInput from '../../components/CustomInput';
-import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -26,6 +25,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSignInWithAccount = async () => {
     if (!email || !password) {
@@ -35,11 +35,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      // Step 1: Authenticate with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Step 2: Fetch the user's Firestore document to read their role
       const userDocRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userDocRef);
 
@@ -51,24 +49,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const userData = userSnap.data();
       const role = userData.role;
 
-      // Step 3: Route based on the user's role
       if (role === 'learner') {
-        // If role === 'learner', navigate to Learner Dashboard
         navigation.navigate('SetYourFingerprint');
       } else if (role === 'content_author') {
-        // If role === 'content_author', navigate to CMS Dashboard
-        // TODO: navigation.navigate('CMSDashboard');
         navigation.navigate('SetYourFingerprint');
       } else if (role === 'admin') {
-        // If role === 'admin', navigate to Admin Panel
-        // TODO: navigation.navigate('AdminPanel');
         navigation.navigate('SetYourFingerprint');
       } else {
-        // Fallback for unknown roles
         navigation.navigate('SetYourFingerprint');
       }
     } catch (error: any) {
-      // Handle specific Firebase Auth error codes
       let message = 'Sign in failed. Please try again.';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
         message = 'Invalid email or password.';
@@ -152,7 +142,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
+        {/* Logo */}
         <View style={styles.logoContainer}>
           <Image
             source={require('../../../assets/logo.png')}
@@ -161,64 +153,98 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.title}>Welcome to Accentify</Text>
-        <Text style={styles.subtitle}>Sign in or continue with a quick option</Text>
+        {/* Title & Subtitle */}
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Login to Your Account to Continue Your Journey</Text>
 
-        <View style={styles.emailPasswordContainer}>
+        {/* Email & Password Inputs */}
+        <View style={styles.inputsContainer}>
           <CustomInput
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
-            leftIcon={<FontAwesome5 name="envelope" size={18} color={colors.primary} />}
+            leftIcon={<FontAwesome5 name="envelope" size={16} color={colors.textMuted} />}
           />
           <CustomInput
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            leftIcon={<FontAwesome5 name="lock" size={18} color={colors.primary} />}
+            leftIcon={<FontAwesome5 name="lock" size={16} color={colors.textMuted} />}
           />
         </View>
 
-        <View style={styles.socialButtonsContainer}>
+        {/* Remember Me & Forgot Password Row */}
+        <View style={styles.optionsRow}>
+          <TouchableOpacity
+            style={styles.rememberRow}
+            onPress={() => setRememberMe(!rememberMe)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+              {rememberMe && <FontAwesome5 name="check" size={10} color={colors.white} />}
+            </View>
+            <Text style={styles.rememberText}>Remember Me</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <Text style={styles.forgotText}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Sign In Button */}
+        <TouchableOpacity
+          style={styles.signInButton}
+          onPress={handleSignInWithAccount}
+          activeOpacity={0.8}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <>
+              <Text style={styles.signInButtonText}>Sign In</Text>
+              <View style={styles.arrowCircle}>
+                <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+              </View>
+            </>
+          )}
+        </TouchableOpacity>
+
+        {/* Or Continue With Divider */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Or Continue With</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Social Login Buttons */}
+        <View style={styles.socialRow}>
           <TouchableOpacity
             style={styles.socialButton}
             onPress={handleGoogleSignIn}
             disabled={loading}
+            activeOpacity={0.7}
           >
             {loading ? (
-              <ActivityIndicator color={colors.primary} />
+              <ActivityIndicator color={colors.primary} size="small" />
             ) : (
-              <>
-                <View style={[styles.socialIconWrap, styles.googleIconWrap]}>
-                  <FontAwesome5 name="google" size={18} color="#4285F4" />
-                </View>
-                <Text style={styles.socialLabel}>Continue with Google</Text>
-              </>
+              <FontAwesome5 name="google" size={22} color="#4285F4" />
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.socialButton}>
-            <View style={styles.socialIconWrap}>
-              <FontAwesome5 name="apple" size={18} color="#111111" />
-            </View>
-            <Text style={styles.socialLabel}>Continue with Apple</Text>
+          <TouchableOpacity
+            style={styles.socialButton}
+            activeOpacity={0.7}
+          >
+            <FontAwesome5 name="apple" size={22} color="#111111" />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.signInButtonContainer}>
-          <CustomButton
-            title="Sign In with Your Account →"
-            onPress={handleSignInWithAccount}
-            variant="primary"
-            style={styles.primaryCta}
-            textStyle={styles.primaryCtaText}
-          />
-        </View>
-
+        {/* Sign Up Link */}
         <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Don't have an account? </Text>
+          <Text style={styles.signUpText}>Don't have an Account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.signUpLink}>SIGN UP</Text>
           </TouchableOpacity>
@@ -231,78 +257,144 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.white,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 40,
-    justifyContent: 'space-between',
+    paddingTop: 16,
+    paddingBottom: 32,
   },
+  /* ── Logo ── */
   logoContainer: {
     alignItems: 'center',
-    marginBottom: 32,
-    marginTop: 16,
+    marginBottom: 20,
+    marginTop: 8,
   },
   logo: {
-    width: 120,
-    height: 120,
+    width: 100,
+    height: 100,
   },
+  /* ── Title & Subtitle ── */
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '700',
     color: colors.text,
-    textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   subtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 20,
+    fontSize: 13,
+    color: colors.textLight,
+    marginBottom: 28,
+    fontWeight: '600',
+    lineHeight: 18,
   },
-  socialButtonsContainer: {
-    gap: 12,
-    marginBottom: 32,
+  /* ── Inputs ── */
+  inputsContainer: {
+    gap: 8,
+    marginBottom: 12,
   },
-  socialButton: {
+  /* ── Remember / Forgot Row ── */
+  optionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 28,
+  },
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  rememberText: {
+    fontSize: 12,
+    color: colors.textLight,
+    fontWeight: '500',
+  },
+  forgotText: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  /* ── Sign In Button ── */
+  signInButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    borderRadius: 12,
-    paddingVertical: 14,
+    backgroundColor: colors.primary,
+    borderRadius: 999,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     gap: 12,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 6,
+    marginBottom: 28,
   },
-  socialIconWrap: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+  signInButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  arrowCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.inputBg,
   },
-  googleIconWrap: {
-    backgroundColor: '#E8F0FE',
+  /* ── Divider ── */
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  socialLabel: {
-    fontSize: 15,
-    color: colors.text,
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.inputBorder,
+  },
+  dividerText: {
+    fontSize: 13,
+    color: colors.textLight,
     fontWeight: '500',
+    marginHorizontal: 14,
   },
-  signInButtonContainer: {
-    marginBottom: 32,
+  /* ── Social Buttons ── */
+  socialRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    marginBottom: 28,
   },
-  primaryCta: {
-    height: 60,
+  socialButton: {
+    width: 60,
+    height: 52,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    backgroundColor: colors.white,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  primaryCtaText: {
-    fontSize: 16,
-    letterSpacing: 0.5,
-  },
+  /* ── Sign Up ── */
   signUpContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -316,10 +408,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.primary,
     fontWeight: '700',
-  },
-  emailPasswordContainer: {
-    gap: 12,
-    marginBottom: 24,
+    textDecorationLine: 'underline',
   },
 });
 
