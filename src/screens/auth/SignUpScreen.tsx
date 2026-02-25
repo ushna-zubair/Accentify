@@ -5,10 +5,10 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { createUserWithEmailAndPassword } from 'firebase/auth';

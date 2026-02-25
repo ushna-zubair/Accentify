@@ -5,12 +5,12 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   FlatList,
   Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AppNavigator';

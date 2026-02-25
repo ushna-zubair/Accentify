@@ -5,11 +5,11 @@ import {
   StyleSheet,
   Image,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';

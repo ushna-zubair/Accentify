@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   TextInput,
   FlatList,
@@ -11,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../navigation/AppNavigator';

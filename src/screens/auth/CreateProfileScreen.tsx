@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   Alert,
   Modal,
@@ -14,6 +13,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';

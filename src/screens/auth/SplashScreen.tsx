@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, SafeAreaView, Image, StyleSheet, Text } from 'react-native';
+import { View, Image, StyleSheet, Text } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../navigation/AppNavigator';
 import colors from '../../theme/colors';
@@ -15,17 +15,16 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <View style={styles.content}>
         <Image
           source={require('../../../assets/logo.png')}
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.title}>Accentify</Text>
-        <Text style={styles.subtitle}>Speak with confidence</Text>
+        <Text style={styles.title}>A C C E N T I F Y</Text>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -40,19 +39,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    width: 140,
-    height: 140,
-    marginBottom: 16,
+    width: 200,
+    height: 200,
+    marginBottom: 24,
   },
   title: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textMuted,
+    color: colors.primary,
+    letterSpacing: 6,
   },
 });
 
