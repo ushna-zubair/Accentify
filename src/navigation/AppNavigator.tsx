@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import AccessibilityScreen from '../screens/main/AccessibilityScreen';
 import NotificationsScreen from '../screens/main/NotificationsScreen';
+import AppPreferenceScreen from '../screens/main/AppPreferenceScreen';
+import ProfileSettingsScreen from '../screens/main/ProfileSettingsScreen';
 
 // Auth Screens
 import SplashScreen from '../screens/auth/SplashScreen';
@@ -71,6 +73,8 @@ export type SettingsStackParamList = {
   SettingsMain: undefined;
   Accessibility: undefined;
   Notifications: undefined;
+  AppPreferences: undefined;
+  ProfileSettings: undefined;
 };
 
 export type LearnerTabParamList = {
@@ -98,6 +102,8 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
       <SettingsStack.Screen name="Accessibility" component={AccessibilityScreen} />
       <SettingsStack.Screen name="Notifications" component={NotificationsScreen} />
+      <SettingsStack.Screen name="AppPreferences" component={AppPreferenceScreen} />
+      <SettingsStack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
     </SettingsStack.Navigator>
   );
 };

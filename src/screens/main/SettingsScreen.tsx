@@ -77,7 +77,7 @@ const SettingsScreen: React.FC = () => {
           <SettingsItem
             label="Profile Settings"
             icon={<Ionicons name="person-circle-outline" size={28} color={colors.primary} />}
-            onPress={() => handleSettingsPress('Profile Settings')}
+            onPress={() => navigation.navigate('ProfileSettings')}
           />
 
           <SettingsItem
@@ -95,7 +95,7 @@ const SettingsScreen: React.FC = () => {
           <SettingsItem
             label="App Preferences"
             icon={<MaterialCommunityIcons name="pencil-outline" size={28} color={colors.primary} />}
-            onPress={() => handleSettingsPress('App Preferences')}
+            onPress={() => navigation.navigate('AppPreferences')}
           />
 
           <SettingsItem
