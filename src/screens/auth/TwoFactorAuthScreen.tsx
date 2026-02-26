@@ -14,29 +14,15 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
   const { completeOnboarding } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const handleContinue = async () => {
-    setLoading(true);
-    try {
-      await completeOnboarding({
-        profile,
-        security: {
-          appPin: appPin,
-          biometricsEnabled: biometricsEnabled,
-          twoFactorEnabled: true,
-        },
-        studyPlan: {
-          learningGoals: learningGoals,
-          nativeLanguage: nativeLanguage,
-          englishLevel: englishLevel,
-        },
-      });
-
-      Alert.alert('Success', 'Your account is all set! Welcome to Accentify.');
-    } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to complete onboarding. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+  const handleContinue = () => {
+    navigation.navigate('ChooseVerificationMethod', {
+      profile,
+      appPin,
+      biometricsEnabled,
+      learningGoals,
+      nativeLanguage,
+      englishLevel,
+    });
   };
 
   const handleSkip = async () => {

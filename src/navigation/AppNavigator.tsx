@@ -1,6 +1,10 @@
 import React from 'react';
+import { Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import AccessibilityScreen from '../screens/main/AccessibilityScreen';
 
 // Auth Screens
 import SplashScreen from '../screens/auth/SplashScreen';
@@ -17,10 +21,12 @@ import TwoFactorAuthScreen from '../screens/auth/TwoFactorAuthScreen';
 import LearningGoalsScreen from '../screens/auth/LearningGoalsScreen';
 import NativeLanguageScreen from '../screens/auth/NativeLanguageScreen';
 import EnglishLevelScreen from '../screens/auth/EnglishLevelScreen';
+import ChooseVerificationMethodScreen from '../screens/auth/ChooseVerificationMethodScreen';
+import SetupAuthenticatorScreen from '../screens/auth/SetupAuthenticatorScreen';
 const SetYourFingerprintScreen = require('../screens/auth/SetYourFingerprintScreen').default;
 
 // Main Screens
-import { HomeScreen } from '../screens/main';
+import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../screens/main';
 
 // Onboarding profile data passed between screens during sign-up flow
 export type ProfileData = {
@@ -55,11 +61,21 @@ export type AuthStackParamList = {
   SetupPin: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string };
   SetupFaceID: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null };
   TwoFactorAuth: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
+  ChooseVerificationMethod: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
+  SetupAuthenticator: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
   SetYourFingerprint: undefined;
 };
 
-export type LearnerStackParamList = {
+export type SettingsStackParamList = {
+  SettingsMain: undefined;
+  Accessibility: undefined;
+};
+
+export type LearnerTabParamList = {
   Home: undefined;
+  Tutor: undefined;
+  Progress: undefined;
+  Settings: undefined;
 };
 
 export type CMSStackParamList = {
@@ -71,7 +87,17 @@ export type AdminStackParamList = {
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const LearnerStack = createNativeStackNavigator<LearnerStackParamList>();
+const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+const LearnerTab = createBottomTabNavigator<LearnerTabParamList>();
+
+const SettingsStackNavigator = () => {
+  return (
+    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
+      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
+      <SettingsStack.Screen name="Accessibility" component={AccessibilityScreen} />
+    </SettingsStack.Navigator>
+  );
+};
 
 const AuthNavigator = () => {
   return (
@@ -95,19 +121,63 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="SetYourFingerprint" component={SetYourFingerprintScreen} />
       <AuthStack.Screen name="SetupFaceID" component={SetupFaceIDScreen} />
       <AuthStack.Screen name="TwoFactorAuth" component={TwoFactorAuthScreen} />
+      <AuthStack.Screen name="ChooseVerificationMethod" component={ChooseVerificationMethodScreen} />
+      <AuthStack.Screen name="SetupAuthenticator" component={SetupAuthenticatorScreen} />
     </AuthStack.Navigator>
   );
 };
 
 const LearnerNavigator = () => {
   return (
-    <LearnerStack.Navigator
-      screenOptions={{
+    <LearnerTab.Navigator
+      screenOptions={({ route }) => ({
         headerShown: false,
-      }}
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: keyof typeof Ionicons.glyphMap = 'home';
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Tutor') {
+            iconName = focused ? 'bar-chart' : 'bar-chart-outline';
+          } else if (route.name === 'Progress') {
+            iconName = focused ? 'star' : 'star-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'person' : 'person-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#1A1A2E',
+        tabBarActiveBackgroundColor: '#6B2FD9',
+        tabBarStyle: {
+          backgroundColor: '#F0EEFF',
+          borderTopWidth: 0,
+          height: Platform.OS === 'ios' ? 85 : 70,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+          paddingTop: 8,
+          paddingHorizontal: 10,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarItemStyle: {
+          borderRadius: 20,
+          marginHorizontal: 4,
+          paddingVertical: 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
+      })}
     >
-      <LearnerStack.Screen name="Home" component={HomeScreen} />
-    </LearnerStack.Navigator>
+      <LearnerTab.Screen name="Home" component={HomeScreen} />
+      <LearnerTab.Screen name="Tutor" component={TutorScreen} />
+      <LearnerTab.Screen name="Progress" component={ProgressScreen} />
+      <LearnerTab.Screen
+        name="Settings"
+        component={SettingsStackNavigator}
+        options={{ tabBarLabel: 'Profile' }}
+      />
+    </LearnerTab.Navigator>
   );
 };
 

@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
+import { AccessibilityProvider } from './src/context/AccessibilityContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 // Keep the native splash screen visible while fonts load
@@ -30,10 +31,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer onReady={onLayoutRootView}>
-          <AppNavigator />
-          <StatusBar style="auto" />
-        </NavigationContainer>
+        <AccessibilityProvider>
+          <NavigationContainer onReady={onLayoutRootView}>
+            <AppNavigator />
+            <StatusBar style="auto" />
+          </NavigationContainer>
+        </AccessibilityProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );
