@@ -31,6 +31,9 @@ const SetYourFingerprintScreen = require('../screens/auth/SetYourFingerprintScre
 // Main Screens
 import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../screens/main';
 
+// Admin Screens
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+
 // Onboarding profile data passed between screens during sign-up flow
 export type ProfileData = {
   fullName: string;
@@ -89,11 +92,19 @@ export type CMSStackParamList = {
 };
 
 export type AdminStackParamList = {
-  AdminPanel: undefined;
+  AdminDashboard: undefined;
+  AdminManageLessons: undefined;
+  AdminManageUsers: undefined;
+  AdminFeedback: undefined;
+  AdminSettings: undefined;
+  AdminBilling: undefined;
+  AdminAccessControl: undefined;
+  AdminSupport: undefined;
 };
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 const LearnerTab = createBottomTabNavigator<LearnerTabParamList>();
 
 const SettingsStackNavigator = () => {
@@ -105,6 +116,14 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="AppPreferences" component={AppPreferenceScreen} />
       <SettingsStack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
     </SettingsStack.Navigator>
+  );
+};
+
+const AdminNavigator = () => {
+  return (
+    <AdminStack.Navigator screenOptions={{ headerShown: false }}>
+      <AdminStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
+    </AdminStack.Navigator>
   );
 };
 
@@ -205,7 +224,11 @@ const AppNavigator: React.FC = () => {
     return <LearnerNavigator />;
   }
 
-  // Default to auth for other roles (cms, admin) - can be expanded later
+  if (userRole === 'admin') {
+    return <AdminNavigator />;
+  }
+
+  // Default to auth for other roles (cms) - can be expanded later
   return <AuthNavigator />;
 };
 
