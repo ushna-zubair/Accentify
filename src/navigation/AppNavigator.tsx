@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 import AccessibilityScreen from '../screens/main/AccessibilityScreen';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 
 // Auth Screens
 import SplashScreen from '../screens/auth/SplashScreen';
@@ -69,6 +70,7 @@ export type AuthStackParamList = {
 export type SettingsStackParamList = {
   SettingsMain: undefined;
   Accessibility: undefined;
+  Notifications: undefined;
 };
 
 export type LearnerTabParamList = {
@@ -95,6 +97,7 @@ const SettingsStackNavigator = () => {
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
       <SettingsStack.Screen name="Accessibility" component={AccessibilityScreen} />
+      <SettingsStack.Screen name="Notifications" component={NotificationsScreen} />
     </SettingsStack.Navigator>
   );
 };

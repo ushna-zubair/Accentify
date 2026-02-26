@@ -101,7 +101,7 @@ const SettingsScreen: React.FC = () => {
           <SettingsItem
             label="Notifications"
             icon={<Ionicons name="notifications-outline" size={28} color={colors.primary} />}
-            onPress={() => handleSettingsPress('Notifications')}
+            onPress={() => navigation.navigate('Notifications')}
           />
 
           <SettingsItem
