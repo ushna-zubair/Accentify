@@ -268,12 +268,25 @@ export interface VocabExerciseData {
   totalPairs: number;
 }
 
-/** Result from the Whisper STT API */
+/** Result from the Whisper STT API — per-word feedback */
 export interface SpeechRecognitionResult {
+  /** Raw transcript from the STT engine */
   transcript: string;
   confidence: number;
-  /** Whether the pronunciation matches the target word */
+  /** Overall correctness (both words) */
   isCorrect: boolean;
+  /** Phonetic transcription of user's attempt at the basic word */
+  basicAttemptPhonetic: string;
+  /** Whether the basic word pronunciation was correct */
+  basicCorrect: boolean;
+  /** Feedback message for the basic word attempt */
+  basicFeedback: string;
+  /** Phonetic transcription of user's attempt at the vocab word */
+  vocabAttemptPhonetic: string;
+  /** Whether the vocab word pronunciation was correct */
+  vocabCorrect: boolean;
+  /** Feedback message for the vocab word attempt */
+  vocabFeedback: string;
 }
 
 // ─── Progress Models ───
