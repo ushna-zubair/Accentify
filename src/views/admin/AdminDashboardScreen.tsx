@@ -185,10 +185,11 @@ const MobileAdminDashboard: React.FC = () => {
   const handleMenuPress = (key: string) => {
     if (key === 'insights') {
       navigation.navigate('AdminInsights');
+    } else if (key === 'user_management') {
+      navigation.navigate('AdminManageUsers');
     } else if (key === 'create_announcement') {
-      setAnnouncementModalVisible(true);
+      navigation.navigate('AdminAnnouncements');
     }
-    // Other menu items can navigate to specific screens when implemented
   };
 
   const handleCreateAnnouncement = async (title: string, body: string) => {

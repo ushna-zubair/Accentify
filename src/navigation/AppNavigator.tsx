@@ -52,6 +52,9 @@ import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../view
 // Views – Admin
 import AdminDashboardScreen from '../views/admin/AdminDashboardScreen';
 import AdminInsightsScreen from '../views/admin/AdminInsightsScreen';
+import AdminUserManagementScreen from '../views/admin/AdminUserManagementScreen';
+import AdminUserDetailScreen from '../views/admin/AdminUserDetailScreen';
+import AdminAnnouncementsScreen from '../views/admin/AdminAnnouncementsScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
@@ -75,6 +78,9 @@ const AdminNavigator = () => {
     <AdminStack.Navigator screenOptions={{ headerShown: false }}>
       <AdminStack.Screen name="AdminDashboard" component={AdminDashboardScreen} />
       <AdminStack.Screen name="AdminInsights" component={AdminInsightsScreen} />
+      <AdminStack.Screen name="AdminManageUsers" component={AdminUserManagementScreen} />
+      <AdminStack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
+      <AdminStack.Screen name="AdminAnnouncements" component={AdminAnnouncementsScreen} />
     </AdminStack.Navigator>
   );
 };

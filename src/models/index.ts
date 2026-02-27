@@ -251,6 +251,28 @@ export interface InsightsUserData {
   weekLabel: string;
 }
 
+// ─── User Management Models ───
+export interface ManagedUser {
+  uid: string;
+  userId: string;     // short numeric ID shown in the table
+  fullName: string;
+  email: string;
+}
+
+export type AccountStatus = 'active' | 'deactivated';
+
+export interface UserDetailData {
+  uid: string;
+  username: string;
+  fullName: string;
+  email: string;
+  userId: string;
+  password: string;
+  status: AccountStatus;
+  activeSince: string;
+  role: 'admin' | 'learner' | 'content_author';
+}
+
 // ─── Navigation Param Lists ───
 export type AuthStackParamList = {
   Splash: undefined;
@@ -296,6 +318,8 @@ export type AdminStackParamList = {
   AdminInsights: undefined;
   AdminManageLessons: undefined;
   AdminManageUsers: undefined;
+  AdminUserDetail: { uid: string };
+  AdminAnnouncements: undefined;
   AdminFeedback: undefined;
   AdminSettings: undefined;
   AdminBilling: undefined;

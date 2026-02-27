@@ -3,3 +3,6 @@ export { useAdminDashboardController, useAdminMobileDashboardController, MENU_IT
 export { useNotificationController } from './useNotificationController';
 export { useProgressController, DEFAULT_PROGRESS } from './useProgressController';
 export { useInsightsController, ENGLISH_LEVELS, DEFAULT_INSIGHTS } from './useInsightsController';
+export { useUserManagementController } from './useUserManagementController';
+export { useUserDetailController } from './useUserDetailController';
+export { useAnnouncementsController } from './useAnnouncementsController';
