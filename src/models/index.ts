@@ -189,6 +189,39 @@ export interface PerformanceBubbleData {
   size: number;
 }
 
+// ─── Tutor / Lesson Models ───
+export type LessonDifficulty = 'Easy' | 'Medium' | 'Challenging';
+
+export interface TutorLesson {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: LessonDifficulty;
+  /** Local require() or remote URI */
+  thumbnail?: ImageSourcePropType;
+  /** Firestore progress status for this user */
+  status: LessonStatus;
+  /** Category: pronunciation, conversation, vocabulary */
+  category: string;
+  /** Order within study path */
+  order: number;
+}
+
+export interface TutorStats {
+  completedLessons: number;
+  totalHours: number;
+}
+
+export interface TutorScreenData {
+  userName: string;
+  avatarUrl?: string;
+  stats: TutorStats;
+  /** Lessons the user started but hasn't finished */
+  recentLessons: TutorLesson[];
+  /** Full ordered study path */
+  studyPath: TutorLesson[];
+}
+
 // ─── Progress Models ───
 export type LessonStatus = 'completed' | 'in_progress' | 'upcoming';
 

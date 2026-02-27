@@ -6,3 +6,4 @@ export { useInsightsController, ENGLISH_LEVELS, DEFAULT_INSIGHTS } from './useIn
 export { useUserManagementController } from './useUserManagementController';
 export { useUserDetailController } from './useUserDetailController';
 export { useAnnouncementsController } from './useAnnouncementsController';
+export { useTutorController, CATEGORY_COLORS } from './useTutorController';
