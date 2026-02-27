@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, Image, StyleSheet, Text } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { AuthStackParamList } from '../../navigation/AppNavigator';
+import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -10,88 +10,13 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
-import { db } from '../../config/firebase';
-import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
 import BarChart from './components/BarChart';
 import DonutChart from './components/DonutChart';
 import LineChart from './components/LineChart';
 import PerformanceBubbles from './components/PerformanceBubbles';
-
-// ------- Types -------
-type SidebarItem = {
-  label: string;
-  icon: string;
-  iconSet: 'ionicons' | 'mci' | 'feather';
-  key: string;
-};
-
-interface TopLearner {
-  name: string;
-  sessions: number;
-  avatar?: string;
-}
-
-interface DashboardData {
-  activeUsers: number;
-  growthPct: number;
-  usageDateRange: string;
-  weeklyBarData: { label: string; thisWeek: number; lastWeek: number }[];
-  practiceActivity: { morning: number; afternoon: number; night: number };
-  pronunciationAccuracy: number;
-  fluencyAccuracy: number;
-  vocabularyRetention: number;
-  topLearners: TopLearner[];
-  totalSessions: number;
-  sessionsGrowth: number;
-  sessionsThisWeek: number[];
-  sessionsLastWeek: number[];
-}
-
-// ------- Constants -------
-const MENU_ITEMS: SidebarItem[] = [
-  { label: 'Dashboard', icon: 'grid-outline', iconSet: 'ionicons', key: 'dashboard' },
-  { label: 'Manage Lessons', icon: 'book-outline', iconSet: 'ionicons', key: 'lessons' },
-  { label: 'Manage Users', icon: 'people-outline', iconSet: 'ionicons', key: 'users' },
-  { label: 'Feedback & Reports', icon: 'chatbox-ellipses-outline', iconSet: 'ionicons', key: 'feedback' },
-];
-
-const OTHERS_ITEMS: SidebarItem[] = [
-  { label: 'Settings', icon: 'settings-outline', iconSet: 'ionicons', key: 'settings' },
-  { label: 'Subscription & billing', icon: 'card-outline', iconSet: 'ionicons', key: 'billing' },
-  { label: 'Admin access control', icon: 'shield-checkmark-outline', iconSet: 'ionicons', key: 'access' },
-  { label: 'Support & logs', icon: 'help-circle-outline', iconSet: 'ionicons', key: 'support' },
-];
-
-const DEFAULT_DATA: DashboardData = {
-  activeUsers: 1245,
-  growthPct: 8.4,
-  usageDateRange: 'Oct 10 - 21 Oct, 25',
-  weeklyBarData: [
-    { label: 'Mon', thisWeek: 80, lastWeek: 60 },
-    { label: 'Tue', thisWeek: 65, lastWeek: 50 },
-    { label: 'Wed', thisWeek: 90, lastWeek: 70 },
-    { label: 'Thur', thisWeek: 75, lastWeek: 55 },
-    { label: 'Fri', thisWeek: 85, lastWeek: 68 },
-    { label: 'Sat', thisWeek: 50, lastWeek: 45 },
-    { label: 'Sun', thisWeek: 40, lastWeek: 35 },
-  ],
-  practiceActivity: { morning: 35, afternoon: 45, night: 20 },
-  pronunciationAccuracy: 85,
-  fluencyAccuracy: 86,
-  vocabularyRetention: 92,
-  topLearners: [
-    { name: 'Sarah Lee', sessions: 48 },
-    { name: 'Alex Chen', sessions: 43 },
-    { name: 'Maria Lopez', sessions: 39 },
-    { name: 'Omer Noor', sessions: 36 },
-  ],
-  totalSessions: 2568,
-  sessionsGrowth: 8.4,
-  sessionsThisWeek: [20, 35, 28, 42, 55, 50],
-  sessionsLastWeek: [15, 22, 30, 25, 35, 40],
-};
+import { useAdminDashboardController, MENU_ITEMS, OTHERS_ITEMS } from '../../controllers';
+import type { DashboardData } from '../../models';
 
 // ------- Sidebar -------
 interface SidebarProps {
@@ -316,62 +241,18 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
 
 // ------- Main Screen -------
 const AdminDashboardScreen: React.FC = () => {
-  const { signOut } = useAuth();
   const { width } = useWindowDimensions();
-  const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [dashboardData, setDashboardData] = useState<DashboardData>(DEFAULT_DATA);
-
-  // Load real data from Firestore if available
-  useEffect(() => {
-    (async () => {
-      try {
-        // Attempt to load top learners from Firestore
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, orderBy('studyPlan.totalSessions', 'desc'), limit(4));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          const learners: TopLearner[] = [];
-          snap.forEach((doc) => {
-            const d = doc.data();
-            learners.push({
-              name: d.profile?.fullName || d.profile?.nickName || 'Unknown',
-              sessions: d.studyPlan?.totalSessions || 0,
-            });
-          });
-          if (learners.length > 0 && learners[0].sessions > 0) {
-            setDashboardData((prev) => ({ ...prev, topLearners: learners }));
-          }
-        }
-
-        // Attempt to load aggregate stats
-        const statsDoc = await getDocs(collection(db, 'admin_stats'));
-        if (!statsDoc.empty) {
-          const stats = statsDoc.docs[0].data();
-          setDashboardData((prev) => ({
-            ...prev,
-            activeUsers: stats.activeUsers ?? prev.activeUsers,
-            totalSessions: stats.totalSessions ?? prev.totalSessions,
-            growthPct: stats.growthPct ?? prev.growthPct,
-          }));
-        }
-      } catch (e) {
-        // Firestore data may not exist yet — use defaults
-        console.log('Using default dashboard data');
-      }
-    })();
-  }, []);
+  const {
+    activeMenu,
+    setActiveMenu,
+    searchQuery,
+    setSearchQuery,
+    dashboardData,
+    handleLogout,
+  } = useAdminDashboardController();
 
   const isWide = width >= 900;
   const isTablet = width >= 600 && width < 900;
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-    } catch (e) {
-      console.error('Logout error', e);
-    }
-  };
 
   return (
     <View style={styles.root}>

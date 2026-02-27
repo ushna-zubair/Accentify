@@ -8,37 +8,10 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
+import { UserRole, UserProfile, OnboardingPayload } from '../models';
 
-export type UserRole = 'learner' | 'content_author' | 'admin';
-
-export interface UserProfile {
-  email: string;
-  role: UserRole;
-  fullName: string;
-  profileComplete: boolean;
-  createdAt?: any;
-}
-
-export interface OnboardingPayload {
-  profile: {
-    fullName: string;
-    nickName: string;
-    dateOfBirth: string;
-    phoneNumber: string;
-    gender: string;
-    profilePictureUrl: string;
-  };
-  security: {
-    appPin: string | null;
-    biometricsEnabled: boolean;
-    twoFactorEnabled: boolean;
-  };
-  studyPlan: {
-    learningGoals: string[];
-    nativeLanguage: string;
-    englishLevel: string;
-  };
-}
+// Re-export for backward compatibility
+export type { UserRole, UserProfile, OnboardingPayload };
 
 interface AuthContextType {
   currentUser: User | null;

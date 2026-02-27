@@ -13,11 +13,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
-import {
-  useAccessibility,
-  ColorBlindMode,
-  FontStyleOption,
-} from '../../context/AccessibilityContext';
+import { useAccessibility } from '../../context/AccessibilityContext';
+import { ColorBlindMode, FontStyleOption } from '../../models';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);

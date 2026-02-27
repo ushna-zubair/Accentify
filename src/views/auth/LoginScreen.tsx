@@ -15,7 +15,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
-import { AuthStackParamList } from '../../navigation/AppNavigator';
+import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import colors from '../../theme/colors';
 

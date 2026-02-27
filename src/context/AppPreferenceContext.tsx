@@ -1,16 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ThemeOption, AccentColor, FontSizeOption, AppPreferenceState } from '../models';
 
-export type ThemeOption = 'Light' | 'Dark';
-export type AccentColor = 'Lavender' | 'Orange' | 'Blue';
-export type FontSizeOption = 'Small' | 'Medium' | 'Large';
-
-interface AppPreferenceState {
-  theme: ThemeOption;
-  accentColor: AccentColor;
-  fontSize: FontSizeOption;
-  highContrastMode: boolean;
-}
+// Re-export for backward compatibility
+export type { ThemeOption, AccentColor, FontSizeOption, AppPreferenceState };
 
 interface AppPreferenceContextType extends AppPreferenceState {
   setTheme: (value: ThemeOption) => void;

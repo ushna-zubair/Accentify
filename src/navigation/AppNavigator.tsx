@@ -4,103 +4,51 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
-import AccessibilityScreen from '../screens/main/AccessibilityScreen';
-import NotificationsScreen from '../screens/main/NotificationsScreen';
-import AppPreferenceScreen from '../screens/main/AppPreferenceScreen';
-import ProfileSettingsScreen from '../screens/main/ProfileSettingsScreen';
 
-// Auth Screens
-import SplashScreen from '../screens/auth/SplashScreen';
-import OnboardingScreen from '../screens/auth/OnboardingScreen';
-import LoginScreen from '../screens/auth/LoginScreen';
-import SignUpScreen from '../screens/auth/SignUpScreen';
-import CreateProfileScreen from '../screens/auth/CreateProfileScreen';
-import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
-import OTPVerificationScreen from '../screens/auth/OTPVerificationScreen';
-import CreateNewPasswordScreen from '../screens/auth/CreateNewPasswordScreen';
-import SetupPinScreen from '../screens/auth/SetupPinScreen';
-import SetupFaceIDScreen from '../screens/auth/SetupFaceIDScreen';
-import TwoFactorAuthScreen from '../screens/auth/TwoFactorAuthScreen';
-import LearningGoalsScreen from '../screens/auth/LearningGoalsScreen';
-import NativeLanguageScreen from '../screens/auth/NativeLanguageScreen';
-import EnglishLevelScreen from '../screens/auth/EnglishLevelScreen';
-import ChooseVerificationMethodScreen from '../screens/auth/ChooseVerificationMethodScreen';
-import SetupAuthenticatorScreen from '../screens/auth/SetupAuthenticatorScreen';
-const SetYourFingerprintScreen = require('../screens/auth/SetYourFingerprintScreen').default;
+// Models
+import {
+  ProfileData,
+  StudyPlanData,
+  AuthStackParamList,
+  SettingsStackParamList,
+  LearnerTabParamList,
+  CMSStackParamList,
+  AdminStackParamList,
+} from '../models';
 
-// Main Screens
-import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../screens/main';
+// Re-export types so existing consumers still work
+export type { ProfileData, StudyPlanData, AuthStackParamList, SettingsStackParamList, LearnerTabParamList, CMSStackParamList, AdminStackParamList };
 
-// Admin Screens
-import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+// Views – Main
+import AccessibilityScreen from '../views/main/AccessibilityScreen';
+import NotificationsScreen from '../views/main/NotificationsScreen';
+import AppPreferenceScreen from '../views/main/AppPreferenceScreen';
+import ProfileSettingsScreen from '../views/main/ProfileSettingsScreen';
 
-// Onboarding profile data passed between screens during sign-up flow
-export type ProfileData = {
-  fullName: string;
-  nickName: string;
-  dateOfBirth: string;
-  phoneNumber: string;
-  gender: string;
-  profilePictureUrl: string;
-};
+// Views – Auth
+import SplashScreen from '../views/auth/SplashScreen';
+import OnboardingScreen from '../views/auth/OnboardingScreen';
+import LoginScreen from '../views/auth/LoginScreen';
+import SignUpScreen from '../views/auth/SignUpScreen';
+import CreateProfileScreen from '../views/auth/CreateProfileScreen';
+import ForgotPasswordScreen from '../views/auth/ForgotPasswordScreen';
+import OTPVerificationScreen from '../views/auth/OTPVerificationScreen';
+import CreateNewPasswordScreen from '../views/auth/CreateNewPasswordScreen';
+import SetupPinScreen from '../views/auth/SetupPinScreen';
+import SetupFaceIDScreen from '../views/auth/SetupFaceIDScreen';
+import TwoFactorAuthScreen from '../views/auth/TwoFactorAuthScreen';
+import LearningGoalsScreen from '../views/auth/LearningGoalsScreen';
+import NativeLanguageScreen from '../views/auth/NativeLanguageScreen';
+import EnglishLevelScreen from '../views/auth/EnglishLevelScreen';
+import ChooseVerificationMethodScreen from '../views/auth/ChooseVerificationMethodScreen';
+import SetupAuthenticatorScreen from '../views/auth/SetupAuthenticatorScreen';
+const SetYourFingerprintScreen = require('../views/auth/SetYourFingerprintScreen').default;
 
-// Study plan data collected across onboarding screens
-export type StudyPlanData = {
-  learningGoals: string[];
-  nativeLanguage: string;
-  englishLevel: string;
-};
+// Views – Main (barrel)
+import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../views/main';
 
-// Navigation Types
-export type AuthStackParamList = {
-  Splash: undefined;
-  Onboarding: undefined;
-  Login: undefined;
-  SignUp: undefined;
-  CreateProfile: undefined;
-  ForgotPassword: undefined;
-  OTPVerification: undefined;
-  CreateNewPassword: undefined;
-  LearningGoals: { profile: ProfileData };
-  NativeLanguage: { profile: ProfileData; learningGoals: string[] };
-  EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
-  SetupPin: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string };
-  SetupFaceID: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null };
-  TwoFactorAuth: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
-  ChooseVerificationMethod: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
-  SetupAuthenticator: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
-  SetYourFingerprint: undefined;
-};
-
-export type SettingsStackParamList = {
-  SettingsMain: undefined;
-  Accessibility: undefined;
-  Notifications: undefined;
-  AppPreferences: undefined;
-  ProfileSettings: undefined;
-};
-
-export type LearnerTabParamList = {
-  Home: undefined;
-  Tutor: undefined;
-  Progress: undefined;
-  Settings: undefined;
-};
-
-export type CMSStackParamList = {
-  CMSDashboard: undefined;
-};
-
-export type AdminStackParamList = {
-  AdminDashboard: undefined;
-  AdminManageLessons: undefined;
-  AdminManageUsers: undefined;
-  AdminFeedback: undefined;
-  AdminSettings: undefined;
-  AdminBilling: undefined;
-  AdminAccessControl: undefined;
-  AdminSupport: undefined;
-};
+// Views – Admin
+import AdminDashboardScreen from '../views/admin/AdminDashboardScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();

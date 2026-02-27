@@ -1,17 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ColorBlindMode, FontStyleOption, AccessibilityState } from '../models';
 
-export type ColorBlindMode = 'None' | 'Deuteranope' | 'Protanope' | 'Tritanope';
-export type FontStyleOption = 'Standard' | 'Bold' | 'Extra Bold (Dyslexia Friendly)' | 'Italic';
-
-interface AccessibilityState {
-  textToSpeech: boolean;
-  colorBlindMode: ColorBlindMode;
-  fontStyle: FontStyleOption;
-  transcript: boolean;
-  reduceAnimation: boolean;
-  highContrastMode: boolean;
-}
+// Re-export for backward compatibility
+export type { ColorBlindMode, FontStyleOption, AccessibilityState };
 
 interface AccessibilityContextType extends AccessibilityState {
   setTextToSpeech: (value: boolean) => void;
