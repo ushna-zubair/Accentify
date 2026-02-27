@@ -8,3 +8,4 @@ export { useUserDetailController } from './useUserDetailController';
 export { useAnnouncementsController } from './useAnnouncementsController';
 export { useTutorController, CATEGORY_COLORS } from './useTutorController';
 export { useLessonDetailController } from './useLessonDetailController';
+export { useVocabExerciseController } from './useVocabExerciseController';

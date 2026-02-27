@@ -9,7 +9,8 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, Circle, Rect, Ellipse } from 'react-native-svg';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -108,6 +109,7 @@ const CATEGORY_ILLUSTRATIONS: Record<string, React.FC> = {
 
 const LessonDetailScreen: React.FC = () => {
   const route = useRoute<DetailRoute>();
+  const navigation = useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
   const { lessonId } = route.params;
 
   const { detail, loading, starting, error, startLesson } =
@@ -175,7 +177,12 @@ const LessonDetailScreen: React.FC = () => {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.continueBtn}
-          onPress={startLesson}
+          onPress={async () => {
+            await startLesson();
+            if (detail.category === 'vocabulary') {
+              navigation.navigate('VocabExercise', { lessonId });
+            }
+          }}
           disabled={starting}
           activeOpacity={0.8}
         >

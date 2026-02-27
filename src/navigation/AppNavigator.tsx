@@ -50,6 +50,7 @@ const SetYourFingerprintScreen = require('../views/auth/SetYourFingerprintScreen
 // Views – Main (barrel)
 import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../views/main';
 import LessonDetailScreen from '../views/main/LessonDetailScreen';
+import VocabExerciseScreen from '../views/main/VocabExerciseScreen';
 
 // Views – Admin
 import AdminDashboardScreen from '../views/admin/AdminDashboardScreen';
@@ -81,6 +82,7 @@ const TutorStackNavigator = () => {
     <TutorStack.Navigator screenOptions={{ headerShown: false }}>
       <TutorStack.Screen name="TutorMain" component={TutorScreen} />
       <TutorStack.Screen name="LessonDetail" component={LessonDetailScreen} />
+      <TutorStack.Screen name="VocabExercise" component={VocabExerciseScreen} />
     </TutorStack.Navigator>
   );
 };

@@ -237,6 +237,45 @@ export interface LessonDetailData {
   status: LessonStatus;
 }
 
+// ─── Vocab Exercise Models ───
+
+export interface VocabWordPair {
+  id: string;
+  /** Common / basic English word */
+  basicWord: string;
+  /** The more advanced vocabulary equivalent */
+  vocabWord: string;
+  /** Phonetic spelling for the basic word */
+  basicPhonetic: string;
+  /** Phonetic spelling for the vocab word */
+  vocabPhonetic: string;
+  /** Definition of the basic word */
+  basicDefinition: string;
+  /** Definition of the vocab word */
+  vocabDefinition: string;
+  /** Optional example sentence */
+  exampleSentence?: string;
+}
+
+export interface VocabExerciseData {
+  lessonId: string;
+  title: string;
+  /** Array of word pairs for this exercise */
+  wordPairs: VocabWordPair[];
+  /** Index of the current word pair the user is on */
+  currentIndex: number;
+  /** Total number of word pairs */
+  totalPairs: number;
+}
+
+/** Result from the Whisper STT API */
+export interface SpeechRecognitionResult {
+  transcript: string;
+  confidence: number;
+  /** Whether the pronunciation matches the target word */
+  isCorrect: boolean;
+}
+
 // ─── Progress Models ───
 export type LessonStatus = 'completed' | 'in_progress' | 'upcoming';
 
@@ -360,6 +399,7 @@ export type LearnerTabParamList = {
 export type TutorStackParamList = {
   TutorMain: undefined;
   LessonDetail: { lessonId: string };
+  VocabExercise: { lessonId: string };
 };
 
 export type CMSStackParamList = {
