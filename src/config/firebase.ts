@@ -1,8 +1,6 @@
 import { initializeApp } from 'firebase/app';
-// @ts-ignore - getReactNativePersistence is exported via the react-native condition in firebase/auth
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
-import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
 /**
@@ -27,9 +25,23 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-export const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(ReactNativeAsyncStorage),
-});
+// Platform-aware auth initialization:
+// Web → browserLocalPersistence  |  Native → AsyncStorage-backed persistence
+import { initializeAuth, browserLocalPersistence } from 'firebase/auth';
+
+let auth: ReturnType<typeof initializeAuth>;
+
+if (Platform.OS === 'web') {
+  auth = initializeAuth(app, { persistence: browserLocalPersistence });
+} else {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { getReactNativePersistence: getRNPersistence } = require('firebase/auth');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+  auth = initializeAuth(app, { persistence: getRNPersistence(AsyncStorage) });
+}
+
+export { auth };
 export const db = getFirestore(app);
 
 export default app;

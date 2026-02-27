@@ -133,6 +133,41 @@ export interface SidebarItem {
   key: string;
 }
 
+// ─── Admin Mobile Dashboard Models ───
+export interface AdminOnline {
+  uid: string;
+  name: string;
+  avatarUrl?: string;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export type AdminMenuKey =
+  | 'insights'
+  | 'user_management'
+  | 'content_management'
+  | 'create_announcement';
+
+export interface AdminMenuItem {
+  key: AdminMenuKey;
+  label: string;
+  filled: boolean;
+}
+
+export interface AdminMobileDashboardData {
+  adminName: string;
+  adminAvatarUrl?: string;
+  announcement: Announcement | null;
+  adminsOnline: AdminOnline[];
+  menuItems: AdminMenuItem[];
+}
+
 // ─── Chart Models ───
 export interface BarChartDataPoint {
   label: string;

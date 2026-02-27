@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,10 @@ import {
   TextInput,
   Image,
   useWindowDimensions,
+  ActivityIndicator,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
@@ -16,8 +20,469 @@ import BarChart from './components/BarChart';
 import DonutChart from './components/DonutChart';
 import LineChart from './components/LineChart';
 import PerformanceBubbles from './components/PerformanceBubbles';
-import { useAdminDashboardController, MENU_ITEMS, OTHERS_ITEMS } from '../../controllers';
-import type { DashboardData } from '../../models';
+import {
+  useAdminDashboardController,
+  useAdminMobileDashboardController,
+  MENU_ITEMS,
+  OTHERS_ITEMS,
+} from '../../controllers';
+import type { DashboardData, AdminOnline, AdminMenuItem } from '../../models';
+
+// ═══════════════════════════════════════════════
+//  MOBILE ADMIN DASHBOARD
+// ═══════════════════════════════════════════════
+
+// ─── Admin Avatar ───
+const AdminAvatar: React.FC<{ name: string; size?: number }> = ({ name, size = 48 }) => {
+  const initials = name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+  return (
+    <View
+      style={[
+        mStyles.avatar,
+        {
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+        },
+      ]}
+    >
+      <Text style={[mStyles.avatarText, { fontSize: size * 0.36 }]}>{initials}</Text>
+      <Text style={[mStyles.avatarEmoji, { fontSize: size * 0.22, bottom: -2 }]}>🏆</Text>
+    </View>
+  );
+};
+
+// ─── Announcement Card ───
+const AnnouncementCard: React.FC<{ title: string; body: string }> = ({ title, body }) => (
+  <View style={mStyles.announcementCard}>
+    <Text style={mStyles.announcementTitle}>{title}</Text>
+    <Text style={mStyles.announcementBody}>{body}</Text>
+  </View>
+);
+
+// ─── Admins Online ───
+const AdminsOnlineSection: React.FC<{ admins: AdminOnline[] }> = ({ admins }) => (
+  <View style={mStyles.adminsOnlineSection}>
+    <Text style={mStyles.adminsOnlineTitle}>Admins Online</Text>
+    <View style={mStyles.adminsOnlineRow}>
+      {admins.map((admin) => (
+        <View key={admin.uid} style={mStyles.adminOnlineItem}>
+          <AdminAvatar name={admin.name} size={40} />
+          <Text style={mStyles.adminOnlineName} numberOfLines={1}>
+            {admin.name}
+          </Text>
+        </View>
+      ))}
+    </View>
+  </View>
+);
+
+// ─── Menu Button ───
+const MenuButton: React.FC<{
+  item: AdminMenuItem;
+  onPress: () => void;
+}> = ({ item, onPress }) => (
+  <TouchableOpacity
+    style={[mStyles.menuButton, item.filled && mStyles.menuButtonFilled]}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    <Text
+      style={[mStyles.menuButtonText, item.filled && mStyles.menuButtonTextFilled]}
+    >
+      {item.label}
+    </Text>
+  </TouchableOpacity>
+);
+
+// ─── Create Announcement Modal ───
+const CreateAnnouncementModal: React.FC<{
+  visible: boolean;
+  onClose: () => void;
+  onSubmit: (title: string, body: string) => void;
+  submitting: boolean;
+}> = ({ visible, onClose, onSubmit, submitting }) => {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+
+  const handleSubmit = () => {
+    if (!title.trim() || !body.trim()) return;
+    onSubmit(title.trim(), body.trim());
+    setTitle('');
+    setBody('');
+  };
+
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <KeyboardAvoidingView
+        style={mStyles.modalOverlay}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={mStyles.modalContent}>
+          <View style={mStyles.modalHeader}>
+            <Text style={mStyles.modalTitle}>Create Announcement</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <Text style={mStyles.modalLabel}>Title</Text>
+          <TextInput
+            style={mStyles.modalInput}
+            placeholder="Announcement title"
+            placeholderTextColor={colors.textMuted}
+            value={title}
+            onChangeText={setTitle}
+          />
+
+          <Text style={mStyles.modalLabel}>Message</Text>
+          <TextInput
+            style={[mStyles.modalInput, mStyles.modalTextArea]}
+            placeholder="Write your announcement..."
+            placeholderTextColor={colors.textMuted}
+            value={body}
+            onChangeText={setBody}
+            multiline
+            textAlignVertical="top"
+          />
+
+          <TouchableOpacity
+            style={[
+              mStyles.modalSubmitBtn,
+              (!title.trim() || !body.trim()) && mStyles.modalSubmitBtnDisabled,
+            ]}
+            onPress={handleSubmit}
+            disabled={!title.trim() || !body.trim() || submitting}
+            activeOpacity={0.7}
+          >
+            {submitting ? (
+              <ActivityIndicator color={colors.white} size="small" />
+            ) : (
+              <Text style={mStyles.modalSubmitText}>Publish</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  );
+};
+
+// ─── Mobile Dashboard Screen ───
+const MobileAdminDashboard: React.FC = () => {
+  const { mobileData, loading, handleLogout, createAnnouncement } =
+    useAdminMobileDashboardController();
+  const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleMenuPress = (key: string) => {
+    if (key === 'create_announcement') {
+      setAnnouncementModalVisible(true);
+    }
+    // Other menu items can navigate to specific screens when implemented
+  };
+
+  const handleCreateAnnouncement = async (title: string, body: string) => {
+    try {
+      setSubmitting(true);
+      await createAnnouncement(title, body);
+      setAnnouncementModalVisible(false);
+    } catch {
+      // Error handled in controller
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={mStyles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={mStyles.container}>
+      <ScrollView
+        contentContainerStyle={mStyles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header ── */}
+        <View style={mStyles.header}>
+          <View style={mStyles.headerLeft}>
+            <AdminAvatar name={mobileData.adminName} size={52} />
+            <Text style={mStyles.headerName}>{mobileData.adminName}</Text>
+          </View>
+          <View style={mStyles.headerCenter}>
+            <Text style={mStyles.headerTitle}>Admin Dashboard</Text>
+          </View>
+          <TouchableOpacity onPress={handleLogout} style={mStyles.logoutBtn}>
+            <Ionicons name="log-out-outline" size={26} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+
+        {/* ── Announcement ── */}
+        {mobileData.announcement && (
+          <AnnouncementCard
+            title={mobileData.announcement.title}
+            body={mobileData.announcement.body}
+          />
+        )}
+
+        {/* ── Admins Online ── */}
+        <AdminsOnlineSection admins={mobileData.adminsOnline} />
+
+        {/* ── Menu Buttons ── */}
+        <View style={mStyles.menuList}>
+          {mobileData.menuItems.map((item) => (
+            <MenuButton
+              key={item.key}
+              item={item}
+              onPress={() => handleMenuPress(item.key)}
+            />
+          ))}
+        </View>
+
+        {/* ── Continue Button ── */}
+        <TouchableOpacity style={mStyles.continueBtn} activeOpacity={0.7}>
+          <Text style={mStyles.continueBtnText}>Continue</Text>
+        </TouchableOpacity>
+      </ScrollView>
+
+      {/* ── Create Announcement Modal ── */}
+      <CreateAnnouncementModal
+        visible={announcementModalVisible}
+        onClose={() => setAnnouncementModalVisible(false)}
+        onSubmit={handleCreateAnnouncement}
+        submitting={submitting}
+      />
+    </View>
+  );
+};
+
+// ─── Mobile Styles ───
+const mStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 16,
+    paddingBottom: 12,
+  },
+  headerLeft: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    color: colors.text,
+  },
+  headerName: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
+    color: colors.textLight,
+  },
+  logoutBtn: {
+    padding: 8,
+  },
+
+  // Avatar
+  avatar: {
+    backgroundColor: colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  avatarText: {
+    fontFamily: fonts.bold,
+    color: colors.white,
+  },
+  avatarEmoji: {
+    position: 'absolute',
+  },
+
+  // Announcement
+  announcementCard: {
+    backgroundColor: colors.primaryMuted,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    padding: 18,
+    marginTop: 8,
+  },
+  announcementTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 6,
+  },
+  announcementBody: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+    lineHeight: 22,
+  },
+
+  // Admins Online
+  adminsOnlineSection: {
+    marginTop: 20,
+  },
+  adminsOnlineTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: 10,
+  },
+  adminsOnlineRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  adminOnlineItem: {
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: 70,
+  },
+  adminOnlineName: {
+    fontFamily: fonts.regular,
+    fontSize: 10,
+    color: colors.textLight,
+    textAlign: 'center',
+  },
+
+  // Menu List
+  menuList: {
+    marginTop: 24,
+    gap: 14,
+    alignItems: 'center',
+  },
+  menuButton: {
+    width: '80%',
+    paddingVertical: 14,
+    borderRadius: 28,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  menuButtonFilled: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  menuButtonText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 16,
+    color: colors.primary,
+  },
+  menuButtonTextFilled: {
+    color: colors.white,
+  },
+
+  // Continue
+  continueBtn: {
+    marginTop: 30,
+    backgroundColor: colors.primary,
+    borderRadius: 28,
+    paddingVertical: 16,
+    alignItems: 'center',
+    marginHorizontal: 16,
+  },
+  continueBtnText: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+    color: colors.white,
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.overlay,
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    color: colors.text,
+  },
+  modalLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: colors.text,
+    marginBottom: 6,
+    marginTop: 12,
+  },
+  modalInput: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.text,
+    borderWidth: 1,
+    borderColor: colors.inputBorder,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    backgroundColor: colors.inputBg,
+  },
+  modalTextArea: {
+    minHeight: 100,
+  },
+  modalSubmitBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 24,
+  },
+  modalSubmitBtnDisabled: {
+    opacity: 0.5,
+  },
+  modalSubmitText: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.white,
+  },
+});
+
+// ═══════════════════════════════════════════════
+//  DESKTOP ADMIN DASHBOARD (existing)
+// ═══════════════════════════════════════════════
 
 // ------- Sidebar -------
 interface SidebarProps {
@@ -240,9 +705,8 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
   </View>
 );
 
-// ------- Main Screen -------
-const AdminDashboardScreen: React.FC = () => {
-  const { width } = useWindowDimensions();
+// ------- Desktop Main Screen -------
+const DesktopAdminDashboard: React.FC = () => {
   const {
     activeMenu,
     setActiveMenu,
@@ -252,12 +716,12 @@ const AdminDashboardScreen: React.FC = () => {
     handleLogout,
   } = useAdminDashboardController();
 
+  const { width } = useWindowDimensions();
   const isWide = width >= 900;
   const isTablet = width >= 600 && width < 900;
 
   return (
     <View style={styles.root}>
-      {/* Sidebar (wide screens only) */}
       {isWide && (
         <Sidebar
           activeKey={activeMenu}
@@ -266,7 +730,6 @@ const AdminDashboardScreen: React.FC = () => {
         />
       )}
 
-      {/* Main area */}
       <View style={styles.mainArea}>
         <TopBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
@@ -277,7 +740,6 @@ const AdminDashboardScreen: React.FC = () => {
         >
           <Text style={styles.pageTitle}>Dashboard</Text>
 
-          {/* Row 1: Revenue + Practice Activity */}
           <View style={[styles.row, !isWide && styles.rowColumn]}>
             <View style={[styles.rowItem, isWide && { flex: 1.6 }]}>
               <RevenueCard data={dashboardData} />
@@ -287,7 +749,6 @@ const AdminDashboardScreen: React.FC = () => {
             </View>
           </View>
 
-          {/* Row 2: 3 cards */}
           <View style={[styles.row, !isTablet && !isWide && styles.rowColumn]}>
             <View style={styles.rowItem}>
               <PerformanceInsightsCard data={dashboardData} />
@@ -305,7 +766,23 @@ const AdminDashboardScreen: React.FC = () => {
   );
 };
 
-// ------- Styles -------
+// ═══════════════════════════════════════════════
+//  RESPONSIVE ROUTER
+// ═══════════════════════════════════════════════
+
+const AdminDashboardScreen: React.FC = () => {
+  const { width } = useWindowDimensions();
+
+  // Mobile / phone: < 600px  →  Mobile layout matching the design
+  // Tablet / desktop: >= 600px  →  Existing desktop layout
+  if (width < 600) {
+    return <MobileAdminDashboard />;
+  }
+
+  return <DesktopAdminDashboard />;
+};
+
+// ------- Desktop Styles -------
 const SIDEBAR_WIDTH = 220;
 
 const styles = StyleSheet.create({
@@ -314,7 +791,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: colors.adminBg,
   },
-  // Sidebar
   sidebar: {
     width: SIDEBAR_WIDTH,
     backgroundColor: colors.white,
@@ -361,7 +837,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: fonts.semiBold,
   },
-  // Top bar
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -424,7 +899,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: colors.error,
   },
-  // Main area
   mainArea: {
     flex: 1,
   },
@@ -441,7 +915,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     marginBottom: 20,
   },
-  // Layout
   row: {
     flexDirection: 'row',
     gap: 16,
@@ -454,7 +927,6 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
-  // Cards
   card: {
     backgroundColor: colors.white,
     borderRadius: 14,
@@ -545,7 +1017,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textLight,
   },
-  // Top learners
   learnerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
