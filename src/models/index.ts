@@ -289,9 +289,7 @@ export interface SpeechRecognitionResult {
   vocabFeedback: string;
 }
 
-// ─── Pronunciation Chat Models ───
-
-export type ChatMessageRole = 'ai' | 'user' | 'system';
+// ─── Pronunciation Exercise Models ───
 
 export interface PronunciationScore {
   clarity: number;
@@ -300,28 +298,22 @@ export interface PronunciationScore {
   overall: number;
 }
 
-export interface ChatMessage {
-  id: string;
-  role: ChatMessageRole;
-  text: string;
-  timestamp: string;
-  /** Audio URI if user recorded speech */
-  audioUri?: string;
-  /** Pronunciation score for user messages */
-  score?: PronunciationScore;
-  /** Feedback text from AI after scoring */
-  feedback?: string;
-  /** The prompt/sentence the user was asked to read */
-  prompt?: string;
+export interface WordResult {
+  word: string;
+  isCorrect: boolean;
 }
 
-export interface PronunciationExerciseData {
-  lessonId: string;
-  title: string;
-  messages: ChatMessage[];
-  currentPromptIndex: number;
-  totalPrompts: number;
-  averageScore: PronunciationScore;
+export interface PronunciationAttemptResult {
+  isCorrect: boolean;
+  wordResults: WordResult[];
+  feedback: string;
+  successMessage: string;
+  score: PronunciationScore;
+}
+
+export interface PronunciationSentence {
+  text: string;
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 // ─── Progress Models ───

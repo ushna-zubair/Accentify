@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Audio } from 'expo-av';
 import {
   doc,
-  getDoc,
   setDoc,
   collection,
   addDoc,
@@ -11,264 +10,254 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type {
-  ChatMessage,
   PronunciationScore,
-  PronunciationExerciseData,
+  WordResult,
+  PronunciationAttemptResult,
+  PronunciationSentence,
 } from '../models';
 
 // ═══════════════════════════════════════════════
-//  PRONUNCIATION PROMPTS
+//  SAMPLE SENTENCES
 // ═══════════════════════════════════════════════
 
-const PRONUNCIATION_PROMPTS = [
+const SENTENCES: PronunciationSentence[] = [
   {
-    text: 'The weather is beautiful today, isn\'t it?',
+    text: 'Joe went to play soccer with his friends but he ended up staying at home and play video games',
     difficulty: 'easy',
-    focusAreas: ['intonation', 'contractions'],
   },
   {
-    text: 'She sells seashells by the seashore.',
+    text: 'Sophie wanted to study for her exam, but she ended up watching her favorite TV series all evening.',
     difficulty: 'medium',
-    focusAreas: ['sibilants', 'tongue twisters'],
   },
   {
-    text: 'I would have gone to the party if I had known about it.',
-    difficulty: 'medium',
-    focusAreas: ['conditional', 'reduced forms'],
-  },
-  {
-    text: 'The technology revolutionized communication worldwide.',
+    text: 'Mark planned to wake up early for his morning jog, but he ended up sleeping in until noon.',
     difficulty: 'hard',
-    focusAreas: ['multisyllabic', 'word stress'],
-  },
-  {
-    text: 'Peter Piper picked a peck of pickled peppers.',
-    difficulty: 'hard',
-    focusAreas: ['plosives', 'tongue twister'],
   },
 ];
 
-const AI_GREETINGS = [
-  "Hi! I'm your AI pronunciation coach. Let's practice together! 🎤",
-  "Welcome! Ready to improve your pronunciation? Let's start! 🎯",
-  "Hello! Let's work on your English pronunciation today! 🗣️",
+const SUCCESS_MESSAGES = [
+  'Well-Done!!!',
+  'Keep it up!!!',
+  'Excellent!!!',
+  'Great Job!!!',
+  'Amazing!!!',
 ];
 
-const AI_TRANSITION_MESSAGES = [
-  "Great effort! Let's try the next one.",
-  "Good work! Here's your next sentence to practice.",
-  "Nice! Ready for another one?",
-  "Well done! Let's keep going.",
+const FEEDBACK_TEMPLATES = [
+  {
+    threshold: 0,
+    templates: [
+      'Not quite! Emphasize the "{word}" part make the E sound clearer and stronger. Try saying it slowly: {phonetic}.',
+      'Close! Focus on the word "{word}" — the vowel sounds need more clarity. Repeat it slowly.',
+      'Almost there! The word "{word}" needs a crisper pronunciation. Break it into syllables.',
+    ],
+  },
 ];
 
 // ═══════════════════════════════════════════════
-//  SCORE GENERATION (placeholder for real API)
+//  HELPERS
 // ═══════════════════════════════════════════════
 
-const generateMockScore = (): PronunciationScore => {
-  const clarity = Math.floor(Math.random() * 30) + 65; // 65-95
-  const accuracy = Math.floor(Math.random() * 30) + 60; // 60-90
-  const fluency = Math.floor(Math.random() * 30) + 55; // 55-85
-  const overall = Math.round((clarity + accuracy + fluency) / 3);
-  return { clarity, accuracy, fluency, overall };
+const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+
+/** Strip punctuation, normalize for comparison */
+const normalize = (w: string): string =>
+  w.toLowerCase().replace(/[^a-zA-Z0-9']/g, '');
+
+/** Simple phonetic approximation for feedback */
+const toPhonetic = (word: string): string => {
+  const map: Record<string, string> = {
+    play: 'pley',
+    soccer: 'sah-ker',
+    friends: 'frendz',
+    but: 'buht',
+    games: 'gaymz',
+    staying: 'stay-ing',
+    ended: 'en-ded',
+    video: 'vih-dee-oh',
+    study: 'stuh-dee',
+    exam: 'ig-zam',
+    watching: 'wah-ching',
+    favorite: 'fay-vuh-rit',
+    evening: 'eev-ning',
+    planned: 'pland',
+    morning: 'mor-ning',
+    sleeping: 'slee-ping',
+  };
+  return map[word.toLowerCase()] ?? word.toLowerCase();
 };
 
-const generateFeedback = (score: PronunciationScore, prompt: string): string => {
-  if (score.overall >= 85) {
-    return 'Excellent pronunciation! Your clarity and rhythm are spot on. Keep up the great work!';
-  }
-  if (score.overall >= 70) {
-    if (score.clarity < score.accuracy) {
-      return 'Good job! Try to enunciate each word more clearly, especially the consonant sounds.';
+/** Levenshtein distance */
+const levenshtein = (a: string, b: string): number => {
+  const m = a.length;
+  const n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () =>
+    Array(n + 1).fill(0),
+  );
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] =
+        a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1]
+          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
     }
-    if (score.fluency < score.accuracy) {
-      return 'Nice accuracy! Work on speaking more smoothly — try not to pause between words.';
-    }
-    return 'Good work! Focus on maintaining a natural rhythm and stress pattern.';
   }
-  if (score.accuracy < 65) {
-    return 'Keep practicing! Try saying each word slowly first, then gradually speed up. Focus on the vowel sounds.';
-  }
-  return 'Almost there! Listen to the native pronunciation and try to match the rhythm and intonation.';
+  return dp[m][n];
 };
-
-const createMessageId = (): string =>
-  `msg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-
-// ═══════════════════════════════════════════════
-//  WHISPER API PLACEHOLDER
-// ═══════════════════════════════════════════════
-
-const HF_API_TOKEN = '';
 
 /**
- * Transcribe audio and evaluate pronunciation against a target sentence.
- * Placeholder that returns mock results.
+ * Compare transcript words against target sentence.
+ * Returns per-word results along with a score and feedback.
  */
-const transcribeAndScore = async (
-  audioUri: string,
-  targetSentence: string,
-): Promise<{ transcript: string; score: PronunciationScore; feedback: string }> => {
-  if (!HF_API_TOKEN) {
-    // Mock implementation
-    await new Promise((r) => setTimeout(r, 1500));
+const evaluatePronunciation = (
+  target: string,
+  transcript: string,
+): { wordResults: WordResult[]; score: PronunciationScore; feedback: string } => {
+  const targetWords = target.split(/\s+/).filter(Boolean);
+  const transcriptWords = transcript.split(/\s+/).filter(Boolean);
 
-    const score = generateMockScore();
-    const feedback = generateFeedback(score, targetSentence);
+  let matched = 0;
+  const wordResults: WordResult[] = targetWords.map((tw, i) => {
+    const nTarget = normalize(tw);
+    const nTranscript = normalize(transcriptWords[i] ?? '');
+    if (!nTarget) return { word: tw, isCorrect: true };
 
-    // Simulate a transcript (slightly imperfect for realism)
-    const words = targetSentence.split(' ');
-    const transcript = words
-      .map((w) => (Math.random() > 0.85 ? w.toLowerCase() + '...' : w.toLowerCase()))
-      .join(' ');
+    const dist = levenshtein(nTarget, nTranscript);
+    const threshold = nTarget.length <= 3 ? 0 : Math.ceil(nTarget.length * 0.3);
+    const correct = dist <= threshold;
+    if (correct) matched++;
+    return { word: tw, isCorrect: correct };
+  });
 
-    return { transcript, score, feedback };
+  const ratio = targetWords.length > 0 ? matched / targetWords.length : 0;
+
+  // Generate scores based on match ratio
+  const accuracy = Math.round(ratio * 100);
+  const clarity = Math.round(Math.min(100, accuracy + (Math.random() * 10 - 5)));
+  const fluency = Math.round(Math.min(100, accuracy + (Math.random() * 15 - 7)));
+  const overall = Math.round((clarity + accuracy + fluency) / 3);
+  const score: PronunciationScore = { clarity, accuracy, fluency, overall };
+
+  // Generate feedback referring to the first mispronounced word
+  const firstWrong = wordResults.find((wr) => !wr.isCorrect);
+  let feedback = '';
+  if (firstWrong) {
+    const w = normalize(firstWrong.word);
+    const ph = toPhonetic(w);
+    feedback = `Not quite! Emphasize the "${w}" part make the E sound clearer and stronger. Try saying it slowly: ${ph}.`;
   }
 
-  // Real API call (uncomment when HF_API_TOKEN is set)
-  /*
-  try {
-    const formData = new FormData();
-    formData.append('file', {
-      uri: audioUri,
-      type: 'audio/m4a',
-      name: 'recording.m4a',
-    } as any);
+  return { wordResults, score, feedback };
+};
 
-    const response = await fetch(
-      'https://api-inference.huggingface.co/models/openai/whisper-large-v3',
-      {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${HF_API_TOKEN}` },
-        body: formData,
-      },
-    );
+/**
+ * Mock STT — returns the target text with some words randomly altered.
+ * In production, replace with Whisper / Google STT API call.
+ */
+const transcribeAudio = async (
+  _uri: string,
+  targetText: string,
+): Promise<string> => {
+  await new Promise((r) => setTimeout(r, 1500));
 
-    if (!response.ok) throw new Error(`Whisper API error: ${response.status}`);
+  const words = targetText.split(/\s+/);
+  // ~25 % chance of making a mistake on each word
+  const transcript = words
+    .map((w) => {
+      if (Math.random() < 0.25) {
+        // Simulate mis-hearing by mangling the word
+        const n = normalize(w);
+        if (n.length > 3) return n.slice(0, -2);
+        return n + 'x';
+      }
+      return w;
+    })
+    .join(' ');
 
-    const result = await response.json();
-    const transcript = (result.text ?? '').trim();
-
-    // Compare transcript with target
-    const score = scoreTranscript(transcript, targetSentence);
-    const feedback = generateFeedback(score, targetSentence);
-
-    return { transcript, score, feedback };
-  } catch (error: any) {
-    console.error('[Pronunciation] API error:', error);
-    return {
-      transcript: '',
-      score: { clarity: 0, accuracy: 0, fluency: 0, overall: 0 },
-      feedback: 'Could not process audio. Please try again.',
-    };
-  }
-  */
-
-  return {
-    transcript: '',
-    score: { clarity: 0, accuracy: 0, fluency: 0, overall: 0 },
-    feedback: 'API not configured.',
-  };
+  return transcript;
 };
 
 // ═══════════════════════════════════════════════
-//  CONTROLLER
+//  CONTROLLER HOOK
 // ═══════════════════════════════════════════════
 
-export const usePronunciationExerciseController = (lessonId: string) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
-  const [currentPrompt, setCurrentPrompt] = useState('');
-  const [sessionScores, setSessionScores] = useState<PronunciationScore[]>([]);
-  const [isComplete, setIsComplete] = useState(false);
+export type PronunciationPhase = 'idle' | 'recording' | 'processing' | 'result';
 
-  // Audio refs
+export const usePronunciationExerciseController = (lessonId: string) => {
+  // ── State ──
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [phase, setPhase] = useState<PronunciationPhase>('idle');
+  const [result, setResult] = useState<PronunciationAttemptResult | null>(null);
+  const [timer, setTimer] = useState(300); // 5 minutes in seconds
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [allScores, setAllScores] = useState<PronunciationScore[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  // ── Refs ──
   const recordingRef = useRef<Audio.Recording | null>(null);
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Initialize chat with AI greeting + first prompt ──
-  const initializeChat = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  // ── Derived ──
+  const sentence = SENTENCES[currentIndex];
+  const totalSentences = SENTENCES.length;
+  const isLastSentence = currentIndex >= totalSentences - 1;
 
-      const greeting = AI_GREETINGS[Math.floor(Math.random() * AI_GREETINGS.length)];
-      const firstPrompt = PRONUNCIATION_PROMPTS[0];
+  // ── Countdown timer ──
+  useEffect(() => {
+    countdownRef.current = setInterval(() => {
+      setTimer((prev) => {
+        if (prev <= 0) {
+          if (countdownRef.current) clearInterval(countdownRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
 
-      const initialMessages: ChatMessage[] = [
-        {
-          id: createMessageId(),
-          role: 'ai',
-          text: greeting,
-          timestamp: new Date().toISOString(),
-        },
-        {
-          id: createMessageId(),
-          role: 'ai',
-          text: `Try saying this sentence:\n\n"${firstPrompt.text}"`,
-          timestamp: new Date().toISOString(),
-          prompt: firstPrompt.text,
-        },
-      ];
-
-      setMessages(initialMessages);
-      setCurrentPrompt(firstPrompt.text);
-      setCurrentPromptIndex(0);
-    } catch (e: any) {
-      console.error('[Pronunciation] Init error:', e);
-      setError(e.message ?? 'Failed to initialize');
-    } finally {
-      setLoading(false);
-    }
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
   }, []);
 
+  // ── Cleanup on unmount ──
   useEffect(() => {
-    initializeChat();
     return () => {
-      // Cleanup recording on unmount
       if (recordingRef.current) {
         recordingRef.current.stopAndUnloadAsync().catch(() => {});
       }
-      if (durationTimerRef.current) {
-        clearInterval(durationTimerRef.current);
-      }
+      if (durationTimerRef.current) clearInterval(durationTimerRef.current);
     };
-  }, [initializeChat]);
+  }, []);
 
   // ── Start recording ──
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') {
         setError('Microphone permission is required');
         return;
       }
-
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
       });
-
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
       );
-
       recordingRef.current = recording;
-      setIsRecording(true);
+      setPhase('recording');
       setRecordingDuration(0);
 
       durationTimerRef.current = setInterval(() => {
-        setRecordingDuration((prev) => prev + 100);
+        setRecordingDuration((p) => p + 100);
       }, 100);
     } catch (e: any) {
-      console.error('[Pronunciation] startRecording error:', e);
+      console.error('[Pronunciation] startRecording:', e);
       setError('Failed to start recording');
     }
   }, []);
@@ -276,68 +265,69 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   // ── Stop recording & process ──
   const stopRecording = useCallback(async () => {
     if (!recordingRef.current) return;
-
     try {
       if (durationTimerRef.current) {
         clearInterval(durationTimerRef.current);
         durationTimerRef.current = null;
       }
 
-      setIsRecording(false);
-      setIsProcessing(true);
+      setPhase('processing');
 
       await recordingRef.current.stopAndUnloadAsync();
       const uri = recordingRef.current.getURI();
       recordingRef.current = null;
-
       await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
 
       if (!uri) {
         setError('Recording failed — no audio captured');
-        setIsProcessing(false);
+        setPhase('idle');
         return;
       }
 
-      // Add user message (recording)
-      const userMsg: ChatMessage = {
-        id: createMessageId(),
-        role: 'user',
-        text: '🎙️ Audio recorded',
-        timestamp: new Date().toISOString(),
-        audioUri: uri,
-        prompt: currentPrompt,
-      };
-      setMessages((prev) => [...prev, userMsg]);
+      // Transcribe
+      const transcript = await transcribeAudio(uri, sentence.text);
 
-      // Process the audio
-      const { transcript, score, feedback } = await transcribeAndScore(
-        uri,
-        currentPrompt,
+      // Evaluate
+      const { wordResults, score, feedback } = evaluatePronunciation(
+        sentence.text,
+        transcript,
       );
 
-      // Add AI feedback message
-      const feedbackMsg: ChatMessage = {
-        id: createMessageId(),
-        role: 'ai',
-        text: feedback,
-        timestamp: new Date().toISOString(),
-        score,
-        feedback,
+      // On "Try Again" give progressively better results (mock)
+      const boostedScore: PronunciationScore =
+        attemptCount > 0
+          ? {
+              clarity: Math.min(100, score.clarity + attemptCount * 12),
+              accuracy: Math.min(100, score.accuracy + attemptCount * 15),
+              fluency: Math.min(100, score.fluency + attemptCount * 10),
+              overall: Math.min(
+                100,
+                score.overall + attemptCount * 12,
+              ),
+            }
+          : score;
+
+      const isCorrect = boostedScore.overall >= 70;
+
+      // If boosted to correct, mark all words correct
+      const finalWordResults: WordResult[] = isCorrect
+        ? wordResults.map((wr) => ({ ...wr, isCorrect: true }))
+        : wordResults;
+
+      const attemptResult: PronunciationAttemptResult = {
+        isCorrect,
+        wordResults: finalWordResults,
+        feedback: isCorrect ? '' : feedback,
+        successMessage: isCorrect ? pickRandom(SUCCESS_MESSAGES) : '',
+        score: boostedScore,
       };
 
-      // Update user message with score
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === userMsg.id
-            ? { ...m, text: transcript || '🎙️ Audio recorded', score, feedback }
-            : m,
-        ),
-      );
+      setResult(attemptResult);
+      setAttemptCount((c) => c + 1);
+      setAllScores((prev) => [...prev, boostedScore]);
+      setPhase('result');
 
-      setMessages((prev) => [...prev, feedbackMsg]);
-      setSessionScores((prev) => [...prev, score]);
-
-      // Save to Firestore
+      // ── Firestore ──
       const uid = auth.currentUser?.uid;
       if (uid) {
         try {
@@ -351,12 +341,13 @@ export const usePronunciationExerciseController = (lessonId: string) => {
               'pronunciationAttempts',
             ),
             {
-              prompt: currentPrompt,
+              sentenceIndex: currentIndex,
+              sentence: sentence.text,
               transcript,
-              score,
-              feedback,
+              score: boostedScore,
+              isCorrect,
+              feedback: attemptResult.feedback,
               attemptedAt: Timestamp.now(),
-              promptIndex: currentPromptIndex,
             },
           );
 
@@ -373,128 +364,81 @@ export const usePronunciationExerciseController = (lessonId: string) => {
           // Non-critical
         }
       }
-
-      // Move to next prompt after a brief delay
-      const nextIndex = currentPromptIndex + 1;
-      if (nextIndex < PRONUNCIATION_PROMPTS.length) {
-        setTimeout(() => {
-          const transition =
-            AI_TRANSITION_MESSAGES[
-              Math.floor(Math.random() * AI_TRANSITION_MESSAGES.length)
-            ];
-          const nextPrompt = PRONUNCIATION_PROMPTS[nextIndex];
-
-          const transitionMsg: ChatMessage = {
-            id: createMessageId(),
-            role: 'ai',
-            text: `${transition}\n\n"${nextPrompt.text}"`,
-            timestamp: new Date().toISOString(),
-            prompt: nextPrompt.text,
-          };
-
-          setMessages((prev) => [...prev, transitionMsg]);
-          setCurrentPrompt(nextPrompt.text);
-          setCurrentPromptIndex(nextIndex);
-        }, 1000);
-      } else {
-        // All prompts completed
-        setTimeout(() => {
-          const avgScore = computeAverageScore([...sessionScores, score]);
-          const completionMsg: ChatMessage = {
-            id: createMessageId(),
-            role: 'ai',
-            text: `🎉 Great session! Here's your summary:\n\n` +
-              `Clarity: ${avgScore.clarity}%\n` +
-              `Accuracy: ${avgScore.accuracy}%\n` +
-              `Fluency: ${avgScore.fluency}%\n` +
-              `Overall: ${avgScore.overall}%\n\n` +
-              (avgScore.overall >= 80
-                ? 'Excellent work! Your pronunciation is really improving!'
-                : avgScore.overall >= 60
-                  ? 'Good progress! Keep practicing to improve further.'
-                  : 'Keep at it! Regular practice will make a big difference.'),
-            timestamp: new Date().toISOString(),
-            score: avgScore,
-          };
-
-          setMessages((prev) => [...prev, completionMsg]);
-          setIsComplete(true);
-
-          // Save session summary to Firestore
-          const uid = auth.currentUser?.uid;
-          if (uid) {
-            setDoc(
-              doc(db, 'users', uid, 'lessons', lessonId),
-              {
-                status: 'completed',
-                completedAt: Timestamp.now(),
-                lastScore: avgScore,
-              },
-              { merge: true },
-            ).catch(() => {});
-          }
-        }, 1200);
-      }
     } catch (e: any) {
-      console.error('[Pronunciation] stopRecording error:', e);
+      console.error('[Pronunciation] stopRecording:', e);
       setError('Failed to process recording');
-    } finally {
-      setIsProcessing(false);
+      setPhase('idle');
     }
-  }, [currentPrompt, currentPromptIndex, lessonId, sessionScores]);
+  }, [sentence, currentIndex, attemptCount, lessonId]);
 
-  // ── Retry current prompt ──
-  const retryPrompt = useCallback(() => {
-    const retryMsg: ChatMessage = {
-      id: createMessageId(),
-      role: 'ai',
-      text: `Let's try again!\n\n"${currentPrompt}"`,
-      timestamp: new Date().toISOString(),
-      prompt: currentPrompt,
-    };
-    setMessages((prev) => [...prev, retryMsg]);
+  // ── Try Again ──
+  const tryAgain = useCallback(() => {
+    setResult(null);
+    setPhase('idle');
     setRecordingDuration(0);
-  }, [currentPrompt]);
-
-  // ── Play sample pronunciation (TTS placeholder) ──
-  const playSample = useCallback(async (text: string) => {
-    console.log('[Pronunciation] Play TTS for:', text);
-    // Placeholder — integrate with expo-speech
-    // import * as Speech from 'expo-speech';
-    // Speech.speak(text, { language: 'en-US', rate: 0.85 });
   }, []);
 
+  // ── Next sentence ──
+  const next = useCallback(() => {
+    if (currentIndex < totalSentences - 1) {
+      setCurrentIndex((i) => i + 1);
+      setResult(null);
+      setPhase('idle');
+      setRecordingDuration(0);
+      setAttemptCount(0);
+    }
+  }, [currentIndex, totalSentences]);
+
+  // ── Complete exercise (mark finished in Firestore) ──
+  const completeExercise = useCallback(async () => {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      try {
+        const avgScore = computeAverage(allScores);
+        await setDoc(
+          doc(db, 'users', uid, 'lessons', lessonId),
+          {
+            status: 'completed',
+            completedAt: Timestamp.now(),
+            lastScore: avgScore,
+          },
+          { merge: true },
+        );
+      } catch {
+        // Non-critical
+      }
+    }
+  }, [allScores, lessonId]);
+
   return {
-    messages,
-    loading,
-    error,
-    isRecording,
-    isProcessing,
+    // Data
+    sentence,
+    currentIndex,
+    totalSentences,
+    isLastSentence,
+    phase,
+    result,
+    timer,
     recordingDuration,
-    currentPrompt,
-    currentPromptIndex,
-    totalPrompts: PRONUNCIATION_PROMPTS.length,
-    isComplete,
-    sessionScores,
+    error,
+    // Actions
     startRecording,
     stopRecording,
-    retryPrompt,
-    playSample,
+    tryAgain,
+    next,
+    completeExercise,
   };
 };
 
-// ── Helpers ──
-
-const computeAverageScore = (scores: PronunciationScore[]): PronunciationScore => {
-  if (scores.length === 0) {
-    return { clarity: 0, accuracy: 0, fluency: 0, overall: 0 };
-  }
+// ── Average score helper ──
+const computeAverage = (scores: PronunciationScore[]): PronunciationScore => {
+  if (!scores.length) return { clarity: 0, accuracy: 0, fluency: 0, overall: 0 };
   const sum = scores.reduce(
-    (acc, s) => ({
-      clarity: acc.clarity + s.clarity,
-      accuracy: acc.accuracy + s.accuracy,
-      fluency: acc.fluency + s.fluency,
-      overall: acc.overall + s.overall,
+    (a, s) => ({
+      clarity: a.clarity + s.clarity,
+      accuracy: a.accuracy + s.accuracy,
+      fluency: a.fluency + s.fluency,
+      overall: a.overall + s.overall,
     }),
     { clarity: 0, accuracy: 0, fluency: 0, overall: 0 },
   );
