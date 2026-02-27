@@ -240,6 +240,17 @@ export interface ProgressData {
   weeks: WeeklyProgress[];
 }
 
+// ─── Insights Models ───
+export type EnglishLevel = 'A1 Beginner' | 'A2 Elementary' | 'B1 Intermediate' | 'B2 Upper Intermediate' | 'C1 Fluent' | 'C2 Proficient';
+
+export interface InsightsUserData {
+  userId: string;
+  currentLevel: EnglishLevel;
+  weeklyProgress: WeeklyProgress;
+  lessonDays: LessonDay[];
+  weekLabel: string;
+}
+
 // ─── Navigation Param Lists ───
 export type AuthStackParamList = {
   Splash: undefined;
@@ -282,6 +293,7 @@ export type CMSStackParamList = {
 
 export type AdminStackParamList = {
   AdminDashboard: undefined;
+  AdminInsights: undefined;
   AdminManageLessons: undefined;
   AdminManageUsers: undefined;
   AdminFeedback: undefined;

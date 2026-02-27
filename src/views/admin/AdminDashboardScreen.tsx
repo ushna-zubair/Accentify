@@ -14,6 +14,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import BarChart from './components/BarChart';
@@ -26,7 +28,7 @@ import {
   MENU_ITEMS,
   OTHERS_ITEMS,
 } from '../../controllers';
-import type { DashboardData, AdminOnline, AdminMenuItem } from '../../models';
+import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } from '../../models';
 
 // ═══════════════════════════════════════════════
 //  MOBILE ADMIN DASHBOARD
@@ -174,13 +176,16 @@ const CreateAnnouncementModal: React.FC<{
 
 // ─── Mobile Dashboard Screen ───
 const MobileAdminDashboard: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const { mobileData, loading, handleLogout, createAnnouncement } =
     useAdminMobileDashboardController();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const handleMenuPress = (key: string) => {
-    if (key === 'create_announcement') {
+    if (key === 'insights') {
+      navigation.navigate('AdminInsights');
+    } else if (key === 'create_announcement') {
       setAnnouncementModalVisible(true);
     }
     // Other menu items can navigate to specific screens when implemented
