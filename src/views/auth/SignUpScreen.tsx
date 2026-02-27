@@ -17,6 +17,7 @@ import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
@@ -150,8 +151,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 24,
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 32,
@@ -176,15 +177,16 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   checkboxText: {
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.text,
-    fontWeight: '500',
   },
   signUpButtonContainer: {
     marginTop: 24,
     marginBottom: 28,
   },
   orContinueText: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textLight,
     textAlign: 'center',
@@ -214,13 +216,14 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   signInText: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textLight,
   },
   signInLink: {
+    fontFamily: fonts.bold,
     fontSize: 14,
     color: colors.primary,
-    fontWeight: '700',
   },
 });
 

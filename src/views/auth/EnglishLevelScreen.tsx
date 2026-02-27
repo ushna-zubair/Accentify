@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'EnglishLevel'>;
 
@@ -109,13 +110,14 @@ const styles = StyleSheet.create({
     height: 56,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 24,
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 10,
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'center',
@@ -136,17 +138,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   levelCardSelected: {
-    backgroundColor: '#EDE9FE',
+    backgroundColor: colors.primary500,
     borderColor: colors.primary,
   },
   levelLabel: {
+    fontFamily: fonts.medium,
     fontSize: 15,
-    fontWeight: '500',
     color: colors.text,
   },
   levelLabelSelected: {
+    fontFamily: fonts.semiBold,
     color: colors.primary,
-    fontWeight: '600',
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -174,8 +176,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

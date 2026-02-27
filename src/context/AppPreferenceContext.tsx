@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeOption, AccentColor, FontSizeOption, AppPreferenceState } from '../models';
 
@@ -59,13 +59,13 @@ export const AppPreferenceProvider: React.FC<{ children: ReactNode }> = ({ child
     [persist],
   );
 
-  const value: AppPreferenceContextType = {
+  const value = useMemo<AppPreferenceContextType>(() => ({
     ...state,
-    setTheme: (v) => update({ theme: v }),
-    setAccentColor: (v) => update({ accentColor: v }),
-    setFontSize: (v) => update({ fontSize: v }),
-    setHighContrastMode: (v) => update({ highContrastMode: v }),
-  };
+    setTheme: (v: ThemeOption) => update({ theme: v }),
+    setAccentColor: (v: AccentColor) => update({ accentColor: v }),
+    setFontSize: (v: FontSizeOption) => update({ fontSize: v }),
+    setHighContrastMode: (v: boolean) => update({ highContrastMode: v }),
+  }), [state, update]);
 
   return (
     <AppPreferenceContext.Provider value={value}>

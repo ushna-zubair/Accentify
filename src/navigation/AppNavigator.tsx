@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
+import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 
 // Models
 import {
@@ -121,11 +123,11 @@ const LearnerNavigator = () => {
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: '#1A1A2E',
-        tabBarActiveBackgroundColor: '#6B2FD9',
+        tabBarActiveTintColor: colors.white,
+        tabBarInactiveTintColor: colors.tabBarInactive,
+        tabBarActiveBackgroundColor: colors.tabBarActive,
         tabBarStyle: {
-          backgroundColor: '#F0EEFF',
+          backgroundColor: colors.tabBarBg,
           borderTopWidth: 0,
           height: Platform.OS === 'ios' ? 85 : 70,
           paddingBottom: Platform.OS === 'ios' ? 24 : 10,
@@ -140,8 +142,8 @@ const LearnerNavigator = () => {
           paddingVertical: 4,
         },
         tabBarLabelStyle: {
+          fontFamily: fonts.semiBold,
           fontSize: 11,
-          fontWeight: '600',
         },
       })}
     >

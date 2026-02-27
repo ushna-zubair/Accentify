@@ -9,11 +9,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import { useNotificationController } from '../../controllers';
-import type { NotificationItem, NotificationSection } from '../../models';
+import type { NotificationItem, NotificationSection, SettingsStackParamList } from '../../models';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+type Props = NativeStackScreenProps<SettingsStackParamList, 'Notifications'>;
 
 // ------- Component -------
-const NotificationsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   const { activeTab, setActiveTab, sections, markAllAsRead, markAsRead } =
     useNotificationController();
 
@@ -92,8 +96,8 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 28,
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 16,
   },
@@ -105,21 +109,21 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   tabText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.textLight,
   },
   tabTextActive: {
-    color: '#1A6FEE',
+    color: colors.textLink,
     textDecorationLine: 'underline',
   },
   markAllBtn: {
     marginLeft: 'auto',
   },
   markAllText: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
-    fontWeight: '600',
-    color: '#1A6FEE',
+    color: colors.textLink,
   },
   // Section headers
   sectionHeaderContainer: {
@@ -131,8 +135,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionHeaderText: {
+    fontFamily: fonts.bold,
     fontSize: 14,
-    fontWeight: '700',
     color: colors.text,
   },
   // Notification row
@@ -161,11 +165,13 @@ const styles = StyleSheet.create({
   },
   notificationText: {
     flex: 1,
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
     lineHeight: 20,
   },
   notificationTime: {
+    fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.textLight,
     marginLeft: 4,
@@ -179,6 +185,7 @@ const styles = StyleSheet.create({
     paddingTop: 60,
   },
   emptyText: {
+    fontFamily: fonts.regular,
     fontSize: 16,
     color: colors.textLight,
   },

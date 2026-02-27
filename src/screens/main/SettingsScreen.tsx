@@ -11,11 +11,10 @@ import {
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import colors from '../../theme/colors';
-import { fonts } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { SettingsStackParamList } from '../../models';
+import type { SettingsStackParamList } from '../../navigation/AppNavigator';
 
 interface SettingsItemProps {
   label: string;
@@ -146,8 +145,8 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   title: {
-    fontFamily: fonts.bold,
     fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
     marginBottom: 24,
   },
@@ -164,15 +163,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
   },
   settingsItemText: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
     color: colors.white,
   },
   settingsItemIcon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: colors.overlayLight,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -189,8 +188,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   logoutText: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
     color: colors.error,
   },
 });

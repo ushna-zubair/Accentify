@@ -6,6 +6,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'TwoFactorAuth'>;
 
@@ -135,8 +136,8 @@ const styles = StyleSheet.create({
   },
   /* ── Title ── */
   title: {
+    fontFamily: fonts.bold,
     fontSize: 24,
-    fontWeight: '700',
     color: colors.text,
     paddingTop: 24,
     marginBottom: 20,
@@ -144,8 +145,8 @@ const styles = StyleSheet.create({
   },
   /* ── Subtitle ── */
   subtitle: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
     lineHeight: 22,
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 4,
-    borderColor: '#D4A843',
+    borderColor: colors.warning700,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -185,26 +186,26 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#D4A843',
+    backgroundColor: colors.warning700,
   },
   keyShaft: {
     width: 4,
     height: 50,
-    backgroundColor: '#D4A843',
+    backgroundColor: colors.warning700,
     marginLeft: 13,
     marginTop: -2,
   },
   keyTeeth1: {
     width: 10,
     height: 4,
-    backgroundColor: '#D4A843',
+    backgroundColor: colors.warning700,
     marginLeft: 17,
     marginTop: -16,
   },
   keyTeeth2: {
     width: 8,
     height: 4,
-    backgroundColor: '#D4A843',
+    backgroundColor: colors.warning700,
     marginLeft: 17,
     marginTop: 4,
   },
@@ -212,12 +213,12 @@ const styles = StyleSheet.create({
   lockBody: {
     width: 72,
     height: 56,
-    backgroundColor: '#5BBCB3',
+    backgroundColor: colors.success700,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 30,
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -229,7 +230,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 30,
     borderWidth: 5,
-    borderColor: '#5BBCB3',
+    borderColor: colors.success700,
     borderBottomWidth: 0,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
@@ -238,11 +239,12 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#3D9B91',
+    backgroundColor: colors.success800,
     marginTop: 4,
   },
   /* ── Description ── */
   description: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'center',
@@ -269,8 +271,8 @@ const styles = StyleSheet.create({
     borderColor: colors.inputBorder,
   },
   skipButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text,
   },
   continueButton: {
@@ -290,8 +292,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

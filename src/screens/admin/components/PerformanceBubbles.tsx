@@ -1,8 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle as SvgCircle, G, Text as SvgText } from 'react-native-svg';
-import colors from '../../../theme/colors';
-import { fonts } from '../../../theme/typography';
 
 interface BubbleData {
   label: string;
@@ -46,8 +44,8 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
                 x={pos.cx}
                 y={pos.cy - 10}
                 textAnchor="middle"
-                fill={colors.white}
-                fontFamily={fonts.bold}
+                fill="#FFFFFF"
+                fontWeight="700"
                 fontSize={18}
               >
                 {item.value}%
@@ -56,9 +54,9 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
                 x={pos.cx}
                 y={pos.cy + 8}
                 textAnchor="middle"
-                fill={colors.white}
-                fontFamily={fonts.medium}
+                fill="#FFFFFF"
                 fontSize={9}
+                fontWeight="500"
               >
                 {item.label}
               </SvgText>
@@ -66,9 +64,9 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
                 x={pos.cx}
                 y={pos.cy + 20}
                 textAnchor="middle"
-                fill={colors.white}
-                fontFamily={fonts.medium}
+                fill="#FFFFFF"
                 fontSize={9}
+                fontWeight="500"
               >
                 {item.subLabel}
               </SvgText>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,89 @@ import {
   Image,
   useWindowDimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
-import { fonts } from '../../theme/typography';
 import BarChart from './components/BarChart';
 import DonutChart from './components/DonutChart';
 import LineChart from './components/LineChart';
 import PerformanceBubbles from './components/PerformanceBubbles';
-import { useAdminDashboardController, MENU_ITEMS, OTHERS_ITEMS } from '../../controllers';
-import type { DashboardData } from '../../models';
+
+// ------- Types -------
+type SidebarItem = {
+  label: string;
+  icon: string;
+  iconSet: 'ionicons' | 'mci' | 'feather';
+  key: string;
+};
+
+interface TopLearner {
+  name: string;
+  sessions: number;
+  avatar?: string;
+}
+
+interface DashboardData {
+  activeUsers: number;
+  growthPct: number;
+  usageDateRange: string;
+  weeklyBarData: { label: string; thisWeek: number; lastWeek: number }[];
+  practiceActivity: { morning: number; afternoon: number; night: number };
+  pronunciationAccuracy: number;
+  fluencyAccuracy: number;
+  vocabularyRetention: number;
+  topLearners: TopLearner[];
+  totalSessions: number;
+  sessionsGrowth: number;
+  sessionsThisWeek: number[];
+  sessionsLastWeek: number[];
+}
+
+// ------- Constants -------
+const MENU_ITEMS: SidebarItem[] = [
+  { label: 'Dashboard', icon: 'grid-outline', iconSet: 'ionicons', key: 'dashboard' },
+  { label: 'Manage Lessons', icon: 'book-outline', iconSet: 'ionicons', key: 'lessons' },
+  { label: 'Manage Users', icon: 'people-outline', iconSet: 'ionicons', key: 'users' },
+  { label: 'Feedback & Reports', icon: 'chatbox-ellipses-outline', iconSet: 'ionicons', key: 'feedback' },
+];
+
+const OTHERS_ITEMS: SidebarItem[] = [
+  { label: 'Settings', icon: 'settings-outline', iconSet: 'ionicons', key: 'settings' },
+  { label: 'Subscription & billing', icon: 'card-outline', iconSet: 'ionicons', key: 'billing' },
+  { label: 'Admin access control', icon: 'shield-checkmark-outline', iconSet: 'ionicons', key: 'access' },
+  { label: 'Support & logs', icon: 'help-circle-outline', iconSet: 'ionicons', key: 'support' },
+];
+
+const DEFAULT_DATA: DashboardData = {
+  activeUsers: 1245,
+  growthPct: 8.4,
+  usageDateRange: 'Oct 10 - 21 Oct, 25',
+  weeklyBarData: [
+    { label: 'Mon', thisWeek: 80, lastWeek: 60 },
+    { label: 'Tue', thisWeek: 65, lastWeek: 50 },
+    { label: 'Wed', thisWeek: 90, lastWeek: 70 },
+    { label: 'Thur', thisWeek: 75, lastWeek: 55 },
+    { label: 'Fri', thisWeek: 85, lastWeek: 68 },
+    { label: 'Sat', thisWeek: 50, lastWeek: 45 },
+    { label: 'Sun', thisWeek: 40, lastWeek: 35 },
+  ],
+  practiceActivity: { morning: 35, afternoon: 45, night: 20 },
+  pronunciationAccuracy: 85,
+  fluencyAccuracy: 86,
+  vocabularyRetention: 92,
+  topLearners: [
+    { name: 'Sarah Lee', sessions: 48 },
+    { name: 'Alex Chen', sessions: 43 },
+    { name: 'Maria Lopez', sessions: 39 },
+    { name: 'Omer Noor', sessions: 36 },
+  ],
+  totalSessions: 2568,
+  sessionsGrowth: 8.4,
+  sessionsThisWeek: [20, 35, 28, 42, 55, 50],
+  sessionsLastWeek: [15, 22, 30, 25, 35, 40],
+};
 
 // ------- Sidebar -------
 interface SidebarProps {
@@ -47,7 +121,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
           <Ionicons
             name={item.icon as any}
             size={20}
-            color={active ? colors.white : colors.textLight}
+            color={active ? colors.white : '#6B7280'}
           />
           <Text style={[styles.sidebarLabel, active && styles.sidebarLabelActive]}>
             {item.label}
@@ -70,7 +144,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
           <Ionicons
             name={item.icon as any}
             size={20}
-            color={active ? colors.white : colors.textLight}
+            color={active ? colors.white : '#6B7280'}
           />
           <Text style={[styles.sidebarLabel, active && styles.sidebarLabelActive]}>
             {item.label}
@@ -93,20 +167,20 @@ const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => (
       <TextInput
         style={styles.searchInput}
         placeholder="Search"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor="#9CA3AF"
         value={searchQuery}
         onChangeText={onSearchChange}
       />
-      <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
+      <Ionicons name="search" size={18} color="#9CA3AF" style={styles.searchIcon} />
     </View>
     <View style={styles.topBarRight}>
       <View style={styles.adminBadge}>
         <Image source={require('../../../assets/logo.png')} style={styles.adminAvatar} />
         <Text style={styles.adminLabel}>Admin Dashboard</Text>
-        <Ionicons name="chevron-down" size={16} color={colors.text} />
+        <Ionicons name="chevron-down" size={16} color="#1A1A2E" />
       </View>
       <View style={styles.notifBadge}>
-        <Ionicons name="notifications-outline" size={22} color={colors.primary} />
+        <Ionicons name="notifications-outline" size={22} color="#6B2FD9" />
         <View style={styles.notifDot} />
       </View>
     </View>
@@ -125,7 +199,7 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     </View>
     <Text style={styles.bigNumber}>{data.activeUsers.toLocaleString()} Active Users</Text>
     <View style={styles.growthRow}>
-      <Ionicons name="arrow-up" size={14} color={colors.success} />
+      <Ionicons name="arrow-up" size={14} color="#22C55E" />
       <Text style={styles.growthText}>{data.growthPct}%</Text>
       <Text style={styles.growthSub}>vs last week</Text>
     </View>
@@ -135,11 +209,11 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     </View>
     <View style={styles.legendRow}>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+        <View style={[styles.legendDot, { backgroundColor: '#6B2FD9' }]} />
         <Text style={styles.legendText}>This Week</Text>
       </View>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.primaryMuted }]} />
+        <View style={[styles.legendDot, { backgroundColor: '#C4B5FD' }]} />
         <Text style={styles.legendText}>Last Week</Text>
       </View>
     </View>
@@ -157,9 +231,9 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     <Text style={styles.dateRange}>From Oct 10 - 21 Oct, 2025</Text>
     <DonutChart
       segments={[
-        { label: 'Morning Sessions', value: data.practiceActivity.morning, color: colors.primaryLight },
-        { label: 'Afternoon Sessions', value: data.practiceActivity.afternoon, color: colors.primary },
-        { label: 'Night Sessions', value: data.practiceActivity.night, color: colors.primaryMuted },
+        { label: 'Morning Sessions', value: data.practiceActivity.morning, color: '#8B5CF6' },
+        { label: 'Afternoon Sessions', value: data.practiceActivity.afternoon, color: '#6B2FD9' },
+        { label: 'Night Sessions', value: data.practiceActivity.night, color: '#C4B5FD' },
       ]}
       size={180}
       tooltipLabel="Afternoon"
@@ -172,12 +246,12 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
 const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>User Performance Insights</Text>
-    <Text style={styles.cardSubtitle}>Pronunciation, fluency &amp; vocabulary metrics</Text>
+    <Text style={styles.cardSubtitle}>Lorem ipsum dolor sit amet, consectetur</Text>
     <PerformanceBubbles
       data={[
-        { label: 'Pronunciation', subLabel: 'Accuracy', value: data.pronunciationAccuracy, color: colors.primary, size: 110 },
-        { label: 'Fluency', subLabel: 'Accuracy', value: data.fluencyAccuracy, color: colors.warning, size: 120 },
-        { label: 'Vocabulary', subLabel: 'Retention', value: data.vocabularyRetention, color: colors.primaryLight, size: 100 },
+        { label: 'Pronunciation', subLabel: 'Accuracy', value: data.pronunciationAccuracy, color: '#6B2FD9', size: 110 },
+        { label: 'Fluency', subLabel: 'Accuracy', value: data.fluencyAccuracy, color: '#F59E0B', size: 120 },
+        { label: 'Vocabulary', subLabel: 'Retention', value: data.vocabularyRetention, color: '#3B82F6', size: 100 },
       ]}
     />
   </View>
@@ -186,7 +260,7 @@ const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) =>
 const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>Top Performing Learners</Text>
-    <Text style={styles.cardSubtitle}>Ranked by sessions completed this month</Text>
+    <Text style={styles.cardSubtitle}>Adipiscing elit, sed do eiusmod tempor</Text>
     <View style={{ marginTop: 16, gap: 16 }}>
       {data.topLearners.map((learner, i) => (
         <View key={learner.name} style={styles.learnerRow}>
@@ -215,7 +289,7 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       {data.totalSessions.toLocaleString()} total sessions completed
     </Text>
     <View style={styles.growthRow}>
-      <Ionicons name="arrow-up" size={14} color={colors.success} />
+      <Ionicons name="arrow-up" size={14} color="#22C55E" />
       <Text style={styles.growthText}>+{data.sessionsGrowth}%</Text>
       <Text style={styles.growthSub}>vs last week</Text>
     </View>
@@ -229,11 +303,11 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     />
     <View style={[styles.legendRow, { marginTop: 8 }]}>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+        <View style={[styles.legendDot, { backgroundColor: '#6B2FD9' }]} />
         <Text style={styles.legendText}>This Week</Text>
       </View>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.disabled }]} />
+        <View style={[styles.legendDot, { backgroundColor: '#D1D5DB' }]} />
         <Text style={styles.legendText}>Last Week</Text>
       </View>
     </View>
@@ -242,18 +316,62 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
 
 // ------- Main Screen -------
 const AdminDashboardScreen: React.FC = () => {
+  const { signOut } = useAuth();
   const { width } = useWindowDimensions();
-  const {
-    activeMenu,
-    setActiveMenu,
-    searchQuery,
-    setSearchQuery,
-    dashboardData,
-    handleLogout,
-  } = useAdminDashboardController();
+  const [activeMenu, setActiveMenu] = useState('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [dashboardData, setDashboardData] = useState<DashboardData>(DEFAULT_DATA);
+
+  // Load real data from Firestore if available
+  useEffect(() => {
+    (async () => {
+      try {
+        // Attempt to load top learners from Firestore
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, orderBy('studyPlan.totalSessions', 'desc'), limit(4));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const learners: TopLearner[] = [];
+          snap.forEach((doc) => {
+            const d = doc.data();
+            learners.push({
+              name: d.profile?.fullName || d.profile?.nickName || 'Unknown',
+              sessions: d.studyPlan?.totalSessions || 0,
+            });
+          });
+          if (learners.length > 0 && learners[0].sessions > 0) {
+            setDashboardData((prev) => ({ ...prev, topLearners: learners }));
+          }
+        }
+
+        // Attempt to load aggregate stats
+        const statsDoc = await getDocs(collection(db, 'admin_stats'));
+        if (!statsDoc.empty) {
+          const stats = statsDoc.docs[0].data();
+          setDashboardData((prev) => ({
+            ...prev,
+            activeUsers: stats.activeUsers ?? prev.activeUsers,
+            totalSessions: stats.totalSessions ?? prev.totalSessions,
+            growthPct: stats.growthPct ?? prev.growthPct,
+          }));
+        }
+      } catch (e) {
+        // Firestore data may not exist yet — use defaults
+        console.log('Using default dashboard data');
+      }
+    })();
+  }, []);
 
   const isWide = width >= 900;
   const isTablet = width >= 600 && width < 900;
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (e) {
+      console.error('Logout error', e);
+    }
+  };
 
   return (
     <View style={styles.root}>
@@ -312,14 +430,14 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: colors.adminBg,
+    backgroundColor: '#F9FAFB',
   },
   // Sidebar
   sidebar: {
     width: SIDEBAR_WIDTH,
     backgroundColor: colors.white,
     borderRightWidth: 1,
-    borderRightColor: colors.adminSidebarBorder,
+    borderRightColor: '#E5E7EB',
     paddingVertical: 20,
     paddingHorizontal: 16,
   },
@@ -333,9 +451,9 @@ const styles = StyleSheet.create({
     height: 36,
   },
   sidebarSection: {
-    fontFamily: fonts.bold,
     fontSize: 11,
-    color: colors.textMuted,
+    fontWeight: '700',
+    color: '#9CA3AF',
     letterSpacing: 1,
     marginBottom: 10,
     paddingLeft: 4,
@@ -353,13 +471,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   sidebarLabel: {
-    fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.textLight,
+    fontWeight: '500',
+    color: '#6B7280',
   },
   sidebarLabelActive: {
     color: colors.white,
-    fontFamily: fonts.semiBold,
+    fontWeight: '600',
   },
   // Top bar
   topBar: {
@@ -370,23 +488,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    borderBottomColor: '#E5E7EB',
   },
   searchContainer: {
     flex: 1,
     maxWidth: 480,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: '#F3F4F6',
     borderRadius: 10,
     paddingHorizontal: 14,
     height: 40,
   },
   searchInput: {
     flex: 1,
-    fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: '#1A1A2E',
   },
   searchIcon: {
     marginLeft: 8,
@@ -405,12 +522,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: '#E0D9FF',
   },
   adminLabel: {
-    fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    fontWeight: '600',
+    color: '#1A1A2E',
   },
   notifBadge: {
     position: 'relative',
@@ -422,7 +539,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.error,
+    backgroundColor: '#EF4444',
   },
   // Main area
   mainArea: {
@@ -436,9 +553,9 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   pageTitle: {
-    fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#1A1A2E',
     marginBottom: 20,
   },
   // Layout
@@ -459,7 +576,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: '#E5E7EB',
     padding: 20,
     marginBottom: 0,
   },
@@ -470,14 +587,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardTitle: {
-    fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#1A1A2E',
   },
   cardSubtitle: {
-    fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: '#9CA3AF',
     marginTop: 2,
   },
   outlineBtn: {
@@ -488,14 +604,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   outlineBtnText: {
-    fontFamily: fonts.semiBold,
     fontSize: 12,
+    fontWeight: '600',
     color: colors.primary,
   },
   bigNumber: {
-    fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    fontWeight: '700',
+    color: '#1A1A2E',
     marginTop: 4,
   },
   growthRow: {
@@ -505,19 +621,17 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   growthText: {
-    fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.success,
+    fontWeight: '600',
+    color: '#22C55E',
   },
   growthSub: {
-    fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: '#9CA3AF',
   },
   dateRange: {
-    fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: '#9CA3AF',
     marginTop: 6,
     marginBottom: 12,
   },
@@ -541,9 +655,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendText: {
-    fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textLight,
+    color: '#6B7280',
   },
   // Top learners
   learnerRow: {
@@ -560,14 +673,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   learnerName: {
-    fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    fontWeight: '500',
+    color: '#1A1A2E',
   },
   learnerSessions: {
-    fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: '#6B7280',
   },
 });
 

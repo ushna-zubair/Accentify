@@ -1,50 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import CustomButton from '../../components/CustomButton';
+import NumberKeypad from '../../components/NumberKeypad';
+import { useCodeInput } from '../../hooks/useCodeInput';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupPin'>;
 
-const keypad = ['1','2','3','4','5','6','7','8','9','*','0','backspace'];
-
 const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
   const { profile, learningGoals, nativeLanguage, englishLevel } = route.params;
-  const [pin, setPin] = useState<string[]>(['', '', '', '']);
-
-  const handleKeypadPress = (digit: string) => {
-    if (digit === 'backspace') {
-      let lastFilledIndex = -1;
-      for (let i = pin.length - 1; i >= 0; i--) {
-        if (pin[i] !== '') {
-          lastFilledIndex = i;
-          break;
-        }
-      }
-      if (lastFilledIndex >= 0) {
-        const newPin = [...pin];
-        newPin[lastFilledIndex] = '';
-        setPin(newPin);
-      }
-    } else if (digit !== '*') {
-      const firstEmptyIndex = pin.indexOf('');
-      if (firstEmptyIndex < 4) {
-        const newPin = [...pin];
-        newPin[firstEmptyIndex] = digit;
-        setPin(newPin);
-      }
-    }
-  };
-
-  const isComplete = pin.every((d) => d !== '');
+  const { code: pin, handleKeyPress, isComplete, value: pinValue } = useCodeInput(4);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,19 +32,7 @@ const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.keypad}>
-          {keypad.map((key) => (
-            <TouchableOpacity
-              key={key}
-              style={styles.keypadButton}
-              onPress={() => handleKeypadPress(key)}
-            >
-              {key === 'backspace' ? (
-                <FontAwesome5 name="backspace" size={18} color={colors.text} />
-              ) : (
-                <Text style={styles.keypadText}>{key}</Text>
-              )}
-            </TouchableOpacity>
-          ))}
+          <NumberKeypad onKeyPress={handleKeyPress} size="compact" />
         </View>
 
         <View style={styles.buttonContainer}>
@@ -82,7 +43,7 @@ const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
               learningGoals,
               nativeLanguage,
               englishLevel,
-              appPin: pin.join(''),
+              appPin: pinValue,
             })}
             disabled={!isComplete}
           />
@@ -104,12 +65,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 24,
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textLight,
     textAlign: 'center',
@@ -133,26 +95,7 @@ const styles = StyleSheet.create({
   },
   keypad: {
     width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     marginBottom: 24,
-  },
-  keypadButton: {
-    width: '30%',
-    height: 52,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-  },
-  keypadText: {
-    fontSize: 18,
-    color: colors.text,
-    fontWeight: '600',
   },
   buttonContainer: {
     width: '100%',

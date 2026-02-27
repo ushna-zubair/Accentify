@@ -22,6 +22,7 @@ import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateProfile'>;
 
@@ -612,8 +613,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   backArrow: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text,
   },
   avatarSection: {
@@ -624,7 +625,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#EAF2FF',
+    backgroundColor: colors.primary500,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -634,7 +635,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#F6FAFF',
+    backgroundColor: colors.lightNeutral900,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -646,7 +647,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#17A596',
+    backgroundColor: colors.success800,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
@@ -677,8 +678,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   calendarTitle: {
+    fontFamily: fonts.bold,
     fontSize: 12,
-    fontWeight: '700',
     color: colors.text,
   },
   calendarNav: {
@@ -697,9 +698,9 @@ const styles = StyleSheet.create({
   weekDay: {
     width: '14.2%',
     textAlign: 'center',
+    fontFamily: fonts.semiBold,
     fontSize: 10,
     color: colors.textMuted,
-    fontWeight: '600',
   },
   daysGrid: {
     flexDirection: 'row',
@@ -717,9 +718,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   dayText: {
+    fontFamily: fonts.semiBold,
     fontSize: 10,
     color: colors.text,
-    fontWeight: '600',
   },
   dayTextSelected: {
     color: colors.white,
@@ -742,9 +743,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   dateModalButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     color: colors.primary,
-    fontWeight: '600',
   },
   dateInputContainer: {
     flexDirection: 'row',
@@ -758,6 +759,7 @@ const styles = StyleSheet.create({
   },
   inputPlaceholder: {
     flex: 1,
+    fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
     marginLeft: 8,
@@ -790,20 +792,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   countryBadgeText: {
+    fontFamily: fonts.bold,
     color: colors.white,
     fontSize: 12,
-    fontWeight: '700',
   },
   countryCode: {
+    fontFamily: fonts.medium,
     fontSize: 15,
     color: colors.text,
-    fontWeight: '500',
   },
   countryName: {
     flex: 1,
+    fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.text,
-    fontWeight: '500',
     textAlign: 'right',
   },
   genderDropdown: {
@@ -819,13 +821,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   genderText: {
+    fontFamily: fonts.medium,
     fontSize: 15,
     color: colors.text,
-    fontWeight: '500',
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -851,9 +853,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.inputBorder,
   },
   imageActionText: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     color: colors.text,
-    fontWeight: '600',
   },
   countryModalContent: {
     backgroundColor: colors.white,
@@ -863,8 +865,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalTitle: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 12,
   },
@@ -899,6 +901,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   countryOptionText: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.text,
   },
@@ -911,9 +914,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   modalCloseText: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     color: colors.primary,
-    fontWeight: '600',
   },
   genderOption: {
     flexDirection: 'row',
@@ -925,9 +928,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.inputBorder,
   },
   genderOptionText: {
+    fontFamily: fonts.medium,
     fontSize: 15,
     color: colors.text,
-    fontWeight: '500',
   },
   continueButtonContainer: {
     marginTop: 20,

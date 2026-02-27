@@ -3,15 +3,26 @@ import { initializeApp } from 'firebase/app';
 import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+
+/**
+ * Firebase configuration loaded from environment variables via app.json / eas.json.
+ * In local development, values fall back to the `extra` block in app.json.
+ *
+ * To set up:
+ *   1. Add your keys to app.json -> expo.extra (or use expo-dotenv / EAS secrets).
+ *   2. Never commit raw API keys to version control.
+ */
+const extra = Constants.expoConfig?.extra ?? {};
 
 const firebaseConfig = {
-  apiKey: "AIzaSyADW4-QogGi0N3pq_V8OPFZndSICCJ5YpM",
-  authDomain: "accentify-capstone.firebaseapp.com",
-  projectId: "accentify-capstone",
-  storageBucket: "accentify-capstone.firebasestorage.app",
-  messagingSenderId: "104124924088",
-  appId: "1:104124924088:web:cab0cca9dbb1f2e4de344d",
-  measurementId: "G-Z33LPZ97MT"
+  apiKey: extra.FIREBASE_API_KEY ?? '',
+  authDomain: extra.FIREBASE_AUTH_DOMAIN ?? '',
+  projectId: extra.FIREBASE_PROJECT_ID ?? '',
+  storageBucket: extra.FIREBASE_STORAGE_BUCKET ?? '',
+  messagingSenderId: extra.FIREBASE_MESSAGING_SENDER_ID ?? '',
+  appId: extra.FIREBASE_APP_ID ?? '',
+  measurementId: extra.FIREBASE_MEASUREMENT_ID ?? '',
 };
 
 const app = initializeApp(firebaseConfig);

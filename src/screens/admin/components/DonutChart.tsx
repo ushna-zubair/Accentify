@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle as SvgCircle, G } from 'react-native-svg';
-import colors from '../../../theme/colors';
-import { fonts } from '../../../theme/typography';
 
 interface DonutSegment {
   label: string;
@@ -43,7 +41,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={colors.divider}
+            stroke="#E5E7EB"
             strokeWidth={strokeWidth}
           />
           {segments.map((seg) => {
@@ -103,26 +101,25 @@ const styles = StyleSheet.create({
   },
   tooltip: {
     position: 'absolute',
-    backgroundColor: colors.text,
+    backgroundColor: '#1A1A2E',
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
     minWidth: 130,
   },
   tooltipTitle: {
-    color: colors.white,
-    fontFamily: fonts.bold,
+    color: '#FFFFFF',
+    fontWeight: '700',
     fontSize: 13,
   },
   tooltipSub: {
-    fontFamily: fonts.regular,
-    color: colors.disabled,
+    color: '#D1D5DB',
     fontSize: 11,
     marginTop: 2,
   },
   tooltipValue: {
-    color: colors.white,
-    fontFamily: fonts.bold,
+    color: '#FFFFFF',
+    fontWeight: '700',
     fontSize: 14,
     marginTop: 4,
   },
@@ -144,14 +141,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   legendLabel: {
-    fontFamily: fonts.regular,
     fontSize: 11,
-    color: colors.textLight,
+    color: '#6B7280',
   },
   legendPct: {
-    fontFamily: fonts.semiBold,
     fontSize: 12,
-    color: colors.text,
+    fontWeight: '600',
+    color: '#1A1A2E',
   },
 });
 

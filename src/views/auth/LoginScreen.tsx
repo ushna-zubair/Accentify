@@ -18,6 +18,7 @@ import { auth, db } from '../../config/firebase';
 import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -230,7 +231,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             {loading ? (
               <ActivityIndicator color={colors.primary} size="small" />
             ) : (
-              <FontAwesome5 name="google" size={22} color="#4285F4" />
+              <FontAwesome5 name="google" size={22} color={colors.googleBlue} />
             )}
           </TouchableOpacity>
 
@@ -238,7 +239,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.socialButton}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="apple" size={22} color="#111111" />
+            <FontAwesome5 name="apple" size={22} color={colors.appleBlack} />
           </TouchableOpacity>
         </View>
 
@@ -277,16 +278,16 @@ const styles = StyleSheet.create({
   },
   /* ── Title & Subtitle ── */
   title: {
+    fontFamily: fonts.bold,
     fontSize: 26,
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 8,
   },
   subtitle: {
+    fontFamily: fonts.semiBold,
     fontSize: 13,
     color: colors.textLight,
     marginBottom: 28,
-    fontWeight: '600',
     lineHeight: 18,
   },
   /* ── Inputs ── */
@@ -321,14 +322,14 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   rememberText: {
+    fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.textLight,
-    fontWeight: '500',
   },
   forgotText: {
+    fontFamily: fonts.semiBold,
     fontSize: 12,
     color: colors.primary,
-    fontWeight: '600',
   },
   /* ── Sign In Button ── */
   signInButton: {
@@ -348,8 +349,8 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   signInButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {
@@ -372,9 +373,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.inputBorder,
   },
   dividerText: {
+    fontFamily: fonts.medium,
     fontSize: 13,
     color: colors.textLight,
-    fontWeight: '500',
     marginHorizontal: 14,
   },
   /* ── Social Buttons ── */
@@ -401,13 +402,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   signUpText: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.text,
   },
   signUpLink: {
+    fontFamily: fonts.bold,
     fontSize: 13,
     color: colors.primary,
-    fontWeight: '700',
     textDecorationLine: 'underline',
   },
 });

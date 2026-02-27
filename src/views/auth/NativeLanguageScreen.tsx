@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TextInput,
   FlatList,
   Alert,
-  ActivityIndicator,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'NativeLanguage'>;
 
@@ -245,8 +245,8 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   skipText: {
+    fontFamily: fonts.semiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: colors.text,
   },
   searchBar: {
@@ -263,18 +263,20 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
+    fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
     height: '100%',
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 22,
-    fontWeight: '700',
     color: colors.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'left',
@@ -293,8 +295,8 @@ const styles = StyleSheet.create({
     borderColor: colors.inputBorder,
   },
   languagePickerText: {
+    fontFamily: fonts.medium,
     fontSize: 15,
-    fontWeight: '500',
     color: colors.text,
   },
   languagePickerPlaceholder: {
@@ -302,7 +304,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -314,8 +316,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalTitle: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
     color: colors.text,
     marginBottom: 12,
   },
@@ -328,6 +330,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 12,
     color: colors.text,
+    fontFamily: fonts.regular,
     fontSize: 14,
   },
   languageOption: {
@@ -340,16 +343,17 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.inputBorder,
   },
   languageOptionSelected: {
-    backgroundColor: '#F5F3FF',
+    backgroundColor: colors.primary500,
     borderRadius: 8,
     paddingHorizontal: 8,
   },
   languageOptionName: {
+    fontFamily: fonts.medium,
     fontSize: 15,
-    fontWeight: '500',
     color: colors.text,
   },
   languageOptionNative: {
+    fontFamily: fonts.regular,
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 2,
@@ -359,9 +363,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   modalCloseText: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     color: colors.primary,
-    fontWeight: '600',
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -389,8 +393,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   nextButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

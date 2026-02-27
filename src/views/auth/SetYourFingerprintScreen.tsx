@@ -10,6 +10,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetYourFingerprint'>;
 
@@ -61,7 +62,7 @@ const SetYourFingerprintScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#6E6A80',
+    backgroundColor: colors.lightNeutral600,
   },
   header: {
     paddingHorizontal: 20,
@@ -74,15 +75,15 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
     color: colors.text,
   },
   card: {
     marginTop: 40,
     marginHorizontal: 24,
     borderRadius: 24,
-    backgroundColor: '#F4F8FF',
+    backgroundColor: colors.lightNeutral900,
     paddingVertical: 28,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -91,7 +92,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: '#FFE6D1',
+    backgroundColor: colors.accentOrange500,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -100,18 +101,19 @@ const styles = StyleSheet.create({
     width: 86,
     height: 86,
     borderRadius: 43,
-    backgroundColor: '#FFD54F',
+    backgroundColor: colors.warning600,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
+    fontFamily: fonts.bold,
     fontSize: 20,
-    fontWeight: '700',
     color: colors.text,
     marginTop: 8,
     marginBottom: 6,
   },
   cardSubtitle: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
   },
@@ -139,13 +141,13 @@ const styles = StyleSheet.create({
     marginRight: 12,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#5D5870',
+    backgroundColor: colors.lightNeutral500,
     alignItems: 'center',
     justifyContent: 'center',
   },
   skipText: {
-    color: '#B9B4CC',
-    fontWeight: '700',
+    fontFamily: fonts.bold,
+    color: colors.darkNeutral700,
   },
   continueButton: {
     flex: 1.4,
@@ -158,8 +160,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   continueText: {
+    fontFamily: fonts.bold,
     color: colors.white,
-    fontWeight: '700',
   },
   continueIcon: {
     width: 28,

@@ -2,6 +2,12 @@ import React, { useCallback } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
 import * as SplashScreen from 'expo-splash-screen';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -17,6 +23,10 @@ export default function App() {
   // Preload the FontAwesome5 icon font so icons appear instantly
   const [fontsLoaded] = useFonts({
     ...FontAwesome5.font,
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
   });
 
   const onLayoutRootView = useCallback(async () => {

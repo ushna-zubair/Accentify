@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,47 @@ import {
   ScrollView,
   Image,
   TextInput,
+  Alert,
   Modal,
+  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
+import { db } from '../../config/firebase';
+import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
-import { fonts } from '../../theme/typography';
-import { useProfileSettingsController, LEARNING_GOALS, COUNTRIES, TIME_ZONES } from '../../controllers';
-import PickerModal from '../../components/PickerModal';
-import type { SettingsStackParamList } from '../../models';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+// ------- Types -------
+type LearningGoal = 'Pronunciation' | 'Vocabulary' | 'Fluency';
+
+interface ProfileState {
+  username: string;
+  email: string;
+  country: string;
+  timeZone: string;
+  learningGoals: LearningGoal[];
+  profilePictureUrl: string;
+}
+
+// ------- Constants -------
+const LEARNING_GOALS: { label: LearningGoal; icon: string; iconSet: 'ionicons' | 'fa5' | 'mci' }[] = [
+  { label: 'Pronunciation', icon: 'mic', iconSet: 'ionicons' },
+  { label: 'Vocabulary', icon: 'language', iconSet: 'fa5' },
+  { label: 'Fluency', icon: 'chat-processing-outline', iconSet: 'mci' },
+];
+
+const COUNTRIES = [
+  'Australia', 'Canada', 'Germany', 'India', 'Japan',
+  'Pakistan', 'United Kingdom', 'United States',
+];
+
+const TIME_ZONES = [
+  'GMT-12', 'GMT-11', 'GMT-10', 'GMT-9', 'GMT-8', 'GMT-7', 'GMT-6', 'GMT-5',
+  'GMT-4', 'GMT-3', 'GMT-2', 'GMT-1', 'GMT+0', 'GMT+1', 'GMT+2', 'GMT+3',
+  'GMT+4', 'GMT+5', 'GMT+6', 'GMT+7', 'GMT+8', 'GMT+9', 'GMT+10', 'GMT+11', 'GMT+12',
+];
 
 // ------- Subcomponents -------
 
@@ -73,31 +104,186 @@ const RadioCircle: React.FC<RadioCircleProps> = ({ selected }) => (
   </View>
 );
 
-type Props = NativeStackScreenProps<SettingsStackParamList, 'ProfileSettings'>;
+// ------- Picker Modal -------
+interface PickerModalProps {
+  visible: boolean;
+  title: string;
+  options: string[];
+  selected: string;
+  onSelect: (value: string) => void;
+  onClose: () => void;
+}
+
+const PickerModal: React.FC<PickerModalProps> = ({
+  visible,
+  title,
+  options,
+  selected,
+  onSelect,
+  onClose,
+}) => (
+  <Modal visible={visible} transparent animationType="slide">
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContent}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>{title}</Text>
+          <TouchableOpacity onPress={onClose}>
+            <Ionicons name="close" size={24} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={options}
+          keyExtractor={(item) => item}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={[styles.modalOption, selected === item && styles.modalOptionSelected]}
+              onPress={() => {
+                onSelect(item);
+                onClose();
+              }}
+            >
+              <Text
+                style={[
+                  styles.modalOptionText,
+                  selected === item && styles.modalOptionTextSelected,
+                ]}
+              >
+                {item}
+              </Text>
+              {selected === item && (
+                <Ionicons name="checkmark" size={20} color={colors.primary} />
+              )}
+            </TouchableOpacity>
+          )}
+          showsVerticalScrollIndicator={false}
+          style={{ maxHeight: 350 }}
+        />
+      </View>
+    </View>
+  </Modal>
+);
 
 // ------- Main Screen -------
-const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
-  const {
-    profile,
-    editingField,
-    fieldValue,
-    setFieldValue,
-    currentPassword,
-    setCurrentPassword,
-    pickerModal,
-    handleSaveUsername,
-    handleSavePassword,
-    handleCountrySelect,
-    handleTimeZoneSelect,
-    toggleLearningGoal,
-    handlePrivacyPress,
-    startEditUsername,
-    startEditPassword,
-    closeEditing,
-    openCountryPicker,
-    openTimeZonePicker,
-    closePickerModal,
-  } = useProfileSettingsController();
+const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { currentUser } = useAuth();
+
+  const [profile, setProfile] = useState<ProfileState>({
+    username: '',
+    email: '',
+    country: 'Australia',
+    timeZone: 'GMT+10',
+    learningGoals: [],
+    profilePictureUrl: '',
+  });
+
+  const [editingField, setEditingField] = useState<'username' | 'password' | null>(null);
+  const [fieldValue, setFieldValue] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [pickerModal, setPickerModal] = useState<{ visible: boolean; type: 'country' | 'timeZone' }>({
+    visible: false,
+    type: 'country',
+  });
+
+  // Load profile from Firestore
+  useEffect(() => {
+    if (!currentUser) return;
+    (async () => {
+      try {
+        const snap = await getDoc(doc(db, 'users', currentUser.uid));
+        if (snap.exists()) {
+          const data = snap.data();
+          setProfile({
+            username: data.profile?.fullName || data.profile?.nickName || '',
+            email: currentUser.email || '',
+            country: data.profile?.country || 'Australia',
+            timeZone: data.profile?.timeZone || 'GMT+10',
+            learningGoals: (data.studyPlan?.learningGoals || []) as LearningGoal[],
+            profilePictureUrl: data.profile?.profilePictureUrl || '',
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to load profile', e);
+      }
+    })();
+  }, [currentUser]);
+
+  // ------- Handlers -------
+
+  const handleSaveUsername = async () => {
+    if (!currentUser || !fieldValue.trim()) return;
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        'profile.fullName': fieldValue.trim(),
+      });
+      setProfile((prev) => ({ ...prev, username: fieldValue.trim() }));
+      setEditingField(null);
+      setFieldValue('');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to update username.');
+    }
+  };
+
+  const handleSavePassword = async () => {
+    if (!currentUser || !fieldValue || !currentPassword) return;
+    if (fieldValue.length < 6) {
+      Alert.alert('Error', 'Password must be at least 6 characters.');
+      return;
+    }
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email!, currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, fieldValue);
+      Alert.alert('Success', 'Password updated successfully.');
+      setEditingField(null);
+      setFieldValue('');
+      setCurrentPassword('');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to update password.');
+    }
+  };
+
+  const handleCountrySelect = async (country: string) => {
+    if (!currentUser) return;
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        'profile.country': country,
+      });
+      setProfile((prev) => ({ ...prev, country }));
+    } catch {
+      Alert.alert('Error', 'Failed to update country.');
+    }
+  };
+
+  const handleTimeZoneSelect = async (tz: string) => {
+    if (!currentUser) return;
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        'profile.timeZone': tz,
+      });
+      setProfile((prev) => ({ ...prev, timeZone: tz }));
+    } catch {
+      Alert.alert('Error', 'Failed to update time zone.');
+    }
+  };
+
+  const toggleLearningGoal = async (goal: LearningGoal) => {
+    if (!currentUser) return;
+    const updated = profile.learningGoals.includes(goal)
+      ? profile.learningGoals.filter((g) => g !== goal)
+      : [...profile.learningGoals, goal];
+    try {
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        'studyPlan.learningGoals': updated,
+      });
+      setProfile((prev) => ({ ...prev, learningGoals: updated }));
+    } catch {
+      Alert.alert('Error', 'Failed to update learning goals.');
+    }
+  };
+
+  const handlePrivacyPress = (item: string) => {
+    Alert.alert(item, `${item} coming soon!`);
+  };
 
   // ------- Goal icon renderer -------
   const renderGoalIcon = (goal: typeof LEARNING_GOALS[number]) => {
@@ -141,7 +327,10 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity
               style={styles.editProfileBtn}
               activeOpacity={0.7}
-              onPress={startEditUsername}
+              onPress={() => {
+                setEditingField('username');
+                setFieldValue(profile.username);
+              }}
             >
               <Text style={styles.editProfileBtnText}>Edit Profile</Text>
             </TouchableOpacity>
@@ -155,7 +344,10 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
             label="Username"
             value={profile.username}
             editable
-            onEdit={startEditUsername}
+            onEdit={() => {
+              setEditingField('username');
+              setFieldValue(profile.username);
+            }}
           />
           <View style={styles.divider} />
           <AccountRow
@@ -163,21 +355,25 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
             value=""
             secureText
             editable
-            onEdit={startEditPassword}
+            onEdit={() => {
+              setEditingField('password');
+              setFieldValue('');
+              setCurrentPassword('');
+            }}
           />
           <View style={styles.divider} />
           <AccountRow
             label="Country"
             value={profile.country}
             navigable
-            onNavigate={openCountryPicker}
+            onNavigate={() => setPickerModal({ visible: true, type: 'country' })}
           />
           <View style={styles.divider} />
           <AccountRow
             label="Time Zone"
             value={profile.timeZone}
             navigable
-            onNavigate={openTimeZonePicker}
+            onNavigate={() => setPickerModal({ visible: true, type: 'timeZone' })}
           />
         </View>
 
@@ -233,7 +429,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
         visible={editingField !== null}
         transparent
         animationType="slide"
-        onRequestClose={closeEditing}
+        onRequestClose={() => setEditingField(null)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -241,7 +437,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={styles.modalTitle}>
                 {editingField === 'username' ? 'Edit Username' : 'Change Password'}
               </Text>
-              <TouchableOpacity onPress={closeEditing}>
+              <TouchableOpacity onPress={() => setEditingField(null)}>
                 <Ionicons name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
@@ -285,7 +481,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
         options={pickerModal.type === 'country' ? COUNTRIES : TIME_ZONES}
         selected={pickerModal.type === 'country' ? profile.country : profile.timeZone}
         onSelect={pickerModal.type === 'country' ? handleCountrySelect : handleTimeZoneSelect}
-        onClose={closePickerModal}
+        onClose={() => setPickerModal({ ...pickerModal, visible: false })}
       />
     </SafeAreaView>
   );
@@ -314,8 +510,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   title: {
-    fontFamily: fonts.bold,
     fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
     fontStyle: 'italic',
   },
@@ -330,18 +526,17 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: colors.avatarBg,
+    backgroundColor: '#7DC8E7',
   },
   profileInfo: {
     flex: 1,
   },
   profileName: {
-    fontFamily: fonts.bold,
     fontSize: 20,
+    fontWeight: '700',
     color: colors.text,
   },
   profileEmail: {
-    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     marginBottom: 8,
@@ -355,14 +550,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
   },
   editProfileBtnText: {
-    fontFamily: fonts.semiBold,
     fontSize: 13,
+    fontWeight: '600',
     color: colors.text,
   },
   // Sections
   sectionTitle: {
-    fontFamily: fonts.bold,
     fontSize: 18,
+    fontWeight: '700',
     color: colors.text,
     marginBottom: 10,
   },
@@ -386,8 +581,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   accountRowLabel: {
-    fontFamily: fonts.medium,
     fontSize: 14,
+    fontWeight: '500',
     color: colors.text,
   },
   accountRowRight: {
@@ -395,7 +590,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   accountRowValue: {
-    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textLight,
   },
@@ -412,8 +606,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   goalLabel: {
-    fontFamily: fonts.medium,
     fontSize: 14,
+    fontWeight: '500',
     color: colors.text,
   },
   radioOuter: {
@@ -442,14 +636,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   privacyLabel: {
-    fontFamily: fonts.medium,
     fontSize: 14,
+    fontWeight: '500',
     color: colors.text,
   },
   // Modals
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: 'rgba(0,0,0,0.4)',
     justifyContent: 'flex-end',
   },
   modalContent: {
@@ -466,8 +660,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontFamily: fonts.bold,
     fontSize: 18,
+    fontWeight: '700',
     color: colors.text,
   },
   modalInput: {
@@ -476,7 +670,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.text,
     backgroundColor: colors.inputBg,
@@ -490,9 +683,29 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   modalSaveBtnText: {
-    fontFamily: fonts.bold,
     fontSize: 16,
+    fontWeight: '700',
     color: colors.white,
+  },
+  modalOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.inputBorder,
+  },
+  modalOptionSelected: {
+    backgroundColor: colors.inputBg,
+  },
+  modalOptionText: {
+    fontSize: 15,
+    color: colors.text,
+  },
+  modalOptionTextSelected: {
+    fontWeight: '600',
+    color: colors.primary,
   },
 });
 

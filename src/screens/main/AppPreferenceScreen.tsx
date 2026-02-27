@@ -13,10 +13,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
-import { fonts } from '../../theme/typography';
-import { useAppPreference } from '../../context/AppPreferenceContext';
-import { ThemeOption, AccentColor, FontSizeOption, SettingsStackParamList } from '../../models';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import {
+  useAppPreference,
+  ThemeOption,
+  AccentColor,
+  FontSizeOption,
+} from '../../context/AppPreferenceContext';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -28,9 +30,9 @@ const ACCENT_OPTIONS: AccentColor[] = ['Lavender', 'Orange', 'Blue'];
 const FONT_SIZE_OPTIONS: FontSizeOption[] = ['Small', 'Medium', 'Large'];
 
 const ACCENT_COLORS: Record<AccentColor, string> = {
-  Lavender: colors.primary,
-  Orange: colors.warning,
-  Blue: colors.info,
+  Lavender: '#6B2FD9',
+  Orange: '#F59E0B',
+  Blue: '#3B82F6',
 };
 
 // ------- Sub-components -------
@@ -73,9 +75,7 @@ const RadioCircle: React.FC<RadioCircleProps> = ({ selected, color = colors.text
 );
 
 // ------- Main Screen -------
-type Props = NativeStackScreenProps<SettingsStackParamList, 'AppPreferences'>;
-
-const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
+const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const {
     theme,
     setTheme,
@@ -231,9 +231,9 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                 <Switch
                   value={highContrastMode}
                   onValueChange={setHighContrastMode}
-                  trackColor={{ false: colors.switchTrack, true: colors.primary }}
+                  trackColor={{ false: '#D1D5DB', true: colors.primary }}
                   thumbColor={colors.white}
-                  ios_backgroundColor={colors.switchTrack}
+                  ios_backgroundColor="#D1D5DB"
                 />
               </View>
             </View>
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   title: {
-    fontFamily: fonts.bold,
     fontSize: 28,
+    fontWeight: '700',
     color: colors.text,
   },
   // Card
@@ -286,16 +286,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
-    fontFamily: fonts.bold,
     fontSize: 20,
+    fontWeight: '700',
     color: colors.text,
   },
   sectionBody: {
     marginTop: 8,
   },
   subtitle: {
-    fontFamily: fonts.regular,
     fontSize: 14,
+    fontWeight: '400',
     color: colors.text,
     marginBottom: 10,
   },
@@ -320,8 +320,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.text,
   },
   themeOptionText: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
   },
   themeOptionTextDark: {
@@ -337,8 +337,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   accentOptionText: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
     color: colors.white,
   },
   // Radio
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
   },
   fontSizeButton: {
     flex: 1,
-    backgroundColor: colors.divider,
+    backgroundColor: '#E5E7EB',
     borderRadius: 24,
     paddingVertical: 12,
     alignItems: 'center',
@@ -372,8 +372,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   fontSizeText: {
-    fontFamily: fonts.semiBold,
     fontSize: 14,
+    fontWeight: '600',
     color: colors.text,
   },
   fontSizeTextSelected: {
@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   toggleLabel: {
-    fontFamily: fonts.semiBold,
     fontSize: 16,
+    fontWeight: '600',
     color: colors.text,
   },
 });

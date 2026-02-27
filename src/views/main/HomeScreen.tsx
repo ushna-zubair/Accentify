@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 const HomeScreen: React.FC = () => {
   return (
@@ -18,9 +19,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   text: {
+    fontFamily: fonts.semiBold,
     fontSize: 24,
     color: colors.text,
-    fontWeight: '600',
   },
 });
 

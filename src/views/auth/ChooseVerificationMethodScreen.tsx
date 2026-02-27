@@ -13,6 +13,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ChooseVerificationMethod'>;
 
@@ -153,14 +154,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 16,
-    fontWeight: '700',
     color: colors.text,
   },
   /* ── Subtitle ── */
   subtitle: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
-    fontWeight: '600',
     color: colors.text,
     textAlign: 'center',
     lineHeight: 22,
@@ -169,7 +170,7 @@ const styles = StyleSheet.create({
   },
   accentifyText: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   /* ── Methods ── */
   methodsContainer: {
@@ -190,8 +191,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   methodText: {
+    fontFamily: fonts.semiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: colors.text,
   },
   methodTextSelected: {
@@ -199,6 +200,7 @@ const styles = StyleSheet.create({
   },
   /* ── Warning ── */
   warningText: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'center',
@@ -225,8 +227,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
 });

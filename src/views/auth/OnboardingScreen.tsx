@@ -6,19 +6,18 @@ import {
   Image,
   TouchableOpacity,
   FlatList,
-  Dimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Onboarding'>;
-
-const { width } = Dimensions.get('window');
 
 const slides = [
   {
@@ -48,6 +47,7 @@ const slides = [
 ];
 
 const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
+  const { width } = useWindowDimensions();
   const [currentSlide, setCurrentSlide] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 });
@@ -148,9 +148,9 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   skipText: {
+    fontFamily: fonts.medium,
     fontSize: 16,
     color: colors.text,
-    fontWeight: '500',
   },
   slide: {
     flex: 1,
@@ -165,13 +165,14 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 28,
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 16,
     color: colors.textLight,
     textAlign: 'center',
@@ -214,9 +215,9 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   buttonText: {
+    fontFamily: fonts.bold,
     fontSize: 14,
     color: colors.white,
-    fontWeight: '700',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },

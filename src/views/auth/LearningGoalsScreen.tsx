@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'LearningGoals'>;
 
@@ -143,18 +144,19 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   skipText: {
+    fontFamily: fonts.semiBold,
     fontSize: 15,
-    fontWeight: '600',
     color: colors.text,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 22,
-    fontWeight: '700',
     color: colors.primary,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'left',
@@ -178,20 +180,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   goalChipSelected: {
-    backgroundColor: '#EDE9FE',
+    backgroundColor: colors.primary500,
     borderColor: colors.primary,
   },
   goalIcon: {
     fontSize: 16,
   },
   goalLabel: {
+    fontFamily: fonts.medium,
     fontSize: 14,
-    fontWeight: '500',
     color: colors.text,
   },
   goalLabelSelected: {
+    fontFamily: fonts.semiBold,
     color: colors.primary,
-    fontWeight: '600',
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -219,8 +221,8 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   nextButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

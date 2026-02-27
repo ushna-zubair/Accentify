@@ -8,6 +8,7 @@ import {
 	TextStyle,
 } from 'react-native';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 
 interface CustomButtonProps {
 	title: string;
@@ -17,6 +18,8 @@ interface CustomButtonProps {
 	variant?: 'primary' | 'outline';
 	style?: ViewStyle;
 	textStyle?: TextStyle;
+	/** Accessibility label override — defaults to title */
+	accessibilityLabel?: string;
 }
 
 const CustomButton: React.FC<CustomButtonProps> = ({
@@ -27,6 +30,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	variant = 'primary',
 	style,
 	textStyle,
+	accessibilityLabel,
 }) => {
 	const isPrimary = variant === 'primary';
 	const isDisabled = disabled || loading;
@@ -36,6 +40,9 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 			onPress={onPress}
 			disabled={isDisabled}
 			activeOpacity={0.8}
+			accessibilityRole="button"
+			accessibilityLabel={accessibilityLabel || title}
+			accessibilityState={{ disabled: isDisabled }}
 			style={[
 				styles.button,
 				isPrimary ? styles.primaryButton : styles.outlineButton,
@@ -86,8 +93,8 @@ const styles = StyleSheet.create({
 		opacity: 0.5,
 	},
 	buttonText: {
+		fontFamily: fonts.semiBold,
 		fontSize: 16,
-		fontWeight: '600',
 		letterSpacing: 0.3,
 	},
 	primaryText: {

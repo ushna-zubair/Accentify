@@ -5,6 +5,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupFaceID'>;
 
@@ -115,12 +116,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
   },
   /* ── Description ── */
   description: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textLight,
     textAlign: 'center',
@@ -208,6 +210,7 @@ const styles = StyleSheet.create({
   },
   /* ── Privacy Note ── */
   privacyNote: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'center',
@@ -234,8 +237,8 @@ const styles = StyleSheet.create({
     borderColor: colors.inputBorder,
   },
   skipButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.text,
   },
   continueButton: {
@@ -255,8 +258,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

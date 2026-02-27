@@ -13,8 +13,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 import { useAccessibility } from '../../context/AccessibilityContext';
-import { ColorBlindMode, FontStyleOption } from '../../models';
+import { ColorBlindMode, FontStyleOption, SettingsStackParamList } from '../../models';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -43,9 +45,9 @@ const ToggleRow: React.FC<ToggleRowProps> = ({ label, value, onValueChange }) =>
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: '#D1D5DB', true: colors.primary }}
+      trackColor={{ false: colors.switchTrack, true: colors.primary }}
       thumbColor={colors.white}
-      ios_backgroundColor="#D1D5DB"
+      ios_backgroundColor={colors.switchTrack}
     />
   </View>
 );
@@ -82,7 +84,9 @@ const OptionButton: React.FC<OptionButtonProps> = ({
   </TouchableOpacity>
 );
 
-const AccessibilityScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+type Props = NativeStackScreenProps<SettingsStackParamList, 'Accessibility'>;
+
+const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
   const {
     textToSpeech,
     setTextToSpeech,
@@ -246,8 +250,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 28,
-    fontWeight: '700',
     color: colors.text,
   },
   card: {
@@ -264,8 +268,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sectionTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     flex: 1,
@@ -277,8 +281,8 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   toggleLabel: {
+    fontFamily: fonts.regular,
     fontSize: 14,
-    fontWeight: '400',
     color: colors.text,
   },
   optionsContainer: {
@@ -286,7 +290,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   optionButton: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.divider,
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
@@ -295,12 +299,13 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
   },
   optionText: {
+    fontFamily: fonts.regular,
     fontSize: 16,
     color: colors.text,
   },
   optionTextSelected: {
+    fontFamily: fonts.semiBold,
     color: colors.white,
-    fontWeight: '600',
   },
 });
 

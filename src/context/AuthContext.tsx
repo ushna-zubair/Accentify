@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import {
   User,
   createUserWithEmailAndPassword,
@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserRole = async (uid: string): Promise<UserRole | null> => {
+  const fetchUserRole = useCallback(async (uid: string): Promise<UserRole | null> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
@@ -47,9 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error fetching user role:', error);
       return null;
     }
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string) => {
     try {
       // Only create the Firebase Auth account here
       // The full Firestore document is written at the end of onboarding via completeOnboarding()
@@ -57,19 +57,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       await fetchUserRole(result.user.uid);
     } catch (error) {
       throw error;
     }
-  };
+  }, [fetchUserRole]);
 
   // Called at the END of the multi-step onboarding to write the complete Firestore document
-  const completeOnboarding = async (data: OnboardingPayload) => {
+  const completeOnboarding = useCallback(async (data: OnboardingPayload) => {
     if (!currentUser) throw new Error('No authenticated user found');
 
     // Write the COMPLETE user document — Document ID MUST match the Auth user.uid
@@ -105,9 +105,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Fetch role to update context state — triggers AppNavigator to show LearnerNavigator
     await fetchUserRole(currentUser.uid);
-  };
+  }, [currentUser, fetchUserRole]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       await firebaseSignOut(auth);
       setUserRole(null);
@@ -115,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       throw error;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -132,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, []);
 
-  const value: AuthContextType = {
+  const value = useMemo<AuthContextType>(() => ({
     currentUser,
     userRole,
     userProfile,
@@ -142,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     fetchUserRole,
     completeOnboarding,
-  };
+  }), [currentUser, userRole, userProfile, loading, signUp, signIn, signOut, fetchUserRole, completeOnboarding]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

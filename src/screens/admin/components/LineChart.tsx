@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Polyline, Circle as SvgCircle, Line } from 'react-native-svg';
-import { fonts } from '../../../theme/typography';
-import colors from '../../../theme/colors';
 
 interface LineChartProps {
   thisWeek: number[];
@@ -13,8 +11,8 @@ interface LineChartProps {
 }
 
 const LINE_COLORS = {
-  thisWeek: colors.primary,
-  lastWeek: colors.disabled,
+  thisWeek: '#6B2FD9',
+  lastWeek: '#D1D5DB',
 };
 
 const LineChart: React.FC<LineChartProps> = ({
@@ -59,7 +57,7 @@ const LineChart: React.FC<LineChartProps> = ({
               y1={y}
               x2={width - padding}
               y2={y}
-              stroke={colors.surfaceAlt}
+              stroke="#F3F4F6"
               strokeWidth={1}
             />
           );
@@ -113,9 +111,8 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   label: {
-    fontFamily: fonts.regular,
     fontSize: 10,
-    color: colors.textMuted,
+    color: '#9CA3AF',
   },
 });
 

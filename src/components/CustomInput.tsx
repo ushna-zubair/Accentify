@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 
 interface CustomInputProps {
 	placeholder?: string;
@@ -23,6 +24,8 @@ interface CustomInputProps {
 	style?: ViewStyle;
 	autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
 	editable?: boolean;
+	/** Accessibility label for screen readers */
+	accessibilityLabel?: string;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -37,6 +40,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 	style,
 	autoCapitalize = 'none',
 	editable = true,
+	accessibilityLabel,
 }) => {
 	const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
@@ -67,6 +71,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 					editable={editable}
 					onFocus={() => setIsFocused(true)}
 					onBlur={() => setIsFocused(false)}
+					accessibilityLabel={accessibilityLabel || placeholder}
 				/>
 
 				{isPassword ? (
@@ -74,6 +79,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
 						style={styles.iconRight}
 						onPress={() => setIsPasswordVisible((prev) => !prev)}
 						hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+						accessibilityRole="button"
+						accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
 					>
 						<FontAwesome5
 							name={showPassword ? 'eye-slash' : 'eye'}
@@ -114,6 +121,7 @@ const styles = StyleSheet.create({
 	input: {
 		flex: 1,
 		color: colors.text,
+		fontFamily: fonts.regular,
 		fontSize: 15,
 		paddingVertical: 0,
 	},

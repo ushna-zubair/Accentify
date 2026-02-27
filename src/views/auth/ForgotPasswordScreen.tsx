@@ -4,13 +4,13 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
@@ -119,8 +119,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
   },
   illustrationContainer: {
@@ -139,11 +139,11 @@ const styles = StyleSheet.create({
   phoneBody: {
     width: 90,
     height: 130,
-    backgroundColor: '#F9A8B8',
+    backgroundColor: colors.accentPink600,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: colors.primary500,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -164,16 +164,17 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#A8D8D0',
+    backgroundColor: colors.success600,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 15,
     color: colors.textLight,
     textAlign: 'center',
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
   },
   methodCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: colors.primary500,
   },
   methodIconWrapper: {
     width: 48,
@@ -209,15 +210,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   methodLabel: {
+    fontFamily: fonts.medium,
     fontSize: 12,
     color: colors.textMuted,
-    fontWeight: '500',
     marginBottom: 3,
   },
   methodValue: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     color: colors.text,
-    fontWeight: '600',
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -242,8 +243,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

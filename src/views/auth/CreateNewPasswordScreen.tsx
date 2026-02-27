@@ -12,6 +12,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateNewPassword'>;
 
@@ -66,7 +67,7 @@ const CreateNewPasswordScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.illustrationContainer}>
           <View style={styles.shieldOuter}>
             <View style={styles.shieldInner}>
-              <FontAwesome5 name="lock" size={36} color="#A78BFA" />
+              <FontAwesome5 name="lock" size={36} color={colors.primaryLight} />
             </View>
           </View>
         </View>
@@ -135,8 +136,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
   },
   /* ── Illustration ── */
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   shieldOuter: {
     width: 140,
     height: 160,
-    backgroundColor: '#7C3AED',
+    backgroundColor: colors.primaryDark,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
-    shadowColor: '#7C3AED',
+    shadowColor: colors.primaryDark,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
   shieldInner: {
     width: 110,
     height: 128,
-    backgroundColor: '#8B5CF6',
+    backgroundColor: colors.primary,
     borderRadius: 16,
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
@@ -176,12 +177,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.15)',
+    borderColor: colors.primary600,
   },
   /* ── Subtitle ── */
   subtitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
     textAlign: 'center',
     marginBottom: 24,
@@ -215,8 +216,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {

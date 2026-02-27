@@ -13,7 +13,10 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
+import NumberKeypad from '../../components/NumberKeypad';
+import { useCodeInput } from '../../hooks/useCodeInput';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupAuthenticator'>;
 
@@ -22,36 +25,11 @@ const CODE_LENGTH = 6;
 const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
   const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { completeOnboarding } = useAuth();
-  const [code, setCode] = useState<string[]>(Array(CODE_LENGTH).fill(''));
+  const { code, handleKeyPress, isComplete, value: codeValue } = useCodeInput(CODE_LENGTH);
   const [loading, setLoading] = useState(false);
 
-  const handleKeypadPress = (key: string) => {
-    if (key === 'backspace') {
-      let lastFilledIndex = -1;
-      for (let i = code.length - 1; i >= 0; i--) {
-        if (code[i] !== '') {
-          lastFilledIndex = i;
-          break;
-        }
-      }
-      if (lastFilledIndex >= 0) {
-        const newCode = [...code];
-        newCode[lastFilledIndex] = '';
-        setCode(newCode);
-      }
-    } else {
-      const firstEmptyIndex = code.indexOf('');
-      if (firstEmptyIndex >= 0 && firstEmptyIndex < CODE_LENGTH) {
-        const newCode = [...code];
-        newCode[firstEmptyIndex] = key;
-        setCode(newCode);
-      }
-    }
-  };
-
   const handleContinue = async () => {
-    const enteredCode = code.join('');
-    if (enteredCode.length < CODE_LENGTH) {
+    if (!isComplete) {
       Alert.alert('Error', 'Please enter the full 6-digit code.');
       return;
     }
@@ -176,23 +154,7 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Hidden keypad - using TextInput approach or simple tap boxes */}
         {/* We'll use a simple approach: tap on the code area to show a basic keypad row */}
-        <View style={styles.miniKeypad}>
-          {['1','2','3','4','5','6','7','8','9','','0','backspace'].map((key, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.miniKeypadButton}
-              onPress={() => key !== '' && handleKeypadPress(key)}
-              activeOpacity={key === '' ? 1 : 0.5}
-              disabled={key === ''}
-            >
-              {key === 'backspace' ? (
-                <FontAwesome5 name="backspace" size={16} color={colors.text} />
-              ) : (
-                <Text style={styles.miniKeypadText}>{key}</Text>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
+        <NumberKeypad onKeyPress={handleKeyPress} size="compact" style={styles.miniKeypad} />
 
         {/* Warning */}
         <Text style={styles.warningText}>
@@ -242,23 +204,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 15,
-    fontWeight: '700',
     color: colors.text,
   },
   /* ── Steps ── */
   stepText: {
+    fontFamily: fonts.medium,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginTop: 16,
     marginBottom: 8,
-    fontWeight: '500',
   },
   accentifyText: {
     color: colors.primary,
-    fontWeight: '700',
+    fontFamily: fonts.bold,
   },
   /* ── QR Code ── */
   qrContainer: {
@@ -297,41 +259,26 @@ const styles = StyleSheet.create({
   },
   codeBoxFilled: {
     borderColor: colors.primary,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: colors.primary500,
   },
   codeDigit: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
   },
   /* ── Mini Keypad ── */
   miniKeypad: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
     marginTop: 4,
     marginBottom: 12,
   },
-  miniKeypadButton: {
-    width: '30%',
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 4,
-  },
-  miniKeypadText: {
-    fontSize: 18,
-    color: colors.text,
-    fontWeight: '500',
-  },
   /* ── Warning ── */
   warningText: {
+    fontFamily: fonts.medium,
     fontSize: 13,
     color: colors.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
-    fontWeight: '500',
   },
   /* ── Continue Button ── */
   continueButton: {
@@ -348,8 +295,8 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   continueButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
 });

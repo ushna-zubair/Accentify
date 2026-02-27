@@ -1,4 +1,7 @@
 // ─── Auth / User Models ───
+import type { ImageSourcePropType } from 'react-native';
+import type { Timestamp } from 'firebase/firestore';
+
 export type UserRole = 'learner' | 'content_author' | 'admin';
 
 export interface UserProfile {
@@ -6,7 +9,7 @@ export interface UserProfile {
   role: UserRole;
   fullName: string;
   profileComplete: boolean;
-  createdAt?: any;
+  createdAt?: Timestamp;
 }
 
 export interface OnboardingPayload {
@@ -78,7 +81,7 @@ export interface NotificationItem {
   id: string;
   text: string;
   time: string;
-  avatar: any;
+  avatar: ImageSourcePropType;
   unread: boolean;
   tab: NotificationTab;
 }

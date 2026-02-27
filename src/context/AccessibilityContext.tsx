@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColorBlindMode, FontStyleOption, AccessibilityState } from '../models';
 
@@ -63,15 +63,15 @@ export const AccessibilityProvider: React.FC<{ children: ReactNode }> = ({ child
     [persist],
   );
 
-  const value: AccessibilityContextType = {
+  const value = useMemo<AccessibilityContextType>(() => ({
     ...state,
-    setTextToSpeech: (v) => update({ textToSpeech: v }),
-    setColorBlindMode: (v) => update({ colorBlindMode: v }),
-    setFontStyle: (v) => update({ fontStyle: v }),
-    setTranscript: (v) => update({ transcript: v }),
-    setReduceAnimation: (v) => update({ reduceAnimation: v }),
-    setHighContrastMode: (v) => update({ highContrastMode: v }),
-  };
+    setTextToSpeech: (v: boolean) => update({ textToSpeech: v }),
+    setColorBlindMode: (v: ColorBlindMode) => update({ colorBlindMode: v }),
+    setFontStyle: (v: FontStyleOption) => update({ fontStyle: v }),
+    setTranscript: (v: boolean) => update({ transcript: v }),
+    setReduceAnimation: (v: boolean) => update({ reduceAnimation: v }),
+    setHighContrastMode: (v: boolean) => update({ highContrastMode: v }),
+  }), [state, update]);
 
   return (
     <AccessibilityContext.Provider value={value}>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import colors from '../theme/colors';
+import { fonts } from '../theme/typography';
 
 interface OTPInputProps {
   value: string[];
@@ -8,9 +9,9 @@ interface OTPInputProps {
 
 const OTPInput: React.FC<OTPInputProps> = ({ value }) => {
   return (
-    <View style={styles.container}>
+    <View style={styles.container} accessibilityRole="text" accessibilityLabel={`OTP code: ${value.join('')}`}>
       {value.map((digit, index) => (
-        <View key={index} style={[styles.box, digit && styles.boxFilled]}>
+        <View key={index} style={[styles.box, digit && styles.boxFilled]} accessibilityLabel={`Digit ${index + 1}: ${digit || 'empty'}`}>
           <Text style={styles.boxText}>{digit}</Text>
         </View>
       ))}
@@ -38,8 +39,8 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   boxText: {
+    fontFamily: fonts.semiBold,
     fontSize: 18,
-    fontWeight: '600',
     color: colors.text,
   },
 });

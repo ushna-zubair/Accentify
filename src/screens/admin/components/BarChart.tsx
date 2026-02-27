@@ -1,8 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
-import { fonts } from '../../../theme/typography';
-import colors from '../../../theme/colors';
 
 interface BarChartProps {
   data: { label: string; thisWeek: number; lastWeek: number }[];
@@ -10,8 +8,8 @@ interface BarChartProps {
 }
 
 const CHART_COLORS = {
-  thisWeek: colors.primary,
-  lastWeek: colors.primaryMuted,
+  thisWeek: '#6B2FD9',
+  lastWeek: '#C4B5FD',
 };
 
 const BarChart: React.FC<BarChartProps> = ({ data, height = 180 }) => {
@@ -77,9 +75,8 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   label: {
-    fontFamily: fonts.regular,
     fontSize: 11,
-    color: colors.textMuted,
+    color: '#9CA3AF',
     textAlign: 'center',
     position: 'absolute',
   },

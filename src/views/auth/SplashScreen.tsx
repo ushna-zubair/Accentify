@@ -3,6 +3,7 @@ import { View, Image, StyleSheet, Text } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../models';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
@@ -44,8 +45,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
+    fontFamily: fonts.bold,
     fontSize: 22,
-    fontWeight: '700',
     color: colors.primary,
     letterSpacing: 6,
   },

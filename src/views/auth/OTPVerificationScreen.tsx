@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,16 +11,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
+import NumberKeypad from '../../components/NumberKeypad';
+import { useCodeInput } from '../../hooks/useCodeInput';
 import colors from '../../theme/colors';
+import { fonts } from '../../theme/typography';
+import { OTP_RESEND_SECONDS } from '../../theme/spacing';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'OTPVerification'>;
 
 const OTP_LENGTH = 4;
 
 const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
-  const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  const [resendTimer, setResendTimer] = useState(58);
-  const [canResend, setCanResend] = useState(false);
+  const { code: otp, handleKeyPress, isComplete, activeIndex } = useCodeInput(OTP_LENGTH);
+  const [resendTimer, setResendTimer] = React.useState(OTP_RESEND_SECONDS);
+  const [canResend, setCanResend] = React.useState(false);
 
   // Blinking cursor animation
   const cursorAnim = useRef(new Animated.Value(1)).current;
@@ -45,48 +49,13 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [resendTimer]);
 
-  const handleKeypadPress = (key: string) => {
-    if (key === 'backspace') {
-      let lastFilledIndex = -1;
-      for (let i = otp.length - 1; i >= 0; i--) {
-        if (otp[i] !== '') {
-          lastFilledIndex = i;
-          break;
-        }
-      }
-      if (lastFilledIndex >= 0) {
-        const newOtp = [...otp];
-        newOtp[lastFilledIndex] = '';
-        setOtp(newOtp);
-      }
-    } else if (key !== '') {
-      const firstEmptyIndex = otp.indexOf('');
-      if (firstEmptyIndex >= 0 && firstEmptyIndex < OTP_LENGTH) {
-        const newOtp = [...otp];
-        newOtp[firstEmptyIndex] = key;
-        setOtp(newOtp);
-      }
-    }
-  };
-
   const handleResend = () => {
     if (canResend) {
-      setResendTimer(58);
+      setResendTimer(OTP_RESEND_SECONDS);
       setCanResend(false);
       // TODO: trigger resend OTP API call
     }
   };
-
-  const isComplete = otp.every((d) => d !== '');
-  const activeIndex = otp.indexOf('');
-
-  // Keypad layout: 1-9, empty, 0, backspace
-  const keypadRows = [
-    ['1', '2', '3'],
-    ['4', '5', '6'],
-    ['7', '8', '9'],
-    ['', '0', 'backspace'],
-  ];
 
   return (
     <SafeAreaView style={styles.container}>
@@ -152,25 +121,7 @@ const OTPVerificationScreen: React.FC<Props> = ({ navigation }) => {
 
         {/* Custom Keypad */}
         <View style={styles.keypad}>
-          {keypadRows.map((row, rowIndex) => (
-            <View key={rowIndex} style={styles.keypadRow}>
-              {row.map((key, colIndex) => (
-                <TouchableOpacity
-                  key={`${rowIndex}-${colIndex}`}
-                  style={styles.keypadButton}
-                  onPress={() => handleKeypadPress(key)}
-                  activeOpacity={key === '' ? 1 : 0.5}
-                  disabled={key === ''}
-                >
-                  {key === 'backspace' ? (
-                    <FontAwesome5 name="backspace" size={20} color={colors.text} />
-                  ) : (
-                    <Text style={styles.keypadText}>{key}</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          ))}
+          <NumberKeypad onKeyPress={handleKeyPress} />
         </View>
       </View>
     </SafeAreaView>
@@ -203,12 +154,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: fonts.bold,
     fontSize: 18,
-    fontWeight: '700',
     color: colors.text,
   },
   /* ── Subtitle ── */
   subtitle: {
+    fontFamily: fonts.regular,
     fontSize: 14,
     color: colors.textLight,
     textAlign: 'center',
@@ -235,14 +187,14 @@ const styles = StyleSheet.create({
   },
   otpBoxFilled: {
     borderColor: colors.primary,
-    backgroundColor: '#F5F3FF',
+    backgroundColor: colors.primary500,
   },
   otpBoxActive: {
     borderColor: colors.primary,
   },
   otpDigit: {
+    fontFamily: fonts.bold,
     fontSize: 22,
-    fontWeight: '700',
     color: colors.text,
   },
   cursor: {
@@ -253,12 +205,13 @@ const styles = StyleSheet.create({
   },
   /* ── Resend ── */
   resendText: {
+    fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.textLight,
     marginBottom: 28,
   },
   resendBold: {
-    fontWeight: '700',
+    fontFamily: fonts.bold,
     color: colors.text,
     textDecorationLine: 'underline',
   },
@@ -284,8 +237,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   verifyButtonText: {
+    fontFamily: fonts.semiBold,
     fontSize: 16,
-    fontWeight: '600',
     color: colors.white,
   },
   arrowCircle: {
@@ -301,23 +254,6 @@ const styles = StyleSheet.create({
     width: '100%',
     marginTop: 'auto',
     paddingBottom: 16,
-  },
-  keypadRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  keypadButton: {
-    width: '30%',
-    height: 56,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  keypadText: {
-    fontSize: 24,
-    color: colors.text,
-    fontWeight: '500',
   },
 });
 
