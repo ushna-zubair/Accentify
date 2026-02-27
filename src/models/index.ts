@@ -222,6 +222,21 @@ export interface TutorScreenData {
   studyPath: TutorLesson[];
 }
 
+export interface LessonDetailData {
+  id: string;
+  title: string;
+  /** Full description shown on detail screen */
+  fullDescription: string;
+  /** Category: pronunciation, conversation, vocabulary */
+  category: string;
+  difficulty: LessonDifficulty;
+  /** Ordered tips for "Remember to focus:" section */
+  focusTips: string[];
+  /** Remote image URL for the lesson illustration */
+  imageUrl?: string;
+  status: LessonStatus;
+}
+
 // ─── Progress Models ───
 export type LessonStatus = 'completed' | 'in_progress' | 'upcoming';
 
@@ -340,6 +355,11 @@ export type LearnerTabParamList = {
   Tutor: undefined;
   Progress: undefined;
   Settings: undefined;
+};
+
+export type TutorStackParamList = {
+  TutorMain: undefined;
+  LessonDetail: { lessonId: string };
 };
 
 export type CMSStackParamList = {

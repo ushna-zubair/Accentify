@@ -16,10 +16,11 @@ import {
   LearnerTabParamList,
   CMSStackParamList,
   AdminStackParamList,
+  TutorStackParamList,
 } from '../models';
 
 // Re-export types so existing consumers still work
-export type { ProfileData, StudyPlanData, AuthStackParamList, SettingsStackParamList, LearnerTabParamList, CMSStackParamList, AdminStackParamList };
+export type { ProfileData, StudyPlanData, AuthStackParamList, SettingsStackParamList, LearnerTabParamList, CMSStackParamList, AdminStackParamList, TutorStackParamList };
 
 // Views – Main
 import AccessibilityScreen from '../views/main/AccessibilityScreen';
@@ -48,6 +49,7 @@ const SetYourFingerprintScreen = require('../views/auth/SetYourFingerprintScreen
 
 // Views – Main (barrel)
 import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../views/main';
+import LessonDetailScreen from '../views/main/LessonDetailScreen';
 
 // Views – Admin
 import AdminDashboardScreen from '../views/admin/AdminDashboardScreen';
@@ -58,6 +60,7 @@ import AdminAnnouncementsScreen from '../views/admin/AdminAnnouncementsScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
+const TutorStack = createNativeStackNavigator<TutorStackParamList>();
 const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 const LearnerTab = createBottomTabNavigator<LearnerTabParamList>();
 
@@ -70,6 +73,15 @@ const SettingsStackNavigator = () => {
       <SettingsStack.Screen name="AppPreferences" component={AppPreferenceScreen} />
       <SettingsStack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
     </SettingsStack.Navigator>
+  );
+};
+
+const TutorStackNavigator = () => {
+  return (
+    <TutorStack.Navigator screenOptions={{ headerShown: false }}>
+      <TutorStack.Screen name="TutorMain" component={TutorScreen} />
+      <TutorStack.Screen name="LessonDetail" component={LessonDetailScreen} />
+    </TutorStack.Navigator>
   );
 };
 
@@ -156,7 +168,7 @@ const LearnerNavigator = () => {
       })}
     >
       <LearnerTab.Screen name="Home" component={HomeScreen} />
-      <LearnerTab.Screen name="Tutor" component={TutorScreen} />
+      <LearnerTab.Screen name="Tutor" component={TutorStackNavigator} />
       <LearnerTab.Screen name="Progress" component={ProgressScreen} />
       <LearnerTab.Screen
         name="Settings"

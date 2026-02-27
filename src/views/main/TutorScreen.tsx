@@ -7,12 +7,15 @@ import {
   Image,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import { useTutorController, CATEGORY_COLORS } from '../../controllers';
-import type { TutorLesson, LessonDifficulty } from '../../models';
+import type { TutorLesson, LessonDifficulty, TutorStackParamList } from '../../models';
 
 // ═══════════════════════════════════════════════
 //  SUB-COMPONENTS
@@ -56,8 +59,8 @@ const LessonThumbnail: React.FC<{ lesson: TutorLesson }> = ({ lesson }) => {
 };
 
 // ─── Lesson Card ───
-const LessonCard: React.FC<{ lesson: TutorLesson }> = ({ lesson }) => (
-  <View style={styles.lessonCard}>
+const LessonCard: React.FC<{ lesson: TutorLesson; onPress: () => void }> = ({ lesson, onPress }) => (
+  <TouchableOpacity style={styles.lessonCard} activeOpacity={0.7} onPress={onPress}>
     <LessonThumbnail lesson={lesson} />
     <View style={styles.lessonInfo}>
       <View style={styles.lessonTitleRow}>
@@ -70,7 +73,7 @@ const LessonCard: React.FC<{ lesson: TutorLesson }> = ({ lesson }) => (
         {lesson.description}
       </Text>
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 // ─── Stats Badge ───
@@ -88,6 +91,7 @@ const StatBadge: React.FC<{ value: number | string; label: string }> = ({ value,
 // ═══════════════════════════════════════════════
 
 const TutorScreen: React.FC = () => {
+  const navigation = useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
   const { data, loading, error, refresh } = useTutorController();
 
   if (loading) {
@@ -143,7 +147,11 @@ const TutorScreen: React.FC = () => {
           <>
             <Text style={styles.sectionTitle}>Select where you left off</Text>
             {data.recentLessons.map((lesson) => (
-              <LessonCard key={lesson.id} lesson={lesson} />
+              <LessonCard
+                key={lesson.id}
+                lesson={lesson}
+                onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
+              />
             ))}
           </>
         )}
@@ -153,7 +161,11 @@ const TutorScreen: React.FC = () => {
           <>
             <Text style={styles.sectionTitle}>Study Path</Text>
             {data.studyPath.map((lesson) => (
-              <LessonCard key={lesson.id} lesson={lesson} />
+              <LessonCard
+                key={lesson.id}
+                lesson={lesson}
+                onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
+              />
             ))}
           </>
         )}
