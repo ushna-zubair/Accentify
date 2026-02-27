@@ -30,17 +30,17 @@ const SENTENCES: PronunciationSentence[] = [
     difficulty: 'medium',
   },
   {
-    text: 'Mark planned to wake up early for his morning jog, but he ended up sleeping in until noon.',
+    text: 'Hannah planned to finish her science project on Saturday, so she spent the afternoon working at the library.',
     difficulty: 'hard',
   },
 ];
 
 const SUCCESS_MESSAGES = [
   'Well-Done!!!',
-  'Keep it up!!!',
-  'Excellent!!!',
+  'Almost there\nKeep it up!',
+  'Good Job!!!',
   'Great Job!!!',
-  'Amazing!!!',
+  'Excellent!!!',
 ];
 
 const FEEDBACK_TEMPLATES = [
@@ -83,6 +83,14 @@ const toPhonetic = (word: string): string => {
     planned: 'pland',
     morning: 'mor-ning',
     sleeping: 'slee-ping',
+    science: 'sy-uhns',
+    project: 'prah-jekt',
+    saturday: 'sa-ter-day',
+    afternoon: 'af-ter-noon',
+    library: 'ly-breh-ree',
+    hannah: 'ha-nuh',
+    finish: 'fi-nish',
+    working: 'wer-king',
   };
   return map[word.toLowerCase()] ?? word.toLowerCase();
 };

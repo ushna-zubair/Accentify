@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,17 +11,24 @@ import {
   Easing,
   Dimensions,
   Platform,
+  TextInput,
+  KeyboardAvoidingView,
+  Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Svg, { Rect, Circle, Path, Ellipse, Line, G } from 'react-native-svg';
+import Svg, { Circle, Path } from 'react-native-svg';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import {
   usePronunciationExerciseController,
 } from '../../controllers/usePronunciationExerciseController';
-import type { TutorStackParamList, WordResult } from '../../models';
+import {
+  useWavyChatController,
+  type WavyChatMessage,
+} from '../../controllers/useWavyChatController';
+import type { TutorStackParamList } from '../../models';
 
 type ExerciseRoute = RouteProp<TutorStackParamList, 'PronunciationExercise'>;
 type ExerciseNav = NativeStackNavigationProp<
@@ -29,13 +36,12 @@ type ExerciseNav = NativeStackNavigationProp<
   'PronunciationExercise'
 >;
 
-const { width: SCREEN_W } = Dimensions.get('window');
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 
 // ═══════════════════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════════════════
 
-/** Progress badge color: green → orange → red */
 const getProgressColor = (idx: number, total: number): string => {
   if (total <= 1) return colors.success;
   const ratio = idx / (total - 1);
@@ -44,7 +50,6 @@ const getProgressColor = (idx: number, total: number): string => {
   return colors.error;
 };
 
-/** Format seconds → m:ss */
 const formatTimer = (secs: number): string => {
   const m = Math.floor(secs / 60);
   const s = secs % 60;
@@ -52,30 +57,34 @@ const formatTimer = (secs: number): string => {
 };
 
 // ═══════════════════════════════════════════════
-//  AI MASCOT (bottom-left)
+//  AI MASCOT (tappable)
 // ═══════════════════════════════════════════════
 
-const AiMascot: React.FC = () => (
-  <View style={styles.mascotWrap}>
+const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => (
+  <TouchableOpacity
+    style={styles.mascotWrap}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
     <Svg width={44} height={44} viewBox="0 0 44 44">
-      {/* Body */}
-      <Circle cx={22} cy={26} r={16} fill="#C4A882" />
-      {/* Face */}
-      <Circle cx={22} cy={22} r={14} fill="#D4B896" />
-      {/* Eyes */}
-      <Circle cx={16} cy={20} r={2.5} fill={colors.text} />
-      <Circle cx={28} cy={20} r={2.5} fill={colors.text} />
-      {/* Mouth */}
-      <Path d="M18 27 Q22 31 26 27" stroke={colors.text} strokeWidth={1.5} fill="none" strokeLinecap="round" />
-      {/* Ears */}
-      <Circle cx={8} cy={14} r={5} fill="#C4A882" />
-      <Circle cx={36} cy={14} r={5} fill="#C4A882" />
+      <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
+      <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
+      <Circle cx={16} cy={19} r={2.5} fill={colors.white} />
+      <Circle cx={28} cy={19} r={2.5} fill={colors.white} />
+      <Path
+        d="M18 26 Q22 30 26 26"
+        stroke={colors.white}
+        strokeWidth={1.5}
+        fill="none"
+        strokeLinecap="round"
+      />
+      <Circle cx={8} cy={14} r={5} fill="#8B6FAE" />
+      <Circle cx={36} cy={14} r={5} fill="#8B6FAE" />
     </Svg>
-    {/* Speech bubble */}
     <View style={styles.mascotBubble}>
       <Ionicons name="chatbubble-ellipses" size={14} color={colors.primary} />
     </View>
-  </View>
+  </TouchableOpacity>
 );
 
 // ═══════════════════════════════════════════════
@@ -149,7 +158,7 @@ const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
 };
 
 // ═══════════════════════════════════════════════
-//  RESULT ICON (✓ or ✗)
+//  RESULT ICON
 // ═══════════════════════════════════════════════
 
 const ResultIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
@@ -184,6 +193,198 @@ const ResultIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
 };
 
 // ═══════════════════════════════════════════════
+//  WAVY CHAT OVERLAY
+// ═══════════════════════════════════════════════
+
+const WavyChatOverlay: React.FC<{
+  visible: boolean;
+  lessonId: string;
+  currentSentence: string;
+  onClose: () => void;
+  onExpand: () => void;
+  expanded: boolean;
+}> = ({ visible, lessonId, currentSentence, onClose, onExpand, expanded }) => {
+  const slideAnim = useRef(new Animated.Value(0)).current;
+  const chatScrollRef = useRef<ScrollView>(null);
+
+  const {
+    messages,
+    inputText,
+    setInputText,
+    isTyping,
+    sendMessage,
+  } = useWavyChatController(lessonId, currentSentence);
+
+  useEffect(() => {
+    Animated.spring(slideAnim, {
+      toValue: visible ? 1 : 0,
+      friction: 8,
+      tension: 65,
+      useNativeDriver: true,
+    }).start();
+  }, [visible, slideAnim]);
+
+  // Auto-scroll
+  useEffect(() => {
+    setTimeout(() => chatScrollRef.current?.scrollToEnd({ animated: true }), 200);
+  }, [messages.length, isTyping]);
+
+  const overlayHeight = expanded ? SCREEN_H * 0.75 : SCREEN_H * 0.48;
+
+  const handleSend = () => {
+    if (!inputText.trim()) return;
+    sendMessage();
+    Keyboard.dismiss();
+  };
+
+  if (!visible) return null;
+
+  return (
+    <Animated.View
+      style={[
+        chatStyles.overlay,
+        {
+          height: overlayHeight,
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [overlayHeight, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
+      {/* Header */}
+      <View style={chatStyles.header}>
+        <View style={chatStyles.headerLeft}>
+          {/* Wavy avatar */}
+          <Svg width={32} height={32} viewBox="0 0 44 44">
+            <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
+            <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
+            <Circle cx={16} cy={19} r={2.5} fill={colors.white} />
+            <Circle cx={28} cy={19} r={2.5} fill={colors.white} />
+            <Path
+              d="M18 26 Q22 30 26 26"
+              stroke={colors.white}
+              strokeWidth={1.5}
+              fill="none"
+              strokeLinecap="round"
+            />
+          </Svg>
+          <View style={chatStyles.headerInfo}>
+            <Text style={chatStyles.headerTitle}>Wavy</Text>
+            <Text style={chatStyles.headerSub}>Powered by AI</Text>
+          </View>
+        </View>
+
+        <View style={chatStyles.headerActions}>
+          <TouchableOpacity onPress={onExpand} activeOpacity={0.6}>
+            <Ionicons
+              name={expanded ? 'contract' : 'expand'}
+              size={20}
+              color={colors.white}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onClose} activeOpacity={0.6}>
+            <Ionicons name="close" size={22} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Messages */}
+      <ScrollView
+        ref={chatScrollRef}
+        style={chatStyles.messagesArea}
+        contentContainerStyle={chatStyles.messagesContent}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {messages.map((msg) => (
+          <ChatBubble key={msg.id} message={msg} />
+        ))}
+        {isTyping && (
+          <View style={chatStyles.typingRow}>
+            <Text style={chatStyles.typingLabel}>Wavy</Text>
+            <View style={chatStyles.typingBubble}>
+              <Text style={chatStyles.typingDots}>...</Text>
+            </View>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Input */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={60}
+      >
+        <View style={chatStyles.inputRow}>
+          <TextInput
+            style={chatStyles.textInput}
+            placeholder="Type your message..."
+            placeholderTextColor="rgba(255,255,255,0.5)"
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={handleSend}
+            returnKeyType="send"
+          />
+          <TouchableOpacity
+            onPress={handleSend}
+            activeOpacity={0.6}
+            style={chatStyles.sendBtn}
+          >
+            <Ionicons name="send" size={20} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+    </Animated.View>
+  );
+};
+
+// ── Chat Bubble ──
+const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
+  const isWavy = message.role === 'wavy';
+
+  return (
+    <View>
+      {/* Role label */}
+      <Text
+        style={[
+          chatStyles.roleLabel,
+          isWavy ? chatStyles.roleLabelLeft : chatStyles.roleLabelRight,
+        ]}
+      >
+        {isWavy ? 'Wavy' : 'You'}
+      </Text>
+      <View
+        style={[
+          chatStyles.bubbleRow,
+          isWavy ? chatStyles.bubbleRowLeft : chatStyles.bubbleRowRight,
+        ]}
+      >
+        {isWavy && (
+          <Svg width={24} height={24} viewBox="0 0 44 44" style={{ marginRight: 6 }}>
+            <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
+            <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
+            <Circle cx={16} cy={19} r={2} fill={colors.white} />
+            <Circle cx={28} cy={19} r={2} fill={colors.white} />
+          </Svg>
+        )}
+        <View
+          style={[
+            chatStyles.bubble,
+            isWavy ? chatStyles.bubbleWavy : chatStyles.bubbleUser,
+          ]}
+        >
+          <Text style={chatStyles.bubbleText}>{message.text}</Text>
+        </View>
+      </View>
+    </View>
+  );
+};
+
+// ═══════════════════════════════════════════════
 //  MAIN SCREEN
 // ═══════════════════════════════════════════════
 
@@ -200,7 +401,6 @@ const PronunciationExerciseScreen: React.FC = () => {
     phase,
     result,
     timer,
-    recordingDuration,
     error,
     startRecording,
     stopRecording,
@@ -209,7 +409,10 @@ const PronunciationExerciseScreen: React.FC = () => {
     completeExercise,
   } = usePronunciationExerciseController(lessonId);
 
-  // ── Render sentence text (plain or colored) ──
+  const [chatVisible, setChatVisible] = useState(false);
+  const [chatExpanded, setChatExpanded] = useState(false);
+
+  // ── Render sentence text ──
   const renderSentenceText = () => {
     if (phase === 'result' && result) {
       return (
@@ -261,7 +464,9 @@ const PronunciationExerciseScreen: React.FC = () => {
               {currentIndex + 1}/{totalSentences}
             </Text>
           </View>
-          <View style={[styles.badge, { backgroundColor: colors.accentOrange700 }]}>
+          <View
+            style={[styles.badge, { backgroundColor: colors.accentOrange700 }]}
+          >
             <Text style={styles.badgeText}>{formatTimer(timer)}</Text>
           </View>
         </View>
@@ -275,8 +480,8 @@ const PronunciationExerciseScreen: React.FC = () => {
       >
         {/* ── Pronunciation Card ── */}
         <View style={[styles.card, isResult && styles.cardResult]}>
-          {/* Speaker icon + sentence */}
-          <View style={styles.cardTextRow}>
+          {/* Speaker icon */}
+          <View style={styles.cardTopRow}>
             <TouchableOpacity
               style={styles.speakerBtn}
               activeOpacity={0.6}
@@ -288,12 +493,12 @@ const PronunciationExerciseScreen: React.FC = () => {
                 color={colors.textLight}
               />
             </TouchableOpacity>
-            <View style={styles.cardTextWrap}>
-              {renderSentenceText()}
-            </View>
           </View>
 
-          {/* Result overlay */}
+          {/* Sentence text */}
+          <View style={styles.cardTextWrap}>{renderSentenceText()}</View>
+
+          {/* Result */}
           {isResult && result && (
             <View style={styles.resultSection}>
               <ResultIcon isCorrect={result.isCorrect} />
@@ -316,7 +521,7 @@ const PronunciationExerciseScreen: React.FC = () => {
             </View>
           )}
 
-          {/* Processing indicator */}
+          {/* Processing */}
           {isProcessing && (
             <View style={styles.processingWrap}>
               <ActivityIndicator size="large" color={colors.primary} />
@@ -327,7 +532,7 @@ const PronunciationExerciseScreen: React.FC = () => {
           )}
         </View>
 
-        {/* ── Action button (Try Again / Next / Complete) ── */}
+        {/* ── Action button ── */}
         {isResult && result && (
           <TouchableOpacity
             style={styles.actionBtn}
@@ -345,11 +550,7 @@ const PronunciationExerciseScreen: React.FC = () => {
             }}
           >
             <Text style={styles.actionBtnText}>
-              {result.isCorrect
-                ? isLastSentence
-                  ? 'Complete'
-                  : 'Next'
-                : 'Try Again'}
+              {result.isCorrect ? 'Continue' : 'Try Again'}
             </Text>
           </TouchableOpacity>
         )}
@@ -357,10 +558,8 @@ const PronunciationExerciseScreen: React.FC = () => {
 
       {/* ═══════ BOTTOM AREA ═══════ */}
       <View style={styles.bottomArea}>
-        {/* Waveform */}
         <WaveformBar active={isIdle || isRecording} />
 
-        {/* Mic button */}
         <TouchableOpacity
           style={[
             styles.micBtn,
@@ -382,16 +581,28 @@ const PronunciationExerciseScreen: React.FC = () => {
           )}
         </TouchableOpacity>
 
-        {/* Label below mic */}
         {(isIdle || isRecording) && (
           <Text style={styles.speakNowText}>
-            {isRecording ? `Recording…` : 'Speak Now'}
+            {isRecording ? 'Recording…' : 'Speak Now'}
           </Text>
         )}
       </View>
 
       {/* ═══════ AI MASCOT ═══════ */}
-      <AiMascot />
+      <AiMascot onPress={() => setChatVisible(true)} />
+
+      {/* ═══════ WAVY CHATBOX ═══════ */}
+      <WavyChatOverlay
+        visible={chatVisible}
+        lessonId={lessonId}
+        currentSentence={sentence.text}
+        onClose={() => {
+          setChatVisible(false);
+          setChatExpanded(false);
+        }}
+        onExpand={() => setChatExpanded((e) => !e)}
+        expanded={chatExpanded}
+      />
 
       {/* ═══════ ERROR ═══════ */}
       {error && (
@@ -408,7 +619,7 @@ const PronunciationExerciseScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const CARD_HORIZONTAL = 24;
+const CARD_H = 24;
 
 const styles = StyleSheet.create({
   container: {
@@ -421,7 +632,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    paddingHorizontal: CARD_HORIZONTAL,
+    paddingHorizontal: CARD_H,
     paddingTop: Platform.OS === 'android' ? 40 : 12,
     paddingBottom: 4,
   },
@@ -448,7 +659,7 @@ const styles = StyleSheet.create({
 
   // ── Scroll ──
   scrollContent: {
-    paddingHorizontal: CARD_HORIZONTAL,
+    paddingHorizontal: CARD_H,
     paddingTop: 10,
     paddingBottom: 16,
     flexGrow: 1,
@@ -458,7 +669,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255,255,255,0.50)',
     borderRadius: 20,
-    paddingHorizontal: 20,
+    paddingHorizontal: 22,
     paddingVertical: 24,
     minHeight: 300,
     borderWidth: 1,
@@ -467,29 +678,29 @@ const styles = StyleSheet.create({
   cardResult: {
     minHeight: 340,
   },
-  cardTextRow: {
+  cardTopRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 6,
   },
   speakerBtn: {
-    marginTop: 4,
-    marginRight: 8,
+    marginRight: 6,
   },
   cardTextWrap: {
-    flex: 1,
+    paddingHorizontal: 2,
   },
   cardSentence: {
     fontFamily: fonts.semiBold,
     fontSize: 20,
-    lineHeight: 32,
+    lineHeight: 33,
     color: colors.text,
-    textAlign: 'left',
+    textAlign: 'center',
   },
 
-  // ── Result section ──
+  // ── Result ──
   resultSection: {
     alignItems: 'center',
-    marginTop: 20,
+    marginTop: 16,
   },
   resultIconWrap: {
     width: 80,
@@ -504,6 +715,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: colors.text,
     textAlign: 'center',
+    lineHeight: 30,
   },
 
   // ── Feedback ──
@@ -557,14 +769,14 @@ const styles = StyleSheet.create({
     color: colors.white,
   },
 
-  // ── Bottom area ──
+  // ── Bottom ──
   bottomArea: {
     alignItems: 'center',
     paddingBottom: Platform.OS === 'ios' ? 8 : 12,
-    paddingHorizontal: CARD_HORIZONTAL,
+    paddingHorizontal: CARD_H,
   },
 
-  // ── Waveform bar ──
+  // ── Waveform ──
   waveBarOuter: {
     width: '80%',
     marginBottom: 14,
@@ -595,7 +807,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
 
-  // ── Mic button ──
+  // ── Mic ──
   micBtn: {
     width: 62,
     height: 62,
@@ -617,7 +829,7 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 
-  // ── Speak now label ──
+  // ── Labels ──
   speakNowText: {
     fontFamily: fonts.medium,
     fontSize: 14,
@@ -625,7 +837,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
 
-  // ── AI Mascot ──
+  // ── Mascot ──
   mascotWrap: {
     position: 'absolute',
     bottom: Platform.OS === 'ios' ? 14 : 18,
@@ -646,7 +858,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
 
-  // ── Error bar ──
+  // ── Error ──
   errorBar: {
     position: 'absolute',
     top: Platform.OS === 'android' ? 36 : 0,
@@ -663,6 +875,172 @@ const styles = StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 13,
     color: colors.error,
+  },
+});
+
+// ═══════════════════════════════════════════════
+//  WAVY CHAT STYLES
+// ═══════════════════════════════════════════════
+
+const chatStyles = StyleSheet.create({
+  overlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#6B4EAB',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+    elevation: 20,
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+  },
+
+  // Header
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.15)',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerInfo: {},
+  headerTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: colors.white,
+  },
+  headerSub: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 14,
+    alignItems: 'center',
+  },
+
+  // Messages area
+  messagesArea: {
+    flex: 1,
+  },
+  messagesContent: {
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+
+  // Role label
+  roleLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 3,
+    marginTop: 8,
+  },
+  roleLabelLeft: {
+    textAlign: 'left',
+    marginLeft: 32,
+  },
+  roleLabelRight: {
+    textAlign: 'right',
+    marginRight: 4,
+  },
+
+  // Bubble row
+  bubbleRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
+    alignItems: 'flex-end',
+  },
+  bubbleRowLeft: {
+    justifyContent: 'flex-start',
+  },
+  bubbleRowRight: {
+    justifyContent: 'flex-end',
+  },
+
+  // Bubble
+  bubble: {
+    maxWidth: SCREEN_W * 0.65,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
+  },
+  bubbleWavy: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderBottomLeftRadius: 4,
+  },
+  bubbleUser: {
+    backgroundColor: colors.primary,
+    borderBottomRightRadius: 4,
+  },
+  bubbleText: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.white,
+    lineHeight: 20,
+  },
+
+  // Typing
+  typingRow: {
+    marginTop: 6,
+  },
+  typingLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 3,
+    marginLeft: 32,
+  },
+  typingBubble: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+    marginLeft: 30,
+  },
+  typingDots: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 3,
+  },
+
+  // Input
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.12)',
+  },
+  textInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: colors.white,
+  },
+  sendBtn: {
+    marginLeft: 10,
+    padding: 6,
   },
 });
 

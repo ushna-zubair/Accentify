@@ -55,35 +55,74 @@ const { width: SCREEN_W } = Dimensions.get('window');
 const CelebrationIllustration: React.FC = () => (
   <View style={illustrationStyles.container}>
     <View style={illustrationStyles.frame}>
-      {/* Confetti dots */}
-      <View style={[illustrationStyles.confetti, { top: 8, left: 20 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FD8E39' }]} />
+      {/* Confetti pieces */}
+      <View style={[illustrationStyles.confetti, { top: 10, left: 15 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FE7F9C', width: 8, height: 3, borderRadius: 2, transform: [{ rotate: '45deg' }] }]} />
       </View>
-      <View style={[illustrationStyles.confetti, { top: 16, right: 25 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#3DC13C' }]} />
+      <View style={[illustrationStyles.confetti, { top: 12, right: 18 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#3F66FB', width: 7, height: 3, borderRadius: 2, transform: [{ rotate: '-30deg' }] }]} />
       </View>
-      <View style={[illustrationStyles.confetti, { top: 35, left: 45 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#E94F54' }]} />
+      <View style={[illustrationStyles.confetti, { top: 28, left: 50 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FD8E39', width: 6, height: 6 }]} />
       </View>
-      <View style={[illustrationStyles.confetti, { top: 30, right: 40 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#3F66FB' }]} />
+      <View style={[illustrationStyles.confetti, { top: 22, right: 45 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#3DC13C', width: 8, height: 3, borderRadius: 2, transform: [{ rotate: '60deg' }] }]} />
       </View>
-      <View style={[illustrationStyles.confetti, { bottom: 60, left: 15 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#F3BB1B' }]} />
+      <View style={[illustrationStyles.confetti, { bottom: 80, left: 20 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#9FB2FD', width: 6, height: 6 }]} />
       </View>
-      <View style={[illustrationStyles.confetti, { bottom: 55, right: 20 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FE7F9C' }]} />
+      <View style={[illustrationStyles.confetti, { bottom: 75, right: 15 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#F3BB1B', width: 6, height: 3, borderRadius: 2 }]} />
       </View>
-
-      {/* Celebration person emoji */}
-      <Text style={illustrationStyles.emoji}>🎉</Text>
-      <Text style={illustrationStyles.personEmoji}>👩‍💻</Text>
+      <View style={[illustrationStyles.confetti, { top: 40, left: 10 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#E94F54', width: 5, height: 5 }]} />
+      </View>
+      <View style={[illustrationStyles.confetti, { top: 45, right: 12 }]}>
+        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FE7F9C', width: 5, height: 5 }]} />
+      </View>
 
       {/* Balloons */}
       <View style={illustrationStyles.balloonsRow}>
-        <Text style={illustrationStyles.balloon}>🎈</Text>
-        <Text style={illustrationStyles.balloon}>🟡</Text>
-        <Text style={illustrationStyles.balloon}>🔴</Text>
+        <View style={[illustrationStyles.balloonWrap, { left: -10 }]}>
+          <View style={[illustrationStyles.balloonShape, { backgroundColor: '#E94F54' }]} />
+          <View style={illustrationStyles.balloonString} />
+        </View>
+        <View style={[illustrationStyles.balloonWrap, { left: 25, top: -8 }]}>
+          <View style={[illustrationStyles.balloonShape, { backgroundColor: '#F3BB1B' }]} />
+          <View style={illustrationStyles.balloonString} />
+        </View>
+        <View style={[illustrationStyles.balloonWrap, { right: -10 }]}>
+          <View style={[illustrationStyles.balloonShape, { backgroundColor: '#FD8E39' }]} />
+          <View style={illustrationStyles.balloonString} />
+        </View>
+      </View>
+
+      {/* Purple Mascot with headphones */}
+      <View style={illustrationStyles.mascotBody}>
+        {/* Headphones band */}
+        <View style={illustrationStyles.headphoneBand} />
+        {/* Left ear cup */}
+        <View style={[illustrationStyles.earCup, { left: -8 }]} />
+        {/* Right ear cup */}
+        <View style={[illustrationStyles.earCup, { right: -8 }]} />
+        {/* Head */}
+        <View style={illustrationStyles.mascotHead}>
+          {/* Eyes */}
+          <View style={illustrationStyles.mascotEyeRow}>
+            <View style={illustrationStyles.mascotEye} />
+            <View style={illustrationStyles.mascotEye} />
+          </View>
+          {/* Mouth */}
+          <View style={illustrationStyles.mascotMouth} />
+        </View>
+      </View>
+
+      {/* Desk */}
+      <View style={illustrationStyles.desk}>
+        <View style={illustrationStyles.laptop}>
+          <View style={illustrationStyles.laptopScreen} />
+          <View style={illustrationStyles.laptopBase} />
+        </View>
       </View>
     </View>
   </View>
@@ -95,16 +134,14 @@ const illustrationStyles = StyleSheet.create({
     marginVertical: 12,
   },
   frame: {
-    width: 200,
-    height: 180,
-    backgroundColor: '#FFF8E7',
-    borderRadius: 16,
+    width: SCREEN_W * 0.78,
+    height: 200,
+    backgroundColor: '#FD8E39',
+    borderRadius: 18,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     position: 'relative',
     overflow: 'visible',
-    borderWidth: 1,
-    borderColor: '#E5DCC8',
   },
   confetti: {
     position: 'absolute',
@@ -115,23 +152,106 @@ const illustrationStyles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
   },
-  emoji: {
-    fontSize: 50,
-    zIndex: 2,
-  },
-  personEmoji: {
-    fontSize: 44,
-    marginTop: -8,
-    zIndex: 1,
-  },
   balloonsRow: {
     position: 'absolute',
-    top: -15,
+    top: -18,
+    width: '80%',
     flexDirection: 'row',
-    gap: 6,
+    justifyContent: 'space-between',
   },
-  balloon: {
-    fontSize: 24,
+  balloonWrap: {
+    alignItems: 'center',
+  },
+  balloonShape: {
+    width: 24,
+    height: 30,
+    borderRadius: 12,
+  },
+  balloonString: {
+    width: 1,
+    height: 16,
+    backgroundColor: colors.textLight,
+  },
+  mascotBody: {
+    alignItems: 'center',
+    marginBottom: 8,
+    position: 'relative',
+  },
+  headphoneBand: {
+    width: 56,
+    height: 28,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    borderWidth: 4,
+    borderBottomWidth: 0,
+    borderColor: '#555',
+    position: 'absolute',
+    top: -14,
+    zIndex: 3,
+  },
+  earCup: {
+    position: 'absolute',
+    top: 6,
+    width: 14,
+    height: 18,
+    borderRadius: 5,
+    backgroundColor: '#555',
+    zIndex: 4,
+  },
+  mascotHead: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#8B6FAE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  mascotEyeRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 4,
+  },
+  mascotEye: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.white,
+  },
+  mascotMouth: {
+    width: 18,
+    height: 9,
+    borderBottomLeftRadius: 9,
+    borderBottomRightRadius: 9,
+    backgroundColor: colors.white,
+  },
+  desk: {
+    width: '70%',
+    height: 24,
+    backgroundColor: '#C4A67D',
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 0,
+  },
+  laptop: {
+    alignItems: 'center',
+    marginTop: -18,
+  },
+  laptopScreen: {
+    width: 38,
+    height: 24,
+    backgroundColor: '#333',
+    borderTopLeftRadius: 3,
+    borderTopRightRadius: 3,
+  },
+  laptopBase: {
+    width: 46,
+    height: 4,
+    backgroundColor: '#777',
+    borderBottomLeftRadius: 2,
+    borderBottomRightRadius: 2,
   },
 });
 
@@ -442,9 +562,13 @@ const CourseCompletionScreen: React.FC = () => {
   }, [navigation]);
 
   const handleAttemptAgain = useCallback(() => {
-    // Go back to the same VocabExercise
-    navigation.replace('VocabExercise', { lessonId });
-  }, [navigation, lessonId]);
+    // Determine if this is a pronunciation or vocab exercise based on courseTitle
+    if (courseTitle.toLowerCase().includes('pronunciation')) {
+      navigation.replace('PronunciationExercise', { lessonId });
+    } else {
+      navigation.replace('VocabExercise', { lessonId });
+    }
+  }, [navigation, lessonId, courseTitle]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -462,18 +586,18 @@ const CourseCompletionScreen: React.FC = () => {
 
           {/* Congratulatory Message */}
           <Text style={styles.congratsMessage}>
-            Congratulations, you have successfully completed the first course!
+            Congratulations, you have successfully completed the second course!
             You may attempt again for more practice or proceed to the next
             level.
           </Text>
 
-          {/* Proceed to Level 2 Button */}
+          {/* Back to Menu Button */}
           <TouchableOpacity
             style={styles.proceedBtn}
             onPress={handleProceed}
             activeOpacity={0.7}
           >
-            <Text style={styles.proceedBtnText}>Proceed to Level 2</Text>
+            <Text style={styles.proceedBtnText}>Back to Menu</Text>
           </TouchableOpacity>
 
           {/* Attempt Again */}

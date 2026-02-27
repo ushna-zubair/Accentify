@@ -10,3 +10,4 @@ export { useTutorController, CATEGORY_COLORS } from './useTutorController';
 export { useLessonDetailController } from './useLessonDetailController';
 export { useVocabExerciseController } from './useVocabExerciseController';
 export { usePronunciationExerciseController } from './usePronunciationExerciseController';
+export { useWavyChatController } from './useWavyChatController';
