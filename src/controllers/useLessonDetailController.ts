@@ -52,13 +52,13 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
     id: 'lesson_4',
     title: 'English Pronunciation',
     fullDescription:
-      'Improve your pronunciation with AI-powered feedback. Read sentences and get instant analysis of your accent, clarity, and rhythm. Focus on difficult sounds and practice them repeatedly.',
+      'Enhance your pronunciation with the AI speech tutor. Practice speaking, get instant feedback, and improve how you sound in real conversations.',
     category: 'pronunciation',
     difficulty: 'Medium',
     focusTips: [
-      'Focus on mouth positioning',
-      'Practice difficult sounds repeatedly',
-      'Listen and mimic native patterns',
+      'Clear and Natural Speaking',
+      'Accent and Word Stress',
+      'Real-Time AI Feedback',
     ],
     status: 'upcoming',
   },

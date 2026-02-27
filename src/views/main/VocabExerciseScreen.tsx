@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Rect, Path, Circle } from 'react-native-svg';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
@@ -20,6 +21,7 @@ import { useVocabExerciseController } from '../../controllers';
 import type { TutorStackParamList } from '../../models';
 
 type ExerciseRoute = RouteProp<TutorStackParamList, 'VocabExercise'>;
+type ExerciseNav = NativeStackNavigationProp<TutorStackParamList, 'VocabExercise'>;
 const { width: SCREEN_W } = Dimensions.get('window');
 
 // ═══════════════════════════════════════════════
@@ -208,7 +210,7 @@ const MicButton: React.FC<{
 // ═══════════════════════════════════════════════
 
 const VocabExerciseScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<ExerciseNav>();
   const route = useRoute<ExerciseRoute>();
   const { lessonId } = route.params;
 
@@ -242,7 +244,12 @@ const VocabExerciseScreen: React.FC = () => {
   const handleNext = async () => {
     const isComplete = await nextPair();
     if (isComplete) {
-      navigation.goBack();
+      navigation.replace('CourseCompletion', {
+        lessonId,
+        courseTitle: exercise.title,
+        completedCount: 3, // placeholder — real value from Firestore
+        totalWeekly: 7,
+      });
     }
   };
 

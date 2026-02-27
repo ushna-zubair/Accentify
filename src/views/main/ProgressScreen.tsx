@@ -7,6 +7,7 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Dimensions,
 } from 'react-native';
 import Svg, {
   Rect,
@@ -15,6 +16,7 @@ import Svg, {
   Polyline,
   Line,
   Text as SvgText,
+  Path,
 } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
@@ -25,6 +27,8 @@ import type {
   VocabularyGrowthPoint,
   OverallPerformance,
 } from '../../models';
+
+const { width: SCREEN_W } = Dimensions.get('window');
 
 // ═══════════════════════════════════════════════
 //  CHART COLORS
@@ -47,7 +51,28 @@ const CHART = {
 const DayStreak: React.FC<{ streak: number }> = ({ streak }) => (
   <View style={styles.streakContainer}>
     <View style={styles.rocketCircle}>
-      <Text style={styles.rocketEmoji}>🚀</Text>
+      {/* Rocket SVG icon */}
+      <Svg width={50} height={50} viewBox="0 0 24 24" fill="none">
+        <Path
+          d="M12 2C12 2 7 7 7 12C7 14 8 16 10 17.5V21H14V17.5C16 16 17 14 17 12C17 7 12 2 12 2Z"
+          fill={colors.text}
+          stroke={colors.text}
+          strokeWidth={0.5}
+        />
+        <Path
+          d="M10 21H14V22H10V21Z"
+          fill={colors.text}
+        />
+        <SvgCircle cx={12} cy={11} r={2} fill={colors.primaryLight} />
+        <Path
+          d="M7 12C5 13 4 15 4 15L7 14Z"
+          fill={colors.text}
+        />
+        <Path
+          d="M17 12C19 13 20 15 20 15L17 14Z"
+          fill={colors.text}
+        />
+      </Svg>
       <View style={styles.streakBadge}>
         <Text style={styles.streakBadgeText}>{streak}</Text>
       </View>
@@ -69,8 +94,20 @@ const STATUS_LABEL: Record<LessonDay['status'], string> = {
   upcoming: 'Upcoming',
 };
 
-const LessonDayItem: React.FC<{ item: LessonDay }> = ({ item }) => {
+/** Get the label for a lesson day — special 'Tomorrow' label for the day after in-progress */
+const getLessonLabel = (item: LessonDay, allDays: LessonDay[]): string => {
+  if (item.status !== 'upcoming') return STATUS_LABEL[item.status];
+  const activeIndex = allDays.findIndex((d) => d.status === 'in_progress');
+  if (activeIndex >= 0) {
+    const itemIndex = allDays.findIndex((d) => d.id === item.id);
+    if (itemIndex === activeIndex + 1) return 'Tomorrow';
+  }
+  return 'Upcoming';
+};
+
+const LessonDayItem: React.FC<{ item: LessonDay; allDays: LessonDay[] }> = ({ item, allDays }) => {
   const cfg = STATUS_ICON[item.status];
+  const label = getLessonLabel(item, allDays);
   return (
     <View style={styles.lessonDay}>
       <View style={[styles.lessonDayCircle, { backgroundColor: cfg.bg }]}>
@@ -87,7 +124,7 @@ const LessonDayItem: React.FC<{ item: LessonDay }> = ({ item }) => {
         ]}
         numberOfLines={2}
       >
-        {STATUS_LABEL[item.status]}
+        {label}
       </Text>
     </View>
   );
@@ -406,7 +443,9 @@ const ProgressScreen: React.FC = () => {
       <FlatList
         data={progressData.lessonDays}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <LessonDayItem item={item} />}
+        renderItem={({ item }) => (
+          <LessonDayItem item={item} allDays={progressData.lessonDays} />
+        )}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.lessonDayList}
@@ -473,19 +512,19 @@ const ProgressScreen: React.FC = () => {
           </View>
 
           {/* Vocabulary Growth Card */}
-          <View style={styles.cardWide}>
-            <Text style={styles.cardTitle}>Vocabulary Growth</Text>
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Vocabulary growth</Text>
             <MiniLineChart
               data={currentWeek.vocabularyGrowth}
-              height={110}
-              width={280}
+              height={100}
+              width={SCREEN_W / 2 - 50}
             />
           </View>
 
           {/* Overall Performance Card */}
-          <View style={styles.cardWide}>
+          <View style={styles.card}>
             <Text style={styles.cardTitle}>Overall Performance</Text>
-            <MiniDonut performance={currentWeek.overallPerformance} size={90} />
+            <MiniDonut performance={currentWeek.overallPerformance} size={80} />
           </View>
         </View>
       )}
@@ -526,9 +565,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  rocketEmoji: {
-    fontSize: 44,
   },
   streakBadge: {
     position: 'absolute',
@@ -657,21 +693,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: colors.cardBorder,
-    padding: 14,
-  },
-  cardWide: {
-    width: '100%',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.cardBorder,
-    padding: 14,
+    padding: 12,
   },
   cardTitle: {
     fontFamily: fonts.medium,
     fontSize: 14,
     color: colors.textLight,
-    marginBottom: 8,
+    marginBottom: 6,
   },
 });
 

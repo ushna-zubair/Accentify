@@ -289,6 +289,41 @@ export interface SpeechRecognitionResult {
   vocabFeedback: string;
 }
 
+// ─── Pronunciation Chat Models ───
+
+export type ChatMessageRole = 'ai' | 'user' | 'system';
+
+export interface PronunciationScore {
+  clarity: number;
+  accuracy: number;
+  fluency: number;
+  overall: number;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: ChatMessageRole;
+  text: string;
+  timestamp: string;
+  /** Audio URI if user recorded speech */
+  audioUri?: string;
+  /** Pronunciation score for user messages */
+  score?: PronunciationScore;
+  /** Feedback text from AI after scoring */
+  feedback?: string;
+  /** The prompt/sentence the user was asked to read */
+  prompt?: string;
+}
+
+export interface PronunciationExerciseData {
+  lessonId: string;
+  title: string;
+  messages: ChatMessage[];
+  currentPromptIndex: number;
+  totalPrompts: number;
+  averageScore: PronunciationScore;
+}
+
 // ─── Progress Models ───
 export type LessonStatus = 'completed' | 'in_progress' | 'upcoming';
 
@@ -413,6 +448,8 @@ export type TutorStackParamList = {
   TutorMain: undefined;
   LessonDetail: { lessonId: string };
   VocabExercise: { lessonId: string };
+  PronunciationExercise: { lessonId: string };
+  CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
 };
 
 export type CMSStackParamList = {
