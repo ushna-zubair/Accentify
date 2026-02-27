@@ -51,6 +51,7 @@ const SetYourFingerprintScreen = require('../views/auth/SetYourFingerprintScreen
 import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../views/main';
 import LessonDetailScreen from '../views/main/LessonDetailScreen';
 import VocabExerciseScreen from '../views/main/VocabExerciseScreen';
+import PronunciationExerciseScreen from '../views/main/PronunciationExerciseScreen';
 import CourseCompletionScreen from '../views/main/CourseCompletionScreen';
 
 // Views – Admin
@@ -84,6 +85,7 @@ const TutorStackNavigator = () => {
       <TutorStack.Screen name="TutorMain" component={TutorScreen} />
       <TutorStack.Screen name="LessonDetail" component={LessonDetailScreen} />
       <TutorStack.Screen name="VocabExercise" component={VocabExerciseScreen} />
+      <TutorStack.Screen name="PronunciationExercise" component={PronunciationExerciseScreen} />
       <TutorStack.Screen name="CourseCompletion" component={CourseCompletionScreen} />
     </TutorStack.Navigator>
   );

@@ -181,6 +181,8 @@ const LessonDetailScreen: React.FC = () => {
             await startLesson();
             if (detail.category === 'vocabulary') {
               navigation.navigate('VocabExercise', { lessonId });
+            } else if (detail.category === 'pronunciation') {
+              navigation.navigate('PronunciationExercise', { lessonId });
             }
           }}
           disabled={starting}
