@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import Svg, { Rect, Path, Circle, Line } from 'react-native-svg';
+import Svg, { Rect, Path, Circle } from 'react-native-svg';
 import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import { useVocabExerciseController } from '../../controllers';
@@ -23,11 +23,27 @@ type ExerciseRoute = RouteProp<TutorStackParamList, 'VocabExercise'>;
 const { width: SCREEN_W } = Dimensions.get('window');
 
 // ═══════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════
+
+/** Return a color for the progress badge based on current index */
+const getProgressColor = (index: number, total: number): string => {
+  if (total <= 1) return colors.success;
+  const ratio = index / (total - 1);
+  if (ratio <= 0.34) return colors.success;
+  if (ratio <= 0.67) return colors.accentOrange700;
+  return colors.error;
+};
+
+// ═══════════════════════════════════════════════
 //  SUB-COMPONENTS
 // ═══════════════════════════════════════════════
 
-// ─── Result overlay icon (X / Check) ───
-const ResultOverlayIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
+// ─── Result overlay (Check / X + success message) ───
+const ResultOverlay: React.FC<{ isCorrect: boolean; message: string }> = ({
+  isCorrect,
+  message,
+}) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -41,10 +57,7 @@ const ResultOverlayIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
 
   return (
     <Animated.View
-      style={[
-        styles.resultOverlay,
-        { transform: [{ scale: scaleAnim }] },
-      ]}
+      style={[styles.resultOverlay, { transform: [{ scale: scaleAnim }] }]}
     >
       <View
         style={[
@@ -53,20 +66,31 @@ const ResultOverlayIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
         ]}
       >
         {isCorrect ? (
-          <Ionicons name="checkmark" size={40} color={colors.white} />
+          <Ionicons name="checkmark" size={44} color={colors.white} />
         ) : (
-          <Ionicons name="close" size={40} color={colors.white} />
+          <Ionicons name="close" size={44} color={colors.white} />
         )}
       </View>
+      {message !== '' && (
+        <Text
+          style={[
+            styles.resultMessage,
+            { color: isCorrect ? colors.success : colors.error },
+          ]}
+        >
+          {message}
+        </Text>
+      )}
     </Animated.View>
   );
 };
 
 // ─── Animated waveform ───
-const WaveformBar: React.FC<{ isRecording: boolean; duration: number }> = ({
-  isRecording,
-  duration,
-}) => {
+const WaveformBar: React.FC<{
+  isRecording: boolean;
+  duration: number;
+  hasResult: boolean;
+}> = ({ isRecording, duration, hasResult }) => {
   const progress = Math.min(duration / 10000, 1);
 
   return (
@@ -74,20 +98,45 @@ const WaveformBar: React.FC<{ isRecording: boolean; duration: number }> = ({
       <View style={styles.waveformTrack}>
         <Svg width="100%" height={36} viewBox="0 0 300 36">
           {/* Background bar */}
-          <Rect x={0} y={14} width={300} height={8} rx={4} fill={colors.primaryLight} opacity={0.4} />
-          {/* Progress fill */}
-          <Rect x={0} y={14} width={300 * progress} height={8} rx={4} fill={colors.primary} opacity={0.6} />
-          {/* Decorative wave */}
-          <Path
-            d="M10 18 Q25 6 40 18 Q55 30 70 18 Q85 6 100 18 Q115 30 130 18 Q145 6 160 18 Q175 30 190 18 Q205 6 220 18 Q235 30 250 18 Q265 6 280 18"
-            stroke="#5EDBA8"
-            strokeWidth={3}
-            fill="none"
-            strokeLinecap="round"
-            opacity={isRecording ? 1 : 0.7}
+          <Rect
+            x={0}
+            y={14}
+            width={300}
+            height={8}
+            rx={4}
+            fill={colors.primaryLight}
+            opacity={0.4}
           />
-          {/* Indicator dot */}
-          <Circle cx={10 + 270 * progress} cy={18} r={5} fill={colors.primary} />
+          {/* Progress fill */}
+          <Rect
+            x={0}
+            y={14}
+            width={hasResult ? 300 : 300 * progress}
+            height={8}
+            rx={4}
+            fill={colors.primary}
+            opacity={0.6}
+          />
+          {/* Decorative wave — only visible when NOT showing a result */}
+          {!hasResult && (
+            <>
+              <Path
+                d="M10 18 Q25 6 40 18 Q55 30 70 18 Q85 6 100 18 Q115 30 130 18 Q145 6 160 18 Q175 30 190 18 Q205 6 220 18 Q235 30 250 18 Q265 6 280 18"
+                stroke="#5EDBA8"
+                strokeWidth={3}
+                fill="none"
+                strokeLinecap="round"
+                opacity={isRecording ? 1 : 0.7}
+              />
+              {/* Indicator dot */}
+              <Circle
+                cx={10 + 270 * progress}
+                cy={18}
+                r={5}
+                fill={colors.primary}
+              />
+            </>
+          )}
         </Svg>
       </View>
     </View>
@@ -98,8 +147,9 @@ const WaveformBar: React.FC<{ isRecording: boolean; duration: number }> = ({
 const MicButton: React.FC<{
   isRecording: boolean;
   isProcessing: boolean;
+  hasResult: boolean;
   onPress: () => void;
-}> = ({ isRecording, isProcessing, onPress }) => {
+}> = ({ isRecording, isProcessing, hasResult, onPress }) => {
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -126,11 +176,17 @@ const MicButton: React.FC<{
   }, [isRecording, pulseAnim]);
 
   return (
-    <Animated.View style={[styles.micBtnOuter, { transform: [{ scale: pulseAnim }] }]}>
+    <Animated.View
+      style={[styles.micBtnOuter, { transform: [{ scale: pulseAnim }] }]}
+    >
       <TouchableOpacity
-        style={[styles.micBtn, isRecording && styles.micBtnActive]}
+        style={[
+          styles.micBtn,
+          isRecording && styles.micBtnActive,
+          hasResult && styles.micBtnDone,
+        ]}
         onPress={onPress}
-        disabled={isProcessing}
+        disabled={isProcessing || (hasResult && !isRecording)}
         activeOpacity={0.7}
       >
         {isProcessing ? (
@@ -166,6 +222,7 @@ const VocabExerciseScreen: React.FC = () => {
     isProcessing,
     lastResult,
     recordingDuration,
+    successMessage,
     toggleDefinition,
     playPronunciation,
     startRecording,
@@ -206,14 +263,19 @@ const VocabExerciseScreen: React.FC = () => {
   }
 
   const hasResult = lastResult !== null;
+  const isLastPair = exercise.currentIndex + 1 >= exercise.totalPairs;
+  const progressColor = getProgressColor(
+    exercise.currentIndex,
+    exercise.totalPairs,
+  );
 
   return (
     <SafeAreaView style={styles.container}>
       {/* ── Header ── */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{exercise.title}</Text>
-        <View style={styles.progressBadge}>
-          <Text style={styles.progressText}>
+        <View style={[styles.progressBadge, { borderColor: progressColor }]}>
+          <Text style={[styles.progressText, { color: progressColor }]}>
             {exercise.currentIndex + 1}/{exercise.totalPairs}
           </Text>
         </View>
@@ -226,149 +288,127 @@ const VocabExerciseScreen: React.FC = () => {
       >
         {/* ── Word Pair Card ── */}
         <View style={styles.cardWrapper}>
-          <View style={styles.card}>
-            {/* Left column: Basic word */}
-            <View style={styles.cardHalf}>
-              <View style={styles.labelRow}>
-                <Text style={styles.wordTypeLabel}>Basic</Text>
-              </View>
+          <View style={[styles.card, hasResult && styles.cardWithResult]}>
+            {/* ── Two-column content ── */}
+            <View style={styles.columnsRow}>
+              {/* Left column: Basic word */}
+              <View style={styles.cardHalf}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.wordTypeLabel}>Basic</Text>
+                  <TouchableOpacity
+                    onPress={() => playPronunciation(currentPair.basicWord)}
+                    activeOpacity={0.6}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Ionicons
+                      name="volume-high-outline"
+                      size={16}
+                      color={colors.text}
+                    />
+                  </TouchableOpacity>
+                </View>
 
-              <View style={styles.wordRow}>
                 <Text style={styles.wordText}>{currentPair.basicWord}</Text>
-                <TouchableOpacity
-                  onPress={() => playPronunciation(currentPair.basicWord)}
-                  activeOpacity={0.6}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="volume-high-outline" size={16} color={colors.text} />
-                </TouchableOpacity>
+                <Text style={styles.phoneticText}>
+                  {currentPair.basicPhonetic}
+                </Text>
+
+                {/* Attempt phonetic (after recording) */}
+                {hasResult && (
+                  <View style={styles.attemptSection}>
+                    <Text style={styles.attemptLabel}>Your Attempt</Text>
+                    <Text
+                      style={[
+                        styles.attemptPhonetic,
+                        {
+                          color: lastResult.basicCorrect
+                            ? colors.success
+                            : colors.error,
+                        },
+                      ]}
+                    >
+                      {lastResult.basicAttemptPhonetic}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Definition (toggled) */}
+                {showDefinition && (
+                  <View style={styles.inCardDefinition}>
+                    <Text style={styles.definitionText}>
+                      {currentPair.basicDefinition}
+                    </Text>
+                  </View>
+                )}
               </View>
 
-              <Text style={styles.phoneticText}>{currentPair.basicPhonetic}</Text>
+              {/* Vertical Divider */}
+              <View style={styles.cardDivider} />
 
-              {/* Attempt phonetic (after recording) */}
-              {hasResult && (
-                <View style={styles.attemptSection}>
-                  <Text style={styles.attemptLabel}>Your Attempt</Text>
-                  <Text
-                    style={[
-                      styles.attemptPhonetic,
-                      {
-                        color: lastResult.basicCorrect
-                          ? colors.success
-                          : colors.error,
-                      },
-                    ]}
+              {/* Right column: Vocab word */}
+              <View style={styles.cardHalf}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.wordTypeLabel}>Vocab</Text>
+                  <TouchableOpacity
+                    onPress={() => playPronunciation(currentPair.vocabWord)}
+                    activeOpacity={0.6}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    {lastResult.basicAttemptPhonetic}
-                  </Text>
+                    <Ionicons
+                      name="volume-high-outline"
+                      size={16}
+                      color={colors.text}
+                    />
+                  </TouchableOpacity>
                 </View>
-              )}
 
-              {/* Feedback */}
-              {hasResult && (
-                <View style={styles.feedbackSection}>
-                  <Text style={styles.feedbackLabel}>Feedback:</Text>
-                  <Text
-                    style={[
-                      styles.feedbackText,
-                      {
-                        color: lastResult.basicCorrect
-                          ? colors.success
-                          : colors.textLight,
-                      },
-                    ]}
-                  >
-                    {lastResult.basicFeedback}
-                  </Text>
-                </View>
-              )}
-
-              {/* Definition (toggled) */}
-              {showDefinition && (
-                <View style={styles.inCardDefinition}>
-                  <Text style={styles.definitionLabel}>Definition:</Text>
-                  <Text style={styles.definitionText}>
-                    {currentPair.basicDefinition}
-                  </Text>
-                </View>
-              )}
-            </View>
-
-            {/* Vertical Divider */}
-            <View style={styles.cardDivider} />
-
-            {/* Right column: Vocab word */}
-            <View style={styles.cardHalf}>
-              <View style={styles.labelRow}>
-                <Text style={styles.wordTypeLabel}>Vocab</Text>
-              </View>
-
-              <View style={styles.wordRow}>
                 <Text style={styles.wordText}>{currentPair.vocabWord}</Text>
-                <TouchableOpacity
-                  onPress={() => playPronunciation(currentPair.vocabWord)}
-                  activeOpacity={0.6}
-                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                >
-                  <Ionicons name="volume-high-outline" size={16} color={colors.text} />
-                </TouchableOpacity>
+                <Text style={styles.phoneticText}>
+                  {currentPair.vocabPhonetic}
+                </Text>
+
+                {/* Attempt phonetic (after recording) */}
+                {hasResult && (
+                  <View style={styles.attemptSection}>
+                    <Text style={styles.attemptLabel}>Current Attempt</Text>
+                    <Text
+                      style={[
+                        styles.attemptPhonetic,
+                        {
+                          color: lastResult.vocabCorrect
+                            ? colors.success
+                            : colors.error,
+                        },
+                      ]}
+                    >
+                      {lastResult.vocabAttemptPhonetic}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Definition (toggled) */}
+                {showDefinition && (
+                  <View style={styles.inCardDefinition}>
+                    <Text style={styles.definitionText}>
+                      {currentPair.vocabDefinition}
+                    </Text>
+                  </View>
+                )}
               </View>
-
-              <Text style={styles.phoneticText}>{currentPair.vocabPhonetic}</Text>
-
-              {/* Attempt phonetic (after recording) */}
-              {hasResult && (
-                <View style={styles.attemptSection}>
-                  <Text style={styles.attemptLabel}>Current Attempt</Text>
-                  <Text
-                    style={[
-                      styles.attemptPhonetic,
-                      {
-                        color: lastResult.vocabCorrect
-                          ? colors.success
-                          : colors.error,
-                      },
-                    ]}
-                  >
-                    {lastResult.vocabAttemptPhonetic}
-                  </Text>
-                </View>
-              )}
-
-              {/* Feedback */}
-              {hasResult && (
-                <View style={styles.feedbackSection}>
-                  <Text style={styles.feedbackLabel}>Feedback:</Text>
-                  <Text
-                    style={[
-                      styles.feedbackText,
-                      {
-                        color: lastResult.vocabCorrect
-                          ? colors.success
-                          : colors.textLight,
-                      },
-                    ]}
-                  >
-                    {lastResult.vocabFeedback}
-                  </Text>
-                </View>
-              )}
-
-              {/* Definition (toggled) */}
-              {showDefinition && (
-                <View style={styles.inCardDefinition}>
-                  <Text style={styles.definitionLabel}>Definition:</Text>
-                  <Text style={styles.definitionText}>
-                    {currentPair.vocabDefinition}
-                  </Text>
-                </View>
-              )}
             </View>
-          </View>
 
-          {/* Result overlay icon (X or Check) */}
-          {hasResult && <ResultOverlayIcon isCorrect={lastResult.isCorrect} />}
+            {/* ── Result overlay (centered below columns) ── */}
+            {hasResult && (
+              <ResultOverlay
+                isCorrect={lastResult.isCorrect}
+                message={
+                  lastResult.isCorrect
+                    ? successMessage
+                    : 'Try Again'
+                }
+              />
+            )}
+          </View>
         </View>
 
         {/* Definition toggle */}
@@ -378,7 +418,7 @@ const VocabExerciseScreen: React.FC = () => {
           activeOpacity={0.6}
         >
           <Text style={styles.definitionToggleText}>
-            {showDefinition ? 'Hide definition' : 'Show definition'}
+            {showDefinition ? 'Hide Definition' : 'Show Definition'}
           </Text>
         </TouchableOpacity>
 
@@ -393,7 +433,7 @@ const VocabExerciseScreen: React.FC = () => {
           </TouchableOpacity>
         )}
 
-        {/* Next button (when correct) */}
+        {/* Next / Complete button (when correct) */}
         {hasResult && lastResult.isCorrect && (
           <TouchableOpacity
             style={styles.nextBtn}
@@ -401,9 +441,8 @@ const VocabExerciseScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Text style={styles.nextBtnText}>
-              {exercise.currentIndex + 1 >= exercise.totalPairs ? 'Finish' : 'Next'}
+              {isLastPair ? 'Complete' : 'Next'}
             </Text>
-            <Ionicons name="arrow-forward" size={18} color={colors.white} />
           </TouchableOpacity>
         )}
 
@@ -411,22 +450,30 @@ const VocabExerciseScreen: React.FC = () => {
       </ScrollView>
 
       {/* ── Waveform ── */}
-      <WaveformBar isRecording={isRecording} duration={recordingDuration} />
+      <WaveformBar
+        isRecording={isRecording}
+        duration={recordingDuration}
+        hasResult={hasResult}
+      />
 
       {/* ── Mic Button ── */}
       <View style={styles.micArea}>
         <MicButton
           isRecording={isRecording}
           isProcessing={isProcessing}
+          hasResult={hasResult}
           onPress={handleMicPress}
         />
-        <Text style={styles.speakNowText}>
-          {isProcessing
-            ? 'Processing...'
-            : isRecording
-              ? 'Listening...'
-              : 'Speak now'}
-        </Text>
+        {/* Only show prompt text BEFORE a result */}
+        {!hasResult && (
+          <Text style={styles.speakNowText}>
+            {isProcessing
+              ? 'Processing...'
+              : isRecording
+                ? 'Listening...'
+                : 'Speak now'}
+          </Text>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -464,7 +511,6 @@ const styles = StyleSheet.create({
   },
   progressBadge: {
     borderWidth: 1.5,
-    borderColor: colors.text,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 5,
@@ -473,25 +519,24 @@ const styles = StyleSheet.create({
   progressText: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.success,
   },
 
   // ── Scroll ──
   scrollContent: {
     paddingHorizontal: 18,
     paddingBottom: 8,
+    flexGrow: 1,
   },
 
-  // ── Card wrapper (for overlay positioning) ──
+  // ── Card wrapper ──
   cardWrapper: {
     position: 'relative',
   },
   card: {
-    flexDirection: 'row',
     backgroundColor: colors.white,
     borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 12,
+    paddingVertical: 18,
+    paddingHorizontal: 14,
     shadowColor: colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -499,6 +544,13 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: colors.primaryLight,
+    minHeight: 280,
+  },
+  cardWithResult: {
+    minHeight: 320,
+  },
+  columnsRow: {
+    flexDirection: 'row',
   },
   cardHalf: {
     flex: 1,
@@ -513,64 +565,43 @@ const styles = StyleSheet.create({
 
   // ── Labels & words ──
   labelRow: {
-    marginBottom: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
   },
   wordTypeLabel: {
     fontFamily: fonts.semiBold,
-    fontSize: 12,
+    fontSize: 13,
     color: colors.textLight,
-  },
-  wordRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 2,
   },
   wordText: {
     fontFamily: fonts.bold,
-    fontSize: 17,
+    fontSize: 20,
     color: colors.text,
-    flexShrink: 1,
+    marginBottom: 2,
   },
   phoneticText: {
     fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.success,
-    fontStyle: 'italic',
+    fontSize: 12,
+    color: colors.textLight,
     marginBottom: 6,
   },
 
   // ── Attempt section ──
   attemptSection: {
-    marginTop: 4,
+    marginTop: 6,
     marginBottom: 4,
   },
   attemptLabel: {
     fontFamily: fonts.bold,
-    fontSize: 11,
+    fontSize: 12,
     color: colors.text,
     marginBottom: 2,
   },
   attemptPhonetic: {
     fontFamily: fonts.medium,
-    fontSize: 11,
-    fontStyle: 'italic',
-  },
-
-  // ── Feedback section ──
-  feedbackSection: {
-    marginTop: 6,
-  },
-  feedbackLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 11,
-    color: colors.text,
-    marginBottom: 2,
-  },
-  feedbackText: {
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    lineHeight: 15,
+    fontSize: 12,
   },
 
   // ── In-card definition ──
@@ -580,32 +611,24 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     borderTopColor: colors.divider,
   },
-  definitionLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 11,
-    color: colors.text,
-    marginBottom: 2,
-  },
   definitionText: {
     fontFamily: fonts.regular,
-    fontSize: 10,
+    fontSize: 11,
     color: colors.textLight,
-    lineHeight: 15,
+    lineHeight: 16,
   },
 
   // ── Result overlay ──
   resultOverlay: {
-    position: 'absolute',
-    top: '30%',
-    left: '50%',
-    marginLeft: -32,
-    marginTop: -32,
-    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingTop: 12,
+    paddingBottom: 6,
   },
   resultOverlayCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: colors.shadow,
@@ -614,18 +637,23 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  resultMessage: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    marginTop: 8,
+    textAlign: 'center',
+  },
 
   // ── Toggle ──
   definitionToggle: {
     alignSelf: 'center',
     marginTop: 12,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   definitionToggleText: {
     fontFamily: fonts.medium,
     fontSize: 13,
     color: colors.textLight,
-    fontStyle: 'italic',
     textDecorationLine: 'underline',
   },
 
@@ -636,8 +664,8 @@ const styles = StyleSheet.create({
     borderColor: colors.success,
     borderRadius: 24,
     paddingVertical: 10,
-    paddingHorizontal: 32,
-    marginTop: 6,
+    paddingHorizontal: 36,
+    marginTop: 4,
     marginBottom: 4,
   },
   tryAgainText: {
@@ -646,17 +674,15 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
 
-  // ── Next button ──
+  // ── Next / Complete button ──
   nextBtn: {
-    flexDirection: 'row',
     alignSelf: 'center',
     alignItems: 'center',
     backgroundColor: colors.primary,
     borderRadius: 24,
     paddingVertical: 12,
-    paddingHorizontal: 28,
-    gap: 6,
-    marginTop: 6,
+    paddingHorizontal: 36,
+    marginTop: 4,
     marginBottom: 4,
   },
   nextBtnText: {
@@ -713,6 +739,10 @@ const styles = StyleSheet.create({
   },
   micBtnActive: {
     backgroundColor: colors.error,
+  },
+  micBtnDone: {
+    backgroundColor: colors.primaryDark,
+    opacity: 0.7,
   },
   speakNowText: {
     fontFamily: fonts.medium,

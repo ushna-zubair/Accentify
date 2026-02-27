@@ -25,26 +25,26 @@ const SAMPLE_WORD_PAIRS: VocabWordPair[] = [
   {
     id: 'wp_2',
     basicWord: 'Help',
-    vocabWord: 'Facilitate',
-    basicPhonetic: 'Help',
-    vocabPhonetic: 'Fuh-sil-ih-tayt',
+    vocabWord: 'Assist',
+    basicPhonetic: 'H-alp',
+    vocabPhonetic: 'Uh-sist',
     basicDefinition:
       'To "help" is to assist or make it easier for someone to do something',
     vocabDefinition:
-      'To facilitate means to make a process easier or to help bring about a result formally',
-    exampleSentence: 'The moderator will facilitate the discussion.',
+      'To assist means to give support or aid to someone in an action or effort',
+    exampleSentence: 'The nurse will assist the doctor during surgery.',
   },
   {
     id: 'wp_3',
-    basicWord: 'Show',
-    vocabWord: 'Demonstrate',
-    basicPhonetic: 'Shoh',
-    vocabPhonetic: 'Dem-uhn-strayt',
+    basicWord: 'Look Closely',
+    vocabWord: 'Scrutinize',
+    basicPhonetic: 'Luk-Klow-slee',
+    vocabPhonetic: 'Skroo-tuh-nize',
     basicDefinition:
-      'To "show" means to display or make something visible to others',
+      'To "look closely" means to examine something carefully and in detail',
     vocabDefinition:
-      'To demonstrate means to clearly prove, display, or illustrate something with evidence',
-    exampleSentence: 'The teacher will demonstrate the experiment.',
+      'To scrutinize means to examine or inspect closely and thoroughly with critical attention',
+    exampleSentence: 'The auditor will scrutinize every transaction.',
   },
 ];
 
@@ -65,13 +65,24 @@ const toPhonetic = (word: string): string => {
   const PHONETIC_MAP: Record<string, string> = {
     understand: 'Uhn-dun-stand',
     comprehend: 'Kom-pruh-hend',
-    help: 'Help',
-    facilitate: 'Fuh-sil-ih-tayt',
-    show: 'Shoh',
-    demonstrate: 'Dem-uhn-strayt',
+    help: 'H-alp',
+    assist: 'Uh-sist',
+    'look closely': 'Luk-Klow-slee',
+    scrutinize: 'Skroo-tuh-nize',
   };
   return PHONETIC_MAP[word.toLowerCase()] ?? word;
 };
+
+/** Pick a random success message for correct attempts */
+const SUCCESS_MESSAGES = [
+  'Well Done!!!',
+  'Keep it up!!!',
+  'Excellent!!!',
+  'Great Job!!!',
+  'Awesome!!!',
+];
+const pickSuccessMessage = (): string =>
+  SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)];
 
 /**
  * Compute a simple Levenshtein distance between two strings.
@@ -312,6 +323,7 @@ export const useVocabExerciseController = (lessonId: string) => {
   const [lastResult, setLastResult] = useState<SpeechRecognitionResult | null>(null);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [attemptCount, setAttemptCount] = useState(0);
+  const [successMessage, setSuccessMessage] = useState('');
 
   // Audio refs
   const recordingRef = useRef<Audio.Recording | null>(null);
@@ -497,6 +509,7 @@ export const useVocabExerciseController = (lessonId: string) => {
 
       setLastResult(result);
       setAttemptCount((prev) => prev + 1);
+      setSuccessMessage(result.isCorrect ? pickSuccessMessage() : '');
 
       // Save attempt to Firestore
       const uid = auth.currentUser?.uid;
@@ -548,6 +561,7 @@ export const useVocabExerciseController = (lessonId: string) => {
   const tryAgain = useCallback(() => {
     setLastResult(null);
     setRecordingDuration(0);
+    setSuccessMessage('');
   }, []);
 
   // ── Navigate to next word pair ──
@@ -609,6 +623,7 @@ export const useVocabExerciseController = (lessonId: string) => {
     setLastResult(null);
     setRecordingDuration(0);
     setAttemptCount(0);
+    setSuccessMessage('');
 
     return false;
   }, [exercise.currentIndex, exercise.totalPairs, lessonId]);
@@ -621,6 +636,7 @@ export const useVocabExerciseController = (lessonId: string) => {
     setLastResult(null);
     setRecordingDuration(0);
     setAttemptCount(0);
+    setSuccessMessage('');
   }, [exercise.currentIndex]);
 
   return {
@@ -634,6 +650,7 @@ export const useVocabExerciseController = (lessonId: string) => {
     lastResult,
     recordingDuration,
     attemptCount,
+    successMessage,
     toggleDefinition,
     playPronunciation,
     startRecording,
