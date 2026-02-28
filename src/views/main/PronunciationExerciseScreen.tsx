@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle, Path } from 'react-native-svg';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import {
   usePronunciationExerciseController,
@@ -43,11 +43,13 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 // ═══════════════════════════════════════════════
 
 const getProgressColor = (idx: number, total: number): string => {
-  if (total <= 1) return colors.success;
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  if (total <= 1) return tc.success;
   const ratio = idx / (total - 1);
-  if (ratio <= 0.34) return colors.success;
-  if (ratio <= 0.67) return colors.accentOrange700;
-  return colors.error;
+  if (ratio <= 0.34) return tc.success;
+  if (ratio <= 0.67) return '#FD8E39';
+  return tc.error;
 };
 
 const formatTimer = (secs: number): string => {
@@ -60,7 +62,10 @@ const formatTimer = (secs: number): string => {
 //  AI MASCOT (tappable)
 // ═══════════════════════════════════════════════
 
-const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => (
+const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <TouchableOpacity
     style={styles.mascotWrap}
     onPress={onPress}
@@ -69,11 +74,11 @@ const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => (
     <Svg width={44} height={44} viewBox="0 0 44 44">
       <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
       <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
-      <Circle cx={16} cy={19} r={2.5} fill={colors.white} />
-      <Circle cx={28} cy={19} r={2.5} fill={colors.white} />
+      <Circle cx={16} cy={19} r={2.5} fill={tc.white} />
+      <Circle cx={28} cy={19} r={2.5} fill={tc.white} />
       <Path
         d="M18 26 Q22 30 26 26"
-        stroke={colors.white}
+        stroke={tc.white}
         strokeWidth={1.5}
         fill="none"
         strokeLinecap="round"
@@ -82,16 +87,19 @@ const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => (
       <Circle cx={36} cy={14} r={5} fill="#8B6FAE" />
     </Svg>
     <View style={styles.mascotBubble}>
-      <Ionicons name="chatbubble-ellipses" size={14} color={colors.primary} />
+      <Ionicons name="chatbubble-ellipses" size={14} color={tc.accent} />
     </View>
   </TouchableOpacity>
-);
+  );
+};
 
 // ═══════════════════════════════════════════════
 //  WAVEFORM BAR
 // ═══════════════════════════════════════════════
 
 const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const waveAnims = useRef(
     Array.from({ length: 24 }, () => new Animated.Value(0)),
   ).current;
@@ -135,7 +143,7 @@ const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
                 style={[
                   styles.waveBarSegment,
                   {
-                    backgroundColor: colors.success600,
+                    backgroundColor: tc.successBg,
                     transform: [
                       {
                         scaleY: anim.interpolate({
@@ -162,6 +170,8 @@ const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
 // ═══════════════════════════════════════════════
 
 const ResultIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -178,7 +188,7 @@ const ResultIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
       style={[
         styles.resultIconWrap,
         {
-          backgroundColor: isCorrect ? colors.success : colors.error,
+          backgroundColor: isCorrect ? tc.success : tc.error,
           transform: [{ scale: scaleAnim }],
         },
       ]}
@@ -186,7 +196,7 @@ const ResultIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
       <Ionicons
         name={isCorrect ? 'checkmark' : 'close'}
         size={48}
-        color={colors.white}
+        color={tc.white}
       />
     </Animated.View>
   );
@@ -204,6 +214,8 @@ const WavyChatOverlay: React.FC<{
   onExpand: () => void;
   expanded: boolean;
 }> = ({ visible, lessonId, currentSentence, onClose, onExpand, expanded }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const slideAnim = useRef(new Animated.Value(0)).current;
   const chatScrollRef = useRef<ScrollView>(null);
 
@@ -263,11 +275,11 @@ const WavyChatOverlay: React.FC<{
           <Svg width={32} height={32} viewBox="0 0 44 44">
             <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
             <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
-            <Circle cx={16} cy={19} r={2.5} fill={colors.white} />
-            <Circle cx={28} cy={19} r={2.5} fill={colors.white} />
+            <Circle cx={16} cy={19} r={2.5} fill={tc.white} />
+            <Circle cx={28} cy={19} r={2.5} fill={tc.white} />
             <Path
               d="M18 26 Q22 30 26 26"
-              stroke={colors.white}
+              stroke={tc.white}
               strokeWidth={1.5}
               fill="none"
               strokeLinecap="round"
@@ -284,11 +296,11 @@ const WavyChatOverlay: React.FC<{
             <Ionicons
               name={expanded ? 'contract' : 'expand'}
               size={20}
-              color={colors.white}
+              color={tc.white}
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={onClose} activeOpacity={0.6}>
-            <Ionicons name="close" size={22} color={colors.white} />
+            <Ionicons name="close" size={22} color={tc.white} />
           </TouchableOpacity>
         </View>
       </View>
@@ -334,7 +346,7 @@ const WavyChatOverlay: React.FC<{
             activeOpacity={0.6}
             style={chatStyles.sendBtn}
           >
-            <Ionicons name="send" size={20} color={colors.white} />
+            <Ionicons name="send" size={20} color={tc.white} />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -344,6 +356,8 @@ const WavyChatOverlay: React.FC<{
 
 // ── Chat Bubble ──
 const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const isWavy = message.role === 'wavy';
 
   return (
@@ -367,8 +381,8 @@ const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
           <Svg width={24} height={24} viewBox="0 0 44 44" style={{ marginRight: 6 }}>
             <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
             <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
-            <Circle cx={16} cy={19} r={2} fill={colors.white} />
-            <Circle cx={28} cy={19} r={2} fill={colors.white} />
+            <Circle cx={16} cy={19} r={2} fill={tc.white} />
+            <Circle cx={28} cy={19} r={2} fill={tc.white} />
           </Svg>
         )}
         <View
@@ -389,6 +403,8 @@ const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
 // ═══════════════════════════════════════════════
 
 const PronunciationExerciseScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const route = useRoute<ExerciseRoute>();
   const navigation = useNavigation<ExerciseNav>();
   const { lessonId } = route.params;
@@ -421,7 +437,7 @@ const PronunciationExerciseScreen: React.FC = () => {
             <Text
               key={i}
               style={{
-                color: wr.isCorrect ? colors.success : colors.error,
+                color: wr.isCorrect ? tc.success : tc.error,
                 fontFamily: fonts.semiBold,
               }}
             >
@@ -465,7 +481,7 @@ const PronunciationExerciseScreen: React.FC = () => {
             </Text>
           </View>
           <View
-            style={[styles.badge, { backgroundColor: colors.accentOrange700 }]}
+            style={[styles.badge, { backgroundColor: '#FD8E39' }]}
           >
             <Text style={styles.badgeText}>{formatTimer(timer)}</Text>
           </View>
@@ -490,7 +506,7 @@ const PronunciationExerciseScreen: React.FC = () => {
               <Ionicons
                 name="volume-high"
                 size={20}
-                color={colors.textLight}
+                color={tc.textLight}
               />
             </TouchableOpacity>
           </View>
@@ -512,7 +528,7 @@ const PronunciationExerciseScreen: React.FC = () => {
                     <Ionicons
                       name="volume-high-outline"
                       size={16}
-                      color={colors.textLight}
+                      color={tc.textLight}
                     />
                   </View>
                   <Text style={styles.feedbackText}>{result.feedback}</Text>
@@ -524,7 +540,7 @@ const PronunciationExerciseScreen: React.FC = () => {
           {/* Processing */}
           {isProcessing && (
             <View style={styles.processingWrap}>
-              <ActivityIndicator size="large" color={colors.primary} />
+              <ActivityIndicator size="large" color={tc.accent} />
               <Text style={styles.processingText}>
                 Analyzing pronunciation…
               </Text>
@@ -571,12 +587,12 @@ const PronunciationExerciseScreen: React.FC = () => {
           activeOpacity={0.7}
         >
           {isProcessing ? (
-            <ActivityIndicator size="small" color={colors.white} />
+            <ActivityIndicator size="small" color={tc.white} />
           ) : (
             <Ionicons
               name={isRecording ? 'stop' : 'mic'}
               size={28}
-              color={colors.white}
+              color={tc.white}
             />
           )}
         </TouchableOpacity>
@@ -607,7 +623,7 @@ const PronunciationExerciseScreen: React.FC = () => {
       {/* ═══════ ERROR ═══════ */}
       {error && (
         <View style={styles.errorBar}>
-          <Ionicons name="alert-circle" size={16} color={colors.error} />
+          <Ionicons name="alert-circle" size={16} color={tc.error} />
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
@@ -621,10 +637,10 @@ const PronunciationExerciseScreen: React.FC = () => {
 
 const CARD_H = 24;
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
 
   // ── Header ──
@@ -639,7 +655,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: tc.text,
     maxWidth: SCREEN_W * 0.6,
   },
   badgesCol: {
@@ -654,7 +670,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontFamily: fonts.bold,
     fontSize: 12,
-    color: colors.white,
+    color: tc.white,
   },
 
   // ── Scroll ──
@@ -693,7 +709,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.semiBold,
     fontSize: 20,
     lineHeight: 33,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
   },
 
@@ -713,7 +729,7 @@ const styles = StyleSheet.create({
   successMsg: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     lineHeight: 30,
   },
@@ -732,12 +748,12 @@ const styles = StyleSheet.create({
   feedbackLabel: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   feedbackText: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     lineHeight: 22,
     textAlign: 'center',
   },
@@ -751,13 +767,13 @@ const styles = StyleSheet.create({
   processingText: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.primary,
+    color: tc.accent,
   },
 
   // ── Action button ──
   actionBtn: {
     alignSelf: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 24,
     paddingHorizontal: 36,
     paddingVertical: 12,
@@ -766,7 +782,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
 
   // ── Bottom ──
@@ -784,7 +800,7 @@ const styles = StyleSheet.create({
   waveBarTrack: {
     height: 22,
     borderRadius: 11,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     overflow: 'hidden',
     justifyContent: 'center',
     paddingHorizontal: 6,
@@ -803,7 +819,7 @@ const styles = StyleSheet.create({
   waveBarSolid: {
     height: 4,
     borderRadius: 2,
-    backgroundColor: colors.success,
+    backgroundColor: tc.success,
     marginHorizontal: 4,
   },
 
@@ -812,20 +828,20 @@ const styles = StyleSheet.create({
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
   },
   micBtnRecording: {
-    backgroundColor: colors.error,
+    backgroundColor: tc.error,
   },
   micBtnDimmed: {
-    backgroundColor: colors.primary800,
+    backgroundColor: tc.accentDark,
     opacity: 0.6,
   },
 
@@ -833,7 +849,7 @@ const styles = StyleSheet.create({
   speakNowText: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
     marginTop: 6,
   },
 
@@ -846,13 +862,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   mascotBubble: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 10,
     padding: 4,
     marginLeft: -8,
     marginBottom: 28,
     elevation: 2,
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.15,
     shadowRadius: 2,
@@ -869,12 +885,12 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 20,
     paddingVertical: 8,
-    backgroundColor: colors.errorBg,
+    backgroundColor: tc.errorBg,
   },
   errorText: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.error,
+    color: tc.error,
   },
 });
 
@@ -893,7 +909,7 @@ const chatStyles = StyleSheet.create({
     borderTopRightRadius: 20,
     overflow: 'hidden',
     elevation: 20,
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.3,
     shadowRadius: 12,
@@ -918,7 +934,7 @@ const chatStyles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: '#FFFFFF',
   },
   headerSub: {
     fontFamily: fonts.regular,
@@ -983,13 +999,13 @@ const chatStyles = StyleSheet.create({
     borderBottomLeftRadius: 4,
   },
   bubbleUser: {
-    backgroundColor: colors.primary,
+    backgroundColor: '#3F66FB',
     borderBottomRightRadius: 4,
   },
   bubbleText: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.white,
+    color: '#FFFFFF',
     lineHeight: 20,
   },
 
@@ -1036,7 +1052,7 @@ const chatStyles = StyleSheet.create({
     paddingVertical: Platform.OS === 'ios' ? 10 : 8,
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.white,
+    color: '#FFFFFF',
   },
   sendBtn: {
     marginLeft: 10,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -19,12 +19,14 @@ import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 const SignUpScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { signInWithGoogle, signInWithApple } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -132,7 +134,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
-          leftIcon={<FontAwesome5 name="envelope" size={18} color={colors.primary} />}
+          leftIcon={<FontAwesome5 name="envelope" size={18} color={tc.accent} />}
         />
 
         <CustomInput
@@ -140,7 +142,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          leftIcon={<FontAwesome5 name="lock" size={18} color={colors.primary} />}
+          leftIcon={<FontAwesome5 name="lock" size={18} color={tc.accent} />}
         />
 
         <TouchableOpacity
@@ -148,7 +150,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setAgreeToTerms(!agreeToTerms)}
         >
           <View style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}>
-            {agreeToTerms && <FontAwesome5 name="check" size={12} color={colors.white} />}
+            {agreeToTerms && <FontAwesome5 name="check" size={12} color={tc.white} />}
           </View>
           <Text style={styles.checkboxText}>Agree to Terms and Conditions</Text>
         </TouchableOpacity>
@@ -173,9 +175,9 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             {socialLoading === 'google' ? (
-              <ActivityIndicator color={colors.primary} size="small" />
+              <ActivityIndicator color={tc.accent} size="small" />
             ) : (
-              <FontAwesome5 name="google" size={20} color={colors.googleBlue} />
+              <FontAwesome5 name="google" size={20} color={'#4285F4'} />
             )}
           </TouchableOpacity>
           {Platform.OS === 'ios' && (
@@ -186,9 +188,9 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
               activeOpacity={0.7}
             >
               {socialLoading === 'apple' ? (
-                <ActivityIndicator color={colors.text} size="small" />
+                <ActivityIndicator color={tc.text} size="small" />
               ) : (
-                <FontAwesome5 name="apple" size={20} color={colors.appleBlack} />
+                <FontAwesome5 name="apple" size={20} color={'#000000'} />
               )}
             </TouchableOpacity>
           )}
@@ -205,10 +207,10 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -224,7 +226,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     marginBottom: 32,
   },
@@ -239,18 +241,18 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 2,
-    borderColor: colors.primary,
-    backgroundColor: colors.white,
+    borderColor: tc.accent,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
   },
   checkboxText: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   signUpButtonContainer: {
     marginTop: 24,
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
   orContinueText: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     marginBottom: 16,
   },
@@ -273,9 +275,9 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -289,12 +291,12 @@ const styles = StyleSheet.create({
   signInText: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   signInLink: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.primary,
+    color: tc.accent,
   },
 });
 

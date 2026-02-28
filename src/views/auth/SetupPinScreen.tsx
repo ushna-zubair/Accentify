@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,12 +10,14 @@ import { AuthStackParamList } from '../../models';
 import CustomButton from '../../components/CustomButton';
 import NumberKeypad from '../../components/NumberKeypad';
 import { useCodeInput } from '../../hooks/useCodeInput';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupPin'>;
 
 const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { code: pin, handleKeyPress, isComplete, value: pinValue } = useCodeInput(4);
 
@@ -53,10 +55,10 @@ const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -67,13 +69,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 8,
   },
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -87,11 +89,11 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
   },
   pinDotFilled: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
   keypad: {
     width: '100%',

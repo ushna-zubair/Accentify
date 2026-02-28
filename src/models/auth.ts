@@ -79,6 +79,8 @@ export interface ManagedUser {
   email: string;
 }
 
+export type TwoFactorMethod = 'email' | 'authenticator' | 'none';
+
 export type AccountStatus = 'active' | 'deactivated';
 
 export interface UserDetailData {

@@ -29,7 +29,8 @@
     "plugins": [
       "expo-secure-store",
       "expo-font",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-audio"
     ],
     "extra": {
       "FIREBASE_API_KEY": "AIzaSyADW4-QogGi0N3pq_V8OPFZndSICCJ5YpM",

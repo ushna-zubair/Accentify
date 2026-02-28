@@ -1,7 +1,7 @@
 export { useProfileSettingsController, LEARNING_GOALS, COUNTRIES, TIME_ZONES } from './useProfileSettingsController';
-export { useAdminDashboardController, useAdminMobileDashboardController, MENU_ITEMS, OTHERS_ITEMS, ADMIN_MENU, DEFAULT_DATA } from './useAdminDashboardController';
+export { useAdminDashboardController, useAdminMobileDashboardController, MENU_ITEMS, OTHERS_ITEMS, ADMIN_MENU } from './useAdminDashboardController';
 export { useNotificationController } from './useNotificationController';
-export { useProgressController, DEFAULT_PROGRESS } from './useProgressController';
+export { useProgressController } from './useProgressController';
 export { useInsightsController, ENGLISH_LEVELS, DEFAULT_INSIGHTS } from './useInsightsController';
 export { useUserManagementController } from './useUserManagementController';
 export { useUserDetailController } from './useUserDetailController';
@@ -12,3 +12,4 @@ export { useVocabExerciseController } from './useVocabExerciseController';
 export { usePronunciationExerciseController } from './usePronunciationExerciseController';
 export { useWavyChatController } from './useWavyChatController';
 export { useConversationExerciseController } from './useConversationExerciseController';
+export { useLoginDevicesController } from './useLoginDevicesController';

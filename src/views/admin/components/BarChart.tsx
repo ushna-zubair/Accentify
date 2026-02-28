@@ -1,20 +1,21 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
 import { fonts } from '../../../theme/typography';
-import colors from '../../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../../hooks/useAppTheme';
 
 interface BarChartProps {
   data: { label: string; thisWeek: number; lastWeek: number }[];
   height?: number;
 }
 
-const CHART_COLORS = {
-  thisWeek: colors.primary,
-  lastWeek: colors.primaryMuted,
-};
-
 const BarChart: React.FC<BarChartProps> = ({ data, height = 180 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  const CHART_COLORS = {
+    thisWeek: tc.accent,
+    lastWeek: tc.accentMuted,
+  };
   const maxVal = Math.max(...data.flatMap((d) => [d.thisWeek, d.lastWeek]), 1);
   const barWidth = 14;
   const gap = 6;
@@ -71,7 +72,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, height = 180 }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   labelsRow: {
     flexDirection: 'row',
     marginTop: 6,
@@ -79,7 +80,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    color: colors.textMuted,
+    color: tc.textMuted,
     textAlign: 'center',
     position: 'absolute',
   },

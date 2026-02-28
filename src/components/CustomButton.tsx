@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
 	TouchableOpacity,
 	Text,
@@ -7,7 +7,7 @@ import {
 	ViewStyle,
 	TextStyle,
 } from 'react-native';
-import colors from '../theme/colors';
+import { useAppTheme, type ThemeColors } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
 interface CustomButtonProps {
@@ -32,6 +32,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	textStyle,
 	accessibilityLabel,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
 	const isPrimary = variant === 'primary';
 	const isDisabled = disabled || loading;
 
@@ -51,7 +53,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 			]}
 		>
 			{loading ? (
-				<ActivityIndicator color={isPrimary ? colors.white : colors.primary} size="small" />
+				<ActivityIndicator color={isPrimary ? tc.white : tc.accent} size="small" />
 			) : (
 				<Text
 					style={[
@@ -68,7 +70,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
 	);
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
 	button: {
 		height: 56,
 		borderRadius: 999,
@@ -77,8 +79,8 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 24,
 	},
 	primaryButton: {
-		backgroundColor: colors.primary,
-		shadowColor: colors.primary,
+		backgroundColor: tc.accent,
+		shadowColor: tc.accent,
 		shadowOffset: { width: 0, height: 4 },
 		shadowOpacity: 0.25,
 		shadowRadius: 8,
@@ -87,7 +89,7 @@ const styles = StyleSheet.create({
 	outlineButton: {
 		backgroundColor: 'transparent',
 		borderWidth: 1.5,
-		borderColor: colors.primary,
+		borderColor: tc.accent,
 	},
 	disabledButton: {
 		opacity: 0.5,
@@ -98,10 +100,10 @@ const styles = StyleSheet.create({
 		letterSpacing: 0.3,
 	},
 	primaryText: {
-		color: colors.white,
+		color: tc.white,
 	},
 	outlineText: {
-		color: colors.primary,
+		color: tc.accent,
 	},
 	disabledText: {
 		opacity: 0.7,

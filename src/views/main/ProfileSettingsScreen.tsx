@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
+import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
 import { useProfileSettingsController, LEARNING_GOALS, COUNTRIES, TIME_ZONES } from '../../controllers';
 import PickerModal from '../../components/PickerModal';
 import type { SettingsStackParamList } from '../../models';
@@ -39,7 +40,10 @@ const AccountRow: React.FC<AccountRowProps> = ({
   navigable,
   onNavigate,
   secureText,
-}) => (
+}) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <TouchableOpacity
     style={styles.accountRow}
     activeOpacity={editable || navigable ? 0.6 : 1}
@@ -52,14 +56,15 @@ const AccountRow: React.FC<AccountRowProps> = ({
         {secureText ? '••••••••' : value}
       </Text>
       {editable && (
-        <Feather name="edit-2" size={16} color={colors.textLight} style={{ marginLeft: 6 }} />
+        <Feather name="edit-2" size={16} color={tc.textLight} style={{ marginLeft: 6 }} />
       )}
       {navigable && (
-        <Ionicons name="chevron-forward" size={18} color={colors.textLight} style={{ marginLeft: 4 }} />
+        <Ionicons name="chevron-forward" size={18} color={tc.textLight} style={{ marginLeft: 4 }} />
       )}
     </View>
   </TouchableOpacity>
-);
+  );
+};
 
 // Inline import to avoid extra top-level import
 import { Feather } from '@expo/vector-icons';
@@ -68,16 +73,22 @@ interface RadioCircleProps {
   selected: boolean;
 }
 
-const RadioCircle: React.FC<RadioCircleProps> = ({ selected }) => (
+const RadioCircle: React.FC<RadioCircleProps> = ({ selected }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
     {selected && <View style={styles.radioInner} />}
   </View>
-);
+  );
+};
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'ProfileSettings'>;
 
 // ------- Main Screen -------
 const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const {
     profile,
     isLoading,
@@ -88,12 +99,14 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     currentPassword,
     setCurrentPassword,
     pickerModal,
+    photoUploading,
     handleSaveUsername,
     handleSavePassword,
     handleCountrySelect,
     handleTimeZoneSelect,
     toggleLearningGoal,
     handlePrivacyPress,
+    handlePhotoPress,
     startEditUsername,
     startEditPassword,
     closeEditing,
@@ -101,11 +114,12 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     openTimeZonePicker,
     closePickerModal,
   } = useProfileSettingsController();
+  const { handleScroll } = useTabBarScroll();
 
   // ------- Goal icon renderer -------
   const renderGoalIcon = (goal: typeof LEARNING_GOALS[number]) => {
     const size = 20;
-    const color = colors.primary;
+    const color = tc.accent;
     if (goal.iconSet === 'ionicons')
       return <Ionicons name={goal.icon as any} size={size} color={color} />;
     if (goal.iconSet === 'fa5')
@@ -118,7 +132,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color={colors.primary} />
+          <ActivityIndicator size="large" color={tc.accent} />
           <Text style={styles.loadingText}>Loading profile…</Text>
         </View>
       </SafeAreaView>
@@ -130,7 +144,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.centered}>
-          <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+          <Ionicons name="alert-circle-outline" size={48} color={tc.error} />
           <Text style={styles.errorText}>{error}</Text>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorBackBtn}>
             <Text style={styles.errorBackBtnText}>Go Back</Text>
@@ -146,34 +160,71 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color={colors.text} />
+            <Ionicons name="arrow-back" size={24} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Profile Settings</Text>
+          <View style={{ width: 36 }} />
         </View>
 
-        {/* Profile Card */}
+        {/* Profile Card – centered avatar with camera badge */}
         <View style={styles.profileCard}>
-          <Image
-            source={
-              profile.profilePictureUrl
-                ? { uri: profile.profilePictureUrl }
-                : require('../../../assets/icon.png')
-            }
-            style={styles.avatar}
-          />
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile.username || 'User'}</Text>
-            <Text style={styles.profileEmail}>{profile.email}</Text>
+          <TouchableOpacity
+            style={styles.avatarWrapper}
+            activeOpacity={0.8}
+            onPress={handlePhotoPress}
+            disabled={photoUploading}
+          >
+            {profile.profilePictureUrl ? (
+              <Image
+                source={{ uri: profile.profilePictureUrl }}
+                style={styles.avatar}
+              />
+            ) : (
+              <View style={[styles.avatar, styles.avatarPlaceholder]}>
+                <Text style={styles.avatarInitials}>
+                  {(profile.username || 'U').charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+            {/* Camera badge */}
+            <View style={styles.cameraBadge}>
+              {photoUploading ? (
+                <ActivityIndicator size={14} color={tc.white} />
+              ) : (
+                <Ionicons name="camera" size={14} color={tc.white} />
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <Text style={styles.profileName}>{profile.username || 'User'}</Text>
+          <Text style={styles.profileEmail}>{profile.email}</Text>
+
+          <View style={styles.profileActions}>
             <TouchableOpacity
               style={styles.editProfileBtn}
               activeOpacity={0.7}
               onPress={startEditUsername}
             >
+              <Feather name="edit-2" size={14} color={tc.accent} />
               <Text style={styles.editProfileBtnText}>Edit Profile</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.changePhotoBtn}
+              activeOpacity={0.7}
+              onPress={handlePhotoPress}
+              disabled={photoUploading}
+            >
+              <Ionicons name="image-outline" size={14} color={tc.text} />
+              <Text style={styles.changePhotoBtnText}>
+                {profile.profilePictureUrl ? 'Change Photo' : 'Add Photo'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -241,19 +292,19 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity
             style={styles.privacyRow}
             activeOpacity={0.7}
-            onPress={() => handlePrivacyPress('Login Devices')}
+            onPress={() => navigation.navigate('LoginDevices')}
           >
             <Text style={styles.privacyLabel}>Login Devices</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+            <Ionicons name="chevron-forward" size={20} color={tc.textLight} />
           </TouchableOpacity>
           <View style={styles.divider} />
           <TouchableOpacity
             style={styles.privacyRow}
             activeOpacity={0.7}
-            onPress={() => handlePrivacyPress('Two-Factor Authentication')}
+            onPress={() => navigation.navigate('TwoFactorSettings')}
           >
             <Text style={styles.privacyLabel}>Two-Factor Authentication</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+            <Ionicons name="chevron-forward" size={20} color={tc.textLight} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -272,7 +323,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
                 {editingField === 'username' ? 'Edit Username' : 'Change Password'}
               </Text>
               <TouchableOpacity onPress={closeEditing}>
-                <Ionicons name="close" size={24} color={colors.text} />
+                <Ionicons name="close" size={24} color={tc.text} />
               </TouchableOpacity>
             </View>
 
@@ -280,7 +331,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
               <TextInput
                 style={styles.modalInput}
                 placeholder="Current password"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={tc.textMuted}
                 secureTextEntry
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
@@ -290,7 +341,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
             <TextInput
               style={styles.modalInput}
               placeholder={editingField === 'username' ? 'Enter new username' : 'Enter new password'}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={tc.textMuted}
               secureTextEntry={editingField === 'password'}
               value={fieldValue}
               onChangeText={setFieldValue}
@@ -322,10 +373,10 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ------- Styles -------
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   container: {
     flex: 1,
@@ -333,80 +384,129 @@ const styles = StyleSheet.create({
   contentContainer: {
     paddingHorizontal: 20,
     paddingTop: 10,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
   backButton: {
-    marginRight: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: tc.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 28,
-    color: colors.text,
-    fontStyle: 'italic',
+    fontSize: 20,
+    color: tc.text,
   },
-  // Profile card
+  // Profile card – centered layout
   profileCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
-    gap: 16,
+    marginBottom: 28,
+    paddingVertical: 16,
+  },
+  avatarWrapper: {
+    position: 'relative',
+    marginBottom: 14,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: colors.avatarBg,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: tc.accentLight,
   },
-  profileInfo: {
-    flex: 1,
+  avatarPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInitials: {
+    fontFamily: fonts.bold,
+    fontSize: 38,
+    color: tc.white,
+  },
+  cameraBadge: {
+    position: 'absolute',
+    bottom: 2,
+    right: 2,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: tc.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2.5,
+    borderColor: tc.white,
   },
   profileName: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
+    marginBottom: 2,
   },
   profileEmail: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
-    marginBottom: 8,
+    color: tc.textLight,
+    marginBottom: 14,
+  },
+  profileActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   editProfileBtn: {
-    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     borderWidth: 1.5,
-    borderColor: colors.text,
+    borderColor: tc.accent,
     borderRadius: 20,
-    paddingVertical: 6,
+    paddingVertical: 8,
     paddingHorizontal: 18,
   },
   editProfileBtnText: {
     fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.text,
+    color: tc.accent,
+  },
+  changePhotoBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    borderWidth: 1.5,
+    borderColor: tc.cardBorder,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+  },
+  changePhotoBtnText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+    color: tc.text,
   },
   // Sections
   sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 10,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: colors.primaryLight,
+    borderColor: tc.accentLight,
     paddingHorizontal: 16,
     marginBottom: 20,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.inputBorder,
+    backgroundColor: tc.inputBorder,
   },
   // Account rows
   accountRow: {
@@ -418,7 +518,7 @@ const styles = StyleSheet.create({
   accountRowLabel: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   accountRowRight: {
     flexDirection: 'row',
@@ -427,7 +527,7 @@ const styles = StyleSheet.create({
   accountRowValue: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   // Learning Goals
   goalRow: {
@@ -444,25 +544,25 @@ const styles = StyleSheet.create({
   goalLabel: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   radioOuter: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.textLight,
+    borderColor: tc.textLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
   radioOuterSelected: {
-    borderColor: colors.text,
+    borderColor: tc.text,
   },
   radioInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: colors.text,
+    backgroundColor: tc.text,
   },
   // Privacy
   privacyRow: {
@@ -474,16 +574,16 @@ const styles = StyleSheet.create({
   privacyLabel: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   // Modals
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -498,22 +598,22 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   modalInput: {
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.inputBg,
+    color: tc.text,
+    backgroundColor: tc.inputBg,
     marginBottom: 12,
   },
   modalSaveBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
@@ -522,7 +622,7 @@ const styles = StyleSheet.create({
   modalSaveBtnText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   // Loading & error states
   centered: {
@@ -534,19 +634,19 @@ const styles = StyleSheet.create({
   loadingText: {
     fontFamily: fonts.medium,
     fontSize: 16,
-    color: colors.textLight,
+    color: tc.textLight,
     marginTop: 12,
   },
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 16,
-    color: colors.error,
+    color: tc.error,
     textAlign: 'center',
     marginTop: 12,
     marginBottom: 20,
   },
   errorBackBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 28,
@@ -554,7 +654,7 @@ const styles = StyleSheet.create({
   errorBackBtnText: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.white,
+    color: tc.white,
   },
 });
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useAnnouncementsController } from '../../controllers';
 
@@ -19,6 +19,8 @@ import { useAnnouncementsController } from '../../controllers';
 // ═══════════════════════════════════════════════
 
 const AdminAnnouncementsScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation();
   const {
     announcements,
@@ -36,7 +38,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tc.accent} />
       </View>
     );
   }
@@ -46,7 +48,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Announcements</Text>
         <View style={styles.headerSpacer} />
@@ -103,7 +105,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
                 ]}
               >
                 {isSelected && (
-                  <Ionicons name="checkmark" size={14} color={colors.white} />
+                  <Ionicons name="checkmark" size={14} color={tc.white} />
                 )}
               </View>
             </TouchableOpacity>
@@ -120,7 +122,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               {submitting ? (
-                <ActivityIndicator size="small" color={colors.white} />
+                <ActivityIndicator size="small" color={tc.white} />
               ) : (
                 <Text style={styles.deleteBtnText}>
                   Delete{'\n'}Announcement
@@ -136,7 +138,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
           <TextInput
             style={styles.createInput}
             placeholder="Type your announcement here..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             multiline
             value={draftBody}
             onChangeText={setDraftBody}
@@ -153,7 +155,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             {submitting ? (
-              <ActivityIndicator size="small" color={colors.white} />
+              <ActivityIndicator size="small" color={tc.white} />
             ) : (
               <Text style={styles.postBtnText}>Post Announcement</Text>
             )}
@@ -168,14 +170,14 @@ const AdminAnnouncementsScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
   },
   headerSpacer: { width: 32 },
 
@@ -206,7 +208,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.error,
+    color: tc.error,
     marginBottom: 10,
   },
 
@@ -214,14 +216,14 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 12,
     fontStyle: 'italic',
   },
   emptyText: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.textMuted,
+    color: tc.textMuted,
     marginBottom: 16,
   },
 
@@ -229,18 +231,18 @@ const styles = StyleSheet.create({
   announcementPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: tc.accentLight,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginBottom: 8,
   },
   announcementPillAlt: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
   },
   announcementPillSelected: {
     borderWidth: 2,
-    borderColor: colors.primaryDark,
+    borderColor: tc.accentDark,
   },
   pillContent: {
     flex: 1,
@@ -249,29 +251,29 @@ const styles = StyleSheet.create({
   pillLabel: {
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 2,
   },
   pillBody: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   pillBodyAlt: {
-    color: colors.white,
+    color: tc.white,
   },
   checkCircle: {
     width: 26,
     height: 26,
     borderRadius: 13,
     borderWidth: 2,
-    borderColor: colors.white,
+    borderColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkCircleActive: {
-    backgroundColor: colors.primaryDark,
-    borderColor: colors.primaryDark,
+    backgroundColor: tc.accentDark,
+    borderColor: tc.accentDark,
   },
 
   // Delete Button
@@ -281,7 +283,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   deleteBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 14,
     paddingVertical: 14,
     paddingHorizontal: 40,
@@ -291,14 +293,14 @@ const styles = StyleSheet.create({
   deleteBtnText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
     textAlign: 'center',
     lineHeight: 22,
   },
 
   // Create Card
   createCard: {
-    backgroundColor: colors.infoBg,
+    backgroundColor: tc.accentMuted,
     borderRadius: 16,
     padding: 20,
     marginTop: 16,
@@ -308,13 +310,13 @@ const styles = StyleSheet.create({
   createTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 10,
   },
   createInput: {
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
     minHeight: 80,
     lineHeight: 22,
   },
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   postBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 24,
     paddingVertical: 14,
     paddingHorizontal: 36,
@@ -338,7 +340,7 @@ const styles = StyleSheet.create({
   postBtnText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
 });
 

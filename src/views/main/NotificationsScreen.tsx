@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useNotificationController } from '../../controllers';
 import type { NotificationItem, NotificationSection, SettingsStackParamList } from '../../models';
@@ -20,6 +20,8 @@ type Props = NativeStackScreenProps<SettingsStackParamList, 'Notifications'>;
 const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   const { activeTab, setActiveTab, sections, markAllAsRead, markAsRead } =
     useNotificationController();
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
 
   const renderItem = ({ item }: { item: NotificationItem }) => (
     <TouchableOpacity
@@ -85,10 +87,10 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 // ------- Styles -------
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   container: {
     flex: 1,
@@ -98,7 +100,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 28,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 16,
   },
   // Tabs
@@ -111,10 +113,10 @@ const styles = StyleSheet.create({
   tabText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   tabTextActive: {
-    color: colors.textLink,
+    color: tc.accent,
     textDecorationLine: 'underline',
   },
   markAllBtn: {
@@ -123,11 +125,11 @@ const styles = StyleSheet.create({
   markAllText: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.textLink,
+    color: tc.accent,
   },
   // Section headers
   sectionHeaderContainer: {
-    backgroundColor: colors.inputBorder,
+    backgroundColor: tc.inputBorder,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 6,
@@ -137,7 +139,7 @@ const styles = StyleSheet.create({
   sectionHeaderText: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   // Notification row
   notificationRow: {
@@ -151,7 +153,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.text,
+    backgroundColor: tc.text,
   },
   unreadDotPlaceholder: {
     width: 8,
@@ -161,19 +163,19 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: colors.inputBorder,
+    backgroundColor: tc.inputBorder,
   },
   notificationText: {
     flex: 1,
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     lineHeight: 20,
   },
   notificationTime: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textLight,
+    color: tc.textLight,
     marginLeft: 4,
     alignSelf: 'flex-end',
   },
@@ -187,7 +189,7 @@ const styles = StyleSheet.create({
   emptyText: {
     fontFamily: fonts.regular,
     fontSize: 16,
-    color: colors.textLight,
+    color: tc.textLight,
   },
 });
 

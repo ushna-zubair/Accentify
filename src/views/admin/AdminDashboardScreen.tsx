@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -16,7 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import BarChart from './components/BarChart';
 import DonutChart from './components/DonutChart';
@@ -36,6 +36,8 @@ import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } f
 
 // ─── Admin Avatar ───
 const AdminAvatar: React.FC<{ name: string; size?: number }> = ({ name, size = 48 }) => {
+  const { colors: tc } = useAppTheme();
+  const mStyles = useMemo(() => createMStyles(tc), [tc]);
   const initials = name
     .split(' ')
     .map((w) => w[0])
@@ -60,15 +62,22 @@ const AdminAvatar: React.FC<{ name: string; size?: number }> = ({ name, size = 4
 };
 
 // ─── Announcement Card ───
-const AnnouncementCard: React.FC<{ title: string; body: string }> = ({ title, body }) => (
+const AnnouncementCard: React.FC<{ title: string; body: string }> = ({ title, body }) => {
+  const { colors: tc } = useAppTheme();
+  const mStyles = useMemo(() => createMStyles(tc), [tc]);
+  return (
   <View style={mStyles.announcementCard}>
     <Text style={mStyles.announcementTitle}>{title}</Text>
     <Text style={mStyles.announcementBody}>{body}</Text>
   </View>
-);
+  );
+};
 
 // ─── Admins Online ───
-const AdminsOnlineSection: React.FC<{ admins: AdminOnline[] }> = ({ admins }) => (
+const AdminsOnlineSection: React.FC<{ admins: AdminOnline[] }> = ({ admins }) => {
+  const { colors: tc } = useAppTheme();
+  const mStyles = useMemo(() => createMStyles(tc), [tc]);
+  return (
   <View style={mStyles.adminsOnlineSection}>
     <Text style={mStyles.adminsOnlineTitle}>Admins Online</Text>
     <View style={mStyles.adminsOnlineRow}>
@@ -82,13 +91,17 @@ const AdminsOnlineSection: React.FC<{ admins: AdminOnline[] }> = ({ admins }) =>
       ))}
     </View>
   </View>
-);
+  );
+};
 
 // ─── Menu Button ───
 const MenuButton: React.FC<{
   item: AdminMenuItem;
   onPress: () => void;
-}> = ({ item, onPress }) => (
+}> = ({ item, onPress }) => {
+  const { colors: tc } = useAppTheme();
+  const mStyles = useMemo(() => createMStyles(tc), [tc]);
+  return (
   <TouchableOpacity
     style={[mStyles.menuButton, item.filled && mStyles.menuButtonFilled]}
     onPress={onPress}
@@ -100,7 +113,8 @@ const MenuButton: React.FC<{
       {item.label}
     </Text>
   </TouchableOpacity>
-);
+  );
+};
 
 // ─── Create Announcement Modal ───
 const CreateAnnouncementModal: React.FC<{
@@ -109,6 +123,8 @@ const CreateAnnouncementModal: React.FC<{
   onSubmit: (title: string, body: string) => void;
   submitting: boolean;
 }> = ({ visible, onClose, onSubmit, submitting }) => {
+  const { colors: tc } = useAppTheme();
+  const mStyles = useMemo(() => createMStyles(tc), [tc]);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
 
@@ -129,7 +145,7 @@ const CreateAnnouncementModal: React.FC<{
           <View style={mStyles.modalHeader}>
             <Text style={mStyles.modalTitle}>Create Announcement</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={colors.text} />
+              <Ionicons name="close" size={24} color={tc.text} />
             </TouchableOpacity>
           </View>
 
@@ -137,7 +153,7 @@ const CreateAnnouncementModal: React.FC<{
           <TextInput
             style={mStyles.modalInput}
             placeholder="Announcement title"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             value={title}
             onChangeText={setTitle}
           />
@@ -146,7 +162,7 @@ const CreateAnnouncementModal: React.FC<{
           <TextInput
             style={[mStyles.modalInput, mStyles.modalTextArea]}
             placeholder="Write your announcement..."
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             value={body}
             onChangeText={setBody}
             multiline
@@ -163,7 +179,7 @@ const CreateAnnouncementModal: React.FC<{
             activeOpacity={0.7}
           >
             {submitting ? (
-              <ActivityIndicator color={colors.white} size="small" />
+              <ActivityIndicator color={tc.white} size="small" />
             ) : (
               <Text style={mStyles.modalSubmitText}>Publish</Text>
             )}
@@ -176,6 +192,8 @@ const CreateAnnouncementModal: React.FC<{
 
 // ─── Mobile Dashboard Screen ───
 const MobileAdminDashboard: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const mStyles = useMemo(() => createMStyles(tc), [tc]);
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const { mobileData, loading, handleLogout, createAnnouncement } =
     useAdminMobileDashboardController();
@@ -207,7 +225,7 @@ const MobileAdminDashboard: React.FC = () => {
   if (loading) {
     return (
       <View style={mStyles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tc.accent} />
       </View>
     );
   }
@@ -228,7 +246,7 @@ const MobileAdminDashboard: React.FC = () => {
             <Text style={mStyles.headerTitle}>Admin Dashboard</Text>
           </View>
           <TouchableOpacity onPress={handleLogout} style={mStyles.logoutBtn}>
-            <Ionicons name="log-out-outline" size={26} color={colors.text} />
+            <Ionicons name="log-out-outline" size={26} color={tc.text} />
           </TouchableOpacity>
         </View>
 
@@ -272,10 +290,10 @@ const MobileAdminDashboard: React.FC = () => {
 };
 
 // ─── Mobile Styles ───
-const mStyles = StyleSheet.create({
+const createMStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   scrollContent: {
     paddingHorizontal: 20,
@@ -283,7 +301,7 @@ const mStyles = StyleSheet.create({
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -307,12 +325,12 @@ const mStyles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
   },
   headerName: {
     fontFamily: fonts.medium,
     fontSize: 11,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   logoutBtn: {
     padding: 8,
@@ -320,14 +338,14 @@ const mStyles = StyleSheet.create({
 
   // Avatar
   avatar: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: tc.accentLight,
     justifyContent: 'center',
     alignItems: 'center',
     position: 'relative',
   },
   avatarText: {
     fontFamily: fonts.bold,
-    color: colors.white,
+    color: tc.white,
   },
   avatarEmoji: {
     position: 'absolute',
@@ -335,23 +353,23 @@ const mStyles = StyleSheet.create({
 
   // Announcement
   announcementCard: {
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: tc.accent,
     padding: 18,
     marginTop: 8,
   },
   announcementTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 6,
   },
   announcementBody: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     lineHeight: 22,
   },
 
@@ -362,7 +380,7 @@ const mStyles = StyleSheet.create({
   adminsOnlineTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 10,
   },
   adminsOnlineRow: {
@@ -377,7 +395,7 @@ const mStyles = StyleSheet.create({
   adminOnlineName: {
     fontFamily: fonts.regular,
     fontSize: 10,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
   },
 
@@ -392,27 +410,27 @@ const mStyles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 28,
     borderWidth: 2,
-    borderColor: colors.primary,
+    borderColor: tc.accent,
     alignItems: 'center',
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   menuButtonFilled: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
   menuButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.primary,
+    color: tc.accent,
   },
   menuButtonTextFilled: {
-    color: colors.white,
+    color: tc.white,
   },
 
   // Continue
   continueBtn: {
     marginTop: 30,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 28,
     paddingVertical: 16,
     alignItems: 'center',
@@ -421,17 +439,17 @@ const mStyles = StyleSheet.create({
   continueBtnText: {
     fontFamily: fonts.bold,
     fontSize: 17,
-    color: colors.white,
+    color: tc.white,
   },
 
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -446,31 +464,31 @@ const mStyles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   modalLabel: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 6,
     marginTop: 12,
   },
   modalInput: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: colors.inputBg,
+    backgroundColor: tc.inputBg,
   },
   modalTextArea: {
     minHeight: 100,
   },
   modalSubmitBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 28,
     paddingVertical: 14,
     alignItems: 'center',
@@ -482,7 +500,7 @@ const mStyles = StyleSheet.create({
   modalSubmitText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
 });
 
@@ -497,7 +515,10 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
+const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.sidebar}>
     {/* Logo */}
     <View style={styles.logoContainer}>
@@ -518,7 +539,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
           <Ionicons
             name={item.icon as any}
             size={20}
-            color={active ? colors.white : colors.textLight}
+            color={active ? tc.white : tc.textLight}
           />
           <Text style={[styles.sidebarLabel, active && styles.sidebarLabelActive]}>
             {item.label}
@@ -541,7 +562,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
           <Ionicons
             name={item.icon as any}
             size={20}
-            color={active ? colors.white : colors.textLight}
+            color={active ? tc.white : tc.textLight}
           />
           <Text style={[styles.sidebarLabel, active && styles.sidebarLabelActive]}>
             {item.label}
@@ -550,7 +571,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
       );
     })}
   </View>
-);
+  );
+};
 
 // ------- Top Bar -------
 interface TopBarProps {
@@ -558,35 +580,42 @@ interface TopBarProps {
   onSearchChange: (text: string) => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => (
+const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.topBar}>
     <View style={styles.searchContainer}>
       <TextInput
         style={styles.searchInput}
         placeholder="Search"
-        placeholderTextColor={colors.textMuted}
+        placeholderTextColor={tc.textMuted}
         value={searchQuery}
         onChangeText={onSearchChange}
       />
-      <Ionicons name="search" size={18} color={colors.textMuted} style={styles.searchIcon} />
+      <Ionicons name="search" size={18} color={tc.textMuted} style={styles.searchIcon} />
     </View>
     <View style={styles.topBarRight}>
       <View style={styles.adminBadge}>
         <Image source={require('../../../assets/logo.png')} style={styles.adminAvatar} />
         <Text style={styles.adminLabel}>Admin Dashboard</Text>
-        <Ionicons name="chevron-down" size={16} color={colors.text} />
+        <Ionicons name="chevron-down" size={16} color={tc.text} />
       </View>
       <View style={styles.notifBadge}>
-        <Ionicons name="notifications-outline" size={22} color={colors.primary} />
+        <Ionicons name="notifications-outline" size={22} color={tc.accent} />
         <View style={styles.notifDot} />
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // ------- Dashboard Cards -------
 
-const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>Revenue</Text>
@@ -596,7 +625,7 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     </View>
     <Text style={styles.bigNumber}>{data.activeUsers.toLocaleString()} Active Users</Text>
     <View style={styles.growthRow}>
-      <Ionicons name="arrow-up" size={14} color={colors.success} />
+      <Ionicons name="arrow-up" size={14} color={tc.success} />
       <Text style={styles.growthText}>{data.growthPct}%</Text>
       <Text style={styles.growthSub}>vs last week</Text>
     </View>
@@ -606,18 +635,22 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     </View>
     <View style={styles.legendRow}>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+        <View style={[styles.legendDot, { backgroundColor: tc.accent }]} />
         <Text style={styles.legendText}>This Week</Text>
       </View>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.primaryMuted }]} />
+        <View style={[styles.legendDot, { backgroundColor: tc.accentMuted }]} />
         <Text style={styles.legendText}>Last Week</Text>
       </View>
     </View>
   </View>
-);
+  );
+};
 
-const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>User Practice Activity</Text>
@@ -628,9 +661,9 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     <Text style={styles.dateRange}>From Oct 10 - 21 Oct, 2025</Text>
     <DonutChart
       segments={[
-        { label: 'Morning Sessions', value: data.practiceActivity.morning, color: colors.primaryLight },
-        { label: 'Afternoon Sessions', value: data.practiceActivity.afternoon, color: colors.primary },
-        { label: 'Night Sessions', value: data.practiceActivity.night, color: colors.primaryMuted },
+        { label: 'Morning Sessions', value: data.practiceActivity.morning, color: tc.accentLight },
+        { label: 'Afternoon Sessions', value: data.practiceActivity.afternoon, color: tc.accent },
+        { label: 'Night Sessions', value: data.practiceActivity.night, color: tc.accentMuted },
       ]}
       size={180}
       tooltipLabel="Afternoon"
@@ -638,23 +671,31 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       tooltipValue="540 Active Users"
     />
   </View>
-);
+  );
+};
 
-const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>User Performance Insights</Text>
     <Text style={styles.cardSubtitle}>Pronunciation, fluency &amp; vocabulary metrics</Text>
     <PerformanceBubbles
       data={[
-        { label: 'Pronunciation', subLabel: 'Accuracy', value: data.pronunciationAccuracy, color: colors.primary, size: 110 },
-        { label: 'Fluency', subLabel: 'Accuracy', value: data.fluencyAccuracy, color: colors.warning, size: 120 },
-        { label: 'Vocabulary', subLabel: 'Retention', value: data.vocabularyRetention, color: colors.primaryLight, size: 100 },
+        { label: 'Pronunciation', subLabel: 'Accuracy', value: data.pronunciationAccuracy, color: tc.accent, size: 110 },
+        { label: 'Fluency', subLabel: 'Accuracy', value: data.fluencyAccuracy, color: tc.warning, size: 120 },
+        { label: 'Vocabulary', subLabel: 'Retention', value: data.vocabularyRetention, color: tc.accentLight, size: 100 },
       ]}
     />
   </View>
-);
+  );
+};
 
-const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>Top Performing Learners</Text>
     <Text style={styles.cardSubtitle}>Ranked by sessions completed this month</Text>
@@ -672,9 +713,13 @@ const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       ))}
     </View>
   </View>
-);
+  );
+};
 
-const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>User Practice Sessions</Text>
@@ -686,7 +731,7 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       {data.totalSessions.toLocaleString()} total sessions completed
     </Text>
     <View style={styles.growthRow}>
-      <Ionicons name="arrow-up" size={14} color={colors.success} />
+      <Ionicons name="arrow-up" size={14} color={tc.success} />
       <Text style={styles.growthText}>+{data.sessionsGrowth}%</Text>
       <Text style={styles.growthSub}>vs last week</Text>
     </View>
@@ -700,31 +745,72 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
     />
     <View style={[styles.legendRow, { marginTop: 8 }]}>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.primary }]} />
+        <View style={[styles.legendDot, { backgroundColor: tc.accent }]} />
         <Text style={styles.legendText}>This Week</Text>
       </View>
       <View style={styles.legendItem}>
-        <View style={[styles.legendDot, { backgroundColor: colors.disabled }]} />
+        <View style={[styles.legendDot, { backgroundColor: tc.disabled }]} />
         <Text style={styles.legendText}>Last Week</Text>
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // ------- Desktop Main Screen -------
 const DesktopAdminDashboard: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const {
     activeMenu,
     setActiveMenu,
     searchQuery,
     setSearchQuery,
     dashboardData,
+    isLoading,
+    error,
+    refetch,
     handleLogout,
   } = useAdminDashboardController();
 
   const { width } = useWindowDimensions();
   const isWide = width >= 900;
   const isTablet = width >= 600 && width < 900;
+
+  // ── Loading state ──
+  if (isLoading) {
+    return (
+      <View style={styles.root}>
+        {isWide && (
+          <Sidebar activeKey={activeMenu} onSelect={setActiveMenu} onLogout={handleLogout} />
+        )}
+        <View style={[styles.mainArea, styles.centeredContainer]}>
+          <ActivityIndicator size="large" color={tc.accent} />
+          <Text style={styles.loadingText}>Loading dashboard analytics…</Text>
+        </View>
+      </View>
+    );
+  }
+
+  // ── Error state ──
+  if (error || !dashboardData) {
+    return (
+      <View style={styles.root}>
+        {isWide && (
+          <Sidebar activeKey={activeMenu} onSelect={setActiveMenu} onLogout={handleLogout} />
+        )}
+        <View style={[styles.mainArea, styles.centeredContainer]}>
+          <Ionicons name="alert-circle-outline" size={48} color={tc.error} />
+          <Text style={styles.errorText}>
+            {error || 'Failed to load dashboard data.'}
+          </Text>
+          <TouchableOpacity style={styles.retryBtn} activeOpacity={0.7} onPress={refetch}>
+            <Text style={styles.retryBtnText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
@@ -791,17 +877,17 @@ const AdminDashboardScreen: React.FC = () => {
 // ------- Desktop Styles -------
 const SIDEBAR_WIDTH = 220;
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   root: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: colors.adminBg,
+    backgroundColor: tc.background,
   },
   sidebar: {
     width: SIDEBAR_WIDTH,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRightWidth: 1,
-    borderRightColor: colors.adminSidebarBorder,
+    borderRightColor: tc.cardBorder,
     paddingVertical: 20,
     paddingHorizontal: 16,
   },
@@ -817,7 +903,7 @@ const styles = StyleSheet.create({
   sidebarSection: {
     fontFamily: fonts.bold,
     fontSize: 11,
-    color: colors.textMuted,
+    color: tc.textMuted,
     letterSpacing: 1,
     marginBottom: 10,
     paddingLeft: 4,
@@ -832,15 +918,15 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sidebarItemActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
   },
   sidebarLabel: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   sidebarLabelActive: {
-    color: colors.white,
+    color: tc.white,
     fontFamily: fonts.semiBold,
   },
   topBar: {
@@ -849,16 +935,16 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    borderBottomColor: tc.divider,
   },
   searchContainer: {
     flex: 1,
     maxWidth: 480,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: tc.surfaceAlt,
     borderRadius: 10,
     paddingHorizontal: 14,
     height: 40,
@@ -867,7 +953,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   searchIcon: {
     marginLeft: 8,
@@ -886,12 +972,12 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
   adminLabel: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   notifBadge: {
     position: 'relative',
@@ -903,7 +989,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.error,
+    backgroundColor: tc.error,
   },
   mainArea: {
     flex: 1,
@@ -918,7 +1004,7 @@ const styles = StyleSheet.create({
   pageTitle: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 20,
   },
   row: {
@@ -934,10 +1020,10 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: tc.cardBorder,
     padding: 20,
     marginBottom: 0,
   },
@@ -950,17 +1036,17 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   cardSubtitle: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: tc.textMuted,
     marginTop: 2,
   },
   outlineBtn: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: tc.accent,
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -968,12 +1054,12 @@ const styles = StyleSheet.create({
   outlineBtnText: {
     fontFamily: fonts.semiBold,
     fontSize: 12,
-    color: colors.primary,
+    color: tc.accent,
   },
   bigNumber: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: tc.text,
     marginTop: 4,
   },
   growthRow: {
@@ -985,17 +1071,17 @@ const styles = StyleSheet.create({
   growthText: {
     fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.success,
+    color: tc.success,
   },
   growthSub: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
   dateRange: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: tc.textMuted,
     marginTop: 6,
     marginBottom: 12,
   },
@@ -1021,7 +1107,7 @@ const styles = StyleSheet.create({
   legendText: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   learnerRow: {
     flexDirection: 'row',
@@ -1039,12 +1125,43 @@ const styles = StyleSheet.create({
   learnerName: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   learnerSessions: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
+  },
+  // Loading & error states (desktop)
+  centeredContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    color: tc.textLight,
+    marginTop: 12,
+  },
+  errorText: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    color: tc.error,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 20,
+    paddingHorizontal: 24,
+  },
+  retryBtn: {
+    backgroundColor: tc.accent,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+  },
+  retryBtnText: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
+    color: tc.white,
   },
 });
 

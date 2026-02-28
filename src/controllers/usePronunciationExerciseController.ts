@@ -1,26 +1,37 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  AudioModule,
+  setAudioModeAsync,
+  type AudioRecorder,
+} from 'expo-audio';
 import {
   doc,
   setDoc,
-  collection,
-  addDoc,
   Timestamp,
   increment,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
+import {
+  fetchSentences,
+  readAudioAsBase64,
+  transcribeAndEvaluate,
+  type PronunciationSentenceDTO,
+} from '../services/pronunciationService';
 import type {
   PronunciationScore,
   WordResult,
   PronunciationAttemptResult,
   PronunciationSentence,
 } from '../models';
+import { onExerciseComplete } from '../services/progressService';
 
 // ═══════════════════════════════════════════════
-//  SAMPLE SENTENCES
+//  DEFAULT SENTENCES (used while loading from backend)
 // ═══════════════════════════════════════════════
 
-const SENTENCES: PronunciationSentence[] = [
+const DEFAULT_SENTENCES: PronunciationSentence[] = [
   {
     text: 'Joe went to play soccer with his friends but he ended up staying at home and play video games',
     difficulty: 'easy',
@@ -160,32 +171,8 @@ const evaluatePronunciation = (
   return { wordResults, score, feedback };
 };
 
-/**
- * Mock STT — returns the target text with some words randomly altered.
- * In production, replace with Whisper / Google STT API call.
- */
-const transcribeAudio = async (
-  _uri: string,
-  targetText: string,
-): Promise<string> => {
-  await new Promise((r) => setTimeout(r, 1500));
-
-  const words = targetText.split(/\s+/);
-  // ~25 % chance of making a mistake on each word
-  const transcript = words
-    .map((w) => {
-      if (Math.random() < 0.25) {
-        // Simulate mis-hearing by mangling the word
-        const n = normalize(w);
-        if (n.length > 3) return n.slice(0, -2);
-        return n + 'x';
-      }
-      return w;
-    })
-    .join(' ');
-
-  return transcript;
-};
+// transcribeAudio has been replaced by the Cloud Function `transcribeAndEvaluate`
+// via pronunciationService.ts — see stopRecording below.
 
 // ═══════════════════════════════════════════════
 //  CONTROLLER HOOK
@@ -195,6 +182,9 @@ export type PronunciationPhase = 'idle' | 'recording' | 'processing' | 'result';
 
 export const usePronunciationExerciseController = (lessonId: string) => {
   // ── State ──
+  const [sentences, setSentences] = useState<PronunciationSentence[]>(DEFAULT_SENTENCES);
+  const [sentenceIds, setSentenceIds] = useState<(string | undefined)[]>([]);
+  const [sentencesLoading, setSentencesLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<PronunciationPhase>('idle');
   const [result, setResult] = useState<PronunciationAttemptResult | null>(null);
@@ -204,15 +194,38 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   const [allScores, setAllScores] = useState<PronunciationScore[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // ── Audio recorder (expo-audio) ──
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
   // ── Refs ──
-  const recordingRef = useRef<Audio.Recording | null>(null);
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Derived ──
-  const sentence = SENTENCES[currentIndex];
-  const totalSentences = SENTENCES.length;
+  const sentence = sentences[currentIndex];
+  const totalSentences = sentences.length;
   const isLastSentence = currentIndex >= totalSentences - 1;
+
+  // ── Load sentences from Firestore via Cloud Function ──
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await fetchSentences(undefined, 3);
+        if (!cancelled && data.length > 0) {
+          setSentences(
+            data.map((s) => ({ text: s.text, difficulty: s.difficulty })),
+          );
+          setSentenceIds(data.map((s) => s.id));
+        }
+      } catch {
+        // Fall back to DEFAULT_SENTENCES already in state
+      } finally {
+        if (!cancelled) setSentencesLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // ── Countdown timer ──
   useEffect(() => {
@@ -234,8 +247,8 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   // ── Cleanup on unmount ──
   useEffect(() => {
     return () => {
-      if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+      if (audioRecorder.isRecording) {
+        audioRecorder.stop().catch(() => {});
       }
       if (durationTimerRef.current) clearInterval(durationTimerRef.current);
     };
@@ -245,19 +258,17 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+      if (!granted) {
         setError('Microphone permission is required');
         return;
       }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      recordingRef.current = recording;
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
       setPhase('recording');
       setRecordingDuration(0);
 
@@ -268,11 +279,11 @@ export const usePronunciationExerciseController = (lessonId: string) => {
       console.error('[Pronunciation] startRecording:', e);
       setError('Failed to start recording');
     }
-  }, []);
+  }, [audioRecorder]);
 
-  // ── Stop recording & process ──
+  // ── Stop recording & process via Cloud Function ──
   const stopRecording = useCallback(async () => {
-    if (!recordingRef.current) return;
+    if (!audioRecorder.isRecording) return;
     try {
       if (durationTimerRef.current) {
         clearInterval(durationTimerRef.current);
@@ -281,10 +292,9 @@ export const usePronunciationExerciseController = (lessonId: string) => {
 
       setPhase('processing');
 
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+      await setAudioModeAsync({ allowsRecording: false });
 
       if (!uri) {
         setError('Recording failed — no audio captured');
@@ -292,73 +302,35 @@ export const usePronunciationExerciseController = (lessonId: string) => {
         return;
       }
 
-      // Transcribe
-      const transcript = await transcribeAudio(uri, sentence.text);
+      // Read audio file as base64
+      const audioBase64 = await readAudioAsBase64(uri);
 
-      // Evaluate
-      const { wordResults, score, feedback } = evaluatePronunciation(
+      // Send to Cloud Function for transcription + evaluation
+      const evaluation = await transcribeAndEvaluate(
+        audioBase64,
         sentence.text,
-        transcript,
+        sentenceIds[currentIndex],
       );
 
-      // On "Try Again" give progressively better results (mock)
-      const boostedScore: PronunciationScore =
-        attemptCount > 0
-          ? {
-              clarity: Math.min(100, score.clarity + attemptCount * 12),
-              accuracy: Math.min(100, score.accuracy + attemptCount * 15),
-              fluency: Math.min(100, score.fluency + attemptCount * 10),
-              overall: Math.min(
-                100,
-                score.overall + attemptCount * 12,
-              ),
-            }
-          : score;
-
-      const isCorrect = boostedScore.overall >= 70;
-
-      // If boosted to correct, mark all words correct
-      const finalWordResults: WordResult[] = isCorrect
-        ? wordResults.map((wr) => ({ ...wr, isCorrect: true }))
-        : wordResults;
+      const { wordResults, score, feedback, isCorrect } = evaluation;
 
       const attemptResult: PronunciationAttemptResult = {
         isCorrect,
-        wordResults: finalWordResults,
+        wordResults,
         feedback: isCorrect ? '' : feedback,
         successMessage: isCorrect ? pickRandom(SUCCESS_MESSAGES) : '',
-        score: boostedScore,
+        score,
       };
 
       setResult(attemptResult);
       setAttemptCount((c) => c + 1);
-      setAllScores((prev) => [...prev, boostedScore]);
+      setAllScores((prev) => [...prev, score]);
       setPhase('result');
 
-      // ── Firestore ──
+      // ── Update lesson-level progress in Firestore ──
       const uid = auth.currentUser?.uid;
-      if (uid) {
+      if (uid && lessonId) {
         try {
-          await addDoc(
-            collection(
-              db,
-              'users',
-              uid,
-              'lessons',
-              lessonId,
-              'pronunciationAttempts',
-            ),
-            {
-              sentenceIndex: currentIndex,
-              sentence: sentence.text,
-              transcript,
-              score: boostedScore,
-              isCorrect,
-              feedback: attemptResult.feedback,
-              attemptedAt: Timestamp.now(),
-            },
-          );
-
           await setDoc(
             doc(db, 'users', uid, 'lessons', lessonId),
             {
@@ -369,15 +341,15 @@ export const usePronunciationExerciseController = (lessonId: string) => {
             { merge: true },
           );
         } catch {
-          // Non-critical
+          // Non-critical — attempt already stored by Cloud Function
         }
       }
     } catch (e: any) {
       console.error('[Pronunciation] stopRecording:', e);
-      setError('Failed to process recording');
+      setError(e.message ?? 'Failed to process recording');
       setPhase('idle');
     }
-  }, [sentence, currentIndex, attemptCount, lessonId]);
+  }, [sentence, currentIndex, attemptCount, lessonId, sentenceIds]);
 
   // ── Try Again ──
   const tryAgain = useCallback(() => {
@@ -397,7 +369,7 @@ export const usePronunciationExerciseController = (lessonId: string) => {
     }
   }, [currentIndex, totalSentences]);
 
-  // ── Complete exercise (mark finished in Firestore) ──
+  // ── Complete exercise (mark finished in Firestore + update progress) ──
   const completeExercise = useCallback(async () => {
     const uid = auth.currentUser?.uid;
     if (uid) {
@@ -412,6 +384,9 @@ export const usePronunciationExerciseController = (lessonId: string) => {
           },
           { merge: true },
         );
+
+        // Update progress: streak, daily activity, weekly aggregation
+        await onExerciseComplete(uid, 'pronunciation', { score: avgScore });
       } catch {
         // Non-critical
       }
@@ -429,6 +404,7 @@ export const usePronunciationExerciseController = (lessonId: string) => {
     timer,
     recordingDuration,
     error,
+    sentencesLoading,
     // Actions
     startRecording,
     stopRecording,

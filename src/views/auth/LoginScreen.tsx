@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -17,12 +17,14 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
 import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -165,14 +167,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
-            leftIcon={<FontAwesome5 name="envelope" size={16} color={colors.textMuted} />}
+            leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
           />
           <CustomInput
             placeholder="Password"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            leftIcon={<FontAwesome5 name="lock" size={16} color={colors.textMuted} />}
+            leftIcon={<FontAwesome5 name="lock" size={16} color={tc.textMuted} />}
           />
         </View>
 
@@ -184,12 +186,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-              {rememberMe && <FontAwesome5 name="check" size={10} color={colors.white} />}
+              {rememberMe && <FontAwesome5 name="check" size={10} color={tc.white} />}
             </View>
             <Text style={styles.rememberText}>Remember Me</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { email: email.trim() })}>
             <Text style={styles.forgotText}>Forgot Password?</Text>
           </TouchableOpacity>
         </View>
@@ -202,12 +204,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={colors.white} />
+            <ActivityIndicator color={tc.white} />
           ) : (
             <>
               <Text style={styles.signInButtonText}>Sign In</Text>
               <View style={styles.arrowCircle}>
-                <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+                <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
               </View>
             </>
           )}
@@ -229,9 +231,9 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
           >
             {loading ? (
-              <ActivityIndicator color={colors.primary} size="small" />
+              <ActivityIndicator color={tc.accent} size="small" />
             ) : (
-              <FontAwesome5 name="google" size={22} color={colors.googleBlue} />
+              <FontAwesome5 name="google" size={22} color={'#4285F4'} />
             )}
           </TouchableOpacity>
 
@@ -239,7 +241,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.socialButton}
             activeOpacity={0.7}
           >
-            <FontAwesome5 name="apple" size={22} color={colors.appleBlack} />
+            <FontAwesome5 name="apple" size={22} color={'#000000'} />
           </TouchableOpacity>
         </View>
 
@@ -255,10 +257,10 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
   },
   scrollContent: {
     flexGrow: 1,
@@ -280,13 +282,13 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 26,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 8,
   },
   subtitle: {
     fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     marginBottom: 28,
     lineHeight: 18,
   },
@@ -312,36 +314,36 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.white,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
   rememberText: {
     fontFamily: fonts.medium,
     fontSize: 12,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   forgotText: {
     fontFamily: fonts.semiBold,
     fontSize: 12,
-    color: colors.primary,
+    color: tc.accent,
   },
   /* ── Sign In Button ── */
   signInButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 32,
     gap: 12,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -351,13 +353,13 @@ const styles = StyleSheet.create({
   signInButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   arrowCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -370,12 +372,12 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.inputBorder,
+    backgroundColor: tc.inputBorder,
   },
   dividerText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     marginHorizontal: 14,
   },
   /* ── Social Buttons ── */
@@ -390,8 +392,8 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.white,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -404,12 +406,12 @@ const styles = StyleSheet.create({
   signUpText: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
   },
   signUpLink: {
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.primary,
+    color: tc.accent,
     textDecorationLine: 'underline',
   },
 });

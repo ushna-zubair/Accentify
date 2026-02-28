@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Audio } from 'expo-av';
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  AudioModule,
+  setAudioModeAsync,
+} from 'expo-audio';
 import {
   doc,
   setDoc,
@@ -14,6 +19,7 @@ import type {
   ConversationScenario,
   ConversationMetricsResult,
 } from '../models';
+import { onExerciseComplete } from '../services/progressService';
 
 // ═══════════════════════════════════════════════
 //  SAMPLE CONVERSATION SCENARIOS
@@ -363,8 +369,10 @@ export const useConversationExerciseController = (lessonId: string) => {
   const [learnerRecordProgress, setLearnerRecordProgress] = useState(0);
   const [conversationFeedback, setConversationFeedback] = useState<ConversationFeedback | null>(null);
 
+  // ── Audio recorder (expo-audio) ──
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
   // ── Refs ──
-  const recordingRef = useRef<Audio.Recording | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -395,8 +403,8 @@ export const useConversationExerciseController = (lessonId: string) => {
   // ── Cleanup ──
   useEffect(() => {
     return () => {
-      if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+      if (audioRecorder.isRecording) {
+        audioRecorder.stop().catch(() => {});
       }
       if (playProgressRef.current) clearInterval(playProgressRef.current);
       if (recordProgressRef.current) clearInterval(recordProgressRef.current);
@@ -463,19 +471,17 @@ export const useConversationExerciseController = (lessonId: string) => {
     if (phase !== 'waiting_for_learner') return;
     try {
       setError(null);
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+      if (!granted) {
         setError('Microphone permission is required');
         return;
       }
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      recordingRef.current = recording;
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
       setPhase('recording');
       setLearnerRecordProgress(0);
 
@@ -490,11 +496,11 @@ export const useConversationExerciseController = (lessonId: string) => {
       console.error('[Conversation] startRecording:', e);
       setError('Failed to start recording');
     }
-  }, [phase, currentTurn]);
+  }, [phase, currentTurn, audioRecorder]);
 
   // ── Stop recording & process ──
   const stopRecording = useCallback(async () => {
-    if (!recordingRef.current) return;
+    if (!audioRecorder.isRecording) return;
     try {
       if (recordProgressRef.current) {
         clearInterval(recordProgressRef.current);
@@ -503,10 +509,9 @@ export const useConversationExerciseController = (lessonId: string) => {
 
       setPhase('processing');
 
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
+      await setAudioModeAsync({ allowsRecording: false });
 
       if (!uri || !currentTurn) {
         setPhase('waiting_for_learner');
@@ -602,6 +607,9 @@ export const useConversationExerciseController = (lessonId: string) => {
         },
         { merge: true },
       );
+
+      // Update progress: streak, daily activity, weekly aggregation
+      await onExerciseComplete(uid, 'conversation', { metrics: avg });
     } catch {
       // Non-critical
     }

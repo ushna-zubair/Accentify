@@ -13,11 +13,17 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import { AccessibilityProvider } from './src/context/AccessibilityContext';
-import { AppPreferenceProvider } from './src/context/AppPreferenceContext';
+import { AppPreferenceProvider, useAppPreference } from './src/context/AppPreferenceContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 // Keep the native splash screen visible while fonts load
 SplashScreen.preventAutoHideAsync();
+
+/** Inner component that can consume AppPreference context for the StatusBar */
+const ThemedStatusBar: React.FC = () => {
+  const { theme } = useAppPreference();
+  return <StatusBar style={theme === 'Dark' ? 'light' : 'dark'} />;
+};
 
 export default function App() {
   // Preload the FontAwesome5 icon font so icons appear instantly
@@ -46,7 +52,7 @@ export default function App() {
           <AppPreferenceProvider>
             <NavigationContainer onReady={onLayoutRootView}>
               <AppNavigator />
-              <StatusBar style="auto" />
+              <ThemedStatusBar />
             </NavigationContainer>
           </AppPreferenceProvider>
         </AccessibilityProvider>

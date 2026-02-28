@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useMemo} from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import BarChart from './components/BarChart';
 import DonutChart from './components/DonutChart';
 import LineChart from './components/LineChart';
@@ -100,7 +100,10 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
+const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.sidebar}>
     {/* Logo */}
     <View style={styles.logoContainer}>
@@ -121,7 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
           <Ionicons
             name={item.icon as any}
             size={20}
-            color={active ? colors.white : '#6B7280'}
+            color={active ? tc.white : '#6B7280'}
           />
           <Text style={[styles.sidebarLabel, active && styles.sidebarLabelActive]}>
             {item.label}
@@ -144,7 +147,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
           <Ionicons
             name={item.icon as any}
             size={20}
-            color={active ? colors.white : '#6B7280'}
+            color={active ? tc.white : '#6B7280'}
           />
           <Text style={[styles.sidebarLabel, active && styles.sidebarLabelActive]}>
             {item.label}
@@ -153,7 +156,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => (
       );
     })}
   </View>
-);
+  );
+};
 
 // ------- Top Bar -------
 interface TopBarProps {
@@ -161,7 +165,10 @@ interface TopBarProps {
   onSearchChange: (text: string) => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => (
+const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.topBar}>
     <View style={styles.searchContainer}>
       <TextInput
@@ -185,11 +192,15 @@ const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => (
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // ------- Dashboard Cards -------
 
-const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>Revenue</Text>
@@ -218,9 +229,13 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       </View>
     </View>
   </View>
-);
+  );
+};
 
-const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>User Practice Activity</Text>
@@ -241,9 +256,13 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       tooltipValue="540 Active Users"
     />
   </View>
-);
+  );
+};
 
-const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>User Performance Insights</Text>
     <Text style={styles.cardSubtitle}>Lorem ipsum dolor sit amet, consectetur</Text>
@@ -255,9 +274,13 @@ const PerformanceInsightsCard: React.FC<{ data: DashboardData }> = ({ data }) =>
       ]}
     />
   </View>
-);
+  );
+};
 
-const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <Text style={styles.cardTitle}>Top Performing Learners</Text>
     <Text style={styles.cardSubtitle}>Adipiscing elit, sed do eiusmod tempor</Text>
@@ -275,9 +298,13 @@ const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       ))}
     </View>
   </View>
-);
+  );
+};
 
-const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
+const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>User Practice Sessions</Text>
@@ -312,10 +339,13 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => (
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // ------- Main Screen -------
 const AdminDashboardScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { signOut } = useAuth();
   const { width } = useWindowDimensions();
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -426,7 +456,7 @@ const AdminDashboardScreen: React.FC = () => {
 // ------- Styles -------
 const SIDEBAR_WIDTH = 220;
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   root: {
     flex: 1,
     flexDirection: 'row',
@@ -435,7 +465,7 @@ const styles = StyleSheet.create({
   // Sidebar
   sidebar: {
     width: SIDEBAR_WIDTH,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRightWidth: 1,
     borderRightColor: '#E5E7EB',
     paddingVertical: 20,
@@ -468,7 +498,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   sidebarItemActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
   },
   sidebarLabel: {
     fontSize: 13,
@@ -476,7 +506,7 @@ const styles = StyleSheet.create({
     color: '#6B7280',
   },
   sidebarLabelActive: {
-    color: colors.white,
+    color: tc.white,
     fontWeight: '600',
   },
   // Top bar
@@ -486,7 +516,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
   },
@@ -573,7 +603,7 @@ const styles = StyleSheet.create({
   },
   // Cards
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: '#E5E7EB',
@@ -598,7 +628,7 @@ const styles = StyleSheet.create({
   },
   outlineBtn: {
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: tc.accent,
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -606,7 +636,7 @@ const styles = StyleSheet.create({
   outlineBtnText: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.primary,
+    color: tc.accent,
   },
   bigNumber: {
     fontSize: 22,

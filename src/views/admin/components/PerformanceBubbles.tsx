@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Circle as SvgCircle, G, Text as SvgText } from 'react-native-svg';
-import colors from '../../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../../hooks/useAppTheme';
 import { fonts } from '../../../theme/typography';
 
 interface BubbleData {
@@ -17,6 +17,8 @@ interface PerformanceBubblesProps {
 }
 
 const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const svgWidth = 280;
   const svgHeight = 220;
 
@@ -46,7 +48,7 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
                 x={pos.cx}
                 y={pos.cy - 10}
                 textAnchor="middle"
-                fill={colors.white}
+                fill={tc.white}
                 fontFamily={fonts.bold}
                 fontSize={18}
               >
@@ -56,7 +58,7 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
                 x={pos.cx}
                 y={pos.cy + 8}
                 textAnchor="middle"
-                fill={colors.white}
+                fill={tc.white}
                 fontFamily={fonts.medium}
                 fontSize={9}
               >
@@ -66,7 +68,7 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
                 x={pos.cx}
                 y={pos.cy + 20}
                 textAnchor="middle"
-                fill={colors.white}
+                fill={tc.white}
                 fontFamily={fonts.medium}
                 fontSize={9}
               >
@@ -80,7 +82,7 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

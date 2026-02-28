@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'TwoFactorAuth'>;
 
 const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { completeOnboarding } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -96,7 +98,7 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={colors.text} size="small" />
+              <ActivityIndicator color={tc.text} size="small" />
             ) : (
               <Text style={styles.skipButtonText}>Skip</Text>
             )}
@@ -109,12 +111,12 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={colors.white} size="small" />
+              <ActivityIndicator color={tc.white} size="small" />
             ) : (
               <>
                 <Text style={styles.continueButtonText}>Continue</Text>
                 <View style={styles.arrowCircle}>
-                  <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+                  <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
                 </View>
               </>
             )}
@@ -125,10 +127,10 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -138,7 +140,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    color: tc.text,
     paddingTop: 24,
     marginBottom: 20,
     lineHeight: 32,
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 28,
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     borderWidth: 4,
-    borderColor: colors.warning700,
+    borderColor: tc.warning,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -186,26 +188,26 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.warning700,
+    backgroundColor: tc.warning,
   },
   keyShaft: {
     width: 4,
     height: 50,
-    backgroundColor: colors.warning700,
+    backgroundColor: tc.warning,
     marginLeft: 13,
     marginTop: -2,
   },
   keyTeeth1: {
     width: 10,
     height: 4,
-    backgroundColor: colors.warning700,
+    backgroundColor: tc.warning,
     marginLeft: 17,
     marginTop: -16,
   },
   keyTeeth2: {
     width: 8,
     height: 4,
-    backgroundColor: colors.warning700,
+    backgroundColor: tc.warning,
     marginLeft: 17,
     marginTop: 4,
   },
@@ -213,12 +215,12 @@ const styles = StyleSheet.create({
   lockBody: {
     width: 72,
     height: 56,
-    backgroundColor: colors.success700,
+    backgroundColor: tc.success,
     borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 30,
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -230,7 +232,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 30,
     borderWidth: 5,
-    borderColor: colors.success700,
+    borderColor: tc.success,
     borderBottomWidth: 0,
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
@@ -239,14 +241,14 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: colors.success800,
+    backgroundColor: tc.success,
     marginTop: 4,
   },
   /* ── Description ── */
   description: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -264,28 +266,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 999,
     paddingVertical: 16,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
   },
   skipButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   continueButton: {
     flex: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 24,
     gap: 10,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -294,13 +296,13 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   arrowCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

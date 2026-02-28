@@ -13,7 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'NativeLanguage'>;
@@ -65,6 +65,8 @@ const LANGUAGES: Language[] = [
 ];
 
 const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, learningGoals } = route.params;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<Language | null>(null);
@@ -113,17 +115,17 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Search Bar */}
         <View style={styles.searchBar}>
-          <FontAwesome5 name="search" size={14} color={colors.textMuted} />
+          <FontAwesome5 name="search" size={14} color={tc.textMuted} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
             autoCorrect={false}
           />
           <TouchableOpacity>
-            <FontAwesome5 name="microphone" size={16} color={colors.text} />
+            <FontAwesome5 name="microphone" size={16} color={tc.text} />
           </TouchableOpacity>
         </View>
 
@@ -147,7 +149,7 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             {selectedLanguage ? selectedLanguage.name : 'Select Language'}
           </Text>
-          <FontAwesome5 name="chevron-down" size={12} color={colors.textMuted} />
+          <FontAwesome5 name="chevron-down" size={12} color={tc.textMuted} />
         </TouchableOpacity>
 
         {/* Language Picker Modal */}
@@ -164,7 +166,7 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
               <TextInput
                 style={styles.modalSearchInput}
                 placeholder="Search language"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={tc.textMuted}
                 value={searchQuery}
                 onChangeText={setSearchQuery}
                 autoCorrect={false}
@@ -190,7 +192,7 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
                       <Text style={styles.languageOptionNative}>{item.nativeName}</Text>
                     </View>
                     {selectedLanguage?.code === item.code && (
-                      <FontAwesome5 name="check" size={14} color={colors.primary} />
+                      <FontAwesome5 name="check" size={14} color={tc.accent} />
                     )}
                   </TouchableOpacity>
                 )}
@@ -219,7 +221,7 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <Text style={styles.nextButtonText}>Next</Text>
             <View style={styles.arrowCircle}>
-              <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+              <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
             </View>
           </TouchableOpacity>
         </View>
@@ -228,10 +230,10 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -247,17 +249,17 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: fonts.semiBold,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 14,
     paddingHorizontal: 16,
     height: 48,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     marginBottom: 28,
     gap: 10,
   },
@@ -265,20 +267,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
     height: '100%',
   },
   title: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.primary,
+    color: tc.accent,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'left',
     lineHeight: 18,
     marginBottom: 28,
@@ -287,29 +289,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 14,
     paddingHorizontal: 16,
     height: 52,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
   },
   languagePickerText: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   languagePickerPlaceholder: {
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 16,
     width: '90%',
     maxHeight: '75%',
@@ -318,18 +320,18 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 12,
   },
   modalSearchInput: {
     height: 44,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.inputBg,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.inputBg,
     paddingHorizontal: 12,
     marginBottom: 12,
-    color: colors.text,
+    color: tc.text,
     fontFamily: fonts.regular,
     fontSize: 14,
   },
@@ -340,22 +342,22 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inputBorder,
+    borderBottomColor: tc.inputBorder,
   },
   languageOptionSelected: {
-    backgroundColor: colors.primary500,
+    backgroundColor: tc.accentMuted,
     borderRadius: 8,
     paddingHorizontal: 8,
   },
   languageOptionName: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   languageOptionNative: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: tc.textMuted,
     marginTop: 2,
   },
   modalClose: {
@@ -365,7 +367,7 @@ const styles = StyleSheet.create({
   modalCloseText: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.primary,
+    color: tc.accent,
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -377,13 +379,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 32,
     gap: 12,
     minWidth: 160,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -395,13 +397,13 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   arrowCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

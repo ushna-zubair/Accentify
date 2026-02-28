@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
 	View,
 	TextInput,
@@ -9,7 +9,7 @@ import {
 	ViewStyle,
 } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import colors from '../theme/colors';
+import { useAppTheme, type ThemeColors } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
 interface CustomInputProps {
@@ -42,6 +42,8 @@ const CustomInput: React.FC<CustomInputProps> = ({
 	editable = true,
 	accessibilityLabel,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
 	const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 	const [isFocused, setIsFocused] = useState(false);
 
@@ -62,7 +64,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 				<TextInput
 					style={[styles.input, leftIcon ? styles.inputWithLeft : null]}
 					placeholder={placeholder}
-					placeholderTextColor={colors.textMuted}
+					placeholderTextColor={tc.textMuted}
 					value={value}
 					onChangeText={onChangeText}
 					secureTextEntry={isPassword && !isPasswordVisible}
@@ -85,7 +87,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 						<FontAwesome5
 							name={showPassword ? 'eye-slash' : 'eye'}
 							size={16}
-							color={colors.textMuted}
+							color={tc.textMuted}
 						/>
 					</TouchableOpacity>
 				) : (
@@ -98,29 +100,29 @@ const CustomInput: React.FC<CustomInputProps> = ({
 	);
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
 	wrapper: {
 		marginBottom: 4,
 	},
 	container: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: colors.inputBg,
+		backgroundColor: tc.inputBg,
 		borderWidth: 1.5,
-		borderColor: colors.inputBorder,
+		borderColor: tc.inputBorder,
 		borderRadius: 14,
 		height: 56,
 		paddingHorizontal: 16,
 	},
 	focusedContainer: {
-		borderColor: colors.primary,
+		borderColor: tc.accent,
 	},
 	errorContainer: {
-		borderColor: colors.error,
+		borderColor: tc.error,
 	},
 	input: {
 		flex: 1,
-		color: colors.text,
+		color: tc.text,
 		fontFamily: fonts.regular,
 		fontSize: 15,
 		paddingVertical: 0,
@@ -142,7 +144,7 @@ const styles = StyleSheet.create({
 		marginTop: 4,
 		marginLeft: 4,
 		fontSize: 12,
-		color: colors.error,
+		color: tc.error,
 	},
 });
 

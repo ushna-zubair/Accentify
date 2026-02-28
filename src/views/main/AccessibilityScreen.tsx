@@ -7,47 +7,43 @@ import {
   ScrollView,
   Switch,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { ColorBlindMode, FontStyleOption, SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 const COLOR_BLIND_OPTIONS: ColorBlindMode[] = ['None', 'Deuteranope', 'Protanope', 'Tritanope'];
 const FONT_STYLE_OPTIONS: FontStyleOption[] = ['Standard', 'Bold', 'Extra Bold (Dyslexia Friendly)', 'Italic'];
 
 interface SectionCardProps {
   children: React.ReactNode;
+  tc: ThemeColors;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ children }) => (
-  <View style={styles.card}>{children}</View>
+const SectionCard: React.FC<SectionCardProps> = ({ children, tc }) => (
+  <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accent }]}>{children}</View>
 );
 
 interface ToggleRowProps {
   label: string;
   value: boolean;
   onValueChange: (v: boolean) => void;
+  tc: ThemeColors;
 }
 
-const ToggleRow: React.FC<ToggleRowProps> = ({ label, value, onValueChange }) => (
+const ToggleRow: React.FC<ToggleRowProps> = ({ label, value, onValueChange, tc }) => (
   <View style={styles.toggleRow}>
-    <Text style={styles.toggleLabel}>{label}</Text>
+    <Text style={[styles.toggleLabel, { color: tc.text }]}>{label}</Text>
     <Switch
       value={value}
       onValueChange={onValueChange}
-      trackColor={{ false: colors.switchTrack, true: colors.primary }}
-      thumbColor={colors.white}
-      ios_backgroundColor={colors.switchTrack}
+      trackColor={{ false: tc.disabled, true: tc.accent }}
+      thumbColor={tc.white}
+      ios_backgroundColor={tc.disabled}
     />
   </View>
 );
@@ -58,6 +54,7 @@ interface OptionButtonProps {
   onPress: () => void;
   fontWeight?: 'normal' | 'bold' | '800';
   fontStyle?: 'normal' | 'italic';
+  tc: ThemeColors;
 }
 
 const OptionButton: React.FC<OptionButtonProps> = ({
@@ -66,16 +63,18 @@ const OptionButton: React.FC<OptionButtonProps> = ({
   onPress,
   fontWeight = 'normal',
   fontStyle = 'normal',
+  tc,
 }) => (
   <TouchableOpacity
-    style={[styles.optionButton, selected && styles.optionButtonSelected]}
+    style={[styles.optionButton, { backgroundColor: tc.divider }, selected && { backgroundColor: tc.accentLight }]}
     onPress={onPress}
     activeOpacity={0.7}
   >
     <Text
       style={[
         styles.optionText,
-        selected && styles.optionTextSelected,
+        { color: tc.text },
+        selected && { fontFamily: fonts.semiBold, color: tc.white },
         { fontWeight, fontStyle },
       ]}
     >
@@ -101,6 +100,7 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
     highContrastMode,
     setHighContrastMode,
   } = useAccessibility();
+  const { colors: tc } = useAppTheme();
 
   const [colorBlindExpanded, setColorBlindExpanded] = useState(true);
   const [fontStyleExpanded, setFontStyleExpanded] = useState(true);
@@ -126,7 +126,7 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -135,33 +135,34 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color={colors.text} />
+            <Ionicons name="arrow-back" size={28} color={tc.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>Accessibility</Text>
+          <Text style={[styles.title, { color: tc.text }]}>Accessibility</Text>
         </View>
 
         {/* Text to Speech */}
-        <SectionCard>
-          <Text style={styles.sectionTitle}>Text to Speech</Text>
+        <SectionCard tc={tc}>
+          <Text style={[styles.sectionTitle, { color: tc.text }]}>Text to Speech</Text>
           <ToggleRow
             label="Enable Text to Speech"
             value={textToSpeech}
             onValueChange={setTextToSpeech}
+            tc={tc}
           />
         </SectionCard>
 
         {/* Color Blind */}
-        <SectionCard>
+        <SectionCard tc={tc}>
           <TouchableOpacity
             style={styles.sectionHeader}
             onPress={() => toggleSection(setColorBlindExpanded)}
             activeOpacity={0.7}
           >
-            <Text style={styles.sectionTitle}>Color Blind</Text>
+            <Text style={[styles.sectionTitle, { color: tc.text }]}>Color Blind</Text>
             <Ionicons
               name={colorBlindExpanded ? 'chevron-up' : 'chevron-down'}
               size={24}
-              color={colors.text}
+              color={tc.text}
             />
           </TouchableOpacity>
           {colorBlindExpanded && (
@@ -172,6 +173,7 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
                   label={option}
                   selected={colorBlindMode === option}
                   onPress={() => setColorBlindMode(option)}
+                  tc={tc}
                 />
               ))}
             </View>
@@ -179,17 +181,17 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
         </SectionCard>
 
         {/* Font Style */}
-        <SectionCard>
+        <SectionCard tc={tc}>
           <TouchableOpacity
             style={styles.sectionHeader}
             onPress={() => toggleSection(setFontStyleExpanded)}
             activeOpacity={0.7}
           >
-            <Text style={styles.sectionTitle}>Font Style</Text>
+            <Text style={[styles.sectionTitle, { color: tc.text }]}>Font Style</Text>
             <Ionicons
               name={fontStyleExpanded ? 'chevron-up' : 'chevron-down'}
               size={24}
-              color={colors.text}
+              color={tc.text}
             />
           </TouchableOpacity>
           {fontStyleExpanded && (
@@ -202,6 +204,7 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
                   onPress={() => setFontStyle(option)}
                   fontWeight={getFontWeight(option)}
                   fontStyle={getFontStyleProp(option)}
+                  tc={tc}
                 />
               ))}
             </View>
@@ -209,18 +212,20 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
         </SectionCard>
 
         {/* Display Preferences */}
-        <SectionCard>
-          <Text style={styles.sectionTitle}>Display Preferences</Text>
-          <ToggleRow label="Transcript" value={transcript} onValueChange={setTranscript} />
+        <SectionCard tc={tc}>
+          <Text style={[styles.sectionTitle, { color: tc.text }]}>Display Preferences</Text>
+          <ToggleRow label="Transcript" value={transcript} onValueChange={setTranscript} tc={tc} />
           <ToggleRow
             label="Reduce Animation"
             value={reduceAnimation}
             onValueChange={setReduceAnimation}
+            tc={tc}
           />
           <ToggleRow
             label="High Contrast Mode"
             value={highContrastMode}
             onValueChange={setHighContrastMode}
+            tc={tc}
           />
         </SectionCard>
       </ScrollView>
@@ -231,7 +236,6 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -252,13 +256,10 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 28,
-    color: colors.text,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: colors.primary,
     padding: 16,
     marginBottom: 16,
   },
@@ -270,7 +271,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
     textAlign: 'center',
     flex: 1,
   },
@@ -283,29 +283,19 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
   },
   optionsContainer: {
     marginTop: 12,
     gap: 8,
   },
   optionButton: {
-    backgroundColor: colors.divider,
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
   },
-  optionButtonSelected: {
-    backgroundColor: colors.primaryLight,
-  },
   optionText: {
     fontFamily: fonts.regular,
     fontSize: 16,
-    color: colors.text,
-  },
-  optionTextSelected: {
-    fontFamily: fonts.semiBold,
-    color: colors.white,
   },
 });
 

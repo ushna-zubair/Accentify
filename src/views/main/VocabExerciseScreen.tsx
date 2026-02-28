@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef , useMemo} from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Rect, Path, Circle } from 'react-native-svg';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useVocabExerciseController } from '../../controllers';
 import type { TutorStackParamList } from '../../models';
@@ -30,11 +30,13 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 /** Return a color for the progress badge based on current index */
 const getProgressColor = (index: number, total: number): string => {
-  if (total <= 1) return colors.success;
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  if (total <= 1) return tc.success;
   const ratio = index / (total - 1);
-  if (ratio <= 0.34) return colors.success;
-  if (ratio <= 0.67) return colors.accentOrange700;
-  return colors.error;
+  if (ratio <= 0.34) return tc.success;
+  if (ratio <= 0.67) return '#FD8E39';
+  return tc.error;
 };
 
 // ═══════════════════════════════════════════════
@@ -46,6 +48,8 @@ const ResultOverlay: React.FC<{ isCorrect: boolean; message: string }> = ({
   isCorrect,
   message,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const scaleAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -64,20 +68,20 @@ const ResultOverlay: React.FC<{ isCorrect: boolean; message: string }> = ({
       <View
         style={[
           styles.resultOverlayCircle,
-          { backgroundColor: isCorrect ? colors.success : colors.error },
+          { backgroundColor: isCorrect ? tc.success : tc.error },
         ]}
       >
         {isCorrect ? (
-          <Ionicons name="checkmark" size={44} color={colors.white} />
+          <Ionicons name="checkmark" size={44} color={tc.white} />
         ) : (
-          <Ionicons name="close" size={44} color={colors.white} />
+          <Ionicons name="close" size={44} color={tc.white} />
         )}
       </View>
       {message !== '' && (
         <Text
           style={[
             styles.resultMessage,
-            { color: isCorrect ? colors.success : colors.error },
+            { color: isCorrect ? tc.success : tc.error },
           ]}
         >
           {message}
@@ -93,6 +97,8 @@ const WaveformBar: React.FC<{
   duration: number;
   hasResult: boolean;
 }> = ({ isRecording, duration, hasResult }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const progress = Math.min(duration / 10000, 1);
 
   return (
@@ -106,7 +112,7 @@ const WaveformBar: React.FC<{
             width={300}
             height={8}
             rx={4}
-            fill={colors.primaryLight}
+            fill={tc.accentLight}
             opacity={0.4}
           />
           {/* Progress fill */}
@@ -116,7 +122,7 @@ const WaveformBar: React.FC<{
             width={hasResult ? 300 : 300 * progress}
             height={8}
             rx={4}
-            fill={colors.primary}
+            fill={tc.accent}
             opacity={0.6}
           />
           {/* Decorative wave — only visible when NOT showing a result */}
@@ -135,7 +141,7 @@ const WaveformBar: React.FC<{
                 cx={10 + 270 * progress}
                 cy={18}
                 r={5}
-                fill={colors.primary}
+                fill={tc.accent}
               />
             </>
           )}
@@ -152,6 +158,8 @@ const MicButton: React.FC<{
   hasResult: boolean;
   onPress: () => void;
 }> = ({ isRecording, isProcessing, hasResult, onPress }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -192,12 +200,12 @@ const MicButton: React.FC<{
         activeOpacity={0.7}
       >
         {isProcessing ? (
-          <ActivityIndicator size="small" color={colors.white} />
+          <ActivityIndicator size="small" color={tc.white} />
         ) : (
           <Ionicons
             name={isRecording ? 'stop' : 'mic'}
             size={28}
-            color={colors.white}
+            color={tc.white}
           />
         )}
       </TouchableOpacity>
@@ -210,6 +218,8 @@ const MicButton: React.FC<{
 // ═══════════════════════════════════════════════
 
 const VocabExerciseScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation<ExerciseNav>();
   const route = useRoute<ExerciseRoute>();
   const { lessonId } = route.params;
@@ -256,7 +266,7 @@ const VocabExerciseScreen: React.FC = () => {
   if (loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tc.accent} />
       </SafeAreaView>
     );
   }
@@ -310,7 +320,7 @@ const VocabExerciseScreen: React.FC = () => {
                     <Ionicons
                       name="volume-high-outline"
                       size={16}
-                      color={colors.text}
+                      color={tc.text}
                     />
                   </TouchableOpacity>
                 </View>
@@ -329,8 +339,8 @@ const VocabExerciseScreen: React.FC = () => {
                         styles.attemptPhonetic,
                         {
                           color: lastResult.basicCorrect
-                            ? colors.success
-                            : colors.error,
+                            ? tc.success
+                            : tc.error,
                         },
                       ]}
                     >
@@ -364,7 +374,7 @@ const VocabExerciseScreen: React.FC = () => {
                     <Ionicons
                       name="volume-high-outline"
                       size={16}
-                      color={colors.text}
+                      color={tc.text}
                     />
                   </TouchableOpacity>
                 </View>
@@ -383,8 +393,8 @@ const VocabExerciseScreen: React.FC = () => {
                         styles.attemptPhonetic,
                         {
                           color: lastResult.vocabCorrect
-                            ? colors.success
-                            : colors.error,
+                            ? tc.success
+                            : tc.error,
                         },
                       ]}
                     >
@@ -490,14 +500,14 @@ const VocabExerciseScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -514,7 +524,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: tc.text,
   },
   progressBadge: {
     borderWidth: 1.5,
@@ -540,17 +550,17 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 20,
     paddingVertical: 18,
     paddingHorizontal: 14,
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
     borderWidth: 1,
-    borderColor: colors.primaryLight,
+    borderColor: tc.accentLight,
     minHeight: 280,
   },
   cardWithResult: {
@@ -565,7 +575,7 @@ const styles = StyleSheet.create({
   },
   cardDivider: {
     width: 1,
-    backgroundColor: colors.divider,
+    backgroundColor: tc.divider,
     marginVertical: 4,
     marginHorizontal: 2,
   },
@@ -580,18 +590,18 @@ const styles = StyleSheet.create({
   wordTypeLabel: {
     fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   wordText: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 2,
   },
   phoneticText: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textLight,
+    color: tc.textLight,
     marginBottom: 6,
   },
 
@@ -603,7 +613,7 @@ const styles = StyleSheet.create({
   attemptLabel: {
     fontFamily: fonts.bold,
     fontSize: 12,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 2,
   },
   attemptPhonetic: {
@@ -616,12 +626,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 6,
     borderTopWidth: 0.5,
-    borderTopColor: colors.divider,
+    borderTopColor: tc.divider,
   },
   definitionText: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    color: colors.textLight,
+    color: tc.textLight,
     lineHeight: 16,
   },
 
@@ -638,7 +648,7 @@ const styles = StyleSheet.create({
     borderRadius: 36,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -660,7 +670,7 @@ const styles = StyleSheet.create({
   definitionToggleText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textDecorationLine: 'underline',
   },
 
@@ -668,7 +678,7 @@ const styles = StyleSheet.create({
   tryAgainBtn: {
     alignSelf: 'center',
     borderWidth: 2,
-    borderColor: colors.success,
+    borderColor: tc.success,
     borderRadius: 24,
     paddingVertical: 10,
     paddingHorizontal: 36,
@@ -678,14 +688,14 @@ const styles = StyleSheet.create({
   tryAgainText: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    color: colors.success,
+    color: tc.success,
   },
 
   // ── Next / Complete button ──
   nextBtn: {
     alignSelf: 'center',
     alignItems: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 36,
@@ -695,14 +705,14 @@ const styles = StyleSheet.create({
   nextBtnText: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    color: colors.white,
+    color: tc.white,
   },
 
   // ── Error ──
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.error,
+    color: tc.error,
     textAlign: 'center',
     marginTop: 8,
   },
@@ -713,7 +723,7 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   waveformTrack: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 22,
     height: 44,
     justifyContent: 'center',
@@ -735,26 +745,26 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
   },
   micBtnActive: {
-    backgroundColor: colors.error,
+    backgroundColor: tc.error,
   },
   micBtnDone: {
-    backgroundColor: colors.primaryDark,
+    backgroundColor: tc.accentDark,
     opacity: 0.7,
   },
   speakNowText: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     marginTop: 6,
   },
 });

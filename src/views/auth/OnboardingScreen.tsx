@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Onboarding'>;
@@ -47,6 +47,8 @@ const slides = [
 ];
 
 const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { width } = useWindowDimensions();
   const [currentSlide, setCurrentSlide] = useState(0);
   const flatListRef = useRef<FlatList>(null);
@@ -127,7 +129,7 @@ const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
           {currentSlide === slides.length - 1 ? (
             <Text style={styles.buttonText}>Get Started</Text>
           ) : (
-            <FontAwesome5 name="arrow-right" size={20} color={colors.white} />
+            <FontAwesome5 name="arrow-right" size={20} color={tc.white} />
           )}
         </TouchableOpacity>
       </View>
@@ -135,10 +137,10 @@ const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   skipButton: {
     position: 'absolute',
@@ -150,7 +152,7 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: fonts.medium,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   slide: {
     flex: 1,
@@ -167,14 +169,14 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 28,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: 16,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 24,
     paddingHorizontal: 20,
@@ -194,10 +196,10 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.inputBorder,
+    backgroundColor: tc.inputBorder,
   },
   dotActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     width: 24,
   },
   nextButton: {
@@ -205,10 +207,10 @@ const styles = StyleSheet.create({
     height: 56,
     paddingHorizontal: 18,
     borderRadius: 28,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 10,
@@ -217,7 +219,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.white,
+    color: tc.white,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },

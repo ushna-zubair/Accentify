@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -13,7 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Circle as SvgCircle, G } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useInsightsController, ENGLISH_LEVELS } from '../../controllers';
 import type {
@@ -29,13 +29,14 @@ import type {
 // ═══════════════════════════════════════════════
 
 // ─── Lesson Status Icon ───
-const STATUS_CONFIG = {
-  completed: { bg: colors.primary, icon: 'checkmark-circle' as const, iconColor: colors.white },
-  in_progress: { bg: '#2D2D3A', icon: 'time' as const, iconColor: colors.white },
-  upcoming: { bg: colors.primaryMuted, icon: 'rocket' as const, iconColor: colors.primary },
-};
-
 const LessonIcon: React.FC<{ item: LessonDay }> = ({ item }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  const STATUS_CONFIG = {
+    completed: { bg: tc.accent, icon: 'checkmark-circle' as const, iconColor: tc.white },
+    in_progress: { bg: '#2D2D3A', icon: 'time' as const, iconColor: tc.white },
+    upcoming: { bg: tc.accentMuted, icon: 'rocket' as const, iconColor: tc.accent },
+  };
   const cfg = STATUS_CONFIG[item.status];
   return (
     <View style={styles.lessonIconWrapper}>
@@ -61,6 +62,8 @@ interface MetricBar {
 }
 
 const MetricBarChart: React.FC<{ title: string; bars: MetricBar[] }> = ({ title, bars }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const maxVal = Math.max(...bars.map((b) => b.value), 1);
   const chartHeight = 110;
   const barWidth = 28;
@@ -106,6 +109,8 @@ const MetricBarChart: React.FC<{ title: string; bars: MetricBar[] }> = ({ title,
 
 // ─── Overall Performance Donut ───
 const PerformanceDonut: React.FC<{ performance: OverallPerformance }> = ({ performance }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const size = 150;
   const strokeWidth = 26;
   const radius = (size - strokeWidth) / 2;
@@ -116,7 +121,7 @@ const PerformanceDonut: React.FC<{ performance: OverallPerformance }> = ({ perfo
 
   const segments = [
     { label: 'Speech Accuracy', value: performance.speechAccuracy, color: '#C6E34E' },
-    { label: 'Speech Fluency', value: performance.speechFluency, color: colors.primary },
+    { label: 'Speech Fluency', value: performance.speechFluency, color: tc.accent },
     { label: 'Speech Consistency', value: performance.speechConsistency, color: '#E74C6F' },
   ];
 
@@ -131,7 +136,7 @@ const PerformanceDonut: React.FC<{ performance: OverallPerformance }> = ({ perfo
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={colors.divider}
+            stroke={tc.divider}
             strokeWidth={strokeWidth}
           />
           {segments.map((seg) => {
@@ -179,7 +184,10 @@ const LevelPickerModal: React.FC<{
   selected: EnglishLevel;
   onSelect: (level: EnglishLevel) => void;
   onClose: () => void;
-}> = ({ visible, selected, onSelect, onClose }) => (
+}> = ({ visible, selected, onSelect, onClose }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <Modal visible={visible} transparent animationType="slide">
     <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={onClose}>
       <View style={styles.pickerContent}>
@@ -200,14 +208,15 @@ const LevelPickerModal: React.FC<{
               {lvl}
             </Text>
             {selected === lvl && (
-              <Ionicons name="checkmark-circle" size={20} color={colors.primary} />
+              <Ionicons name="checkmark-circle" size={20} color={tc.accent} />
             )}
           </TouchableOpacity>
         ))}
       </View>
     </TouchableOpacity>
   </Modal>
-);
+  );
+};
 
 // ═══════════════════════════════════════════════
 //  MAIN SCREEN
@@ -217,6 +226,8 @@ const PRONUNCIATION_COLORS = ['#E74C3C', '#2ECC71', '#F1C40F', '#E67E22'];
 const CONVERSATION_COLORS = ['#2ECC71', '#F1C40F', '#E67E22', '#E74C3C'];
 
 const AdminInsightsScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation();
   const {
     insightsData,
@@ -261,7 +272,7 @@ const AdminInsightsScreen: React.FC = () => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Insights</Text>
         <View style={styles.headerSpacer} />
@@ -278,7 +289,7 @@ const AdminInsightsScreen: React.FC = () => {
             <TextInput
               style={styles.userIdInput}
               placeholder="Enter user ID"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={tc.textMuted}
               value={searchId}
               onChangeText={setSearchId}
               keyboardType="default"
@@ -286,7 +297,7 @@ const AdminInsightsScreen: React.FC = () => {
               onSubmitEditing={handleSearch}
             />
             <TouchableOpacity style={styles.searchBtn} onPress={handleSearch}>
-              <Ionicons name="search" size={18} color={colors.white} />
+              <Ionicons name="search" size={18} color={tc.white} />
             </TouchableOpacity>
           </View>
         </View>
@@ -295,7 +306,7 @@ const AdminInsightsScreen: React.FC = () => {
         {loading && (
           <ActivityIndicator
             size="large"
-            color={colors.primary}
+            color={tc.accent}
             style={{ marginVertical: 32 }}
           />
         )}
@@ -309,7 +320,7 @@ const AdminInsightsScreen: React.FC = () => {
               <Text style={styles.weeklyTitle}>Weekly Progress Insight</Text>
               <View style={styles.dateBadge}>
                 <Text style={styles.dateBadgeText}>{insightsData.weekLabel}</Text>
-                <Ionicons name="chevron-down" size={14} color={colors.text} />
+                <Ionicons name="chevron-down" size={14} color={tc.text} />
               </View>
             </View>
 
@@ -345,7 +356,7 @@ const AdminInsightsScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Text style={styles.levelDropdownText}>{insightsData.currentLevel}</Text>
-                <Ionicons name="chevron-down" size={20} color={colors.text} />
+                <Ionicons name="chevron-down" size={20} color={tc.text} />
               </TouchableOpacity>
             </View>
           </>
@@ -367,10 +378,10 @@ const AdminInsightsScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
 
   // Header
@@ -388,7 +399,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
   },
   headerSpacer: {
     width: 32,
@@ -408,7 +419,7 @@ const styles = StyleSheet.create({
   userIdLabel: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 8,
   },
   userIdInputRow: {
@@ -420,8 +431,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.primaryMuted,
+    color: tc.text,
+    backgroundColor: tc.accentMuted,
     borderRadius: 24,
     paddingHorizontal: 20,
     paddingVertical: 12,
@@ -431,7 +442,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
@@ -440,7 +451,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.error,
+    color: tc.error,
     textAlign: 'center',
     marginVertical: 12,
   },
@@ -455,13 +466,13 @@ const styles = StyleSheet.create({
   weeklyTitle: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
     flex: 1,
   },
   dateBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -470,12 +481,12 @@ const styles = StyleSheet.create({
   dateBadgeText: {
     fontFamily: fonts.medium,
     fontSize: 11,
-    color: colors.text,
+    color: tc.text,
   },
 
   divider: {
     height: 1,
-    backgroundColor: colors.divider,
+    backgroundColor: tc.divider,
     marginBottom: 12,
   },
 
@@ -499,23 +510,23 @@ const styles = StyleSheet.create({
   lessonStatusLabel: {
     fontFamily: fonts.regular,
     fontSize: 9,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
   },
 
   // Overall Performance
   sectionCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: tc.surface,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: tc.cardBorder,
     padding: 16,
     marginBottom: 16,
   },
   sectionCardTitle: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
     marginBottom: 8,
   },
 
@@ -535,7 +546,7 @@ const styles = StyleSheet.create({
   donutCenterValue: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   donutLegend: {
     marginTop: 12,
@@ -556,7 +567,7 @@ const styles = StyleSheet.create({
   donutLegendText: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    color: colors.textLight,
+    color: tc.textLight,
   },
 
   // Metric Cards Row
@@ -575,7 +586,7 @@ const styles = StyleSheet.create({
   metricCardTitle: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 10,
   },
   metricChartContainer: {
@@ -588,7 +599,7 @@ const styles = StyleSheet.create({
   metricBarLabel: {
     fontFamily: fonts.regular,
     fontSize: 8,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
   },
 
@@ -600,14 +611,14 @@ const styles = StyleSheet.create({
   setLevelTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 10,
   },
   levelDropdown: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     borderRadius: 28,
     paddingVertical: 14,
     paddingHorizontal: 28,
@@ -617,17 +628,17 @@ const styles = StyleSheet.create({
   levelDropdownText: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
 
   // Level Picker Modal
   pickerOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'flex-end',
   },
   pickerContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -636,7 +647,7 @@ const styles = StyleSheet.create({
   pickerTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 16,
   },
   pickerOption: {
@@ -649,16 +660,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   pickerOptionSelected: {
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
   pickerOptionText: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   pickerOptionTextSelected: {
     fontFamily: fonts.semiBold,
-    color: colors.primary,
+    color: tc.accent,
   },
 });
 

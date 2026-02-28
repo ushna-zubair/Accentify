@@ -7,55 +7,66 @@ import {
   ScrollView,
   Switch,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import { useAppPreference } from '../../context/AppPreferenceContext';
+import { useAppTheme, type ThemeColors, type ThemeFontSizes } from '../../hooks/useAppTheme';
 import { ThemeOption, AccentColor, FontSizeOption, SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 // ------- Constants -------
 const THEME_OPTIONS: ThemeOption[] = ['Light', 'Dark'];
 const ACCENT_OPTIONS: AccentColor[] = ['Lavender', 'Orange', 'Blue'];
 const FONT_SIZE_OPTIONS: FontSizeOption[] = ['Small', 'Medium', 'Large'];
 
-const ACCENT_COLORS: Record<AccentColor, string> = {
-  Lavender: colors.primary,
-  Orange: colors.warning,
-  Blue: colors.info,
+/** Preview accent colors for the color-picker pills */
+const ACCENT_PILL_COLORS: Record<AccentColor, string> = {
+  Lavender: '#3F66FB',
+  Orange: '#FD8E39',
+  Blue: '#4285F4',
 };
 
 // ------- Sub-components -------
 
 interface SectionCardProps {
   children: React.ReactNode;
+  tc: ThemeColors;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ children }) => (
-  <View style={styles.card}>{children}</View>
+const SectionCard: React.FC<SectionCardProps> = ({ children, tc }) => (
+  <View
+    style={[
+      styles.card,
+      { backgroundColor: tc.surface, borderColor: tc.accent },
+    ]}
+  >
+    {children}
+  </View>
 );
 
 interface CollapsibleHeaderProps {
   title: string;
   expanded: boolean;
   onToggle: () => void;
+  tc: ThemeColors;
+  fs: ThemeFontSizes;
 }
 
-const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ title, expanded, onToggle }) => (
+const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({
+  title,
+  expanded,
+  onToggle,
+  tc,
+  fs,
+}) => (
   <TouchableOpacity style={styles.sectionHeader} onPress={onToggle} activeOpacity={0.7}>
-    <Text style={styles.sectionTitle}>{title}</Text>
+    <Text style={[styles.sectionTitle, { color: tc.text, fontSize: fs.subtitle }]}>{title}</Text>
     <Ionicons
       name={expanded ? 'chevron-up' : 'chevron-down'}
       size={24}
-      color={colors.text}
+      color={tc.text}
     />
   </TouchableOpacity>
 );
@@ -66,9 +77,27 @@ interface RadioCircleProps {
   color?: string;
 }
 
-const RadioCircle: React.FC<RadioCircleProps> = ({ selected, color = colors.text }) => (
+const RadioCircle: React.FC<RadioCircleProps> = ({ selected, color = '#333' }) => (
   <View style={[styles.radioOuter, { borderColor: color }]}>
     {selected && <View style={[styles.radioInner, { backgroundColor: color }]} />}
+  </View>
+);
+
+// Font-size preview text
+interface FontPreviewProps {
+  tc: ThemeColors;
+  fs: ThemeFontSizes;
+}
+
+const FontPreview: React.FC<FontPreviewProps> = ({ tc, fs }) => (
+  <View style={[styles.previewBox, { backgroundColor: tc.surfaceAlt, borderColor: tc.divider }]}>
+    <Text style={[styles.previewTitle, { color: tc.text, fontSize: fs.title }]}>Title</Text>
+    <Text style={[styles.previewBody, { color: tc.text, fontSize: fs.body }]}>
+      Body text preview
+    </Text>
+    <Text style={[styles.previewCaption, { color: tc.textLight, fontSize: fs.caption }]}>
+      Caption text
+    </Text>
   </View>
 );
 
@@ -87,6 +116,8 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
     setHighContrastMode,
   } = useAppPreference();
 
+  const { colors: tc, fontSizes: fs, isDark } = useAppTheme();
+
   const [themeExpanded, setThemeExpanded] = useState(true);
   const [colorExpanded, setColorExpanded] = useState(true);
   const [accessibilityExpanded, setAccessibilityExpanded] = useState(true);
@@ -97,7 +128,7 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -106,32 +137,39 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color={colors.text} />
+            <Ionicons name="arrow-back" size={28} color={tc.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>App Preference</Text>
+          <Text style={[styles.title, { color: tc.text, fontSize: fs.title }]}>App Preference</Text>
         </View>
 
         {/* Theme Settings */}
-        <SectionCard>
+        <SectionCard tc={tc}>
           <CollapsibleHeader
             title="Theme Settings"
             expanded={themeExpanded}
             onToggle={() => toggleSection(setThemeExpanded)}
+            tc={tc}
+            fs={fs}
           />
           {themeExpanded && (
             <View style={styles.sectionBody}>
-              <Text style={styles.subtitle}>Choose Your Theme</Text>
+              <Text style={[styles.subtitle, { color: tc.textLight, fontSize: fs.label }]}>
+                Choose Your Theme
+              </Text>
               <View style={styles.optionsColumn}>
                 {THEME_OPTIONS.map((option) => {
                   const isSelected = theme === option;
-                  const isDark = option === 'Dark';
+                  const isOptionDark = option === 'Dark';
                   return (
                     <TouchableOpacity
                       key={option}
                       style={[
                         styles.themeOption,
-                        isDark && styles.themeOptionDark,
-                        !isDark && styles.themeOptionLight,
+                        {
+                          backgroundColor: isOptionDark ? tc.text : tc.surface,
+                          borderWidth: isOptionDark ? 0 : 1.5,
+                          borderColor: isOptionDark ? 'transparent' : tc.text,
+                        },
                       ]}
                       onPress={() => setTheme(option)}
                       activeOpacity={0.7}
@@ -139,14 +177,14 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                       <Text
                         style={[
                           styles.themeOptionText,
-                          isDark && styles.themeOptionTextDark,
+                          { color: isOptionDark ? tc.surface : tc.text, fontSize: fs.body },
                         ]}
                       >
                         {option}
                       </Text>
                       <RadioCircle
                         selected={isSelected}
-                        color={isDark ? colors.white : colors.text}
+                        color={isOptionDark ? tc.surface : tc.text}
                       />
                     </TouchableOpacity>
                   );
@@ -157,19 +195,23 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
         </SectionCard>
 
         {/* Color Settings */}
-        <SectionCard>
+        <SectionCard tc={tc}>
           <CollapsibleHeader
             title="Color Settings"
             expanded={colorExpanded}
             onToggle={() => toggleSection(setColorExpanded)}
+            tc={tc}
+            fs={fs}
           />
           {colorExpanded && (
             <View style={styles.sectionBody}>
-              <Text style={styles.subtitle}>Choose Your Accent</Text>
+              <Text style={[styles.subtitle, { color: tc.textLight, fontSize: fs.label }]}>
+                Choose Your Accent
+              </Text>
               <View style={styles.optionsColumn}>
                 {ACCENT_OPTIONS.map((option) => {
                   const isSelected = accentColor === option;
-                  const bg = ACCENT_COLORS[option];
+                  const bg = ACCENT_PILL_COLORS[option];
                   return (
                     <TouchableOpacity
                       key={option}
@@ -177,11 +219,10 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                       onPress={() => setAccentColor(option)}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.accentOptionText}>{option}</Text>
-                      <RadioCircle
-                        selected={isSelected}
-                        color={colors.white}
-                      />
+                      <Text style={[styles.accentOptionText, { fontSize: fs.body }]}>
+                        {option}
+                      </Text>
+                      <RadioCircle selected={isSelected} color="#FFFFFF" />
                     </TouchableOpacity>
                   );
                 })}
@@ -191,15 +232,19 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
         </SectionCard>
 
         {/* Accessibility (Font Size + High Contrast) */}
-        <SectionCard>
+        <SectionCard tc={tc}>
           <CollapsibleHeader
             title="Accessibility"
             expanded={accessibilityExpanded}
             onToggle={() => toggleSection(setAccessibilityExpanded)}
+            tc={tc}
+            fs={fs}
           />
           {accessibilityExpanded && (
             <View style={styles.sectionBody}>
-              <Text style={styles.subtitle}>Font Size</Text>
+              <Text style={[styles.subtitle, { color: tc.textLight, fontSize: fs.label }]}>
+                Font Size
+              </Text>
               <View style={styles.fontSizeRow}>
                 {FONT_SIZE_OPTIONS.map((option) => {
                   const isSelected = fontSize === option;
@@ -208,7 +253,9 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                       key={option}
                       style={[
                         styles.fontSizeButton,
-                        isSelected && styles.fontSizeButtonSelected,
+                        {
+                          backgroundColor: isSelected ? tc.accent : tc.divider,
+                        },
                       ]}
                       onPress={() => setFontSize(option)}
                       activeOpacity={0.7}
@@ -216,7 +263,10 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                       <Text
                         style={[
                           styles.fontSizeText,
-                          isSelected && styles.fontSizeTextSelected,
+                          {
+                            color: isSelected ? tc.textOnAccent : tc.text,
+                            fontSize: fs.label,
+                          },
                         ]}
                       >
                         {option}
@@ -226,14 +276,19 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                 })}
               </View>
 
+              {/* Live preview */}
+              <FontPreview tc={tc} fs={fs} />
+
               <View style={styles.toggleRow}>
-                <Text style={styles.toggleLabel}>High Contrast Mode</Text>
+                <Text style={[styles.toggleLabel, { color: tc.text, fontSize: fs.body }]}>
+                  High Contrast Mode
+                </Text>
                 <Switch
                   value={highContrastMode}
                   onValueChange={setHighContrastMode}
-                  trackColor={{ false: colors.switchTrack, true: colors.primary }}
-                  thumbColor={colors.white}
-                  ios_backgroundColor={colors.switchTrack}
+                  trackColor={{ false: tc.disabled, true: tc.accent }}
+                  thumbColor="#FFFFFF"
+                  ios_backgroundColor={tc.disabled}
                 />
               </View>
             </View>
@@ -248,7 +303,6 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -268,15 +322,11 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 28,
-    color: colors.text,
   },
   // Card
   card: {
-    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: colors.primary,
     padding: 16,
     marginBottom: 16,
   },
@@ -287,16 +337,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: fonts.bold,
-    fontSize: 20,
-    color: colors.text,
   },
   sectionBody: {
     marginTop: 8,
   },
   subtitle: {
     fontFamily: fonts.regular,
-    fontSize: 14,
-    color: colors.text,
     marginBottom: 10,
   },
   optionsColumn: {
@@ -311,21 +357,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
   },
-  themeOptionLight: {
-    backgroundColor: colors.white,
-    borderWidth: 1.5,
-    borderColor: colors.text,
-  },
-  themeOptionDark: {
-    backgroundColor: colors.text,
-  },
   themeOptionText: {
     fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: colors.text,
-  },
-  themeOptionTextDark: {
-    color: colors.white,
   },
   // Accent options
   accentOption: {
@@ -338,8 +371,7 @@ const styles = StyleSheet.create({
   },
   accentOptionText: {
     fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: colors.white,
+    color: '#FFFFFF',
   },
   // Radio
   radioOuter: {
@@ -363,21 +395,29 @@ const styles = StyleSheet.create({
   },
   fontSizeButton: {
     flex: 1,
-    backgroundColor: colors.divider,
     borderRadius: 24,
     paddingVertical: 12,
     alignItems: 'center',
   },
-  fontSizeButtonSelected: {
-    backgroundColor: colors.primary,
-  },
   fontSizeText: {
     fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: colors.text,
   },
-  fontSizeTextSelected: {
-    color: colors.white,
+  // Preview box
+  previewBox: {
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 16,
+    gap: 4,
+  },
+  previewTitle: {
+    fontFamily: fonts.bold,
+  },
+  previewBody: {
+    fontFamily: fonts.regular,
+  },
+  previewCaption: {
+    fontFamily: fonts.regular,
   },
   // Toggle
   toggleRow: {
@@ -388,8 +428,6 @@ const styles = StyleSheet.create({
   },
   toggleLabel: {
     fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: colors.text,
   },
 });
 

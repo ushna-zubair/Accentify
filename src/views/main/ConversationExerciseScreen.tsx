@@ -13,7 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Path, Circle, Rect, Ellipse } from 'react-native-svg';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import {
   useConversationExerciseController,
@@ -29,20 +29,24 @@ type ConversationRoute = RouteProp<TutorStackParamList, 'ConversationExercise'>;
 //  BACKGROUND ILLUSTRATION (faded conversation scene)
 // ═══════════════════════════════════════════════
 
-const BackgroundIllustration: React.FC = () => (
+const BackgroundIllustration: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={bgStyles.container}>
     <Svg width={200} height={160} viewBox="0 0 220 160" style={{ opacity: 0.15 }}>
-      <Rect x={10} y={40} width={60} height={100} rx={8} fill={colors.primaryLight} opacity={0.6} />
-      <Rect x={150} y={50} width={55} height={90} rx={8} fill={colors.primaryMuted} opacity={0.6} />
+      <Rect x={10} y={40} width={60} height={100} rx={8} fill={tc.accentLight} opacity={0.6} />
+      <Rect x={150} y={50} width={55} height={90} rx={8} fill={tc.accentMuted} opacity={0.6} />
       <Circle cx={80} cy={55} r={18} fill="#E8BD8A" />
       <Path d="M68 52 C68 42 92 42 92 52" fill="#7B4DB8" />
       <Ellipse cx={80} cy={100} rx={22} ry={30} fill="#F5C84C" />
       <Circle cx={155} cy={65} r={14} fill="#D4A574" />
       <Ellipse cx={155} cy={105} rx={18} ry={25} fill="#5B7FC7" />
-      <Rect x={55} y={120} width={110} height={6} rx={3} fill={colors.primaryLight} />
+      <Rect x={55} y={120} width={110} height={6} rx={3} fill={tc.accentLight} />
     </Svg>
   </View>
-);
+  );
+};
 
 const bgStyles = StyleSheet.create({
   container: {
@@ -64,6 +68,8 @@ interface AudioBarProps {
 }
 
 const AudioProgressBar: React.FC<AudioBarProps> = ({ progress, color }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const animValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -110,6 +116,8 @@ const barStyles = StyleSheet.create({
 // ═══════════════════════════════════════════════
 
 const WaveformBar: React.FC<{ isActive: boolean }> = ({ isActive }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const waveAnims = useRef(
     Array.from({ length: 20 }, () => new Animated.Value(0.3)),
   ).current;
@@ -154,7 +162,7 @@ const WaveformBar: React.FC<{ isActive: boolean }> = ({ isActive }) => {
                 wfStyles.wave,
                 {
                   height,
-                  backgroundColor: isActive ? colors.success : colors.primary,
+                  backgroundColor: isActive ? tc.success : tc.accent,
                 },
               ]}
             />
@@ -169,7 +177,7 @@ const wfStyles = StyleSheet.create({
   container: { marginHorizontal: 20, marginBottom: 8 },
   barBg: {
     height: 36,
-    backgroundColor: colors.primary,
+    backgroundColor: '#3F66FB',
     borderRadius: 18,
     flexDirection: 'row',
     alignItems: 'center',
@@ -232,13 +240,13 @@ const mascotStyles = StyleSheet.create({
     zIndex: 20,
   },
   speechBubble: {
-    backgroundColor: colors.surface,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     paddingHorizontal: 10,
     paddingVertical: 2,
     marginBottom: 4,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: '#E5E5E5',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.08,
@@ -248,7 +256,7 @@ const mascotStyles = StyleSheet.create({
   speechDots: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: '#333333',
     letterSpacing: 2,
   },
   body: {
@@ -286,14 +294,14 @@ const mascotStyles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
   mouth: {
     width: 12,
     height: 6,
     borderBottomLeftRadius: 6,
     borderBottomRightRadius: 6,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
 });
 
@@ -318,7 +326,9 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
   progress,
   isCurrent,
 }) => {
-  const barColor = isPartner ? '#E94F54' : colors.success;
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  const barColor = isPartner ? '#E94F54' : tc.success;
   const iconName = isPartner ? 'volume-high' : 'play';
   const name = isPartner ? partnerName : learnerName;
   const displayProgress = turn.completed ? 1 : isCurrent ? progress : 0;
@@ -348,7 +358,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         <Ionicons
           name={iconName as any}
           size={18}
-          color={turn.completed || isCurrent ? barColor : colors.textMuted}
+          color={turn.completed || isCurrent ? barColor : tc.textMuted}
         />
         <AudioProgressBar
           progress={displayProgress}
@@ -367,7 +377,7 @@ const bubbleStyles = StyleSheet.create({
   name: {
     fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.text,
+    color: '#333333',
     marginBottom: 3,
   },
   nameLeft: { textAlign: 'left' },
@@ -380,7 +390,7 @@ const bubbleStyles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.65)',
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: '#E5E5E5',
     minWidth: 150,
   },
   partnerBubble: { borderTopLeftRadius: 4 },
@@ -393,6 +403,8 @@ const bubbleStyles = StyleSheet.create({
 // ═══════════════════════════════════════════════
 
 const ConversationExerciseScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const route = useRoute<ConversationRoute>();
   const navigation =
     useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
@@ -472,10 +484,10 @@ const ConversationExerciseScreen: React.FC = () => {
 
   const micColor =
     phase === 'recording'
-      ? colors.error
+      ? tc.error
       : micDisabled
-        ? colors.disabled
-        : colors.primary;
+        ? tc.disabled
+        : tc.accent;
 
   // Navigate to completion
   const handleDone = () => {
@@ -504,7 +516,7 @@ const ConversationExerciseScreen: React.FC = () => {
             style={styles.backBtn}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
+            <Ionicons name="chevron-back" size={24} color={tc.text} />
           </TouchableOpacity>
           <View>
             <Text style={styles.title}>Conversation</Text>
@@ -513,7 +525,7 @@ const ConversationExerciseScreen: React.FC = () => {
                 Background noise (
                 <Text
                   style={{
-                    color: backgroundNoise ? colors.success : colors.error,
+                    color: backgroundNoise ? tc.success : tc.error,
                     fontFamily: fonts.bold,
                   }}
                 >
@@ -525,7 +537,7 @@ const ConversationExerciseScreen: React.FC = () => {
                 Crowd chatter (
                 <Text
                   style={{
-                    color: crowdChatter ? colors.success : colors.error,
+                    color: crowdChatter ? tc.success : tc.error,
                     fontFamily: fonts.bold,
                   }}
                 >
@@ -620,7 +632,7 @@ const ConversationExerciseScreen: React.FC = () => {
             <Ionicons
               name={phase === 'recording' ? 'stop' : 'mic'}
               size={32}
-              color={colors.white}
+              color={tc.white}
             />
           </TouchableOpacity>
         </Animated.View>
@@ -663,10 +675,10 @@ const ConversationExerciseScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
 
   // ── Header ──
@@ -687,17 +699,17 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 28,
-    color: colors.text,
+    color: tc.text,
   },
   togglesRow: { marginTop: 2 },
   toggleLabel: {
     fontFamily: fonts.semiBold,
     fontSize: 11,
-    color: colors.text,
+    color: tc.text,
     lineHeight: 17,
   },
   timerBadge: {
-    backgroundColor: colors.success,
+    backgroundColor: tc.success,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 4,
@@ -706,7 +718,7 @@ const styles = StyleSheet.create({
   timerText: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.white,
+    color: tc.white,
   },
 
   // ── Main scroll ──
@@ -724,7 +736,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.35)',
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: tc.cardBorder,
     overflow: 'hidden',
     padding: 14,
     minHeight: 200,
@@ -734,7 +746,7 @@ const styles = StyleSheet.create({
   // ── Processing ──
   processingBubble: {
     alignSelf: 'center',
-    backgroundColor: colors.primaryLight,
+    backgroundColor: tc.accentLight,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -743,14 +755,14 @@ const styles = StyleSheet.create({
   processingText: {
     fontFamily: fonts.medium,
     fontSize: 12,
-    color: colors.primary,
+    color: tc.accent,
   },
 
   // ── End conversation label ──
   endConversationLabel: {
     fontFamily: fonts.medium,
     fontSize: 16,
-    color: colors.textMuted,
+    color: tc.textMuted,
     textAlign: 'center',
     marginTop: 16,
     fontStyle: 'italic',
@@ -764,19 +776,19 @@ const styles = StyleSheet.create({
   },
   feedbackDivider: {
     height: 1,
-    backgroundColor: colors.divider,
+    backgroundColor: tc.divider,
     marginBottom: 14,
   },
   feedbackTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 4,
   },
   feedbackBody: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     lineHeight: 22,
     marginBottom: 12,
     paddingLeft: 4,
@@ -788,13 +800,13 @@ const styles = StyleSheet.create({
   tipLabel: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     marginRight: 4,
   },
   tipBody: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     lineHeight: 21,
     flex: 1,
   },
@@ -808,14 +820,14 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 12,
-    color: colors.error,
+    color: tc.error,
     marginBottom: 6,
     textAlign: 'center',
   },
   speakNowLabel: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
     marginTop: 6,
     marginBottom: 4,
   },
@@ -834,7 +846,7 @@ const styles = StyleSheet.create({
 
   // ── DONE button ──
   doneBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 44,
@@ -843,7 +855,7 @@ const styles = StyleSheet.create({
   doneBtnText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
     letterSpacing: 1,
   },
 });

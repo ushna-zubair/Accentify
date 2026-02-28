@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Polyline, Circle as SvgCircle, Line } from 'react-native-svg';
 import { fonts } from '../../../theme/typography';
-import colors from '../../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../../hooks/useAppTheme';
 
 interface LineChartProps {
   thisWeek: number[];
@@ -12,11 +12,6 @@ interface LineChartProps {
   width?: number;
 }
 
-const LINE_COLORS = {
-  thisWeek: colors.primary,
-  lastWeek: colors.disabled,
-};
-
 const LineChart: React.FC<LineChartProps> = ({
   thisWeek,
   lastWeek,
@@ -24,6 +19,12 @@ const LineChart: React.FC<LineChartProps> = ({
   height = 120,
   width = 240,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  const LINE_COLORS = {
+    thisWeek: tc.accent,
+    lastWeek: tc.disabled,
+  };
   const maxVal = Math.max(...thisWeek, ...lastWeek, 1);
   const padding = 20;
   const usableWidth = width - padding * 2;
@@ -59,7 +60,7 @@ const LineChart: React.FC<LineChartProps> = ({
               y1={y}
               x2={width - padding}
               y2={y}
-              stroke={colors.surfaceAlt}
+              stroke={tc.surfaceAlt}
               strokeWidth={1}
             />
           );
@@ -106,7 +107,7 @@ const LineChart: React.FC<LineChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   labelsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fonts.regular,
     fontSize: 10,
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
 });
 

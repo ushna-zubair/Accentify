@@ -17,7 +17,7 @@ import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 
 // ------- Types -------
 type LearningGoal = 'Pronunciation' | 'Vocabulary' | 'Fluency';
@@ -59,6 +59,7 @@ interface AccountRowProps {
   navigable?: boolean;
   onNavigate?: () => void;
   secureText?: boolean;
+  tc: ThemeColors;
 }
 
 const AccountRow: React.FC<AccountRowProps> = ({
@@ -69,6 +70,7 @@ const AccountRow: React.FC<AccountRowProps> = ({
   navigable,
   onNavigate,
   secureText,
+  tc,
 }) => (
   <TouchableOpacity
     style={styles.accountRow}
@@ -76,16 +78,16 @@ const AccountRow: React.FC<AccountRowProps> = ({
     onPress={navigable ? onNavigate : editable ? onEdit : undefined}
     disabled={!editable && !navigable}
   >
-    <Text style={styles.accountRowLabel}>{label}</Text>
+    <Text style={[styles.accountRowLabel, { color: tc.text }]}>{label}</Text>
     <View style={styles.accountRowRight}>
-      <Text style={styles.accountRowValue}>
+      <Text style={[styles.accountRowValue, { color: tc.textLight }]}>
         {secureText ? '••••••••' : value}
       </Text>
       {editable && (
-        <Feather name="edit-2" size={16} color={colors.textLight} style={{ marginLeft: 6 }} />
+        <Feather name="edit-2" size={16} color={tc.textLight} style={{ marginLeft: 6 }} />
       )}
       {navigable && (
-        <Ionicons name="chevron-forward" size={18} color={colors.textLight} style={{ marginLeft: 4 }} />
+        <Ionicons name="chevron-forward" size={18} color={tc.textLight} style={{ marginLeft: 4 }} />
       )}
     </View>
   </TouchableOpacity>
@@ -96,11 +98,12 @@ import { Feather } from '@expo/vector-icons';
 
 interface RadioCircleProps {
   selected: boolean;
+  tc: ThemeColors;
 }
 
-const RadioCircle: React.FC<RadioCircleProps> = ({ selected }) => (
-  <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
-    {selected && <View style={styles.radioInner} />}
+const RadioCircle: React.FC<RadioCircleProps> = ({ selected, tc }) => (
+  <View style={[styles.radioOuter, { borderColor: tc.textLight }, selected && { borderColor: tc.text }]}>
+    {selected && <View style={[styles.radioInner, { backgroundColor: tc.text }]} />}
   </View>
 );
 
@@ -112,6 +115,7 @@ interface PickerModalProps {
   selected: string;
   onSelect: (value: string) => void;
   onClose: () => void;
+  tc: ThemeColors;
 }
 
 const PickerModal: React.FC<PickerModalProps> = ({
@@ -121,14 +125,15 @@ const PickerModal: React.FC<PickerModalProps> = ({
   selected,
   onSelect,
   onClose,
+  tc,
 }) => (
   <Modal visible={visible} transparent animationType="slide">
     <View style={styles.modalOverlay}>
-      <View style={styles.modalContent}>
+      <View style={[styles.modalContent, { backgroundColor: tc.surface }]}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>{title}</Text>
+          <Text style={[styles.modalTitle, { color: tc.text }]}>{title}</Text>
           <TouchableOpacity onPress={onClose}>
-            <Ionicons name="close" size={24} color={colors.text} />
+            <Ionicons name="close" size={24} color={tc.text} />
           </TouchableOpacity>
         </View>
         <FlatList
@@ -136,7 +141,7 @@ const PickerModal: React.FC<PickerModalProps> = ({
           keyExtractor={(item) => item}
           renderItem={({ item }) => (
             <TouchableOpacity
-              style={[styles.modalOption, selected === item && styles.modalOptionSelected]}
+              style={[styles.modalOption, { borderBottomColor: tc.inputBorder }, selected === item && { backgroundColor: tc.inputBg }]}
               onPress={() => {
                 onSelect(item);
                 onClose();
@@ -145,13 +150,14 @@ const PickerModal: React.FC<PickerModalProps> = ({
               <Text
                 style={[
                   styles.modalOptionText,
-                  selected === item && styles.modalOptionTextSelected,
+                  { color: tc.text },
+                  selected === item && { fontWeight: '600', color: tc.accent },
                 ]}
               >
                 {item}
               </Text>
               {selected === item && (
-                <Ionicons name="checkmark" size={20} color={colors.primary} />
+                <Ionicons name="checkmark" size={20} color={tc.accent} />
               )}
             </TouchableOpacity>
           )}
@@ -166,6 +172,7 @@ const PickerModal: React.FC<PickerModalProps> = ({
 // ------- Main Screen -------
 const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { currentUser } = useAuth();
+  const { colors: tc } = useAppTheme();
 
   const [profile, setProfile] = useState<ProfileState>({
     username: '',
@@ -288,7 +295,7 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   // ------- Goal icon renderer -------
   const renderGoalIcon = (goal: typeof LEARNING_GOALS[number]) => {
     const size = 20;
-    const color = colors.primary;
+    const color = tc.accent;
     if (goal.iconSet === 'ionicons')
       return <Ionicons name={goal.icon as any} size={size} color={color} />;
     if (goal.iconSet === 'fa5')
@@ -297,7 +304,7 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
@@ -306,9 +313,9 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color={colors.text} />
+            <Ionicons name="arrow-back" size={28} color={tc.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>Profile Settings</Text>
+          <Text style={[styles.title, { color: tc.text }]}>Profile Settings</Text>
         </View>
 
         {/* Profile Card */}
@@ -322,24 +329,24 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             style={styles.avatar}
           />
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{profile.username || 'User'}</Text>
-            <Text style={styles.profileEmail}>{profile.email}</Text>
+            <Text style={[styles.profileName, { color: tc.text }]}>{profile.username || 'User'}</Text>
+            <Text style={[styles.profileEmail, { color: tc.textLight }]}>{profile.email}</Text>
             <TouchableOpacity
-              style={styles.editProfileBtn}
+              style={[styles.editProfileBtn, { borderColor: tc.text }]}
               activeOpacity={0.7}
               onPress={() => {
                 setEditingField('username');
                 setFieldValue(profile.username);
               }}
             >
-              <Text style={styles.editProfileBtnText}>Edit Profile</Text>
+              <Text style={[styles.editProfileBtnText, { color: tc.text }]}>Edit Profile</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Account Details */}
-        <Text style={styles.sectionTitle}>Account Details</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: tc.text }]}>Account Details</Text>
+        <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accentLight }]}>
           <AccountRow
             label="Username"
             value={profile.username}
@@ -348,8 +355,9 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               setEditingField('username');
               setFieldValue(profile.username);
             }}
+            tc={tc}
           />
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: tc.inputBorder }]} />
           <AccountRow
             label="Password"
             value=""
@@ -360,31 +368,34 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               setFieldValue('');
               setCurrentPassword('');
             }}
+            tc={tc}
           />
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: tc.inputBorder }]} />
           <AccountRow
             label="Country"
             value={profile.country}
             navigable
             onNavigate={() => setPickerModal({ visible: true, type: 'country' })}
+            tc={tc}
           />
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: tc.inputBorder }]} />
           <AccountRow
             label="Time Zone"
             value={profile.timeZone}
             navigable
             onNavigate={() => setPickerModal({ visible: true, type: 'timeZone' })}
+            tc={tc}
           />
         </View>
 
         {/* Learning Goals */}
-        <Text style={styles.sectionTitle}>Learning Goals</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: tc.text }]}>Learning Goals</Text>
+        <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accentLight }]}>
           {LEARNING_GOALS.map((goal, idx) => {
             const selected = profile.learningGoals.includes(goal.label);
             return (
               <React.Fragment key={goal.label}>
-                {idx > 0 && <View style={styles.divider} />}
+                {idx > 0 && <View style={[styles.divider, { backgroundColor: tc.inputBorder }]} />}
                 <TouchableOpacity
                   style={styles.goalRow}
                   activeOpacity={0.7}
@@ -392,9 +403,9 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
                 >
                   <View style={styles.goalLeft}>
                     {renderGoalIcon(goal)}
-                    <Text style={styles.goalLabel}>{goal.label}</Text>
+                    <Text style={[styles.goalLabel, { color: tc.text }]}>{goal.label}</Text>
                   </View>
-                  <RadioCircle selected={selected} />
+                  <RadioCircle selected={selected} tc={tc} />
                 </TouchableOpacity>
               </React.Fragment>
             );
@@ -402,24 +413,24 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         </View>
 
         {/* Privacy & Security */}
-        <Text style={styles.sectionTitle}>Privacy & Security</Text>
-        <View style={styles.card}>
+        <Text style={[styles.sectionTitle, { color: tc.text }]}>Privacy & Security</Text>
+        <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accentLight }]}>
           <TouchableOpacity
             style={styles.privacyRow}
             activeOpacity={0.7}
             onPress={() => handlePrivacyPress('Login Devices')}
           >
-            <Text style={styles.privacyLabel}>Login Devices</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+            <Text style={[styles.privacyLabel, { color: tc.text }]}>Login Devices</Text>
+            <Ionicons name="chevron-forward" size={20} color={tc.textLight} />
           </TouchableOpacity>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: tc.inputBorder }]} />
           <TouchableOpacity
             style={styles.privacyRow}
             activeOpacity={0.7}
             onPress={() => handlePrivacyPress('Two-Factor Authentication')}
           >
-            <Text style={styles.privacyLabel}>Two-Factor Authentication</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.textLight} />
+            <Text style={[styles.privacyLabel, { color: tc.text }]}>Two-Factor Authentication</Text>
+            <Ionicons name="chevron-forward" size={20} color={tc.textLight} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -432,21 +443,21 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         onRequestClose={() => setEditingField(null)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: tc.surface }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: tc.text }]}>
                 {editingField === 'username' ? 'Edit Username' : 'Change Password'}
               </Text>
               <TouchableOpacity onPress={() => setEditingField(null)}>
-                <Ionicons name="close" size={24} color={colors.text} />
+                <Ionicons name="close" size={24} color={tc.text} />
               </TouchableOpacity>
             </View>
 
             {editingField === 'password' && (
               <TextInput
-                style={styles.modalInput}
+                style={[styles.modalInput, { borderColor: tc.inputBorder, color: tc.text, backgroundColor: tc.inputBg }]}
                 placeholder="Current password"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={tc.textMuted}
                 secureTextEntry
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
@@ -454,9 +465,9 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             )}
 
             <TextInput
-              style={styles.modalInput}
+              style={[styles.modalInput, { borderColor: tc.inputBorder, color: tc.text, backgroundColor: tc.inputBg }]}
               placeholder={editingField === 'username' ? 'Enter new username' : 'Enter new password'}
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={tc.textMuted}
               secureTextEntry={editingField === 'password'}
               value={fieldValue}
               onChangeText={setFieldValue}
@@ -464,11 +475,11 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
             />
 
             <TouchableOpacity
-              style={styles.modalSaveBtn}
+              style={[styles.modalSaveBtn, { backgroundColor: tc.accent }]}
               activeOpacity={0.7}
               onPress={editingField === 'username' ? handleSaveUsername : handleSavePassword}
             >
-              <Text style={styles.modalSaveBtnText}>Save</Text>
+              <Text style={[styles.modalSaveBtnText, { color: tc.white }]}>Save</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -482,6 +493,7 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         selected={pickerModal.type === 'country' ? profile.country : profile.timeZone}
         onSelect={pickerModal.type === 'country' ? handleCountrySelect : handleTimeZoneSelect}
         onClose={() => setPickerModal({ ...pickerModal, visible: false })}
+        tc={tc}
       />
     </SafeAreaView>
   );
@@ -491,7 +503,6 @@ const ProfileSettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -512,7 +523,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.text,
     fontStyle: 'italic',
   },
   // Profile card
@@ -534,17 +544,14 @@ const styles = StyleSheet.create({
   profileName: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text,
   },
   profileEmail: {
     fontSize: 13,
-    color: colors.textLight,
     marginBottom: 8,
   },
   editProfileBtn: {
     alignSelf: 'flex-start',
     borderWidth: 1.5,
-    borderColor: colors.text,
     borderRadius: 20,
     paddingVertical: 6,
     paddingHorizontal: 18,
@@ -552,26 +559,21 @@ const styles = StyleSheet.create({
   editProfileBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: colors.text,
   },
   // Sections
   sectionTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
     marginBottom: 10,
   },
   card: {
-    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: colors.primaryLight,
     paddingHorizontal: 16,
     marginBottom: 20,
   },
   divider: {
     height: 1,
-    backgroundColor: colors.inputBorder,
   },
   // Account rows
   accountRow: {
@@ -583,7 +585,6 @@ const styles = StyleSheet.create({
   accountRowLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.text,
   },
   accountRowRight: {
     flexDirection: 'row',
@@ -591,7 +592,6 @@ const styles = StyleSheet.create({
   },
   accountRowValue: {
     fontSize: 14,
-    color: colors.textLight,
   },
   // Learning Goals
   goalRow: {
@@ -608,25 +608,19 @@ const styles = StyleSheet.create({
   goalLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.text,
   },
   radioOuter: {
     width: 24,
     height: 24,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: colors.textLight,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: colors.text,
   },
   radioInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: colors.text,
   },
   // Privacy
   privacyRow: {
@@ -638,7 +632,6 @@ const styles = StyleSheet.create({
   privacyLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.text,
   },
   // Modals
   modalOverlay: {
@@ -647,7 +640,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -662,21 +654,16 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.text,
   },
   modalInput: {
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
     fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.inputBg,
     marginBottom: 12,
   },
   modalSaveBtn: {
-    backgroundColor: colors.primary,
     borderRadius: 24,
     paddingVertical: 14,
     alignItems: 'center',
@@ -685,7 +672,6 @@ const styles = StyleSheet.create({
   modalSaveBtnText: {
     fontSize: 16,
     fontWeight: '700',
-    color: colors.white,
   },
   modalOption: {
     flexDirection: 'row',
@@ -694,18 +680,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 4,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inputBorder,
-  },
-  modalOptionSelected: {
-    backgroundColor: colors.inputBg,
   },
   modalOptionText: {
     fontSize: 15,
-    color: colors.text,
-  },
-  modalOptionTextSelected: {
-    fontWeight: '600',
-    color: colors.primary,
   },
 });
 

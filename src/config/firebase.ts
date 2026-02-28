@@ -44,4 +44,7 @@ if (Platform.OS === 'web') {
 export { auth };
 export const db = getFirestore(app);
 
+import { getStorage } from 'firebase/storage';
+export const storage = getStorage(app);
+
 export default app;

@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { LessonDetailData, LessonDifficulty, LessonStatus } from '../models';
+import { updateStreak } from '../services/progressService';
 
 // ═══════════════════════════════════════════════
 //  SAMPLE LESSON DETAIL DATA
@@ -141,7 +142,10 @@ export const useLessonDetailController = (lessonId: string) => {
           };
         }
       } catch (e: any) {
-        console.warn('[LessonDetail] Firestore fetch warning:', e.message);
+        // Permission errors are expected if rules aren't deployed yet
+        if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
+          console.warn('[LessonDetail] Firestore fetch warning:', e.message);
+        }
       }
 
       // 2. Fallback to sample data
@@ -210,6 +214,9 @@ export const useLessonDetailController = (lessonId: string) => {
             lastActiveAt: new Date().toISOString(),
           });
         }
+
+        // Update streak when starting a lesson
+        await updateStreak(uid);
       } catch {
         // Non-critical, ignore
       }

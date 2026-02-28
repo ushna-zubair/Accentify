@@ -1,13 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect , useMemo} from 'react';
 import { View, Image, StyleSheet, Text } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Splash'>;
 
 const SplashScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace('Onboarding');
@@ -29,10 +31,10 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -47,7 +49,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.primary,
+    color: tc.accent,
     letterSpacing: 6,
   },
 });

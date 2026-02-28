@@ -57,9 +57,33 @@ export interface ThemeColors {
   success: string;
   /** Warning */
   warning: string;
+  /** Pure white – icons on colored surfaces */
+  white: string;
+  /** Pure black */
+  black: string;
+  /** Light success background tint */
+  successBg: string;
+  /** Light error background tint */
+  errorBg: string;
+  /** Light warning background tint */
+  warningBg: string;
+  /** Deep warning for text on warningBg */
+  warningDeep: string;
+  /** Modal / sheet overlay */
+  overlay: string;
+  /** Very light accent background (for icon pills) */
+  accentBg: string;
+  /** Tab bar background */
+  tabBarBg: string;
+  /** Tab bar active tint */
+  tabBarActive: string;
+  /** Tab bar inactive tint */
+  tabBarInactive: string;
+  /** Tab bar label text */
+  tabBarLabel: string;
 }
 
-const LIGHT_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'accentDark'> = {
+const LIGHT_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'accentDark' | 'accentBg'> = {
   background: '#FFFFFF',
   surface: '#FFFFFF',
   surfaceAlt: '#F5F5F5',
@@ -75,9 +99,20 @@ const LIGHT_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | '
   error: '#E94F54',
   success: '#3DC13C',
   warning: '#F3BB1B',
+  white: '#FFFFFF',
+  black: '#000000',
+  successBg: '#CEEFCE',
+  errorBg: '#FBCDCF',
+  warningBg: '#FCEEC6',
+  warningDeep: '#7A5D0D',
+  overlay: 'rgba(0,0,0,0.4)',
+  tabBarBg: '#5B4FC7',
+  tabBarActive: '#7B6FE0',
+  tabBarInactive: 'rgba(255,255,255,0.50)',
+  tabBarLabel: '#FFFFFF',
 };
 
-const DARK_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'accentDark'> = {
+const DARK_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'accentDark' | 'accentBg'> = {
   background: '#121212',
   surface: '#1E1E1E',
   surfaceAlt: '#2A2A2A',
@@ -93,6 +128,17 @@ const DARK_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'a
   error: '#FF6B6B',
   success: '#4ADE4A',
   warning: '#FFD54F',
+  white: '#FFFFFF',
+  black: '#000000',
+  successBg: '#1A3A1A',
+  errorBg: '#3A1A1A',
+  warningBg: '#3A351A',
+  warningDeep: '#FFD54F',
+  overlay: 'rgba(0,0,0,0.6)',
+  tabBarBg: '#1A1A2E',
+  tabBarActive: '#7B6FE0',
+  tabBarInactive: 'rgba(255,255,255,0.35)',
+  tabBarLabel: '#FFFFFF',
 };
 
 /** High-contrast overrides applied on top of either base. */
@@ -123,26 +169,57 @@ interface AccentScale {
   accentLight: string;
   accentMuted: string;
   accentDark: string;
+  accentBg: string;
 }
 
-const ACCENT_MAP: Record<AccentColor, AccentScale> = {
+const ACCENT_MAP: Record<AccentColor, { light: AccentScale; dark: AccentScale }> = {
   Lavender: {
-    accent: '#3F66FB',   // primary700
-    accentLight: '#9FB2FD', // primary600
-    accentMuted: '#CFD8FE', // primary500
-    accentDark: '#2F4CBC',  // primary800
+    light: {
+      accent: '#3F66FB',
+      accentLight: '#9FB2FD',
+      accentMuted: '#CFD8FE',
+      accentDark: '#2F4CBC',
+      accentBg: '#EEF1FF',
+    },
+    dark: {
+      accent: '#6B8AFF',
+      accentLight: '#4A6AE0',
+      accentMuted: '#1E2A5E',
+      accentDark: '#8FA8FF',
+      accentBg: '#1A1F3A',
+    },
   },
   Orange: {
-    accent: '#FD8E39',   // accentOrange700
-    accentLight: '#FEC79C', // accentOrange600
-    accentMuted: '#FFE3CD', // accentOrange500
-    accentDark: '#BE6A2B',  // accentOrange800
+    light: {
+      accent: '#FD8E39',
+      accentLight: '#FEC79C',
+      accentMuted: '#FFE3CD',
+      accentDark: '#BE6A2B',
+      accentBg: '#FFF5EB',
+    },
+    dark: {
+      accent: '#FFA05C',
+      accentLight: '#C87A3A',
+      accentMuted: '#3A2A1A',
+      accentDark: '#FFB87A',
+      accentBg: '#2A1F15',
+    },
   },
   Blue: {
-    accent: '#4285F4',   // Google-blue / a distinct blue
-    accentLight: '#7AADFF',
-    accentMuted: '#C5DCFF',
-    accentDark: '#2B6AD0',
+    light: {
+      accent: '#4285F4',
+      accentLight: '#7AADFF',
+      accentMuted: '#C5DCFF',
+      accentDark: '#2B6AD0',
+      accentBg: '#EBF5FF',
+    },
+    dark: {
+      accent: '#5A9AFF',
+      accentLight: '#3D7DE0',
+      accentMuted: '#1A2A4E',
+      accentDark: '#7AB4FF',
+      accentBg: '#151F35',
+    },
   },
 };
 
@@ -151,13 +228,16 @@ function resolveColors(
   accentColor: AccentColor,
   highContrast: boolean,
 ): ThemeColors {
-  const base = theme === 'Dark' ? { ...DARK_BASE } : { ...LIGHT_BASE };
+  const isDark = theme === 'Dark';
+  const base = isDark ? { ...DARK_BASE } : { ...LIGHT_BASE };
   const hcOverrides = highContrast
-    ? theme === 'Dark'
+    ? isDark
       ? HIGH_CONTRAST_DARK
       : HIGH_CONTRAST_LIGHT
     : {};
-  const accent = ACCENT_MAP[accentColor];
+  const accent = isDark
+    ? ACCENT_MAP[accentColor].dark
+    : ACCENT_MAP[accentColor].light;
 
   return { ...base, ...hcOverrides, ...accent };
 }

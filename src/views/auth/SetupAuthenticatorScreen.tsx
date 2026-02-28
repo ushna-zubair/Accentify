@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
 import NumberKeypad from '../../components/NumberKeypad';
 import { useCodeInput } from '../../hooks/useCodeInput';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupAuthenticator'>;
@@ -23,6 +23,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SetupAuthenticator'>;
 const CODE_LENGTH = 6;
 
 const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { completeOnboarding } = useAuth();
   const { code, handleKeyPress, isComplete, value: codeValue } = useCodeInput(CODE_LENGTH);
@@ -98,7 +100,7 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <FontAwesome5 name="arrow-left" size={18} color={colors.text} />
+            <FontAwesome5 name="arrow-left" size={18} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Set Up Your Authenticator App</Text>
           <View style={{ width: 32 }} />
@@ -126,7 +128,7 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
                     style={{
                       width: cellSize,
                       height: cellSize,
-                      backgroundColor: filled ? colors.text : colors.white,
+                      backgroundColor: filled ? tc.text : tc.white,
                     }}
                   />
                 ))}
@@ -169,7 +171,7 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color={colors.white} size="small" />
+            <ActivityIndicator color={tc.white} size="small" />
           ) : (
             <Text style={styles.continueButtonText}>Continue</Text>
           )}
@@ -179,10 +181,10 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -206,20 +208,20 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   /* ── Steps ── */
   stepText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginTop: 16,
     marginBottom: 8,
   },
   accentifyText: {
-    color: colors.primary,
+    color: tc.accent,
     fontFamily: fonts.bold,
   },
   /* ── QR Code ── */
@@ -228,7 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginVertical: 12,
     padding: 12,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 12,
     alignSelf: 'center',
   },
@@ -252,19 +254,19 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.white,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   codeBoxFilled: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primary500,
+    borderColor: tc.accent,
+    backgroundColor: tc.accentMuted,
   },
   codeDigit: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   /* ── Mini Keypad ── */
   miniKeypad: {
@@ -275,7 +277,7 @@ const styles = StyleSheet.create({
   warningText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 20,
@@ -285,10 +287,10 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -297,7 +299,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
 });
 

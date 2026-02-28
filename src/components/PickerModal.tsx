@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import colors from '../theme/colors';
+import { useAppTheme, type ThemeColors } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
 interface PickerModalProps {
@@ -36,7 +36,11 @@ const PickerModal: React.FC<PickerModalProps> = ({
   selected,
   onSelect,
   onClose,
-}) => (
+}) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+
+  return (
   <Modal visible={visible} transparent animationType="slide">
     <View style={styles.overlay}>
       <View style={styles.content}>
@@ -48,7 +52,7 @@ const PickerModal: React.FC<PickerModalProps> = ({
             accessibilityRole="button"
             accessibilityLabel="Close picker"
           >
-            <Ionicons name="close" size={24} color={colors.text} />
+            <Ionicons name="close" size={24} color={tc.text} />
           </TouchableOpacity>
         </View>
 
@@ -75,7 +79,7 @@ const PickerModal: React.FC<PickerModalProps> = ({
                 {item}
               </Text>
               {selected === item && (
-                <Ionicons name="checkmark" size={20} color={colors.primary} />
+                <Ionicons name="checkmark" size={20} color={tc.accent} />
               )}
             </TouchableOpacity>
           )}
@@ -85,16 +89,17 @@ const PickerModal: React.FC<PickerModalProps> = ({
       </View>
     </View>
   </Modal>
-);
+  );
+};
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'flex-end',
   },
   content: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 20,
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   option: {
     flexDirection: 'row',
@@ -121,16 +126,16 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   optionSelected: {
-    backgroundColor: colors.primary500,
+    backgroundColor: tc.accentMuted,
   },
   optionText: {
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   optionTextSelected: {
     fontFamily: fonts.semiBold,
-    color: colors.primary,
+    color: tc.accent,
   },
 });
 

@@ -42,6 +42,26 @@ export interface NotificationSection {
   data: NotificationItem[];
 }
 
+// ─── Login Devices Models ───
+export type DevicePlatform = 'ios' | 'android' | 'web';
+
+export interface LoginDevice {
+  /** Unique id for this session/device entry */
+  id: string;
+  /** Display name (e.g. "iPhone 14 Pro", "Chrome on macOS") */
+  deviceName: string;
+  /** Platform icon key */
+  platform: DevicePlatform;
+  /** ISO-8601 timestamp of last activity */
+  lastActiveAt: string;
+  /** IP address (optional, recorded at login) */
+  ipAddress?: string;
+  /** City/country (optional, derived from IP) */
+  location?: string;
+  /** Whether this entry represents the current session */
+  isCurrent: boolean;
+}
+
 // ─── Profile Settings Models ───
 export type LearningGoal = 'Pronunciation' | 'Vocabulary' | 'Fluency';
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ChooseVerificationMethod'>;
@@ -20,6 +20,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'ChooseVerificationMetho
 type VerificationMethod = 'email' | 'authenticator' | 'pin';
 
 const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { completeOnboarding } = useAuth();
   const [selected, setSelected] = useState<VerificationMethod>('authenticator');
@@ -74,7 +76,7 @@ const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) 
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <FontAwesome5 name="arrow-left" size={18} color={colors.text} />
+            <FontAwesome5 name="arrow-left" size={18} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Choose Verification Method</Text>
           <View style={{ width: 32 }} />
@@ -119,7 +121,7 @@ const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) 
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={colors.white} size="small" />
+              <ActivityIndicator color={tc.white} size="small" />
             ) : (
               <Text style={styles.continueButtonText}>Continue</Text>
             )}
@@ -130,10 +132,10 @@ const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) 
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -156,20 +158,20 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   /* ── Subtitle ── */
   subtitle: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     lineHeight: 22,
     marginTop: 32,
     marginBottom: 32,
   },
   accentifyText: {
-    color: colors.primary,
+    color: tc.accent,
     fontFamily: fonts.bold,
   },
   /* ── Methods ── */
@@ -180,29 +182,29 @@ const styles = StyleSheet.create({
   methodButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 999,
     paddingVertical: 16,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
   },
   methodButtonSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
   methodText: {
     fontFamily: fonts.semiBold,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   methodTextSelected: {
-    color: colors.white,
+    color: tc.white,
   },
   /* ── Warning ── */
   warningText: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -217,10 +219,10 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
 });
 

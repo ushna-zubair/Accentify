@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,22 +7,16 @@ import {
   ScrollView,
   Switch,
   LayoutAnimation,
-  Platform,
-  UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import {
   useAppPreference,
   ThemeOption,
   AccentColor,
   FontSizeOption,
 } from '../../context/AppPreferenceContext';
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 // ------- Constants -------
 const THEME_OPTIONS: ThemeOption[] = ['Light', 'Dark'];
@@ -41,9 +35,11 @@ interface SectionCardProps {
   children: React.ReactNode;
 }
 
-const SectionCard: React.FC<SectionCardProps> = ({ children }) => (
-  <View style={styles.card}>{children}</View>
-);
+const SectionCard: React.FC<SectionCardProps> = ({ children }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return <View style={styles.card}>{children}</View>;
+};
 
 interface CollapsibleHeaderProps {
   title: string;
@@ -51,16 +47,20 @@ interface CollapsibleHeaderProps {
   onToggle: () => void;
 }
 
-const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ title, expanded, onToggle }) => (
-  <TouchableOpacity style={styles.sectionHeader} onPress={onToggle} activeOpacity={0.7}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    <Ionicons
-      name={expanded ? 'chevron-up' : 'chevron-down'}
-      size={24}
-      color={colors.text}
-    />
-  </TouchableOpacity>
-);
+const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({ title, expanded, onToggle }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
+    <TouchableOpacity style={styles.sectionHeader} onPress={onToggle} activeOpacity={0.7}>
+      <Text style={styles.sectionTitle}>{title}</Text>
+      <Ionicons
+        name={expanded ? 'chevron-up' : 'chevron-down'}
+        size={24}
+        color={tc.text}
+      />
+    </TouchableOpacity>
+  );
+};
 
 // Radio circle (filled or outline, colored border)
 interface RadioCircleProps {
@@ -68,14 +68,21 @@ interface RadioCircleProps {
   color?: string;
 }
 
-const RadioCircle: React.FC<RadioCircleProps> = ({ selected, color = colors.text }) => (
-  <View style={[styles.radioOuter, { borderColor: color }]}>
-    {selected && <View style={[styles.radioInner, { backgroundColor: color }]} />}
-  </View>
-);
+const RadioCircle: React.FC<RadioCircleProps> = ({ selected, color }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  const resolvedColor = color ?? tc.text;
+  return (
+    <View style={[styles.radioOuter, { borderColor: resolvedColor }]}>
+      {selected && <View style={[styles.radioInner, { backgroundColor: resolvedColor }]} />}
+    </View>
+  );
+};
 
 // ------- Main Screen -------
 const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const {
     theme,
     setTheme,
@@ -106,7 +113,7 @@ const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={28} color={colors.text} />
+            <Ionicons name="arrow-back" size={28} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.title}>App Preference</Text>
         </View>
@@ -146,7 +153,7 @@ const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       </Text>
                       <RadioCircle
                         selected={isSelected}
-                        color={isDark ? colors.white : colors.text}
+                        color={isDark ? tc.white : tc.text}
                       />
                     </TouchableOpacity>
                   );
@@ -180,7 +187,7 @@ const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                       <Text style={styles.accentOptionText}>{option}</Text>
                       <RadioCircle
                         selected={isSelected}
-                        color={colors.white}
+                        color={tc.white}
                       />
                     </TouchableOpacity>
                   );
@@ -231,8 +238,8 @@ const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 <Switch
                   value={highContrastMode}
                   onValueChange={setHighContrastMode}
-                  trackColor={{ false: '#D1D5DB', true: colors.primary }}
-                  thumbColor={colors.white}
+                  trackColor={{ false: '#D1D5DB', true: tc.accent }}
+                  thumbColor={tc.white}
                   ios_backgroundColor="#D1D5DB"
                 />
               </View>
@@ -245,10 +252,10 @@ const AppPreferenceScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 };
 
 // ------- Styles -------
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   container: {
     flex: 1,
@@ -269,14 +276,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.text,
+    color: tc.text,
   },
   // Card
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderColor: tc.accent,
     padding: 16,
     marginBottom: 16,
   },
@@ -288,7 +295,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: colors.text,
+    color: tc.text,
   },
   sectionBody: {
     marginTop: 8,
@@ -296,7 +303,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     fontWeight: '400',
-    color: colors.text,
+    color: tc.text,
     marginBottom: 10,
   },
   optionsColumn: {
@@ -312,20 +319,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   themeOptionLight: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderWidth: 1.5,
-    borderColor: colors.text,
+    borderColor: tc.text,
   },
   themeOptionDark: {
-    backgroundColor: colors.text,
+    backgroundColor: tc.text,
   },
   themeOptionText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
+    color: tc.text,
   },
   themeOptionTextDark: {
-    color: colors.white,
+    color: tc.white,
   },
   // Accent options
   accentOption: {
@@ -339,7 +346,7 @@ const styles = StyleSheet.create({
   accentOptionText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.white,
+    color: tc.white,
   },
   // Radio
   radioOuter: {
@@ -369,15 +376,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   fontSizeButtonSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
   },
   fontSizeText: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.text,
+    color: tc.text,
   },
   fontSizeTextSelected: {
-    color: colors.white,
+    color: tc.white,
   },
   // Toggle
   toggleRow: {
@@ -389,7 +396,7 @@ const styles = StyleSheet.create({
   toggleLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.text,
+    color: tc.text,
   },
 });
 

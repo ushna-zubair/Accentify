@@ -8,11 +8,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import colors from '../../theme/colors';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
+import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
 import { fonts } from '../../theme/typography';
 import { useTutorController, CATEGORY_COLORS } from '../../controllers';
 import type { TutorLesson, LessonDifficulty, TutorStackParamList } from '../../models';
@@ -22,19 +25,19 @@ import type { TutorLesson, LessonDifficulty, TutorStackParamList } from '../../m
 // ═══════════════════════════════════════════════
 
 // ─── Difficulty Badge ───
-const DIFFICULTY_COLORS: Record<LessonDifficulty, string> = {
-  Easy: colors.success,
-  Medium: colors.accentOrange700,
-  Challenging: colors.error,
-};
+const getDifficultyColor = (d: LessonDifficulty, tc: ThemeColors) =>
+  d === 'Easy' ? tc.success : d === 'Challenging' ? tc.error : '#FD8E39';
 
-const DifficultyBadge: React.FC<{ difficulty: LessonDifficulty }> = ({ difficulty }) => (
-  <View style={[styles.badge, { backgroundColor: `${DIFFICULTY_COLORS[difficulty]}18` }]}>
-    <Text style={[styles.badgeText, { color: DIFFICULTY_COLORS[difficulty] }]}>
-      ({difficulty})
-    </Text>
-  </View>
-);
+const DifficultyBadge: React.FC<{ difficulty: LessonDifficulty; tc: ThemeColors }> = ({ difficulty, tc }) => {
+  const dColor = getDifficultyColor(difficulty, tc);
+  return (
+    <View style={[styles.badge, { backgroundColor: `${dColor}18` }]}>
+      <Text style={[styles.badgeText, { color: dColor }]}>
+        ({difficulty})
+      </Text>
+    </View>
+  );
+};
 
 // ─── Category icon for placeholder thumbnails ───
 const CATEGORY_ICONS: Record<string, string> = {
@@ -43,40 +46,41 @@ const CATEGORY_ICONS: Record<string, string> = {
   vocabulary: 'book',
 };
 
-const LessonThumbnail: React.FC<{ lesson: TutorLesson }> = ({ lesson }) => {
+const LessonThumbnail: React.FC<{ lesson: TutorLesson; tc: ThemeColors }> = ({ lesson, tc }) => {
   if (lesson.thumbnail) {
     return <Image source={lesson.thumbnail} style={styles.thumbnailImg} />;
   }
 
-  const bg = CATEGORY_COLORS[lesson.category] ?? colors.primaryLight;
+  const bg = CATEGORY_COLORS[lesson.category] ?? tc.accentLight;
   const iconName = CATEGORY_ICONS[lesson.category] ?? 'book';
 
   return (
     <View style={[styles.thumbnailPlaceholder, { backgroundColor: bg }]}>
-      <Ionicons name={iconName as any} size={28} color={colors.white} />
+      <Ionicons name={iconName as any} size={28} color={tc.white} />
     </View>
   );
 };
 
 // ─── Lesson Card ───
-const LessonCard: React.FC<{ lesson: TutorLesson; onPress: () => void; dashed?: boolean }> = ({ lesson, onPress, dashed }) => (
+const LessonCard: React.FC<{ lesson: TutorLesson; onPress: () => void; dashed?: boolean; tc: ThemeColors }> = ({ lesson, onPress, dashed, tc }) => (
   <TouchableOpacity
     style={[
       styles.lessonCard,
-      dashed && styles.lessonCardDashed,
+      { backgroundColor: tc.surface },
+      dashed && [styles.lessonCardDashed, { borderColor: tc.accent, backgroundColor: tc.surface }],
     ]}
     activeOpacity={0.7}
     onPress={onPress}
   >
-    <LessonThumbnail lesson={lesson} />
+    <LessonThumbnail lesson={lesson} tc={tc} />
     <View style={styles.lessonInfo}>
       <View style={styles.lessonTitleRow}>
-        <Text style={styles.lessonTitle} numberOfLines={1}>
+        <Text style={[styles.lessonTitle, { color: tc.text }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8}>
           {lesson.title}
         </Text>
-        <DifficultyBadge difficulty={lesson.difficulty} />
+        <DifficultyBadge difficulty={lesson.difficulty} tc={tc} />
       </View>
-      <Text style={styles.lessonDesc} numberOfLines={3}>
+      <Text style={[styles.lessonDesc, { color: tc.textLight }]} numberOfLines={3}>
         {lesson.description}
       </Text>
     </View>
@@ -84,11 +88,11 @@ const LessonCard: React.FC<{ lesson: TutorLesson; onPress: () => void; dashed?: 
 );
 
 // ─── Stats Badge ───
-const StatBadge: React.FC<{ value: number | string; label: string }> = ({ value, label }) => (
+const StatBadge: React.FC<{ value: number | string; label: string; tc: ThemeColors }> = ({ value, label, tc }) => (
   <View style={styles.statBlock}>
-    <Text style={styles.statLabel}>{label}</Text>
-    <View style={styles.statBadge}>
-      <Text style={styles.statValue}>{value}</Text>
+    <Text style={[styles.statLabel, { color: tc.textLight }]}>{label}</Text>
+    <View style={[styles.statBadge, { backgroundColor: tc.success }]}>
+      <Text style={[styles.statValue, { color: tc.white }]}>{value}</Text>
     </View>
   </View>
 );
@@ -100,65 +104,69 @@ const StatBadge: React.FC<{ value: number | string; label: string }> = ({ value,
 const TutorScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
   const { data, loading, error, refresh } = useTutorController();
+  const { handleScroll } = useTabBarScroll();
+  const { colors: tc } = useAppTheme();
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: tc.background }]} edges={['top']}>
+        <ActivityIndicator size="large" color={tc.accent} />
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: tc.background }]} edges={['top']}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         refreshControl={
-          <RefreshControl refreshing={false} onRefresh={refresh} tintColor={colors.primary} />
+          <RefreshControl refreshing={false} onRefresh={refresh} tintColor={tc.accent} />
         }
       >
         {/* ── Page Title ── */}
-        <Text style={styles.pageTitle}>Tutoring</Text>
+        <Text style={[styles.pageTitle, { color: tc.text }]}>Tutoring</Text>
 
         {/* ── User Greeting Card ── */}
-        <View style={styles.greetingCard}>
-          <View style={styles.greetingLeft}>
-            {data.avatarUrl ? (
-              <Image source={{ uri: data.avatarUrl }} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Ionicons name="person" size={30} color={colors.white} />
+        <View style={[styles.greetingCard, { backgroundColor: tc.surface }]}>
+          <View style={styles.greetingTop}>
+            <View style={styles.greetingLeft}>
+              {data.avatarUrl ? (
+                <Image source={{ uri: data.avatarUrl }} style={styles.avatar} />
+              ) : (
+                <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: tc.accentLight }]}>
+                  <Ionicons name="person" size={avatarSize * 0.5} color={tc.white} />
+                </View>
+              )}
+              <View style={styles.greetingTextBlock}>
+                <Text style={[styles.greetingName, { color: tc.text }]} numberOfLines={1}>Hello {data.userName}</Text>
+                <Text style={[styles.greetingSubtext, { color: tc.textLight }]}>
+                  Let's begin your speaking session and make progress one step at a time!
+                </Text>
               </View>
-            )}
-            <View style={styles.greetingTextBlock}>
-              <Text style={styles.greetingName}>Hello {data.userName}</Text>
-              <Text style={styles.greetingSubtext}>
-                Let's begin your speaking{'\n'}session and make progress{'\n'}one step at a time!
-              </Text>
             </View>
           </View>
-          <View style={styles.greetingRight}>
-            <StatBadge label="Completed" value={data.stats.completedLessons} />
-            <Text style={styles.totalHoursLabel}>Total Hours</Text>
-            <View style={styles.statBadge}>
-              <Text style={styles.statValue}>{data.stats.totalHours}</Text>
-            </View>
+          <View style={[styles.statsRow, { borderTopColor: tc.inputBorder }]}>
+            <StatBadge label="Completed" value={data.stats.completedLessons} tc={tc} />
+            <StatBadge label="Total Hours" value={data.stats.totalHours} tc={tc} />
           </View>
         </View>
 
-        {error && <Text style={styles.errorText}>{error}</Text>}
+        {error && <Text style={[styles.errorText, { color: tc.error }]}>{error}</Text>}
 
         {/* ── Recent / Continue Lessons ── */}
         {data.recentLessons.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Select where you left off</Text>
+            <Text style={[styles.sectionTitle, { color: tc.text }]}>Select where you left off</Text>
             {data.recentLessons.map((lesson) => (
               <LessonCard
                 key={lesson.id}
                 lesson={lesson}
                 dashed
                 onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
+                tc={tc}
               />
             ))}
           </>
@@ -167,55 +175,68 @@ const TutorScreen: React.FC = () => {
         {/* ── Study Path ── */}
         {data.studyPath.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>Study Path</Text>
+            <Text style={[styles.sectionTitle, { color: tc.text }]}>Study Path</Text>
             {data.studyPath.map((lesson) => (
               <LessonCard
                 key={lesson.id}
                 lesson={lesson}
                 onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
+                tc={tc}
               />
             ))}
           </>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 // ═══════════════════════════════════════════════
-//  STYLES
+//  STYLES (responsive)
 // ═══════════════════════════════════════════════
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const isSmall = SCREEN_W < 380;
+const avatarSize = isSmall ? 46 : 54;
+const thumbSize = isSmall ? 64 : 74;
+const hPad = isSmall ? 14 : 18;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
+    paddingHorizontal: hPad,
+    paddingTop: 12,
+    paddingBottom: 100,
   },
 
   // Page Title
   pageTitle: {
     fontFamily: fonts.bold,
-    fontSize: 34,
-    color: colors.text,
-    marginBottom: 16,
+    fontSize: isSmall ? 26 : 30,
+    marginBottom: 14,
   },
 
   // Greeting Card
   greetingCard: {
+    borderRadius: 16,
+    padding: isSmall ? 12 : 14,
+    marginBottom: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  greetingTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 24,
+    marginBottom: 12,
   },
   greetingLeft: {
     flexDirection: 'row',
@@ -223,13 +244,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: avatarSize,
+    height: avatarSize,
+    borderRadius: avatarSize / 2,
     marginRight: 10,
   },
   avatarPlaceholder: {
-    backgroundColor: colors.avatarBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -239,79 +259,64 @@ const styles = StyleSheet.create({
   },
   greetingName: {
     fontFamily: fonts.bold,
-    fontSize: 16,
-    color: colors.text,
-    marginBottom: 2,
+    fontSize: isSmall ? 14 : 16,
+    marginBottom: 3,
   },
   greetingSubtext: {
     fontFamily: fonts.regular,
-    fontSize: 11,
-    color: colors.textLight,
-    lineHeight: 16,
+    fontSize: isSmall ? 11 : 12,
+    lineHeight: isSmall ? 15 : 17,
   },
-  greetingRight: {
-    alignItems: 'flex-end',
-    justifyContent: 'flex-start',
-    paddingTop: 2,
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    paddingTop: 10,
   },
 
   // Stats
   statBlock: {
-    alignItems: 'flex-end',
-    marginBottom: 4,
+    alignItems: 'center',
   },
   statLabel: {
     fontFamily: fonts.medium,
-    fontSize: 12,
-    color: colors.text,
-    marginBottom: 2,
-  },
-  totalHoursLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: colors.text,
-    marginTop: 4,
-    marginBottom: 2,
+    fontSize: isSmall ? 11 : 12,
+    marginBottom: 4,
   },
   statBadge: {
-    backgroundColor: colors.success,
     borderRadius: 14,
     paddingHorizontal: 16,
     paddingVertical: 4,
-    minWidth: 48,
+    minWidth: 46,
     alignItems: 'center',
   },
   statValue: {
     fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.white,
+    fontSize: isSmall ? 15 : 17,
   },
 
   // Error
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.error,
     marginBottom: 10,
   },
 
   // Section
   sectionTitle: {
     fontFamily: fonts.bold,
-    fontSize: 18,
-    color: colors.text,
-    marginBottom: 12,
-    marginTop: 8,
+    fontSize: isSmall ? 16 : 18,
+    marginBottom: 10,
+    marginTop: 6,
   },
 
   // Lesson Card
   lessonCard: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
     borderRadius: 14,
-    padding: 12,
-    marginBottom: 12,
-    shadowColor: colors.shadow,
+    padding: isSmall ? 10 : 12,
+    marginBottom: 10,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.06,
     shadowRadius: 4,
@@ -320,22 +325,20 @@ const styles = StyleSheet.create({
   lessonCardDashed: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: colors.primary,
-    backgroundColor: colors.surface,
     shadowOpacity: 0,
     elevation: 0,
   },
   thumbnailImg: {
-    width: 80,
-    height: 80,
+    width: thumbSize,
+    height: thumbSize,
     borderRadius: 10,
-    marginRight: 12,
+    marginRight: 10,
   },
   thumbnailPlaceholder: {
-    width: 80,
-    height: 80,
+    width: thumbSize,
+    height: thumbSize,
     borderRadius: 10,
-    marginRight: 12,
+    marginRight: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -352,14 +355,13 @@ const styles = StyleSheet.create({
   },
   lessonTitle: {
     fontFamily: fonts.bold,
-    fontSize: 15,
-    color: colors.text,
+    fontSize: isSmall ? 13 : 15,
+    flexShrink: 1,
   },
   lessonDesc: {
     fontFamily: fonts.regular,
-    fontSize: 12,
-    color: colors.textLight,
-    lineHeight: 17,
+    fontSize: isSmall ? 11 : 12,
+    lineHeight: isSmall ? 15 : 17,
   },
 
   // Badge
@@ -370,7 +372,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontFamily: fonts.semiBold,
-    fontSize: 11,
+    fontSize: isSmall ? 10 : 11,
   },
 });
 

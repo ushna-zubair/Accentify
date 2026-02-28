@@ -1,9 +1,15 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
-import { Audio } from 'expo-av';
+import {
+  useAudioRecorder,
+  RecordingPresets,
+  AudioModule,
+  setAudioModeAsync,
+} from 'expo-audio';
 import { doc, getDoc, setDoc, collection, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { VocabWordPair, VocabExerciseData, SpeechRecognitionResult } from '../models';
+import { onExerciseComplete } from '../services/progressService';
 
 // ═══════════════════════════════════════════════
 //  SAMPLE WORD PAIRS (fallback)
@@ -325,9 +331,10 @@ export const useVocabExerciseController = (lessonId: string) => {
   const [attemptCount, setAttemptCount] = useState(0);
   const [successMessage, setSuccessMessage] = useState('');
 
+  // ── Audio recorder (expo-audio) ──
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
   // Audio refs
-  const recordingRef = useRef<Audio.Recording | null>(null);
-  const soundRef = useRef<Audio.Sound | null>(null);
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Current word pair
@@ -363,7 +370,10 @@ export const useVocabExerciseController = (lessonId: string) => {
           });
         }
       } catch (e: any) {
-        console.warn('[VocabExercise] Firestore fetch warning:', e.message);
+        // Permission errors are expected if rules aren't deployed yet
+        if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
+          console.warn('[VocabExercise] Firestore fetch warning:', e.message);
+        }
       }
 
       // Fallback to sample data
@@ -409,9 +419,8 @@ export const useVocabExerciseController = (lessonId: string) => {
     fetchExercise();
     return () => {
       // Cleanup
-      stopRecording();
-      if (soundRef.current) {
-        soundRef.current.unloadAsync();
+      if (audioRecorder.isRecording) {
+        audioRecorder.stop().catch(() => {});
       }
     };
   }, [fetchExercise]);
@@ -436,27 +445,24 @@ export const useVocabExerciseController = (lessonId: string) => {
   const startRecording = useCallback(async () => {
     try {
       setError(null);
-      // Don't clear lastResult here — user might want to see feedback while re-recording
 
       // Request permissions
-      const { status } = await Audio.requestPermissionsAsync();
-      if (status !== 'granted') {
+      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
+      if (!granted) {
         setError('Microphone permission is required');
         return;
       }
 
       // Configure audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
       // Start recording
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
 
-      recordingRef.current = recording;
       setIsRecording(true);
       setRecordingDuration(0);
 
@@ -468,11 +474,11 @@ export const useVocabExerciseController = (lessonId: string) => {
       console.error('[VocabExercise] startRecording error:', e);
       setError('Failed to start recording');
     }
-  }, []);
+  }, [audioRecorder]);
 
   // ── Audio: Stop recording & process ──
   const stopRecording = useCallback(async () => {
-    if (!recordingRef.current) return;
+    if (!audioRecorder.isRecording) return;
 
     try {
       // Stop duration timer
@@ -484,13 +490,12 @@ export const useVocabExerciseController = (lessonId: string) => {
       setIsRecording(false);
       setIsProcessing(true);
 
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
 
       // Reset audio mode
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
+      await setAudioModeAsync({
+        allowsRecording: false,
       });
 
       if (!uri) {
@@ -596,6 +601,11 @@ export const useVocabExerciseController = (lessonId: string) => {
           } catch {
             // Non-critical
           }
+
+          // Update progress: streak, daily activity, weekly aggregation
+          await onExerciseComplete(uid, 'vocab', {
+            wordsLearned: exercise.totalPairs,
+          });
         } catch {
           // ignore
         }

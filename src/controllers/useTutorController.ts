@@ -174,7 +174,12 @@ export const useTutorController = () => {
         studyPath,
       });
     } catch (e: any) {
-      console.error('[Tutor] fetchTutorData error:', e);
+      // Permission errors are expected if rules aren't deployed yet — use fallback silently
+      if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
+        console.warn('[Tutor] Firestore permission denied, using sample data');
+      } else {
+        console.error('[Tutor] fetchTutorData error:', e);
+      }
       setError(e.message ?? 'Failed to load tutor data');
       applyFallback();
     } finally {

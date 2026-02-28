@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import Svg, { Path, Circle, G } from 'react-native-svg';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useUserDetailController } from '../../controllers';
 import type { AdminStackParamList } from '../../models';
@@ -75,7 +75,10 @@ const Field: React.FC<FieldProps> = ({
   onChange,
   secureTextEntry = false,
   rightIcon,
-}) => (
+}) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.fieldWrapper}>
     <Text style={styles.fieldLabel}>{label}</Text>
     <View style={styles.fieldInputRow}>
@@ -90,7 +93,8 @@ const Field: React.FC<FieldProps> = ({
       {rightIcon && <View style={styles.fieldIcon}>{rightIcon}</View>}
     </View>
   </View>
-);
+  );
+};
 
 // ─── Confirmation Modal (matching design) ───
 interface ConfirmModalProps {
@@ -100,7 +104,10 @@ interface ConfirmModalProps {
   onNo: () => void;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ visible, message, onYes, onNo }) => (
+const ConfirmModal: React.FC<ConfirmModalProps> = ({ visible, message, onYes, onNo }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <Modal visible={visible} transparent animationType="fade">
     <View style={styles.confirmOverlay}>
       <View style={styles.confirmCard}>
@@ -125,13 +132,16 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ visible, message, onYes, on
       </View>
     </View>
   </Modal>
-);
+  );
+};
 
 // ═══════════════════════════════════════════════
 //  MAIN SCREEN
 // ═══════════════════════════════════════════════
 
 const AdminUserDetailScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation();
   const route = useRoute<DetailRoute>();
   const { uid } = route.params;
@@ -195,7 +205,7 @@ const AdminUserDetailScreen: React.FC = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.primary} />
+        <ActivityIndicator size="large" color={tc.accent} />
       </View>
     );
   }
@@ -215,7 +225,7 @@ const AdminUserDetailScreen: React.FC = () => {
         {/* ── Header ── */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Ionicons name="arrow-back" size={24} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>User Management</Text>
           <View style={styles.headerSpacer} />
@@ -244,7 +254,7 @@ const AdminUserDetailScreen: React.FC = () => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>User Management</Text>
         <View style={styles.headerSpacer} />
@@ -289,7 +299,7 @@ const AdminUserDetailScreen: React.FC = () => {
               <Ionicons
                 name={showPassword ? 'eye-outline' : 'eye-off-outline'}
                 size={22}
-                color={colors.textMuted}
+                color={tc.textMuted}
               />
             </TouchableOpacity>
           }
@@ -334,7 +344,7 @@ const AdminUserDetailScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             {saving && isEditing ? (
-              <ActivityIndicator size="small" color={colors.white} />
+              <ActivityIndicator size="small" color={tc.white} />
             ) : (
               <Text style={[styles.actionBtnText, isEditing && styles.actionBtnTextPrimary]}>
                 {isEditing ? 'Save' : 'Edit'}
@@ -370,14 +380,14 @@ const AdminUserDetailScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -395,7 +405,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
   },
   headerSpacer: { width: 32 },
 
@@ -408,7 +418,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.error,
+    color: tc.error,
     marginBottom: 10,
   },
 
@@ -419,7 +429,7 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 6,
   },
   fieldInputRow: {
@@ -430,8 +440,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
-    backgroundColor: colors.primaryMuted,
+    color: tc.text,
+    backgroundColor: tc.accentMuted,
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -439,8 +449,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   fieldInputReadOnly: {
-    backgroundColor: colors.primaryMuted,
-    color: colors.text,
+    backgroundColor: tc.accentMuted,
+    color: tc.text,
   },
   fieldIcon: {
     position: 'absolute',
@@ -463,15 +473,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   statusActive: {
-    color: colors.text,
+    color: tc.text,
   },
   statusInactive: {
-    color: colors.error,
+    color: tc.error,
   },
   sinceText: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
   roleRow: {
     flexDirection: 'row',
@@ -482,17 +492,17 @@ const styles = StyleSheet.create({
   roleLabel: {
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
   },
   roleValue: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
     marginLeft: 4,
   },
   roleHighlight: {
     fontFamily: fonts.semiBold,
-    color: colors.success,
+    color: tc.success,
   },
 
   // Actions
@@ -503,7 +513,7 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     borderWidth: 1.5,
-    borderColor: colors.text,
+    borderColor: tc.text,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 24,
@@ -511,22 +521,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   actionBtnPrimary: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
   actionBtnDanger: {
-    borderColor: colors.text,
+    borderColor: tc.text,
   },
   actionBtnText: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   actionBtnTextPrimary: {
-    color: colors.white,
+    color: tc.white,
   },
   actionBtnTextDanger: {
-    color: colors.text,
+    color: tc.text,
   },
 
   // ── Success View ──
@@ -540,7 +550,7 @@ const styles = StyleSheet.create({
   successText: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     lineHeight: 30,
     marginTop: 20,
@@ -548,7 +558,7 @@ const styles = StyleSheet.create({
   },
   successBtn: {
     borderWidth: 1.5,
-    borderColor: colors.primaryLight,
+    borderColor: tc.accentLight,
     borderRadius: 24,
     paddingVertical: 12,
     paddingHorizontal: 32,
@@ -556,19 +566,19 @@ const styles = StyleSheet.create({
   successBtnText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
 
   // Confirmation Modal
   confirmOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
   },
   confirmCard: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 18,
     paddingVertical: 28,
     paddingHorizontal: 24,
@@ -579,7 +589,7 @@ const styles = StyleSheet.create({
   confirmText: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     lineHeight: 28,
     marginBottom: 12,
@@ -592,7 +602,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    borderTopColor: tc.divider,
   },
   confirmBtn: {
     flex: 1,
@@ -601,16 +611,16 @@ const styles = StyleSheet.create({
   },
   confirmBtnYes: {
     borderRightWidth: 0.5,
-    borderRightColor: colors.divider,
+    borderRightColor: tc.divider,
   },
   confirmBtnNo: {
     borderLeftWidth: 0.5,
-    borderLeftColor: colors.divider,
+    borderLeftColor: tc.divider,
   },
   confirmBtnText: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
 });
 

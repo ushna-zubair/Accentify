@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useUserManagementController } from '../../controllers';
 import type { ManagedUser, AdminStackParamList } from '../../models';
@@ -28,19 +28,26 @@ import type { ManagedUser, AdminStackParamList } from '../../models';
 const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({
   checked,
   onPress,
-}) => (
+}) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <TouchableOpacity
     style={[styles.checkbox, checked && styles.checkboxChecked]}
     onPress={onPress}
     activeOpacity={0.7}
     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
   >
-    {checked && <Ionicons name="checkmark" size={14} color={colors.white} />}
+    {checked && <Ionicons name="checkmark" size={14} color={tc.white} />}
   </TouchableOpacity>
-);
+  );
+};
 
 // ─── Table Header ───
-const TableHeader: React.FC = () => (
+const TableHeader: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <View style={styles.tableHeader}>
     <View style={styles.colCheck} />
     <View style={styles.colId}>
@@ -55,14 +62,18 @@ const TableHeader: React.FC = () => (
       <Text style={styles.colSub}>String | MAX – Length 65</Text>
     </View>
   </View>
-);
+  );
+};
 
 // ─── Table Row ───
 const TableRow: React.FC<{
   user: ManagedUser;
   selected: boolean;
   onToggle: () => void;
-}> = ({ user, selected, onToggle }) => (
+}> = ({ user, selected, onToggle }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
   <TouchableOpacity
     style={[styles.tableRow, selected && styles.tableRowSelected]}
     onPress={onToggle}
@@ -96,7 +107,8 @@ const TableRow: React.FC<{
       </Text>
     </View>
   </TouchableOpacity>
-);
+  );
+};
 
 // ─── Add / Edit User Modal ───
 const UserFormModal: React.FC<{
@@ -108,6 +120,8 @@ const UserFormModal: React.FC<{
   onClose: () => void;
   onSubmit: (name: string, email: string) => void;
 }> = ({ visible, title, initialName = '', initialEmail = '', loading: submitting, onClose, onSubmit }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
 
@@ -134,7 +148,7 @@ const UserFormModal: React.FC<{
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{title}</Text>
             <TouchableOpacity onPress={onClose}>
-              <Ionicons name="close" size={24} color={colors.text} />
+              <Ionicons name="close" size={24} color={tc.text} />
             </TouchableOpacity>
           </View>
 
@@ -142,7 +156,7 @@ const UserFormModal: React.FC<{
           <TextInput
             style={styles.modalInput}
             placeholder="Enter full name"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             value={name}
             onChangeText={setName}
             maxLength={65}
@@ -152,7 +166,7 @@ const UserFormModal: React.FC<{
           <TextInput
             style={styles.modalInput}
             placeholder="Enter email"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -170,7 +184,7 @@ const UserFormModal: React.FC<{
             activeOpacity={0.7}
           >
             {submitting ? (
-              <ActivityIndicator color={colors.white} size="small" />
+              <ActivityIndicator color={tc.white} size="small" />
             ) : (
               <Text style={styles.modalSubmitText}>{title === 'Add User' ? 'Add' : 'Save'}</Text>
             )}
@@ -186,6 +200,8 @@ const UserFormModal: React.FC<{
 // ═══════════════════════════════════════════════
 
 const AdminUserManagementScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const {
     users,
@@ -250,7 +266,7 @@ const AdminUserManagementScreen: React.FC = () => {
       {/* ── Header ── */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>User Management</Text>
         <View style={styles.headerSpacer} />
@@ -262,14 +278,14 @@ const AdminUserManagementScreen: React.FC = () => {
           <TextInput
             style={styles.searchInput}
             placeholder="user_ID"
-            placeholderTextColor={colors.textMuted}
+            placeholderTextColor={tc.textMuted}
             value={searchId}
             onChangeText={setSearchId}
             returnKeyType="search"
             onSubmitEditing={handleSearch}
           />
           <TouchableOpacity onPress={handleSearch} style={styles.searchIconBtn}>
-            <Ionicons name="search" size={16} color={colors.textMuted} />
+            <Ionicons name="search" size={16} color={tc.textMuted} />
           </TouchableOpacity>
         </View>
         <View style={styles.actionBtns}>
@@ -304,7 +320,7 @@ const AdminUserManagementScreen: React.FC = () => {
       {/* ── Delete Button (shows when selection > 0) ── */}
       {selectedUids.size > 0 && (
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
-          <Ionicons name="trash-outline" size={16} color={colors.white} />
+          <Ionicons name="trash-outline" size={16} color={tc.white} />
           <Text style={styles.deleteBtnText}>
             Delete {selectedUids.size} selected
           </Text>
@@ -335,7 +351,7 @@ const AdminUserManagementScreen: React.FC = () => {
               {loading && (
                 <ActivityIndicator
                   size="small"
-                  color={colors.primary}
+                  color={tc.accent}
                   style={{ marginVertical: 16 }}
                 />
               )}
@@ -384,10 +400,10 @@ const COL_ID_W = 64;
 const COL_NAME_W = 130;
 const COL_EMAIL_W = 180;
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
 
   // Header
@@ -403,7 +419,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
   },
   headerSpacer: { width: 32 },
 
@@ -419,7 +435,7 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     borderRadius: 24,
     paddingHorizontal: 18,
     height: 44,
@@ -428,7 +444,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   searchIconBtn: {
     padding: 4,
@@ -437,9 +453,9 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   actionBtn: {
-    backgroundColor: colors.surface,
+    backgroundColor: tc.surface,
     borderWidth: 1,
-    borderColor: colors.cardBorder,
+    borderColor: tc.cardBorder,
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -451,17 +467,17 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontFamily: fonts.medium,
     fontSize: 12,
-    color: colors.text,
+    color: tc.text,
   },
   actionBtnTextDisabled: {
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
 
   // Instruction
   instruction: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.textLight,
+    color: tc.textLight,
     paddingHorizontal: 20,
     marginTop: 10,
     marginBottom: 6,
@@ -472,7 +488,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: colors.error,
+    backgroundColor: tc.error,
     borderRadius: 8,
     paddingVertical: 6,
     paddingHorizontal: 14,
@@ -483,13 +499,13 @@ const styles = StyleSheet.create({
   deleteBtnText: {
     fontFamily: fonts.semiBold,
     fontSize: 12,
-    color: colors.white,
+    color: tc.white,
   },
 
   errorText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.error,
+    color: tc.error,
     paddingHorizontal: 20,
     marginBottom: 6,
   },
@@ -508,7 +524,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-end',
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
+    borderBottomColor: tc.divider,
     paddingBottom: 8,
     marginBottom: 2,
   },
@@ -519,12 +535,12 @@ const styles = StyleSheet.create({
   colTitle: {
     fontFamily: fonts.bold,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
   },
   colSub: {
     fontFamily: fonts.regular,
     fontSize: 8,
-    color: colors.textMuted,
+    color: tc.textMuted,
     marginTop: 1,
   },
 
@@ -534,24 +550,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 0.5,
-    borderBottomColor: colors.divider,
+    borderBottomColor: tc.divider,
   },
   tableRowSelected: {
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
     borderRadius: 6,
   },
   cellText: {
     fontFamily: fonts.regular,
     fontSize: 12,
-    color: colors.text,
+    color: tc.text,
   },
   cellTextBold: {
     fontFamily: fonts.semiBold,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
   },
   cellTextSelected: {
-    color: colors.primary,
+    color: tc.accent,
   },
 
   // Checkbox
@@ -560,14 +576,14 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 4,
     borderWidth: 1.5,
-    borderColor: colors.textMuted,
+    borderColor: tc.textMuted,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
   },
   checkboxChecked: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
+    backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
 
   // Load more
@@ -580,17 +596,17 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.primary,
+    color: tc.accent,
   },
 
   // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     padding: 24,
@@ -605,28 +621,28 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   modalLabel: {
     fontFamily: fonts.medium,
     fontSize: 13,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 6,
     marginTop: 12,
   },
   modalInput: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    backgroundColor: colors.inputBg,
+    backgroundColor: tc.inputBg,
   },
   modalSubmitBtn: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 28,
     paddingVertical: 14,
     alignItems: 'center',
@@ -638,7 +654,7 @@ const styles = StyleSheet.create({
   modalSubmitText: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
 });
 

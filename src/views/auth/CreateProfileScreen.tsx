@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -21,7 +21,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateProfile'>;
@@ -50,6 +50,8 @@ type CountryItem = {
 };
 
 const getFlagEmoji = (countryCode: string) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   if (!countryCode || countryCode.length !== 2) return '';
   const codePoints = countryCode
     .toUpperCase()
@@ -59,6 +61,8 @@ const getFlagEmoji = (countryCode: string) => {
 };
 
 const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const [fullName, setFullName] = useState('');
   const [nickName, setNickName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
@@ -260,7 +264,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <View style={styles.backRow}>
-              <FontAwesome5 name="chevron-left" size={16} color={colors.text} />
+              <FontAwesome5 name="chevron-left" size={16} color={tc.text} />
               <Text style={styles.backArrow}>Create Profile</Text>
             </View>
           </TouchableOpacity>
@@ -276,7 +280,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
               <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarInner}>
-                <FontAwesome5 name="user" size={34} color={colors.primary} />
+                <FontAwesome5 name="user" size={34} color={tc.accent} />
               </View>
             )}
           </TouchableOpacity>
@@ -284,7 +288,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.editButton}
             onPress={() => setImageModalVisible(true)}
           >
-            <FontAwesome5 name="pen" size={14} color={colors.white} />
+            <FontAwesome5 name="pen" size={14} color={tc.white} />
           </TouchableOpacity>
         </View>
 
@@ -292,14 +296,14 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           placeholder="Full Name"
           value={fullName}
           onChangeText={setFullName}
-          leftIcon={<FontAwesome5 name="user" size={18} color={colors.primary} />}
+          leftIcon={<FontAwesome5 name="user" size={18} color={tc.accent} />}
         />
 
         <CustomInput
           placeholder="Nick Name"
           value={nickName}
           onChangeText={setNickName}
-          leftIcon={<FontAwesome5 name="user-circle" size={18} color={colors.primary} />}
+          leftIcon={<FontAwesome5 name="user-circle" size={18} color={tc.accent} />}
         />
 
         <TouchableOpacity
@@ -307,7 +311,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.inputTouchable}
         >
           <View style={styles.dateInputContainer}>
-            <FontAwesome5 name="calendar-alt" size={18} color={colors.primary} />
+            <FontAwesome5 name="calendar-alt" size={18} color={tc.accent} />
             <Text style={[styles.inputPlaceholder, !dateOfBirth && styles.placeholderText]}>
               {dateOfBirth ? dateOfBirth.toLocaleDateString() : 'Date of Birth'}
             </Text>
@@ -348,7 +352,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                     }
                   }}
                 >
-                  <FontAwesome5 name="chevron-left" size={14} color={colors.text} />
+                  <FontAwesome5 name="chevron-left" size={14} color={tc.text} />
                 </TouchableOpacity>
                 <Text style={styles.calendarTitle}>
                   {monthNames[calendarMonth]} {calendarYear}
@@ -365,7 +369,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                     }
                   }}
                 >
-                  <FontAwesome5 name="chevron-right" size={14} color={colors.text} />
+                  <FontAwesome5 name="chevron-right" size={14} color={tc.text} />
                 </TouchableOpacity>
               </View>
 
@@ -419,7 +423,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           value={email}
           onChangeText={handleEmailChange}
           keyboardType="email-address"
-          leftIcon={<FontAwesome5 name="envelope" size={18} color={colors.primary} />}
+          leftIcon={<FontAwesome5 name="envelope" size={18} color={tc.accent} />}
           error={emailError}
         />
 
@@ -455,7 +459,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           value={phoneNumber}
           onChangeText={setPhoneNumber}
           keyboardType="phone-pad"
-          leftIcon={<FontAwesome5 name="phone" size={18} color={colors.primary} />}
+          leftIcon={<FontAwesome5 name="phone" size={18} color={tc.accent} />}
         />
 
         <TouchableOpacity
@@ -465,7 +469,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={[styles.genderText, !selectedGender && styles.placeholderText]}>
             {selectedGender || 'Gender'}
           </Text>
-          <FontAwesome5 name="chevron-down" size={12} color={colors.textMuted} />
+          <FontAwesome5 name="chevron-down" size={12} color={tc.textMuted} />
         </TouchableOpacity>
 
         <Modal
@@ -493,7 +497,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                   >
                     <Text style={styles.genderOptionText}>{item}</Text>
                     {selectedGender === item && (
-                      <FontAwesome5 name="check" size={14} color={colors.primary} />
+                      <FontAwesome5 name="check" size={14} color={tc.accent} />
                     )}
                   </TouchableOpacity>
                 )}
@@ -514,14 +518,14 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search country"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={tc.textMuted}
                 value={countryQuery}
                 onChangeText={setCountryQuery}
               />
 
               {countryLoading ? (
                 <View style={styles.loadingWrap}>
-                  <ActivityIndicator color={colors.primary} />
+                  <ActivityIndicator color={tc.accent} />
                 </View>
               ) : (
                 <FlatList
@@ -569,11 +573,11 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.imageModalContent}>
               <Text style={styles.modalTitle}>Profile Photo</Text>
               <TouchableOpacity style={styles.imageAction} onPress={handleTakePhoto}>
-                <FontAwesome5 name="camera" size={16} color={colors.primary} />
+                <FontAwesome5 name="camera" size={16} color={tc.accent} />
                 <Text style={styles.imageActionText}>Take Photo</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.imageAction} onPress={handlePickImage}>
-                <FontAwesome5 name="image" size={16} color={colors.primary} />
+                <FontAwesome5 name="image" size={16} color={tc.accent} />
                 <Text style={styles.imageActionText}>Choose from Library</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -594,10 +598,10 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -615,7 +619,7 @@ const styles = StyleSheet.create({
   backArrow: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   avatarSection: {
     alignItems: 'center',
@@ -625,7 +629,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: colors.primary500,
+    backgroundColor: tc.accentMuted,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -635,7 +639,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: colors.lightNeutral900,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -647,7 +651,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: colors.success800,
+    backgroundColor: tc.success,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
@@ -661,12 +665,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
   },
   dateModalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 16,
     width: 320,
     padding: 12,
@@ -680,7 +684,7 @@ const styles = StyleSheet.create({
   calendarTitle: {
     fontFamily: fonts.bold,
     fontSize: 12,
-    color: colors.text,
+    color: tc.text,
   },
   calendarNav: {
     width: 28,
@@ -688,7 +692,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.inputBg,
+    backgroundColor: tc.inputBg,
   },
   weekRow: {
     flexDirection: 'row',
@@ -700,7 +704,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fonts.semiBold,
     fontSize: 10,
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
   daysGrid: {
     flexDirection: 'row',
@@ -715,24 +719,24 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   dayCellSelected: {
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
   },
   dayText: {
     fontFamily: fonts.semiBold,
     fontSize: 10,
-    color: colors.text,
+    color: tc.text,
   },
   dayTextSelected: {
-    color: colors.white,
+    color: tc.white,
   },
   dateInput: {
     height: 44,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.inputBg,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.inputBg,
     paddingHorizontal: 12,
-    color: colors.text,
+    color: tc.text,
   },
   dateModalActions: {
     marginTop: 12,
@@ -745,14 +749,14 @@ const styles = StyleSheet.create({
   dateModalButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.primary,
+    color: tc.accent,
   },
   dateInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBg,
+    backgroundColor: tc.inputBg,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     borderRadius: 14,
     height: 56,
     paddingHorizontal: 16,
@@ -761,18 +765,18 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fonts.regular,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
     marginLeft: 8,
   },
   placeholderText: {
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
   countryContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBg,
+    backgroundColor: tc.inputBg,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     borderRadius: 14,
     height: 56,
     paddingHorizontal: 16,
@@ -783,7 +787,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -793,28 +797,28 @@ const styles = StyleSheet.create({
   },
   countryBadgeText: {
     fontFamily: fonts.bold,
-    color: colors.white,
+    color: tc.white,
     fontSize: 12,
   },
   countryCode: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   countryName: {
     flex: 1,
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'right',
   },
   genderDropdown: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.inputBg,
+    backgroundColor: tc.inputBg,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     borderRadius: 14,
     height: 56,
     paddingHorizontal: 16,
@@ -823,23 +827,23 @@ const styles = StyleSheet.create({
   genderText: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: colors.overlay,
+    backgroundColor: tc.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 16,
     width: '80%',
     maxHeight: 300,
     paddingVertical: 8,
   },
   imageModalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 16,
     width: '85%',
     padding: 16,
@@ -850,15 +854,15 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inputBorder,
+    borderBottomColor: tc.inputBorder,
   },
   imageActionText: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   countryModalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 16,
     width: '90%',
     maxHeight: '80%',
@@ -867,18 +871,18 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     marginBottom: 12,
   },
   searchInput: {
     height: 44,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.inputBg,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.inputBg,
     paddingHorizontal: 12,
     marginBottom: 12,
-    color: colors.text,
+    color: tc.text,
   },
   loadingWrap: {
     paddingVertical: 24,
@@ -890,7 +894,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inputBorder,
+    borderBottomColor: tc.inputBorder,
   },
   countryOptionLeft: {
     flexDirection: 'row',
@@ -903,11 +907,11 @@ const styles = StyleSheet.create({
   countryOptionText: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   countryOptionCode: {
     fontSize: 12,
-    color: colors.textMuted,
+    color: tc.textMuted,
   },
   modalClose: {
     marginTop: 12,
@@ -916,7 +920,7 @@ const styles = StyleSheet.create({
   modalCloseText: {
     fontFamily: fonts.semiBold,
     fontSize: 14,
-    color: colors.primary,
+    color: tc.accent,
   },
   genderOption: {
     flexDirection: 'row',
@@ -925,12 +929,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderBottomWidth: 1,
-    borderBottomColor: colors.inputBorder,
+    borderBottomColor: tc.inputBorder,
   },
   genderOptionText: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   continueButtonContainer: {
     marginTop: 20,

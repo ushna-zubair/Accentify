@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import colors from '../theme/colors';
+import { useAppTheme, type ThemeColors } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
 interface OTPInputProps {
@@ -8,6 +8,8 @@ interface OTPInputProps {
 }
 
 const OTPInput: React.FC<OTPInputProps> = ({ value }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   return (
     <View style={styles.container} accessibilityRole="text" accessibilityLabel={`OTP code: ${value.join('')}`}>
       {value.map((digit, index) => (
@@ -19,7 +21,7 @@ const OTPInput: React.FC<OTPInputProps> = ({ value }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -30,18 +32,18 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
-    backgroundColor: colors.white,
+    borderColor: tc.inputBorder,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   boxFilled: {
-    borderColor: colors.primary,
+    borderColor: tc.accent,
   },
   boxText: {
     fontFamily: fonts.semiBold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
 });
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'LearningGoals'>;
@@ -37,6 +37,8 @@ const goals: Goal[] = [
 const MAX_GOALS = 3;
 
 const LearningGoalsScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile } = route.params;
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
 
@@ -118,7 +120,7 @@ const LearningGoalsScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <Text style={styles.nextButtonText}>Next</Text>
             <View style={styles.arrowCircle}>
-              <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+              <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
             </View>
           </TouchableOpacity>
         </View>
@@ -127,10 +129,10 @@ const LearningGoalsScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -146,19 +148,19 @@ const styles = StyleSheet.create({
   skipText: {
     fontFamily: fonts.semiBold,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   title: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.primary,
+    color: tc.accent,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'left',
     lineHeight: 18,
     marginBottom: 28,
@@ -174,14 +176,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 50,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     gap: 8,
   },
   goalChipSelected: {
-    backgroundColor: colors.primary500,
-    borderColor: colors.primary,
+    backgroundColor: tc.accentMuted,
+    borderColor: tc.accent,
   },
   goalIcon: {
     fontSize: 16,
@@ -189,11 +191,11 @@ const styles = StyleSheet.create({
   goalLabel: {
     fontFamily: fonts.medium,
     fontSize: 14,
-    color: colors.text,
+    color: tc.text,
   },
   goalLabelSelected: {
     fontFamily: fonts.semiBold,
-    color: colors.primary,
+    color: tc.accent,
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -205,13 +207,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 32,
     gap: 12,
     minWidth: 160,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -223,13 +225,13 @@ const styles = StyleSheet.create({
   nextButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   arrowCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

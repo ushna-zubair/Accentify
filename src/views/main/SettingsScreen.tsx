@@ -10,30 +10,42 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import colors from '../../theme/colors';
 import { fonts } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
+import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
+import { useAppTheme } from '../../hooks/useAppTheme';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '../../models';
+import type { ThemeColors, ThemeFontSizes } from '../../hooks/useAppTheme';
 
 interface SettingsItemProps {
   label: string;
   icon: React.ReactNode;
   onPress: () => void;
+  tc: ThemeColors;
+  fs: ThemeFontSizes;
 }
 
-const SettingsItem: React.FC<SettingsItemProps> = ({ label, icon, onPress }) => (
-  <TouchableOpacity style={styles.settingsItem} onPress={onPress} activeOpacity={0.7}>
-    <Text style={styles.settingsItemText}>{label}</Text>
+const SettingsItem: React.FC<SettingsItemProps> = ({ label, icon, onPress, tc, fs }) => (
+  <TouchableOpacity
+    style={[styles.settingsItem, { backgroundColor: tc.accent }]}
+    onPress={onPress}
+    activeOpacity={0.7}
+  >
+    <Text style={[styles.settingsItemText, { color: tc.textOnAccent, fontSize: fs.body }]}>
+      {label}
+    </Text>
     <View style={styles.settingsItemIcon}>{icon}</View>
   </TouchableOpacity>
 );
 
 const SettingsScreen: React.FC = () => {
   const { signOut } = useAuth();
+  const { handleScroll } = useTabBarScroll();
   const [loggingOut, setLoggingOut] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
+  const { colors: tc, fontSizes: fs } = useAppTheme();
 
   const handleLogout = () => {
     Alert.alert(
@@ -61,69 +73,84 @@ const SettingsScreen: React.FC = () => {
   };
 
   const handleSettingsPress = (section: string) => {
-    // Placeholder for future navigation to sub-settings screens
     Alert.alert(section, `${section} coming soon!`);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
-        <Text style={styles.title}>Settings</Text>
+        <Text style={[styles.title, { color: tc.text, fontSize: fs.title }]}>Settings</Text>
 
         <View style={styles.itemsWrapper}>
           <SettingsItem
             label="Profile Settings"
-            icon={<Ionicons name="person-circle-outline" size={28} color={colors.primary} />}
+            icon={<Ionicons name="person-circle-outline" size={28} color={tc.accentLight} />}
             onPress={() => navigation.navigate('ProfileSettings')}
+            tc={tc}
+            fs={fs}
           />
 
           <SettingsItem
             label="Accessibility"
-            icon={<MaterialCommunityIcons name="file-search-outline" size={28} color={colors.primary} />}
+            icon={<MaterialCommunityIcons name="file-search-outline" size={28} color={tc.accentLight} />}
             onPress={() => navigation.navigate('Accessibility')}
+            tc={tc}
+            fs={fs}
           />
 
           <SettingsItem
             label="Privacy & Security"
-            icon={<MaterialCommunityIcons name="shield-lock-outline" size={28} color={colors.primary} />}
+            icon={<MaterialCommunityIcons name="shield-lock-outline" size={28} color={tc.accentLight} />}
             onPress={() => handleSettingsPress('Privacy & Security')}
+            tc={tc}
+            fs={fs}
           />
 
           <SettingsItem
             label="App Preferences"
-            icon={<MaterialCommunityIcons name="pencil-outline" size={28} color={colors.primary} />}
+            icon={<MaterialCommunityIcons name="pencil-outline" size={28} color={tc.accentLight} />}
             onPress={() => navigation.navigate('AppPreferences')}
+            tc={tc}
+            fs={fs}
           />
 
           <SettingsItem
             label="Notifications"
-            icon={<Ionicons name="notifications-outline" size={28} color={colors.primary} />}
+            icon={<Ionicons name="notifications-outline" size={28} color={tc.accentLight} />}
             onPress={() => navigation.navigate('Notifications')}
+            tc={tc}
+            fs={fs}
           />
 
           <SettingsItem
             label="Payment Options"
-            icon={<Ionicons name="people-outline" size={28} color={colors.primary} />}
+            icon={<Ionicons name="people-outline" size={28} color={tc.accentLight} />}
             onPress={() => handleSettingsPress('Payment Options')}
+            tc={tc}
+            fs={fs}
           />
         </View>
 
         <TouchableOpacity
-          style={styles.logoutButton}
+          style={[styles.logoutButton, { borderColor: tc.error }]}
           onPress={handleLogout}
           activeOpacity={0.7}
           disabled={loggingOut}
         >
           {loggingOut ? (
-            <ActivityIndicator color={colors.error} />
+            <ActivityIndicator color={tc.error} />
           ) : (
             <>
-              <Text style={styles.logoutText}>Log out</Text>
-              <Feather name="log-out" size={22} color={colors.error} />
+              <Text style={[styles.logoutText, { color: tc.error, fontSize: fs.body }]}>
+                Log out
+              </Text>
+              <Feather name="log-out" size={22} color={tc.error} />
             </>
           )}
         </TouchableOpacity>
@@ -135,7 +162,6 @@ const SettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   container: {
     flex: 1,
@@ -147,8 +173,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.bold,
-    fontSize: 28,
-    color: colors.text,
     marginBottom: 24,
   },
   itemsWrapper: {
@@ -158,21 +182,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.primary,
     borderRadius: 30,
     paddingVertical: 16,
     paddingHorizontal: 24,
   },
   settingsItemText: {
     fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: colors.white,
   },
   settingsItemIcon: {
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: colors.overlayLight,
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -181,7 +202,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: colors.error,
     borderRadius: 30,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -190,8 +210,6 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: colors.error,
   },
 });
 

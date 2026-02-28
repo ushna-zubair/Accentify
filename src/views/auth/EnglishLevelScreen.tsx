@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'EnglishLevel'>;
@@ -31,6 +31,8 @@ const levels: Level[] = [
 ];
 
 const EnglishLevelScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, learningGoals, nativeLanguage } = route.params;
   const [selectedLevel, setSelectedLevel] = useState<string | null>(null);
 
@@ -88,7 +90,7 @@ const EnglishLevelScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <Text style={styles.continueButtonText}>Continue</Text>
             <View style={styles.arrowCircle}>
-              <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+              <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
             </View>
           </TouchableOpacity>
         </View>
@@ -97,10 +99,10 @@ const EnglishLevelScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -112,14 +114,14 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     marginBottom: 10,
   },
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 18,
     marginBottom: 28,
@@ -129,26 +131,26 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   levelCard: {
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 14,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
     paddingVertical: 16,
     paddingHorizontal: 20,
     alignItems: 'center',
   },
   levelCardSelected: {
-    backgroundColor: colors.primary500,
-    borderColor: colors.primary,
+    backgroundColor: tc.accentMuted,
+    borderColor: tc.accent,
   },
   levelLabel: {
     fontFamily: fonts.medium,
     fontSize: 15,
-    color: colors.text,
+    color: tc.text,
   },
   levelLabelSelected: {
     fontFamily: fonts.semiBold,
-    color: colors.primary,
+    color: tc.accent,
   },
   bottomContainer: {
     marginTop: 'auto',
@@ -160,13 +162,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 32,
     gap: 12,
     minWidth: 180,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -178,13 +180,13 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   arrowCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

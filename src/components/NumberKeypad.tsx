@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import colors from '../theme/colors';
+import { useAppTheme, type ThemeColors } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
 /** Standard 1-9, empty/0/backspace layout */
@@ -31,6 +31,8 @@ const NumberKeypad: React.FC<NumberKeypadProps> = ({
   size = 'normal',
   style,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const isCompact = size === 'compact';
   const buttonHeight = isCompact ? 44 : 56;
   const iconSize = isCompact ? 16 : 20;
@@ -53,7 +55,7 @@ const NumberKeypad: React.FC<NumberKeypadProps> = ({
             }
           >
             {key === 'backspace' ? (
-              <FontAwesome5 name="backspace" size={iconSize} color={colors.text} />
+              <FontAwesome5 name="backspace" size={iconSize} color={tc.text} />
             ) : (
               <Text style={[styles.text, { fontSize: textSize }]}>{key}</Text>
             )}
@@ -64,7 +66,7 @@ const NumberKeypad: React.FC<NumberKeypadProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     width: '100%',
     flexDirection: 'row',
@@ -79,7 +81,7 @@ const styles = StyleSheet.create({
   },
   text: {
     fontFamily: fonts.medium,
-    color: colors.text,
+    color: tc.text,
   },
 });
 

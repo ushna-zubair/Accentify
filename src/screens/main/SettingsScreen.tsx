@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -22,14 +22,20 @@ interface SettingsItemProps {
   onPress: () => void;
 }
 
-const SettingsItem: React.FC<SettingsItemProps> = ({ label, icon, onPress }) => (
-  <TouchableOpacity style={styles.settingsItem} onPress={onPress} activeOpacity={0.7}>
-    <Text style={styles.settingsItemText}>{label}</Text>
-    <View style={styles.settingsItemIcon}>{icon}</View>
-  </TouchableOpacity>
-);
+const SettingsItem: React.FC<SettingsItemProps> = ({ label, icon, onPress }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
+  return (
+    <TouchableOpacity style={styles.settingsItem} onPress={onPress} activeOpacity={0.7}>
+      <Text style={styles.settingsItemText}>{label}</Text>
+      <View style={styles.settingsItemIcon}>{icon}</View>
+    </TouchableOpacity>
+  );
+};
 
 const SettingsScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { signOut } = useAuth();
   const [loggingOut, setLoggingOut] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<SettingsStackParamList>>();
@@ -76,37 +82,37 @@ const SettingsScreen: React.FC = () => {
         <View style={styles.itemsWrapper}>
           <SettingsItem
             label="Profile Settings"
-            icon={<Ionicons name="person-circle-outline" size={28} color={colors.primary} />}
+            icon={<Ionicons name="person-circle-outline" size={28} color={tc.accent} />}
             onPress={() => navigation.navigate('ProfileSettings')}
           />
 
           <SettingsItem
             label="Accessibility"
-            icon={<MaterialCommunityIcons name="file-search-outline" size={28} color={colors.primary} />}
+            icon={<MaterialCommunityIcons name="file-search-outline" size={28} color={tc.accent} />}
             onPress={() => navigation.navigate('Accessibility')}
           />
 
           <SettingsItem
             label="Privacy & Security"
-            icon={<MaterialCommunityIcons name="shield-lock-outline" size={28} color={colors.primary} />}
+            icon={<MaterialCommunityIcons name="shield-lock-outline" size={28} color={tc.accent} />}
             onPress={() => handleSettingsPress('Privacy & Security')}
           />
 
           <SettingsItem
             label="App Preferences"
-            icon={<MaterialCommunityIcons name="pencil-outline" size={28} color={colors.primary} />}
+            icon={<MaterialCommunityIcons name="pencil-outline" size={28} color={tc.accent} />}
             onPress={() => navigation.navigate('AppPreferences')}
           />
 
           <SettingsItem
             label="Notifications"
-            icon={<Ionicons name="notifications-outline" size={28} color={colors.primary} />}
+            icon={<Ionicons name="notifications-outline" size={28} color={tc.accent} />}
             onPress={() => navigation.navigate('Notifications')}
           />
 
           <SettingsItem
             label="Payment Options"
-            icon={<Ionicons name="people-outline" size={28} color={colors.primary} />}
+            icon={<Ionicons name="people-outline" size={28} color={tc.accent} />}
             onPress={() => handleSettingsPress('Payment Options')}
           />
         </View>
@@ -118,11 +124,11 @@ const SettingsScreen: React.FC = () => {
           disabled={loggingOut}
         >
           {loggingOut ? (
-            <ActivityIndicator color={colors.error} />
+            <ActivityIndicator color={tc.error} />
           ) : (
             <>
               <Text style={styles.logoutText}>Log out</Text>
-              <Feather name="log-out" size={22} color={colors.error} />
+              <Feather name="log-out" size={22} color={tc.error} />
             </>
           )}
         </TouchableOpacity>
@@ -131,10 +137,10 @@ const SettingsScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   container: {
     flex: 1,
@@ -147,7 +153,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: colors.text,
+    color: tc.text,
     marginBottom: 24,
   },
   itemsWrapper: {
@@ -157,7 +163,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 30,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -165,7 +171,7 @@ const styles = StyleSheet.create({
   settingsItemText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.white,
+    color: tc.white,
   },
   settingsItemIcon: {
     width: 40,
@@ -180,7 +186,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: colors.error,
+    borderColor: tc.error,
     borderRadius: 30,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -190,7 +196,7 @@ const styles = StyleSheet.create({
   logoutText: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.error,
+    color: tc.error,
   },
 });
 

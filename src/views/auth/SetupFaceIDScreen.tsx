@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetupFaceID'>;
 
 const SetupFaceIDScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const { profile, appPin, learningGoals, nativeLanguage, englishLevel } = route.params;
 
   const handleEnable = () => {
@@ -26,7 +28,7 @@ const SetupFaceIDScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-            <FontAwesome5 name="arrow-left" size={18} color={colors.text} />
+            <FontAwesome5 name="arrow-left" size={18} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Setup FaceID</Text>
           <View style={{ width: 32 }} />
@@ -83,7 +85,7 @@ const SetupFaceIDScreen: React.FC<Props> = ({ navigation, route }) => {
           >
             <Text style={styles.continueButtonText}>Continue</Text>
             <View style={styles.arrowCircle}>
-              <FontAwesome5 name="arrow-right" size={14} color={colors.primary} />
+              <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
             </View>
           </TouchableOpacity>
         </View>
@@ -92,10 +94,10 @@ const SetupFaceIDScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: tc.background,
   },
   content: {
     flex: 1,
@@ -118,13 +120,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.text,
+    color: tc.text,
   },
   /* ── Description ── */
   description: {
     fontFamily: fonts.regular,
     fontSize: 14,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 22,
     marginTop: 24,
@@ -147,7 +149,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 36,
     height: 36,
-    borderColor: colors.text,
+    borderColor: tc.text,
   },
   cornerTL: {
     top: 0,
@@ -190,13 +192,13 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.text,
+    backgroundColor: tc.text,
   },
   nose: {
     width: 6,
     height: 16,
     borderRadius: 3,
-    backgroundColor: colors.text,
+    backgroundColor: tc.text,
     marginBottom: 10,
   },
   mouth: {
@@ -206,13 +208,13 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 15,
     borderWidth: 2.5,
     borderTopWidth: 0,
-    borderColor: colors.text,
+    borderColor: tc.text,
   },
   /* ── Privacy Note ── */
   privacyNote: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -230,28 +232,28 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     borderRadius: 999,
     paddingVertical: 16,
     borderWidth: 1.5,
-    borderColor: colors.inputBorder,
+    borderColor: tc.inputBorder,
   },
   skipButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   continueButton: {
     flex: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 999,
     paddingVertical: 16,
     paddingHorizontal: 24,
     gap: 10,
-    shadowColor: colors.primary,
+    shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -260,13 +262,13 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontFamily: fonts.semiBold,
     fontSize: 16,
-    color: colors.white,
+    color: tc.white,
   },
   arrowCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -13,6 +13,7 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Platform, Alert } from 'react-native';
 import { auth, db } from '../config/firebase';
 import { UserRole, UserProfile, OnboardingPayload } from '../models';
+import { recordDeviceSession } from '../services/deviceService';
 
 // Re-export for backward compatibility
 export type { UserRole, UserProfile, OnboardingPayload };
@@ -237,6 +238,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCurrentUser(user);
       if (user) {
         await fetchUserRole(user.uid);
+        // Record this device in the user's device sessions
+        recordDeviceSession(user.uid).catch(() => {});
       } else {
         setUserRole(null);
         setUserProfile(null);

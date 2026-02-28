@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback , useMemo} from 'react';
 import {
   View,
   Text,
@@ -39,7 +39,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import type { TutorStackParamList } from '../../models';
 
@@ -170,7 +170,7 @@ const illustrationStyles = StyleSheet.create({
   balloonString: {
     width: 1,
     height: 16,
-    backgroundColor: colors.textLight,
+    backgroundColor: '#808080',
   },
   mascotBody: {
     alignItems: 'center',
@@ -216,14 +216,14 @@ const illustrationStyles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
   mascotMouth: {
     width: 18,
     height: 9,
     borderBottomLeftRadius: 9,
     borderBottomRightRadius: 9,
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
   },
   desk: {
     width: '70%',
@@ -328,6 +328,8 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
   totalWeekly,
   onDismiss,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -404,13 +406,13 @@ const modalStyles = StyleSheet.create({
   },
   card: {
     width: '100%',
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     paddingTop: 24,
     paddingBottom: 20,
     paddingHorizontal: 24,
     alignItems: 'center',
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 20,
@@ -433,14 +435,14 @@ const modalStyles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.error,
+    color: '#E94F54',
     marginBottom: 8,
     textAlign: 'center',
   },
   message: {
     fontFamily: fonts.medium,
     fontSize: 16,
-    color: colors.text,
+    color: '#333333',
     textAlign: 'center',
     marginTop: 12,
     marginBottom: 20,
@@ -449,16 +451,16 @@ const modalStyles = StyleSheet.create({
   },
   okayButton: {
     width: '100%',
-    backgroundColor: colors.white,
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
+    borderTopColor: '#E5E5E5',
     paddingVertical: 16,
     alignItems: 'center',
   },
   okayText: {
     fontFamily: fonts.bold,
     fontSize: 22,
-    color: colors.text,
+    color: '#333333',
   },
 });
 
@@ -467,6 +469,8 @@ const modalStyles = StyleSheet.create({
 // ═══════════════════════════════════════════════
 
 const CourseCompletionScreen: React.FC = () => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation<CompletionNav>();
   const route = useRoute<CompletionRoute>();
   const { lessonId, courseTitle, completedCount, totalWeekly } = route.params;
@@ -629,10 +633,10 @@ const CourseCompletionScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primaryMuted,
+    backgroundColor: tc.accentMuted,
   },
   content: {
     flex: 1,
@@ -647,7 +651,7 @@ const styles = StyleSheet.create({
   dashboardLabel: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
     alignSelf: 'flex-start',
     marginTop: 16,
     marginBottom: 8,
@@ -655,7 +659,7 @@ const styles = StyleSheet.create({
   courseTitle: {
     fontFamily: fonts.bold,
     fontSize: 24,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -664,7 +668,7 @@ const styles = StyleSheet.create({
   congratsMessage: {
     fontFamily: fonts.medium,
     fontSize: 17,
-    color: colors.text,
+    color: tc.text,
     textAlign: 'center',
     lineHeight: 28,
     marginTop: 16,
@@ -675,11 +679,11 @@ const styles = StyleSheet.create({
   // ── Buttons ──
   proceedBtn: {
     width: '100%',
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     borderRadius: 28,
     paddingVertical: 16,
     alignItems: 'center',
-    shadowColor: colors.shadow,
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -689,7 +693,7 @@ const styles = StyleSheet.create({
   proceedBtnText: {
     fontFamily: fonts.bold,
     fontSize: 18,
-    color: colors.white,
+    color: tc.white,
   },
   attemptAgainBtn: {
     paddingVertical: 8,
@@ -697,7 +701,7 @@ const styles = StyleSheet.create({
   attemptAgainText: {
     fontFamily: fonts.semiBold,
     fontSize: 15,
-    color: colors.textLight,
+    color: tc.textLight,
     textDecorationLine: 'underline',
     fontStyle: 'italic',
   },

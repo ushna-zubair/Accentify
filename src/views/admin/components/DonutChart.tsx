@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle as SvgCircle, G } from 'react-native-svg';
-import colors from '../../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../../hooks/useAppTheme';
 import { fonts } from '../../../theme/typography';
 
 interface DonutSegment {
@@ -27,6 +27,8 @@ const DonutChart: React.FC<DonutChartProps> = ({
   tooltipSub,
   tooltipValue,
 }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const total = segments.reduce((sum, s) => sum + s.value, 0);
@@ -43,7 +45,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={colors.divider}
+            stroke={tc.divider}
             strokeWidth={strokeWidth}
           />
           {segments.map((seg) => {
@@ -97,31 +99,31 @@ const DonutChart: React.FC<DonutChartProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     alignItems: 'center',
   },
   tooltip: {
     position: 'absolute',
-    backgroundColor: colors.text,
+    backgroundColor: tc.text,
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 14,
     minWidth: 130,
   },
   tooltipTitle: {
-    color: colors.white,
+    color: tc.white,
     fontFamily: fonts.bold,
     fontSize: 13,
   },
   tooltipSub: {
     fontFamily: fonts.regular,
-    color: colors.disabled,
+    color: tc.disabled,
     fontSize: 11,
     marginTop: 2,
   },
   tooltipValue: {
-    color: colors.white,
+    color: tc.white,
     fontFamily: fonts.bold,
     fontSize: 14,
     marginTop: 4,
@@ -146,12 +148,12 @@ const styles = StyleSheet.create({
   legendLabel: {
     fontFamily: fonts.regular,
     fontSize: 11,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   legendPct: {
     fontFamily: fonts.semiBold,
     fontSize: 12,
-    color: colors.text,
+    color: tc.text,
   },
 });
 

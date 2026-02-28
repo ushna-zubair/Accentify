@@ -21,9 +21,9 @@ export type AuthStackParamList = {
   Login: undefined;
   SignUp: undefined;
   CreateProfile: undefined;
-  ForgotPassword: undefined;
-  OTPVerification: undefined;
-  CreateNewPassword: undefined;
+  ForgotPassword: { email: string };
+  OTPVerification: { uid: string; method: 'email' | 'sms'; maskedContact: string };
+  CreateNewPassword: { uid: string; sessionToken: string };
   LearningGoals: { profile: ProfileData };
   NativeLanguage: { profile: ProfileData; learningGoals: string[] };
   EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
@@ -41,6 +41,13 @@ export type SettingsStackParamList = {
   Notifications: undefined;
   AppPreferences: undefined;
   ProfileSettings: undefined;
+  LoginDevices: undefined;
+  TwoFactorSettings: undefined;
+};
+
+export type HomeStackParamList = {
+  HomeMain: undefined;
+  HomePronunciation: { lessonId?: string };
 };
 
 export type LearnerTabParamList = {

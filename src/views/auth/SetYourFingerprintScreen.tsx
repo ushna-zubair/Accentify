@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,17 +9,19 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
-import colors from '../../theme/colors';
+import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'SetYourFingerprint'>;
 
 const SetYourFingerprintScreen: React.FC<Props> = ({ navigation }) => {
+  const { colors: tc } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc), [tc]);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backRow}>
-          <FontAwesome5 name="chevron-left" size={16} color={colors.text} />
+          <FontAwesome5 name="chevron-left" size={16} color={tc.text} />
           <Text style={styles.headerTitle}>Set Your Fingerprint</Text>
         </TouchableOpacity>
       </View>
@@ -27,7 +29,7 @@ const SetYourFingerprintScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.card}>
         <View style={styles.avatarWrap}>
           <View style={styles.avatarCircle}>
-            <FontAwesome5 name="user" size={46} color={colors.primary} />
+            <FontAwesome5 name="user" size={46} color={tc.accent} />
           </View>
         </View>
         <Text style={styles.cardTitle}>Congratulations</Text>
@@ -51,7 +53,7 @@ const SetYourFingerprintScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity style={styles.continueButton} onPress={() => navigation.navigate('Login')}>
           <Text style={styles.continueText}>Continue</Text>
           <View style={styles.continueIcon}>
-            <FontAwesome5 name="arrow-right" size={12} color={colors.primary} />
+            <FontAwesome5 name="arrow-right" size={12} color={tc.accent} />
           </View>
         </TouchableOpacity>
       </View>
@@ -59,10 +61,10 @@ const SetYourFingerprintScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.lightNeutral600,
+    backgroundColor: '#595959',
   },
   header: {
     paddingHorizontal: 20,
@@ -77,13 +79,13 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontFamily: fonts.bold,
     fontSize: 16,
-    color: colors.text,
+    color: tc.text,
   },
   card: {
     marginTop: 40,
     marginHorizontal: 24,
     borderRadius: 24,
-    backgroundColor: colors.lightNeutral900,
+    backgroundColor: '#F5F5F5',
     paddingVertical: 28,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -92,7 +94,7 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: colors.accentOrange500,
+    backgroundColor: '#FFE3CD',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -101,21 +103,21 @@ const styles = StyleSheet.create({
     width: 86,
     height: 86,
     borderRadius: 43,
-    backgroundColor: colors.warning600,
+    backgroundColor: tc.warningBg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
     fontFamily: fonts.bold,
     fontSize: 20,
-    color: colors.text,
+    color: tc.text,
     marginTop: 8,
     marginBottom: 6,
   },
   cardSubtitle: {
     fontFamily: fonts.regular,
     fontSize: 13,
-    color: colors.textLight,
+    color: tc.textLight,
   },
   loaderDots: {
     flexDirection: 'row',
@@ -126,7 +128,7 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: colors.textMuted,
+    backgroundColor: tc.textMuted,
   },
   footer: {
     flexDirection: 'row',
@@ -141,19 +143,19 @@ const styles = StyleSheet.create({
     marginRight: 12,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.lightNeutral500,
+    backgroundColor: '#404040',
     alignItems: 'center',
     justifyContent: 'center',
   },
   skipText: {
     fontFamily: fonts.bold,
-    color: colors.darkNeutral700,
+    color: '#BFBFBF',
   },
   continueButton: {
     flex: 1.4,
     height: 48,
     borderRadius: 24,
-    backgroundColor: colors.primary,
+    backgroundColor: tc.accent,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
@@ -161,13 +163,13 @@ const styles = StyleSheet.create({
   },
   continueText: {
     fontFamily: fonts.bold,
-    color: colors.white,
+    color: tc.white,
   },
   continueIcon: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: colors.white,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
