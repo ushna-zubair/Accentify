@@ -316,6 +316,47 @@ export interface PronunciationSentence {
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
+// ─── Conversation Exercise Models ───
+
+export interface ConversationTurn {
+  id: string;
+  /** Who speaks this turn: the AI partner or the learner */
+  speaker: 'partner' | 'learner';
+  /** The text for this dialogue turn */
+  text: string;
+  /** Duration of the audio in milliseconds (for playback bar) */
+  audioDuration: number;
+  /** Whether this turn has been completed */
+  completed: boolean;
+  /** URI to recorded audio (learner) or generated audio (partner) */
+  audioUri?: string;
+}
+
+export interface ConversationScenario {
+  id: string;
+  lessonId: string;
+  /** Name of the AI conversation partner */
+  partnerName: string;
+  /** Learner's display name in the chat */
+  learnerName: string;
+  /** All turns in the conversation */
+  turns: ConversationTurn[];
+  /** Background noise can be toggled */
+  backgroundNoiseEnabled: boolean;
+  /** Crowd chatter can be toggled */
+  crowdChatterEnabled: boolean;
+  /** Total time limit in seconds */
+  timeLimitSeconds: number;
+}
+
+export interface ConversationMetricsResult {
+  fluency: number;
+  vocabulary: number;
+  grammarUsage: number;
+  turnTaking: number;
+  overall: number;
+}
+
 // ─── Progress Models ───
 export type LessonStatus = 'completed' | 'in_progress' | 'upcoming';
 
@@ -441,6 +482,7 @@ export type TutorStackParamList = {
   LessonDetail: { lessonId: string };
   VocabExercise: { lessonId: string };
   PronunciationExercise: { lessonId: string };
+  ConversationExercise: { lessonId: string };
   CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
 };
 

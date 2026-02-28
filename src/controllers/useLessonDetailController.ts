@@ -23,9 +23,9 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
   },
   lesson_2: {
     id: 'lesson_2',
-    title: 'Interview for a career',
+    title: 'Conversation',
     fullDescription:
-      "Prepare for professional interviews with the AI tutor. You're in an interview with David for a cybersecurity position. Practice introducing yourself, discussing your background, and answering common interview questions.",
+      "You're in an interview with David for a cybersecurity position. Practice introducing yourself, discussing your background, and answering common interview questions.",
     category: 'conversation',
     difficulty: 'Challenging',
     focusTips: [
@@ -37,7 +37,7 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
   },
   lesson_3: {
     id: 'lesson_3',
-    title: 'Hanging out friends',
+    title: 'Conversation',
     fullDescription:
       'Improve your casual English by hanging out with friends. Engage in everyday conversations with Alex and Joe. Learn slang, idioms, and how to express opinions naturally.',
     category: 'conversation',

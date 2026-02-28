@@ -562,9 +562,12 @@ const CourseCompletionScreen: React.FC = () => {
   }, [navigation]);
 
   const handleAttemptAgain = useCallback(() => {
-    // Determine if this is a pronunciation or vocab exercise based on courseTitle
-    if (courseTitle.toLowerCase().includes('pronunciation')) {
+    // Determine exercise type based on courseTitle
+    const lower = courseTitle.toLowerCase();
+    if (lower.includes('pronunciation')) {
       navigation.replace('PronunciationExercise', { lessonId });
+    } else if (lower.includes('conversation')) {
+      navigation.replace('ConversationExercise', { lessonId });
     } else {
       navigation.replace('VocabExercise', { lessonId });
     }

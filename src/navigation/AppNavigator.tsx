@@ -1,8 +1,9 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import colors from '../theme/colors';
 import { fonts } from '../theme/typography';
@@ -52,6 +53,7 @@ import { HomeScreen, TutorScreen, ProgressScreen, SettingsScreen } from '../view
 import LessonDetailScreen from '../views/main/LessonDetailScreen';
 import VocabExerciseScreen from '../views/main/VocabExerciseScreen';
 import PronunciationExerciseScreen from '../views/main/PronunciationExerciseScreen';
+import ConversationExerciseScreen from '../views/main/ConversationExerciseScreen';
 import CourseCompletionScreen from '../views/main/CourseCompletionScreen';
 
 // Views – Admin
@@ -86,6 +88,7 @@ const TutorStackNavigator = () => {
       <TutorStack.Screen name="LessonDetail" component={LessonDetailScreen} />
       <TutorStack.Screen name="VocabExercise" component={VocabExerciseScreen} />
       <TutorStack.Screen name="PronunciationExercise" component={PronunciationExerciseScreen} />
+      <TutorStack.Screen name="ConversationExercise" component={ConversationExerciseScreen} />
       <TutorStack.Screen name="CourseCompletion" component={CourseCompletionScreen} />
     </TutorStack.Navigator>
   );
@@ -131,56 +134,133 @@ const AuthNavigator = () => {
   );
 };
 
+// ═══════════════════════════════════════════════
+//  CUSTOM TAB BAR
+// ═══════════════════════════════════════════════
+
+const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
+  Home:     { active: 'home',      inactive: 'home-outline' },
+  Tutor:    { active: 'bar-chart', inactive: 'bar-chart-outline' },
+  Progress: { active: 'star',      inactive: 'star-outline' },
+  Settings: { active: 'person',    inactive: 'person-outline' },
+};
+
+const TAB_LABELS: Record<string, string> = {
+  Home: 'Home',
+  Tutor: 'Tutor',
+  Progress: 'Progress',
+  Settings: 'Profile',
+};
+
+const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
+  const insets = useSafeAreaInsets();
+  const bottomPad = Math.max(insets.bottom, 8);
+
+  return (
+    <View style={[tabStyles.wrapper, { paddingBottom: bottomPad }]}>
+      <View style={tabStyles.bar}>
+        {state.routes.map((route, index) => {
+          const focused = state.index === index;
+          const icons = TAB_ICONS[route.name] ?? { active: 'help-circle', inactive: 'help-circle-outline' };
+          const iconName = focused ? icons.active : icons.inactive;
+          const label = TAB_LABELS[route.name] ?? route.name;
+
+          const onPress = () => {
+            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={focused ? { selected: true } : {}}
+              onPress={onPress}
+              activeOpacity={0.7}
+              style={tabStyles.tab}
+            >
+              <View style={[tabStyles.iconWrap, focused && tabStyles.iconWrapActive]}>
+                <Ionicons name={iconName} size={22} color={focused ? colors.white : colors.tabBarInactive} />
+              </View>
+              <Text style={[tabStyles.label, focused && tabStyles.labelActive]}>
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
+const tabStyles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    backgroundColor: 'transparent',
+  },
+  bar: {
+    flexDirection: 'row',
+    backgroundColor: colors.tabBarBg,
+    borderRadius: 28,
+    paddingVertical: 8,
+    paddingHorizontal: 6,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 12,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  iconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    backgroundColor: colors.tabBarActive,
+  },
+  label: {
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+    color: colors.tabBarInactive,
+    marginTop: 2,
+  },
+  labelActive: {
+    color: colors.tabBarLabel,
+  },
+});
+
+// ═══════════════════════════════════════════════
+//  LEARNER NAVIGATOR
+// ═══════════════════════════════════════════════
+
 const LearnerNavigator = () => {
   return (
     <LearnerTab.Navigator
-      screenOptions={({ route }) => ({
+      tabBar={(props) => <CustomTabBar {...props} />}
+      screenOptions={{
         headerShown: false,
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'home';
-          if (route.name === 'Home') {
-            iconName = focused ? 'home' : 'home-outline';
-          } else if (route.name === 'Tutor') {
-            iconName = focused ? 'bar-chart' : 'bar-chart-outline';
-          } else if (route.name === 'Progress') {
-            iconName = focused ? 'star' : 'star-outline';
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'person' : 'person-outline';
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: colors.white,
-        tabBarInactiveTintColor: colors.tabBarInactive,
-        tabBarActiveBackgroundColor: colors.tabBarActive,
-        tabBarStyle: {
-          backgroundColor: colors.tabBarBg,
-          borderTopWidth: 0,
-          height: Platform.OS === 'ios' ? 85 : 70,
-          paddingBottom: Platform.OS === 'ios' ? 24 : 10,
-          paddingTop: 8,
-          paddingHorizontal: 10,
-          elevation: 0,
-          shadowOpacity: 0,
-        },
-        tabBarItemStyle: {
-          borderRadius: 20,
-          marginHorizontal: 4,
-          paddingVertical: 4,
-        },
-        tabBarLabelStyle: {
-          fontFamily: fonts.semiBold,
-          fontSize: 11,
-        },
-      })}
+      }}
     >
       <LearnerTab.Screen name="Home" component={HomeScreen} />
       <LearnerTab.Screen name="Tutor" component={TutorStackNavigator} />
       <LearnerTab.Screen name="Progress" component={ProgressScreen} />
-      <LearnerTab.Screen
-        name="Settings"
-        component={SettingsStackNavigator}
-        options={{ tabBarLabel: 'Profile' }}
-      />
+      <LearnerTab.Screen name="Settings" component={SettingsStackNavigator} />
     </LearnerTab.Navigator>
   );
 };

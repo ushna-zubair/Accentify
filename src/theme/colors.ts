@@ -151,9 +151,10 @@ const colors = {
   avatarBg: '#9FB2FD',
 
   // ─── Tab Bar ───
-  tabBarBg: '#FFFFFF',
-  tabBarActive: '#3F66FB',
-  tabBarInactive: '#808080',
+  tabBarBg: '#5B4FC7',
+  tabBarActive: '#7B6FE0',
+  tabBarInactive: 'rgba(255,255,255,0.50)',
+  tabBarLabel: '#FFFFFF',
 
   // ─── Admin Dashboard ───
   adminBg: '#F5F5F5',

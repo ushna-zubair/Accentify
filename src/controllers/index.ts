@@ -11,3 +11,4 @@ export { useLessonDetailController } from './useLessonDetailController';
 export { useVocabExerciseController } from './useVocabExerciseController';
 export { usePronunciationExerciseController } from './usePronunciationExerciseController';
 export { useWavyChatController } from './useWavyChatController';
+export { useConversationExerciseController } from './useConversationExerciseController';

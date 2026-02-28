@@ -183,6 +183,8 @@ const LessonDetailScreen: React.FC = () => {
               navigation.navigate('VocabExercise', { lessonId });
             } else if (detail.category === 'pronunciation') {
               navigation.navigate('PronunciationExercise', { lessonId });
+            } else if (detail.category === 'conversation') {
+              navigation.navigate('ConversationExercise', { lessonId });
             }
           }}
           disabled={starting}

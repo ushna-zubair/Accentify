@@ -59,8 +59,15 @@ const LessonThumbnail: React.FC<{ lesson: TutorLesson }> = ({ lesson }) => {
 };
 
 // ─── Lesson Card ───
-const LessonCard: React.FC<{ lesson: TutorLesson; onPress: () => void }> = ({ lesson, onPress }) => (
-  <TouchableOpacity style={styles.lessonCard} activeOpacity={0.7} onPress={onPress}>
+const LessonCard: React.FC<{ lesson: TutorLesson; onPress: () => void; dashed?: boolean }> = ({ lesson, onPress, dashed }) => (
+  <TouchableOpacity
+    style={[
+      styles.lessonCard,
+      dashed && styles.lessonCardDashed,
+    ]}
+    activeOpacity={0.7}
+    onPress={onPress}
+  >
     <LessonThumbnail lesson={lesson} />
     <View style={styles.lessonInfo}>
       <View style={styles.lessonTitleRow}>
@@ -150,6 +157,7 @@ const TutorScreen: React.FC = () => {
               <LessonCard
                 key={lesson.id}
                 lesson={lesson}
+                dashed
                 onPress={() => navigation.navigate('LessonDetail', { lessonId: lesson.id })}
               />
             ))}
@@ -308,6 +316,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
+  },
+  lessonCardDashed: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+    backgroundColor: colors.surface,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   thumbnailImg: {
     width: 80,

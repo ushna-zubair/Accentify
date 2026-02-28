@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingBottom: 32,
+    paddingBottom: 110,
   },
   loadingContainer: {
     flex: 1,
