@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Alert } from 'react-native';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useProfileData } from '../hooks/useProfileData';
 import type { LearningGoal, ProfileState } from '../models';
 
 // ------- Constants -------
@@ -26,15 +27,21 @@ export const TIME_ZONES = [
 
 export const useProfileSettingsController = () => {
   const { currentUser } = useAuth();
+  const { userDoc, isLoading, error: fetchError } = useProfileData();
 
-  const [profile, setProfile] = useState<ProfileState>({
-    username: '',
-    email: '',
-    country: 'Australia',
-    timeZone: 'GMT+10',
-    learningGoals: [],
-    profilePictureUrl: '',
-  });
+  // Derive the UI-facing ProfileState from the canonical UserDocument
+  const profile: ProfileState = {
+    username: userDoc?.profile?.fullName || userDoc?.profile?.nickName || '',
+    email: userDoc?.email || currentUser?.email || '',
+    country: userDoc?.profile?.country || 'Australia',
+    timeZone: userDoc?.profile?.timeZone || 'GMT+10',
+    learningGoals: (userDoc?.studyPlan?.learningGoals || []) as LearningGoal[],
+    profilePictureUrl: userDoc?.profile?.profilePictureUrl || '',
+  };
+
+  // Local overrides so the UI stays snappy after a mutation
+  const [localOverrides, setLocalOverrides] = useState<Partial<ProfileState>>({});
+  const mergedProfile: ProfileState = { ...profile, ...localOverrides };
 
   const [editingField, setEditingField] = useState<'username' | 'password' | null>(null);
   const [fieldValue, setFieldValue] = useState('');
@@ -44,36 +51,13 @@ export const useProfileSettingsController = () => {
     type: 'country',
   });
 
-  // Load profile from Firestore
-  useEffect(() => {
-    if (!currentUser) return;
-    (async () => {
-      try {
-        const snap = await getDoc(doc(db, 'users', currentUser.uid));
-        if (snap.exists()) {
-          const data = snap.data();
-          setProfile({
-            username: data.profile?.fullName || data.profile?.nickName || '',
-            email: currentUser.email || '',
-            country: data.profile?.country || 'Australia',
-            timeZone: data.profile?.timeZone || 'GMT+10',
-            learningGoals: (data.studyPlan?.learningGoals || []) as LearningGoal[],
-            profilePictureUrl: data.profile?.profilePictureUrl || '',
-          });
-        }
-      } catch (e) {
-        console.warn('Failed to load profile', e);
-      }
-    })();
-  }, [currentUser]);
-
   const handleSaveUsername = async () => {
     if (!currentUser || !fieldValue.trim()) return;
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'profile.fullName': fieldValue.trim(),
       });
-      setProfile((prev) => ({ ...prev, username: fieldValue.trim() }));
+      setLocalOverrides((prev) => ({ ...prev, username: fieldValue.trim() }));
       setEditingField(null);
       setFieldValue('');
     } catch (e) {
@@ -106,7 +90,7 @@ export const useProfileSettingsController = () => {
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'profile.country': country,
       });
-      setProfile((prev) => ({ ...prev, country }));
+      setLocalOverrides((prev) => ({ ...prev, country }));
     } catch {
       Alert.alert('Error', 'Failed to update country.');
     }
@@ -118,7 +102,7 @@ export const useProfileSettingsController = () => {
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'profile.timeZone': tz,
       });
-      setProfile((prev) => ({ ...prev, timeZone: tz }));
+      setLocalOverrides((prev) => ({ ...prev, timeZone: tz }));
     } catch {
       Alert.alert('Error', 'Failed to update time zone.');
     }
@@ -126,14 +110,15 @@ export const useProfileSettingsController = () => {
 
   const toggleLearningGoal = async (goal: LearningGoal) => {
     if (!currentUser) return;
-    const updated = profile.learningGoals.includes(goal)
-      ? profile.learningGoals.filter((g) => g !== goal)
-      : [...profile.learningGoals, goal];
+    const current = mergedProfile.learningGoals;
+    const updated = current.includes(goal)
+      ? current.filter((g) => g !== goal)
+      : [...current, goal];
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'studyPlan.learningGoals': updated,
       });
-      setProfile((prev) => ({ ...prev, learningGoals: updated }));
+      setLocalOverrides((prev) => ({ ...prev, learningGoals: updated }));
     } catch {
       Alert.alert('Error', 'Failed to update learning goals.');
     }
@@ -145,7 +130,7 @@ export const useProfileSettingsController = () => {
 
   const startEditUsername = () => {
     setEditingField('username');
-    setFieldValue(profile.username);
+    setFieldValue(mergedProfile.username);
   };
 
   const startEditPassword = () => {
@@ -171,7 +156,9 @@ export const useProfileSettingsController = () => {
   };
 
   return {
-    profile,
+    profile: mergedProfile,
+    isLoading,
+    error: fetchError,
     editingField,
     fieldValue,
     setFieldValue,

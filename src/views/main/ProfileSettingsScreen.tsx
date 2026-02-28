@@ -8,6 +8,7 @@ import {
   Image,
   TextInput,
   Modal,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
@@ -79,6 +80,8 @@ type Props = NativeStackScreenProps<SettingsStackParamList, 'ProfileSettings'>;
 const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
   const {
     profile,
+    isLoading,
+    error,
     editingField,
     fieldValue,
     setFieldValue,
@@ -109,6 +112,33 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
       return <FontAwesome5 name={goal.icon as any} size={size} color={color} />;
     return <MaterialCommunityIcons name={goal.icon as any} size={size} color={color} />;
   };
+
+  // ------- Loading state -------
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading profile…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // ------- Error state -------
+  if (error) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.centered}>
+          <Ionicons name="alert-circle-outline" size={48} color={colors.error} />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorBackBtn}>
+            <Text style={styles.errorBackBtnText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -492,6 +522,38 @@ const styles = StyleSheet.create({
   modalSaveBtnText: {
     fontFamily: fonts.bold,
     fontSize: 16,
+    color: colors.white,
+  },
+  // Loading & error states
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  loadingText: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    color: colors.textLight,
+    marginTop: 12,
+  },
+  errorText: {
+    fontFamily: fonts.medium,
+    fontSize: 16,
+    color: colors.error,
+    textAlign: 'center',
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  errorBackBtn: {
+    backgroundColor: colors.primary,
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 28,
+  },
+  errorBackBtnText: {
+    fontFamily: fonts.bold,
+    fontSize: 14,
     color: colors.white,
   },
 });

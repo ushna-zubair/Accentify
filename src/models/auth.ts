@@ -3,6 +3,45 @@ import type { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'learner' | 'content_author' | 'admin';
 
+/**
+ * Unified Firestore `/users/{uid}` document.
+ * This is the single source of truth for user data across the app.
+ */
+export interface UserDocument {
+  email: string;
+  role: UserRole;
+  createdAt?: Timestamp;
+  termsAccepted?: boolean;
+  profile: {
+    fullName: string;
+    nickName: string;
+    dateOfBirth: string;
+    phoneNumber: string;
+    gender: string;
+    profilePictureUrl: string;
+    country?: string;
+    timeZone?: string;
+  };
+  security: {
+    appPin: string | null;
+    biometricsEnabled: boolean;
+    twoFactorEnabled: boolean;
+  };
+  preferences: {
+    tutor_personality: string;
+    accessibility_mode: boolean;
+    cultural_context: boolean;
+  };
+  studyPlan: {
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+  };
+}
+
+/**
+ * Lightweight projection used by AuthContext (backward-compatible).
+ */
 export interface UserProfile {
   email: string;
   role: UserRole;
