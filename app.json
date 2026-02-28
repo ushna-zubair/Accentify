@@ -28,7 +28,8 @@
     },
     "plugins": [
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "expo-apple-authentication"
     ],
     "extra": {
       "FIREBASE_API_KEY": "AIzaSyADW4-QogGi0N3pq_V8OPFZndSICCJ5YpM",

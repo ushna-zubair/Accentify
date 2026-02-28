@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -14,6 +16,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { AuthStackParamList } from '../../models';
+import { useAuth } from '../../context/AuthContext';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import colors from '../../theme/colors';
@@ -22,10 +25,12 @@ import { fonts } from '../../theme/typography';
 type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 const SignUpScreen: React.FC<Props> = ({ navigation }) => {
+  const { signInWithGoogle, signInWithApple } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
 
   const handleSignUp = async () => {
     if (!email || !password) {
@@ -59,6 +64,52 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       Alert.alert('Sign Up Error', message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setSocialLoading('google');
+    try {
+      const { isNewUser } = await signInWithGoogle();
+      if (isNewUser) {
+        Alert.alert('Success', 'Google account linked! Let\'s set up your profile.');
+        navigation.navigate('CreateProfile');
+      } else {
+        // Existing user — go to main fingerprint/login flow
+        navigation.navigate('SetYourFingerprint');
+      }
+    } catch (error: any) {
+      if (error?.code === 'SIGN_IN_CANCELLED' || error?.message?.includes('cancelled')) {
+        return; // User cancelled, no alert needed
+      }
+      if (!error?.message?.includes('not available')) {
+        Alert.alert('Google Sign-Up Error', error.message || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleAppleSignUp = async () => {
+    setSocialLoading('apple');
+    try {
+      const { isNewUser } = await signInWithApple();
+      if (isNewUser) {
+        Alert.alert('Success', 'Apple account linked! Let\'s set up your profile.');
+        navigation.navigate('CreateProfile');
+      } else {
+        // Existing user — go to main fingerprint/login flow
+        navigation.navigate('SetYourFingerprint');
+      }
+    } catch (error: any) {
+      if (error?.code === 'ERR_REQUEST_CANCELED' || error?.message?.includes('cancelled')) {
+        return; // User cancelled, no alert needed
+      }
+      if (!error?.message?.includes('not available') && !error?.message?.includes('Unavailable')) {
+        Alert.alert('Apple Sign-Up Error', error.message || 'Something went wrong. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -115,12 +166,32 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.orContinueText}>Or continue with</Text>
 
         <View style={styles.socialButtonsContainer}>
-          <TouchableOpacity style={styles.socialButtonSmall}>
-            <FontAwesome5 name="google" size={20} color={colors.primary} />
+          <TouchableOpacity
+            style={styles.socialButtonSmall}
+            onPress={handleGoogleSignUp}
+            disabled={loading || socialLoading !== null}
+            activeOpacity={0.7}
+          >
+            {socialLoading === 'google' ? (
+              <ActivityIndicator color={colors.primary} size="small" />
+            ) : (
+              <FontAwesome5 name="google" size={20} color={colors.googleBlue} />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.socialButtonSmall}>
-            <FontAwesome5 name="apple" size={20} color={colors.text} />
-          </TouchableOpacity>
+          {Platform.OS === 'ios' && (
+            <TouchableOpacity
+              style={styles.socialButtonSmall}
+              onPress={handleAppleSignUp}
+              disabled={loading || socialLoading !== null}
+              activeOpacity={0.7}
+            >
+              {socialLoading === 'apple' ? (
+                <ActivityIndicator color={colors.text} size="small" />
+              ) : (
+                <FontAwesome5 name="apple" size={20} color={colors.appleBlack} />
+              )}
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.signInContainer}>
