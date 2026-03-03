@@ -460,7 +460,11 @@ export const useVocabExerciseController = (lessonId: string) => {
       });
 
       // Start recording
-      await audioRecorder.prepareToRecordAsync();
+      try {
+        await audioRecorder.prepareToRecordAsync();
+      } catch {
+        // Recorder may already be prepared or was released — ignore
+      }
       audioRecorder.record();
 
       setIsRecording(true);

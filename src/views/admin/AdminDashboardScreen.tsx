@@ -1,4 +1,4 @@
-import React, { useState , useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -200,6 +201,20 @@ const MobileAdminDashboard: React.FC = () => {
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
+  const confirmLogout = () => {
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-restricted-globals
+      if (confirm('Are you sure you want to logout?')) {
+        handleLogout();
+      }
+    } else {
+      Alert.alert('Logout', 'Are you sure you want to logout?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: handleLogout },
+      ]);
+    }
+  };
+
   const handleMenuPress = (key: string) => {
     if (key === 'insights') {
       navigation.navigate('AdminInsights');
@@ -245,8 +260,8 @@ const MobileAdminDashboard: React.FC = () => {
           <View style={mStyles.headerCenter}>
             <Text style={mStyles.headerTitle}>Admin Dashboard</Text>
           </View>
-          <TouchableOpacity onPress={handleLogout} style={mStyles.logoutBtn}>
-            <Ionicons name="log-out-outline" size={26} color={tc.text} />
+          <TouchableOpacity onPress={confirmLogout} style={mStyles.logoutBtn}>
+            <Ionicons name="log-out-outline" size={26} color={tc.error} />
           </TouchableOpacity>
         </View>
 
@@ -570,6 +585,19 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => {
         </TouchableOpacity>
       );
     })}
+
+    {/* Spacer pushes logout to bottom */}
+    <View style={{ flex: 1 }} />
+
+    {/* Logout */}
+    <TouchableOpacity
+      style={styles.sidebarLogoutBtn}
+      onPress={onLogout}
+      activeOpacity={0.7}
+    >
+      <Ionicons name="log-out-outline" size={20} color={tc.error} />
+      <Text style={styles.sidebarLogoutText}>Logout</Text>
+    </TouchableOpacity>
   </View>
   );
 };
@@ -578,33 +606,60 @@ const Sidebar: React.FC<SidebarProps> = ({ activeKey, onSelect, onLogout }) => {
 interface TopBarProps {
   searchQuery: string;
   onSearchChange: (text: string) => void;
+  onLogout: () => void;
+  showMenuToggle?: boolean;
+  onMenuToggle?: () => void;
 }
 
-const TopBar: React.FC<TopBarProps> = ({ searchQuery, onSearchChange }) => {
+const TopBar: React.FC<TopBarProps> = ({
+  searchQuery,
+  onSearchChange,
+  onLogout,
+  showMenuToggle,
+  onMenuToggle,
+}) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+  const { width } = useWindowDimensions();
+  const isNarrowTopBar = width < 1000;
   return (
   <View style={styles.topBar}>
-    <View style={styles.searchContainer}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search"
-        placeholderTextColor={tc.textMuted}
-        value={searchQuery}
-        onChangeText={onSearchChange}
-      />
-      <Ionicons name="search" size={18} color={tc.textMuted} style={styles.searchIcon} />
+    <View style={styles.topBarLeftGroup}>
+      {showMenuToggle && (
+        <TouchableOpacity onPress={onMenuToggle} style={{ marginRight: 12 }} activeOpacity={0.7}>
+          <Ionicons name="menu" size={24} color={tc.text} />
+        </TouchableOpacity>
+      )}
+      <View style={[styles.searchContainer, isNarrowTopBar && { maxWidth: 260 }]}>
+        <Ionicons name="search" size={18} color={tc.textMuted} style={{ marginRight: 8 }} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search"
+          placeholderTextColor={tc.textMuted}
+          value={searchQuery}
+          onChangeText={onSearchChange}
+        />
+      </View>
     </View>
     <View style={styles.topBarRight}>
       <View style={styles.adminBadge}>
         <Image source={require('../../../assets/logo.png')} style={styles.adminAvatar} />
-        <Text style={styles.adminLabel}>Admin Dashboard</Text>
-        <Ionicons name="chevron-down" size={16} color={tc.text} />
+        {!isNarrowTopBar && (
+          <Text style={styles.adminLabel}>Admin Dashboard</Text>
+        )}
       </View>
       <View style={styles.notifBadge}>
         <Ionicons name="notifications-outline" size={22} color={tc.accent} />
         <View style={styles.notifDot} />
       </View>
+      <TouchableOpacity
+        style={styles.topBarLogoutBtn}
+        onPress={onLogout}
+        activeOpacity={0.7}
+      >
+        <Ionicons name="log-out-outline" size={20} color={tc.error} />
+        {!isNarrowTopBar && <Text style={styles.topBarLogoutText}>Logout</Text>}
+      </TouchableOpacity>
     </View>
   </View>
   );
@@ -774,15 +829,34 @@ const DesktopAdminDashboard: React.FC = () => {
   } = useAdminDashboardController();
 
   const { width } = useWindowDimensions();
-  const isWide = width >= 900;
-  const isTablet = width >= 600 && width < 900;
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Breakpoints: >= 1024 full sidebar, 600-1023 collapsible sidebar, < 600 mobile (handled by router)
+  const isDesktop = width >= 1024;
+  const isTablet = width >= 600 && width < 1024;
+  const showSidebar = isDesktop || (isTablet && sidebarOpen);
+  const canLayoutTwoCol = width >= 860;
+  const canLayoutThreeCol = width >= 1200;
+
+  const confirmLogout = () => {
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-restricted-globals
+      if (confirm('Are you sure you want to logout?')) {
+        handleLogout();
+      }
+    } else {
+      Alert.alert('Logout', 'Are you sure you want to logout?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: handleLogout },
+      ]);
+    }
+  };
 
   // ── Loading state ──
   if (isLoading) {
     return (
       <View style={styles.root}>
-        {isWide && (
-          <Sidebar activeKey={activeMenu} onSelect={setActiveMenu} onLogout={handleLogout} />
+        {showSidebar && (
+          <Sidebar activeKey={activeMenu} onSelect={setActiveMenu} onLogout={confirmLogout} />
         )}
         <View style={[styles.mainArea, styles.centeredContainer]}>
           <ActivityIndicator size="large" color={tc.accent} />
@@ -796,8 +870,8 @@ const DesktopAdminDashboard: React.FC = () => {
   if (error || !dashboardData) {
     return (
       <View style={styles.root}>
-        {isWide && (
-          <Sidebar activeKey={activeMenu} onSelect={setActiveMenu} onLogout={handleLogout} />
+        {showSidebar && (
+          <Sidebar activeKey={activeMenu} onSelect={setActiveMenu} onLogout={confirmLogout} />
         )}
         <View style={[styles.mainArea, styles.centeredContainer]}>
           <Ionicons name="alert-circle-outline" size={48} color={tc.error} />
@@ -814,41 +888,52 @@ const DesktopAdminDashboard: React.FC = () => {
 
   return (
     <View style={styles.root}>
-      {isWide && (
+      {showSidebar && (
         <Sidebar
           activeKey={activeMenu}
           onSelect={setActiveMenu}
-          onLogout={handleLogout}
+          onLogout={confirmLogout}
         />
       )}
 
       <View style={styles.mainArea}>
-        <TopBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        <TopBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onLogout={confirmLogout}
+          showMenuToggle={isTablet}
+          onMenuToggle={() => setSidebarOpen((v) => !v)}
+        />
 
         <ScrollView
           style={styles.scrollArea}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { maxWidth: 1400, alignSelf: 'center' as const, width: '100%' as unknown as number },
+          ]}
           showsVerticalScrollIndicator={false}
         >
           <Text style={styles.pageTitle}>Dashboard</Text>
 
-          <View style={[styles.row, !isWide && styles.rowColumn]}>
-            <View style={[styles.rowItem, isWide && { flex: 1.6 }]}>
+          {/* Row 1: Revenue + Practice Activity */}
+          <View style={[styles.row, !canLayoutTwoCol && styles.rowColumn]}>
+            <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1.6 }]}>
               <RevenueCard data={dashboardData} />
             </View>
-            <View style={[styles.rowItem, isWide && { flex: 1 }]}>
+            <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1 }]}>
               <PracticeActivityCard data={dashboardData} />
             </View>
           </View>
 
-          <View style={[styles.row, !isTablet && !isWide && styles.rowColumn]}>
-            <View style={styles.rowItem}>
+          {/* Row 2: Insights + Learners + Sessions */}
+          <View style={[styles.row, !canLayoutThreeCol && styles.rowColumn]}>
+            <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
               <PerformanceInsightsCard data={dashboardData} />
             </View>
-            <View style={styles.rowItem}>
+            <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
               <TopLearnersCard data={dashboardData} />
             </View>
-            <View style={styles.rowItem}>
+            <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
               <PracticeSessionsCard data={dashboardData} />
             </View>
           </View>
@@ -890,6 +975,25 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     borderRightColor: tc.cardBorder,
     paddingVertical: 20,
     paddingHorizontal: 16,
+    justifyContent: 'flex-start' as const,
+  },
+  sidebarLogoutBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: tc.error + '30',
+    backgroundColor: tc.error + '08',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  sidebarLogoutText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+    color: tc.error,
   },
   logoContainer: {
     alignItems: 'flex-start',
@@ -930,20 +1034,28 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontFamily: fonts.semiBold,
   },
   topBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     backgroundColor: tc.white,
     borderBottomWidth: 1,
     borderBottomColor: tc.divider,
+    minHeight: 56,
+    flexWrap: 'nowrap' as const,
+  },
+  topBarLeftGroup: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    flex: 1,
+    minWidth: 0,
   },
   searchContainer: {
     flex: 1,
     maxWidth: 480,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
     backgroundColor: tc.surfaceAlt,
     borderRadius: 10,
     paddingHorizontal: 14,
@@ -954,14 +1066,33 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontFamily: fonts.regular,
     fontSize: 14,
     color: tc.text,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
   },
   searchIcon: {
     marginLeft: 8,
   },
   topBarRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+    marginLeft: 16,
+    flexShrink: 0,
+  },
+  topBarLogoutBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: tc.error + '30',
+    backgroundColor: tc.error + '08',
+  },
+  topBarLogoutText: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: tc.error,
   },
   adminBadge: {
     flexDirection: 'row',
@@ -1008,16 +1139,17 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     marginBottom: 20,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: 'row' as const,
     gap: 16,
     marginBottom: 16,
   },
   rowColumn: {
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
   },
   rowItem: {
     flex: 1,
     minWidth: 0,
+    marginBottom: 8,
   },
   card: {
     backgroundColor: tc.white,
@@ -1026,6 +1158,16 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     borderColor: tc.cardBorder,
     padding: 20,
     marginBottom: 0,
+    ...(Platform.OS === 'web'
+      ? {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
+          // @ts-ignore web-only for hover transition feel
+          transition: 'box-shadow 0.2s ease',
+        }
+      : {}),
   },
   cardHeaderRow: {
     flexDirection: 'row',

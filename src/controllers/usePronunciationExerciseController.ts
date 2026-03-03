@@ -267,7 +267,11 @@ export const usePronunciationExerciseController = (lessonId: string) => {
         allowsRecording: true,
         playsInSilentMode: true,
       });
-      await audioRecorder.prepareToRecordAsync();
+      try {
+        await audioRecorder.prepareToRecordAsync();
+      } catch {
+        // Recorder may already be prepared or was released — ignore
+      }
       audioRecorder.record();
       setPhase('recording');
       setRecordingDuration(0);

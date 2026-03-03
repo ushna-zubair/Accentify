@@ -50,8 +50,6 @@ type CountryItem = {
 };
 
 const getFlagEmoji = (countryCode: string) => {
-  const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
   if (!countryCode || countryCode.length !== 2) return '';
   const codePoints = countryCode
     .toUpperCase()

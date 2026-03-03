@@ -44,9 +44,7 @@ const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
 //  HELPERS
 // ═══════════════════════════════════════════════
 
-const getProgressColor = (idx: number, total: number): string => {
-  const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+const getProgressColor = (idx: number, total: number, tc: ThemeColors): string => {
   if (total <= 1) return tc.success;
   const ratio = idx / (total - 1);
   if (ratio <= 0.34) return tc.success;
@@ -363,7 +361,7 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  const progressColor = getProgressColor(currentIndex, totalSentences);
+  const progressColor = getProgressColor(currentIndex, totalSentences, tc);
   const isIdle = phase === 'idle';
   const isRecording = phase === 'recording';
   const isProcessing = phase === 'processing';

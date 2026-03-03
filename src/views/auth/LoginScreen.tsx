@@ -1,4 +1,4 @@
-import React, { useState , useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -25,6 +27,9 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWideWeb = isWeb && width >= 600;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -141,12 +146,16 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWideWeb && styles.webScrollContent,
+        ]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
+        <View style={isWideWeb ? styles.webCard : undefined}>
         {/* Logo */}
         <View style={styles.logoContainer}>
           <Image
@@ -252,6 +261,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.signUpLink}>SIGN UP</Text>
           </TouchableOpacity>
         </View>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -262,11 +272,36 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     flex: 1,
     backgroundColor: tc.white,
   },
+  webContainer: {
+    backgroundColor: '#F5F6FA',
+  },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 32,
+  },
+  webScrollContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+  },
+  webCard: {
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: tc.white,
+    borderRadius: 20,
+    paddingHorizontal: 36,
+    paddingVertical: 36,
+    ...(Platform.OS === 'web'
+      ? {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 24,
+        }
+      : {}),
   },
   /* ── Logo ── */
   logoContainer: {
