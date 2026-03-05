@@ -22,6 +22,32 @@ import type { SettingsStackParamList } from '../../models';
 import type { ThemeColors, ThemeFontSizes } from '../../hooks/useAppTheme';
 
 // ═══════════════════════════════════════════════
+//  WEB ALERT HELPER
+// ═══════════════════════════════════════════════
+const isWeb = Platform.OS === 'web';
+
+function webAlert(title: string, message?: string) {
+  if (isWeb) {
+    // eslint-disable-next-line no-restricted-globals
+    alert(message ? `${title}\n${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+}
+
+function webConfirm(title: string, message: string, onConfirm: () => void) {
+  if (isWeb) {
+    // eslint-disable-next-line no-restricted-globals
+    if (confirm(`${title}\n${message}`)) onConfirm();
+  } else {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Confirm', style: 'destructive', onPress: onConfirm },
+    ]);
+  }
+}
+
+// ═══════════════════════════════════════════════
 //  SETTINGS ITEM DATA
 // ═══════════════════════════════════════════════
 
@@ -179,42 +205,18 @@ const SettingsScreen: React.FC = () => {
         await signOut();
       } catch (e) {
         console.error('Logout error:', e);
-        if (isWeb) {
-          // eslint-disable-next-line no-restricted-globals
-          alert('Failed to log out. Please try again.');
-        } else {
-          Alert.alert('Error', 'Failed to log out. Please try again.');
-        }
+        webAlert('Error', 'Failed to log out. Please try again.');
       } finally {
         setLoggingOut(false);
       }
     };
 
-    if (isWeb) {
-      // eslint-disable-next-line no-restricted-globals
-      if (confirm('Are you sure you want to log out?')) {
-        doLogout();
-      }
-    } else {
-      Alert.alert(
-        'Log Out',
-        'Are you sure you want to log out?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Log Out', style: 'destructive', onPress: doLogout },
-        ],
-      );
-    }
+    webConfirm('Log Out', 'Are you sure you want to log out?', doLogout);
   };
 
   const handleItemPress = (item: SettingsItemData) => {
     if (item.comingSoon) {
-      if (isWeb) {
-        // eslint-disable-next-line no-restricted-globals
-        alert(`${item.label} coming soon!`);
-      } else {
-        Alert.alert(item.label, `${item.label} coming soon!`);
-      }
+      webAlert(item.label, `${item.label} coming soon!`);
       return;
     }
     if (item.route) {

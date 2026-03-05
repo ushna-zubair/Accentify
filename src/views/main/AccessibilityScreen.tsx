@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   ScrollView,
   Switch,
   LayoutAnimation,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +17,8 @@ import { fonts } from '../../theme/typography';
 import { useAccessibility } from '../../context/AccessibilityContext';
 import { ColorBlindMode, FontStyleOption, SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+const isWeb = Platform.OS === 'web';
 
 const COLOR_BLIND_OPTIONS: ColorBlindMode[] = ['None', 'Deuteranope', 'Protanope', 'Tritanope'];
 const FONT_STYLE_OPTIONS: FontStyleOption[] = ['Standard', 'Bold', 'Extra Bold (Dyslexia Friendly)', 'Italic'];
@@ -101,6 +105,8 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
     setHighContrastMode,
   } = useAccessibility();
   const { colors: tc } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isWide = isWeb && width >= 700;
 
   const [colorBlindExpanded, setColorBlindExpanded] = useState(true);
   const [fontStyleExpanded, setFontStyleExpanded] = useState(true);
@@ -125,11 +131,16 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
     return option === 'Italic' ? 'italic' : 'normal';
   };
 
+  const Container = isWide ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]}>
+    <Container style={[styles.safeArea, { backgroundColor: tc.background }]}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          isWide && { maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any, paddingHorizontal: 32, paddingTop: 28 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -229,7 +240,7 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
           />
         </SectionCard>
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 };
 

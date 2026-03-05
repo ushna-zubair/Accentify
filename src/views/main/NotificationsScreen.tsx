@@ -7,6 +7,8 @@ import {
   SectionList,
   Image,
   ActivityIndicator,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
@@ -15,6 +17,8 @@ import { useNotificationController } from '../../controllers';
 import type { NotificationItem, NotificationSection, SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
+const isWeb = Platform.OS === 'web';
+
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Notifications'>;
 
 // ------- Component -------
@@ -22,6 +26,8 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
   const { activeTab, setActiveTab, sections, loading, markAllAsRead, markAsRead } =
     useNotificationController();
   const { colors: tc } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isWide = isWeb && width >= 700;
   const styles = useMemo(() => createStyles(tc), [tc]);
 
   if (loading) {
@@ -54,9 +60,11 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     </View>
   );
 
+  const Container = isWide ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <Container style={styles.safeArea}>
+      <View style={[styles.container, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any, paddingHorizontal: 32 }]}>
         {/* Title */}
         <Text style={styles.title}>Notifications</Text>
 
@@ -93,7 +101,7 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
           }
         />
       </View>
-    </SafeAreaView>
+    </Container>
   );
 };
 

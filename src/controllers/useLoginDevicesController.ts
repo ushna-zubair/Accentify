@@ -28,6 +28,30 @@ import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import type { LoginDevice, DevicePlatform } from '../models';
 
+const isWeb = Platform.OS === 'web';
+
+/** Web-safe alert */
+const webAlert = (title: string, message?: string) => {
+  if (isWeb) {
+    window.alert(message ? `${title}\n${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
+/** Web-safe confirm dialog */
+const webConfirm = (title: string, message?: string): Promise<boolean> => {
+  if (isWeb) {
+    return Promise.resolve(window.confirm(message ? `${title}\n${message}` : title));
+  }
+  return new Promise((resolve) => {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      { text: 'OK', onPress: () => resolve(true) },
+    ]);
+  });
+};
+
 // ─── Helpers ───
 
 /** Generate a stable-ish device id based on platform + installationId */
@@ -140,39 +164,32 @@ export const useLoginDevicesController = () => {
 
   // ── Revoke (delete) a non-current device session ──
   const revokeDevice = useCallback(
-    (deviceId: string) => {
+    async (deviceId: string) => {
       if (!currentUser) return;
 
       const device = devices.find((d) => d.id === deviceId);
       if (!device) return;
 
       if (device.isCurrent) {
-        Alert.alert('Cannot Revoke', 'You cannot revoke the device you are currently using.');
+        webAlert('Cannot Revoke', 'You cannot revoke the device you are currently using.');
         return;
       }
 
-      Alert.alert(
+      const confirmed = await webConfirm(
         'Revoke Device',
         `Remove "${device.deviceName}" from your trusted devices? This will sign that session out.`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Revoke',
-            style: 'destructive',
-            onPress: async () => {
-              setRevoking(deviceId);
-              try {
-                await deleteDoc(doc(db, 'users', currentUser.uid, 'devices', deviceId));
-                setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-              } catch (e: any) {
-                Alert.alert('Error', e.message || 'Failed to revoke device.');
-              } finally {
-                setRevoking(null);
-              }
-            },
-          },
-        ],
       );
+      if (!confirmed) return;
+
+      setRevoking(deviceId);
+      try {
+        await deleteDoc(doc(db, 'users', currentUser.uid, 'devices', deviceId));
+        setDevices((prev) => prev.filter((d) => d.id !== deviceId));
+      } catch (e: any) {
+        webAlert('Error', e.message || 'Failed to revoke device.');
+      } finally {
+        setRevoking(null);
+      }
     },
     [currentUser, devices],
   );

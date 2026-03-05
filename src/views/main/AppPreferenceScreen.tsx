@@ -7,6 +7,8 @@ import {
   ScrollView,
   Switch,
   LayoutAnimation,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +17,8 @@ import { useAppPreference } from '../../context/AppPreferenceContext';
 import { useAppTheme, type ThemeColors, type ThemeFontSizes } from '../../hooks/useAppTheme';
 import { ThemeOption, AccentColor, FontSizeOption, SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+const isWeb = Platform.OS === 'web';
 
 // ------- Constants -------
 const THEME_OPTIONS: ThemeOption[] = ['Light', 'Dark'];
@@ -117,6 +121,8 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
   } = useAppPreference();
 
   const { colors: tc, fontSizes: fs, isDark } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isWide = isWeb && width >= 700;
 
   const [themeExpanded, setThemeExpanded] = useState(true);
   const [colorExpanded, setColorExpanded] = useState(true);
@@ -127,11 +133,16 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
     setter((prev) => !prev);
   };
 
+  const Container = isWide ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]}>
+    <Container style={[styles.safeArea, { backgroundColor: tc.background }]}>
       <ScrollView
         style={styles.container}
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          isWide && { maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any, paddingHorizontal: 32, paddingTop: 28 },
+        ]}
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
@@ -295,7 +306,7 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </SectionCard>
       </ScrollView>
-    </SafeAreaView>
+    </Container>
   );
 };
 

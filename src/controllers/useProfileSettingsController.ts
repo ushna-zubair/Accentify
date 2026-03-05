@@ -9,6 +9,30 @@ import { useAuth } from '../context/AuthContext';
 import { useProfileData } from '../hooks/useProfileData';
 import type { LearningGoal, ProfileState } from '../models';
 
+const isWeb = Platform.OS === 'web';
+
+/** Web-safe alert (window.alert on web, Alert.alert on native) */
+const webAlert = (title: string, message?: string) => {
+  if (isWeb) {
+    window.alert(message ? `${title}\n${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
+/** Web-safe confirm dialog. Returns true if confirmed. */
+const webConfirm = (title: string, message?: string): Promise<boolean> => {
+  if (isWeb) {
+    return Promise.resolve(window.confirm(message ? `${title}\n${message}` : title));
+  }
+  return new Promise((resolve) => {
+    Alert.alert(title, message, [
+      { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+      { text: 'OK', onPress: () => resolve(true) },
+    ]);
+  });
+};
+
 // ------- Constants -------
 export const LEARNING_GOALS: { label: LearningGoal; icon: string; iconSet: 'ionicons' | 'fa5' | 'mci' }[] = [
   { label: 'Pronunciation', icon: 'mic', iconSet: 'ionicons' },
@@ -63,13 +87,13 @@ export const useProfileSettingsController = () => {
     if (source === 'camera') {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Camera access is needed to take a photo.');
+        webAlert('Permission Required', 'Camera access is needed to take a photo.');
         return;
       }
     } else {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Photo library access is needed to select a photo.');
+        webAlert('Permission Required', 'Photo library access is needed to select a photo.');
         return;
       }
     }
@@ -105,7 +129,7 @@ export const useProfileSettingsController = () => {
       });
       setLocalOverrides((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to upload photo.');
+      webAlert('Error', e.message || 'Failed to upload photo.');
     } finally {
       setPhotoUploading(false);
     }
@@ -114,36 +138,33 @@ export const useProfileSettingsController = () => {
   const handleRemovePhoto = async () => {
     if (!currentUser) return;
 
-    Alert.alert('Remove Photo', 'Are you sure you want to remove your profile photo?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          setPhotoUploading(true);
-          try {
-            // Delete from Storage (ignore if doesn't exist)
-            try {
-              const storageRef = ref(storage, `profilePhotos/${currentUser.uid}`);
-              await deleteObject(storageRef);
-            } catch { /* file may not exist */ }
+    const confirmed = await webConfirm('Remove Photo', 'Are you sure you want to remove your profile photo?');
+    if (!confirmed) return;
 
-            await updateDoc(doc(db, 'users', currentUser.uid), {
-              'profile.profilePictureUrl': '',
-            });
-            setLocalOverrides((prev) => ({ ...prev, profilePictureUrl: '' }));
-          } catch (e: any) {
-            Alert.alert('Error', e.message || 'Failed to remove photo.');
-          } finally {
-            setPhotoUploading(false);
-          }
-        },
-      },
-    ]);
+    setPhotoUploading(true);
+    try {
+      // Delete from Storage (ignore if doesn't exist)
+      try {
+        const storageRef = ref(storage, `profilePhotos/${currentUser.uid}`);
+        await deleteObject(storageRef);
+      } catch { /* file may not exist */ }
+
+      await updateDoc(doc(db, 'users', currentUser.uid), {
+        'profile.profilePictureUrl': '',
+      });
+      setLocalOverrides((prev) => ({ ...prev, profilePictureUrl: '' }));
+    } catch (e: any) {
+      webAlert('Error', e.message || 'Failed to remove photo.');
+    } finally {
+      setPhotoUploading(false);
+    }
   };
 
   const handlePhotoPress = () => {
-    if (Platform.OS === 'ios') {
+    if (isWeb) {
+      // On web, use file input for photo selection
+      pickAndUploadPhoto('library');
+    } else if (Platform.OS === 'ios') {
       const options = mergedProfile.profilePictureUrl
         ? ['Take Photo', 'Choose from Library', 'Remove Photo', 'Cancel']
         : ['Take Photo', 'Choose from Library', 'Cancel'];
@@ -184,26 +205,26 @@ export const useProfileSettingsController = () => {
       setEditingField(null);
       setFieldValue('');
     } catch (e) {
-      Alert.alert('Error', 'Failed to update username.');
+      webAlert('Error', 'Failed to update username.');
     }
   };
 
   const handleSavePassword = async () => {
     if (!currentUser || !fieldValue || !currentPassword) return;
     if (fieldValue.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters.');
+      webAlert('Error', 'Password must be at least 6 characters.');
       return;
     }
     try {
       const credential = EmailAuthProvider.credential(currentUser.email!, currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
       await updatePassword(currentUser, fieldValue);
-      Alert.alert('Success', 'Password updated successfully.');
+      webAlert('Success', 'Password updated successfully.');
       setEditingField(null);
       setFieldValue('');
       setCurrentPassword('');
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to update password.');
+      webAlert('Error', e.message || 'Failed to update password.');
     }
   };
 
@@ -215,7 +236,7 @@ export const useProfileSettingsController = () => {
       });
       setLocalOverrides((prev) => ({ ...prev, country }));
     } catch {
-      Alert.alert('Error', 'Failed to update country.');
+      webAlert('Error', 'Failed to update country.');
     }
   };
 
@@ -227,7 +248,7 @@ export const useProfileSettingsController = () => {
       });
       setLocalOverrides((prev) => ({ ...prev, timeZone: tz }));
     } catch {
-      Alert.alert('Error', 'Failed to update time zone.');
+      webAlert('Error', 'Failed to update time zone.');
     }
   };
 
@@ -243,12 +264,12 @@ export const useProfileSettingsController = () => {
       });
       setLocalOverrides((prev) => ({ ...prev, learningGoals: updated }));
     } catch {
-      Alert.alert('Error', 'Failed to update learning goals.');
+      webAlert('Error', 'Failed to update learning goals.');
     }
   };
 
   const handlePrivacyPress = (item: string) => {
-    Alert.alert(item, `${item} coming soon!`);
+    webAlert(item, `${item} coming soon!`);
   };
 
   const startEditUsername = () => {

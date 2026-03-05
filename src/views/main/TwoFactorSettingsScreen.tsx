@@ -7,6 +7,9 @@ import {
   Alert,
   ActivityIndicator,
   Switch,
+  Platform,
+  useWindowDimensions,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,12 +27,25 @@ import {
 } from '../../services/twoFactorService';
 import type { SettingsStackParamList } from '../../models';
 
+const isWeb = Platform.OS === 'web';
+
+/** Web-safe alert */
+const webAlert = (title: string, message?: string) => {
+  if (isWeb) {
+    window.alert(message ? `${title}\n${message}` : title);
+  } else {
+    Alert.alert(title, message);
+  }
+};
+
 type Props = NativeStackScreenProps<SettingsStackParamList, 'TwoFactorSettings'>;
 
 type ScreenStep = 'overview' | 'verifying';
 
 const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isWide = isWeb && width >= 700;
   const styles = useMemo(() => createStyles(tc), [tc]);
   const { currentUser } = useAuth();
 
@@ -80,7 +96,7 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
       setStep('verifying');
       reset();
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to send verification code.');
+      webAlert('Error', e.message || 'Failed to send verification code.');
     } finally {
       setSending(false);
     }
@@ -97,7 +113,7 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
       setIs2FAEnabled(result.enabled);
       setStep('overview');
       reset();
-      Alert.alert(
+      webAlert(
         'Success',
         result.enabled
           ? 'Two-Factor Authentication has been enabled.'
@@ -120,9 +136,9 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const result = await send2FACode(pendingAction);
       setMaskedEmail(result.maskedEmail);
-      Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
+      webAlert('Code Sent', 'A new verification code has been sent to your email.');
     } catch (e: any) {
-      Alert.alert('Error', e.message || 'Failed to resend code.');
+      webAlert('Error', e.message || 'Failed to resend code.');
     } finally {
       setSending(false);
     }
@@ -130,21 +146,23 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   // Loading state
   if (loading) {
+    const LoadContainer = isWide ? View : SafeAreaView;
     return (
-      <SafeAreaView style={styles.safeArea}>
+      <LoadContainer style={styles.safeArea}>
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={tc.accent} />
           <Text style={styles.loadingText}>Loading security settings…</Text>
         </View>
-      </SafeAreaView>
+      </LoadContainer>
     );
   }
 
   // ─── Verification step ───
   if (step === 'verifying') {
+    const VerifyContainer = isWide ? View : SafeAreaView;
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
+      <VerifyContainer style={styles.safeArea}>
+        <View style={[styles.container, isWide && { maxWidth: 500, alignSelf: 'center' as any, width: '100%' as any }]}>
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity
@@ -176,7 +194,28 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
 
             {/* OTP Input */}
             <View style={styles.otpContainer}>
-              <OTPInput value={code} />
+              {isWeb ? (
+                <TextInput
+                  style={styles.webCodeInput}
+                  value={value}
+                  onChangeText={(text) => {
+                    // Only allow digits, max 4
+                    const digits = text.replace(/\D/g, '').slice(0, 4);
+                    // Simulate key presses for each new digit
+                    reset();
+                    for (const d of digits) {
+                      handleKeyPress(d);
+                    }
+                  }}
+                  keyboardType="number-pad"
+                  maxLength={4}
+                  placeholder="0000"
+                  placeholderTextColor={tc.textMuted}
+                  autoFocus
+                />
+              ) : (
+                <OTPInput value={code} />
+              )}
             </View>
 
             {/* Error */}
@@ -212,18 +251,21 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
               )}
             </TouchableOpacity>
 
-            {/* Keypad */}
-            <NumberKeypad onKeyPress={handleKeyPress} size="compact" style={styles.keypad} />
+            {/* Keypad – only on native */}
+            {!isWeb && (
+              <NumberKeypad onKeyPress={handleKeyPress} size="compact" style={styles.keypad} />
+            )}
           </View>
         </View>
-      </SafeAreaView>
+      </VerifyContainer>
     );
   }
 
   // ─── Overview step ───
+  const OverviewContainer = isWide ? View : SafeAreaView;
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
+    <OverviewContainer style={styles.safeArea}>
+      <View style={[styles.container, isWide && { maxWidth: 600, alignSelf: 'center' as any, width: '100%' as any }]}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
@@ -291,7 +333,7 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         )}
       </View>
-    </SafeAreaView>
+    </OverviewContainer>
   );
 };
 
@@ -507,6 +549,20 @@ const createStyles = (tc: ThemeColors) =>
       marginTop: 'auto',
       paddingBottom: 16,
       maxWidth: 300,
+    },
+    webCodeInput: {
+      fontFamily: fonts.bold,
+      fontSize: 32,
+      color: tc.text,
+      textAlign: 'center',
+      letterSpacing: 16,
+      borderWidth: 2,
+      borderColor: tc.inputBorder,
+      borderRadius: 14,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      backgroundColor: tc.inputBg,
+      ...(isWeb ? { outlineStyle: 'none' as any } : {}),
     },
   });
 

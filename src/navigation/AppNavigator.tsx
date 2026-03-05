@@ -77,7 +77,7 @@ const TutorStack = createNativeStackNavigator<TutorStackParamList>();
 const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 const LearnerTab = createBottomTabNavigator<LearnerTabParamList>();
 
-const SettingsStackNavigator = () => {
+export const SettingsStackNavigator = () => {
   return (
     <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
       <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />

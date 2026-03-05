@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,6 +17,8 @@ import { useLoginDevicesController } from '../../controllers/useLoginDevicesCont
 import type { LoginDevice, DevicePlatform } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '../../models';
+
+const isWeb = Platform.OS === 'web';
 
 // ─── Helpers ───
 
@@ -116,6 +120,8 @@ type Props = NativeStackScreenProps<SettingsStackParamList, 'LoginDevices'>;
 const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
   const { devices, loading, revoking, revokeDevice } = useLoginDevicesController();
   const { colors: tc } = useAppTheme();
+  const { width } = useWindowDimensions();
+  const isWide = isWeb && width >= 700;
   const styles = useMemo(() => createStyles(tc), [tc]);
 
   const renderItem = ({ item }: { item: LoginDevice }) => (
@@ -128,10 +134,12 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
     />
   );
 
+  const Container = isWide ? View : SafeAreaView;
+
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <Container style={styles.safeArea}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
@@ -139,7 +147,7 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
         <View style={{ width: 36 }} />
       </View>
 
-      <Text style={styles.subtitle}>
+      <Text style={[styles.subtitle, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any }]}>
         Devices where your account is currently signed in. You can revoke access to any device you
         don't recognize.
       </Text>
@@ -159,12 +167,12 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
           data={devices}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any }]}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         />
       )}
-    </SafeAreaView>
+    </Container>
   );
 };
 

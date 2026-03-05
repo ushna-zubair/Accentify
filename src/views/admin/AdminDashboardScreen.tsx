@@ -32,6 +32,7 @@ import {
 } from '../../controllers';
 import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } from '../../models';
 import AdminUserManagementScreen from './AdminUserManagementScreen';
+import { SettingsStackNavigator } from '../../navigation/AppNavigator';
 
 // ═══════════════════════════════════════════════
 //  MOBILE ADMIN DASHBOARD
@@ -765,21 +766,22 @@ const TopBar: React.FC<TopBarProps> = ({
 const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+  const isPositiveGrowth = data.growthPct >= 0;
   return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
-      <Text style={styles.cardTitle}>Revenue</Text>
+      <Text style={styles.cardTitle}>User Activity Overview</Text>
       <TouchableOpacity style={styles.outlineBtn}>
         <Text style={styles.outlineBtnText}>View User Analytics</Text>
       </TouchableOpacity>
     </View>
     <Text style={styles.bigNumber}>{data.activeUsers.toLocaleString()} Active Users</Text>
     <View style={styles.growthRow}>
-      <Ionicons name="arrow-up" size={14} color={tc.success} />
-      <Text style={styles.growthText}>{data.growthPct}%</Text>
+      <Ionicons name={isPositiveGrowth ? 'arrow-up' : 'arrow-down'} size={14} color={isPositiveGrowth ? tc.success : tc.error} />
+      <Text style={[styles.growthText, !isPositiveGrowth && { color: tc.error }]}>{Math.abs(data.growthPct)}%</Text>
       <Text style={styles.growthSub}>vs last week</Text>
     </View>
-    <Text style={styles.dateRange}>Usage from {data.usageDateRange}</Text>
+    <Text style={styles.dateRange}>{data.usageDateRange ? `Usage from ${data.usageDateRange}` : 'Loading date range…'}</Text>
     <View style={styles.chartContainer}>
       <BarChart data={data.weeklyBarData} height={160} />
     </View>
@@ -800,6 +802,18 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
 const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+
+  // Compute dominant practice period dynamically
+  const { morning, afternoon, night } = data.practiceActivity;
+  const total = morning + afternoon + night;
+  const dominantLabel = morning >= afternoon && morning >= night
+    ? 'Morning' : afternoon >= night ? 'Afternoon' : 'Night';
+  const dominantSub = dominantLabel === 'Morning'
+    ? '5am - 12pm' : dominantLabel === 'Afternoon' ? '12pm - 6pm' : '6pm - 5am';
+  const dominantValue = dominantLabel === 'Morning'
+    ? morning : dominantLabel === 'Afternoon' ? afternoon : night;
+  const dominantPct = total > 0 ? Math.round((dominantValue / total) * 100) : 0;
+
   return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
@@ -808,7 +822,7 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
         <Text style={styles.outlineBtnText}>View Report</Text>
       </TouchableOpacity>
     </View>
-    <Text style={styles.dateRange}>From Oct 10 - 21 Oct, 2025</Text>
+    <Text style={styles.dateRange}>{data.usageDateRange ? `From ${data.usageDateRange}` : 'Current period'}</Text>
     <DonutChart
       segments={[
         { label: 'Morning Sessions', value: data.practiceActivity.morning, color: tc.accentLight },
@@ -816,9 +830,9 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
         { label: 'Night Sessions', value: data.practiceActivity.night, color: tc.accentMuted },
       ]}
       size={180}
-      tooltipLabel="Afternoon"
-      tooltipSub="12pm - 6pm"
-      tooltipValue="540 Active Users"
+      tooltipLabel={dominantLabel}
+      tooltipSub={dominantSub}
+      tooltipValue={total > 0 ? `${dominantPct}% of users` : 'No data yet'}
     />
   </View>
   );
@@ -850,17 +864,33 @@ const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => {
     <Text style={styles.cardTitle}>Top Performing Learners</Text>
     <Text style={styles.cardSubtitle}>Ranked by sessions completed this month</Text>
     <View style={{ marginTop: 16, gap: 16 }}>
-      {data.topLearners.map((learner, i) => (
-        <View key={learner.name} style={styles.learnerRow}>
-          <View style={styles.learnerLeft}>
-            <Text style={styles.learnerEmoji}>
-              {i === 0 ? '👩' : i === 1 ? '👨' : i === 2 ? '👩‍🦱' : '👨‍🦰'}
-            </Text>
-            <Text style={styles.learnerName}>{learner.name}</Text>
-          </View>
-          <Text style={styles.learnerSessions}>{learner.sessions} Sessions</Text>
-        </View>
-      ))}
+      {data.topLearners.length === 0 ? (
+        <Text style={styles.cardSubtitle}>No learner data available yet</Text>
+      ) : (
+        data.topLearners.map((learner, i) => {
+          const initials = learner.name
+            .split(' ')
+            .map((w: string) => w[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+          const rankColors = [tc.accent, tc.warning, tc.accentLight, tc.disabled];
+          return (
+            <View key={`${learner.name}-${i}`} style={styles.learnerRow}>
+              <View style={styles.learnerLeft}>
+                <View style={[styles.learnerAvatar, { backgroundColor: rankColors[i] ?? tc.disabled }]}>
+                  <Text style={styles.learnerInitials}>{initials}</Text>
+                </View>
+                <View>
+                  <Text style={styles.learnerName}>{learner.name}</Text>
+                  <Text style={[styles.cardSubtitle, { marginTop: 0, fontSize: 11 }]}>#{i + 1} Ranked</Text>
+                </View>
+              </View>
+              <Text style={styles.learnerSessions}>{learner.sessions.toLocaleString()} Sessions</Text>
+            </View>
+          );
+        })
+      )}
     </View>
   </View>
   );
@@ -881,8 +911,8 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
       {data.totalSessions.toLocaleString()} total sessions completed
     </Text>
     <View style={styles.growthRow}>
-      <Ionicons name="arrow-up" size={14} color={tc.success} />
-      <Text style={styles.growthText}>+{data.sessionsGrowth}%</Text>
+      <Ionicons name={data.sessionsGrowth >= 0 ? 'arrow-up' : 'arrow-down'} size={14} color={data.sessionsGrowth >= 0 ? tc.success : tc.error} />
+      <Text style={[styles.growthText, data.sessionsGrowth < 0 && { color: tc.error }]}>{data.sessionsGrowth >= 0 ? '+' : ''}{data.sessionsGrowth}%</Text>
       <Text style={styles.growthSub}>vs last week</Text>
     </View>
     <Text style={[styles.cardSubtitle, { marginTop: 12, marginBottom: 4 }]}>Session Completed</Text>
@@ -1003,6 +1033,10 @@ const DesktopAdminDashboard: React.FC = () => {
         {/* ── Conditionally render content based on active sidebar menu ── */}
         {activeMenu === 'users' ? (
           <AdminUserManagementScreen />
+        ) : activeMenu === 'settings' ? (
+          <View style={{ flex: 1 }}>
+            <SettingsStackNavigator />
+          </View>
         ) : (
           <ScrollView
             style={styles.scrollArea}
