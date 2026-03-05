@@ -23,6 +23,13 @@ import { useUserManagementController } from '../../controllers';
 import type { ManagedUser, AdminStackParamList } from '../../models';
 
 // ═══════════════════════════════════════════════
+//  BREAKPOINTS
+// ═══════════════════════════════════════════════
+const BP_TABLET = 700;
+const BP_DESKTOP = 1024;
+const BP_WIDE = 1280;
+
+// ═══════════════════════════════════════════════
 //  SUB-COMPONENTS
 // ═══════════════════════════════════════════════
 
@@ -32,7 +39,7 @@ const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({
   onPress,
 }) => {
   const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc, 400), [tc]);
+  const styles = useMemo(() => createStyles(tc, 400, false), [tc]);
   return (
     <TouchableOpacity
       style={[styles.checkbox, checked && styles.checkboxChecked]}
@@ -46,9 +53,9 @@ const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({
 };
 
 // ─── Table Header ───
-const TableHeader: React.FC<{ isWide: boolean }> = ({ isWide }) => {
-  const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc, isWide ? 900 : 400), [tc, isWide]);
+const TableHeader: React.FC<{ isWide: boolean; isDesktop: boolean }> = ({ isWide, isDesktop }) => {
+  const { colors: tc, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc, isDesktop ? BP_DESKTOP : isWide ? BP_TABLET : 400, isDark), [tc, isWide, isDesktop, isDark]);
   return (
     <View style={styles.tableHeader}>
       <View style={styles.colCheck} />
@@ -57,11 +64,11 @@ const TableHeader: React.FC<{ isWide: boolean }> = ({ isWide }) => {
       </View>
       <View style={styles.colName}>
         <Text style={styles.colTitle}>Name</Text>
-        <Text style={styles.colSub}>String | MAX – Length 65</Text>
+        {isDesktop && <Text style={styles.colSub}>String | MAX – Length 65</Text>}
       </View>
       <View style={styles.colEmail}>
         <Text style={styles.colTitle}>Email</Text>
-        <Text style={styles.colSub}>String | MAX – Length 65</Text>
+        {isDesktop && <Text style={styles.colSub}>String | MAX – Length 65</Text>}
       </View>
       {isWide && (
         <View style={styles.colActions}>
@@ -78,11 +85,19 @@ const TableRow: React.FC<{
   selected: boolean;
   onToggle: () => void;
   isWide: boolean;
+  isDesktop: boolean;
   onViewDetail: () => void;
   onEditUser: () => void;
-}> = ({ user, selected, onToggle, isWide, onViewDetail, onEditUser }) => {
-  const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc, isWide ? 900 : 400), [tc, isWide]);
+}> = ({ user, selected, onToggle, isWide, isDesktop, onViewDetail, onEditUser }) => {
+  const { colors: tc, isDark } = useAppTheme();
+  const styles = useMemo(() => createStyles(tc, isDesktop ? BP_DESKTOP : isWide ? BP_TABLET : 400, isDark), [tc, isWide, isDesktop, isDark]);
+  const initials = user.fullName
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <TouchableOpacity
       style={[styles.tableRow, selected && styles.tableRowSelected]}
@@ -100,7 +115,12 @@ const TableRow: React.FC<{
           {user.userId}
         </Text>
       </View>
-      <View style={styles.colName}>
+      <View style={[styles.colName, { flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
+        {isDesktop && (
+          <View style={[styles.rowAvatar, selected && styles.rowAvatarSelected]}>
+            <Text style={styles.rowAvatarText}>{initials}</Text>
+          </View>
+        )}
         <Text
           style={[styles.cellTextBold, selected && styles.cellTextSelected]}
           numberOfLines={1}
@@ -150,10 +170,10 @@ const UserFormModal: React.FC<{
   onClose: () => void;
   onSubmit: (name: string, email: string) => void;
 }> = ({ visible, title, initialName = '', initialEmail = '', loading: submitting, onClose, onSubmit }) => {
-  const { colors: tc } = useAppTheme();
+  const { colors: tc, isDark } = useAppTheme();
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web' && width >= 600;
-  const styles = useMemo(() => createStyles(tc, width), [tc, width]);
+  const isWeb = Platform.OS === 'web' && width >= BP_TABLET;
+  const styles = useMemo(() => createStyles(tc, width, isDark), [tc, width, isDark]);
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
 
@@ -232,12 +252,14 @@ const UserFormModal: React.FC<{
 // ═══════════════════════════════════════════════
 
 const AdminUserManagementScreen: React.FC = () => {
-  const { colors: tc } = useAppTheme();
+  const { colors: tc, isDark } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
-  const isWide = isWeb && width >= 600;
-  const styles = useMemo(() => createStyles(tc, width), [tc, width]);
+  const isWide = isWeb && width >= BP_TABLET;
+  const isDesktop = isWeb && width >= BP_DESKTOP;
+  const isExtraWide = isWeb && width >= BP_WIDE;
+  const styles = useMemo(() => createStyles(tc, width, isDark), [tc, width, isDark]);
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const {
     users,
@@ -379,7 +401,14 @@ const AdminUserManagementScreen: React.FC = () => {
 
       {/* ── Web Page Title ── */}
       {isWide && (
-        <Text style={styles.pageTitle}>Manage Users</Text>
+        <View style={styles.pageTitleRow}>
+          <View>
+            <Text style={styles.pageTitle}>Manage Users</Text>
+            <Text style={styles.pageSubtitle}>
+              View, add, edit, and remove users from the platform
+            </Text>
+          </View>
+        </View>
       )}
 
       {/* ── Toolbar: Search + Actions ── */}
@@ -433,14 +462,40 @@ const AdminUserManagementScreen: React.FC = () => {
       {/* ── Stats Bar ── */}
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{users.length}</Text>
-          <Text style={styles.statLabel}>Users</Text>
+          <View style={styles.statIconContainer}>
+            <Ionicons name="people" size={16} color={tc.accent} />
+          </View>
+          <View>
+            <Text style={styles.statNumber}>{users.length}</Text>
+            <Text style={styles.statLabel}>Total Users</Text>
+          </View>
         </View>
         <View style={styles.statDivider} />
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{selectedUids.size}</Text>
-          <Text style={styles.statLabel}>Selected</Text>
+          <View style={[styles.statIconContainer, { backgroundColor: tc.accentMuted }]}>
+            <Ionicons name="checkmark-done" size={16} color={tc.accent} />
+          </View>
+          <View>
+            <Text style={styles.statNumber}>{selectedUids.size}</Text>
+            <Text style={styles.statLabel}>Selected</Text>
+          </View>
         </View>
+        {isDesktop && (
+          <>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <View style={[styles.statIconContainer, { backgroundColor: tc.successBg }]}>
+                <Ionicons name="cloud-done" size={16} color={tc.success} />
+              </View>
+              <View>
+                <Text style={[styles.statNumber, { color: tc.success }]}>
+                  {hasMore ? 'More' : 'All'}
+                </Text>
+                <Text style={styles.statLabel}>Loaded</Text>
+              </View>
+            </View>
+          </>
+        )}
       </View>
 
       {/* ── Error ── */}
@@ -455,7 +510,9 @@ const AdminUserManagementScreen: React.FC = () => {
         >
           {users.length === 0 && !loading && (
             <View style={styles.emptyRow}>
-              <Ionicons name="people-outline" size={40} color={tc.textMuted} />
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="people-outline" size={40} color={tc.textMuted} />
+              </View>
               <Text style={styles.emptyText}>No users found</Text>
               <Text style={styles.emptySubText}>Add users or adjust your search</Text>
             </View>
@@ -474,17 +531,20 @@ const AdminUserManagementScreen: React.FC = () => {
         <>
           <View style={styles.tableCard}>
             <View style={styles.tableContainer}>
-              <ScrollView horizontal={!isWide} showsHorizontalScrollIndicator={false}>
-                <View style={{ flex: 1, minWidth: isWide ? '100%' as unknown as number : undefined }}>
-                  <TableHeader isWide={isWide} />
+              <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
+                <View style={{ flex: 1, minWidth: isDesktop ? '100%' as unknown as number : undefined }}>
+                  <TableHeader isWide={isWide} isDesktop={isDesktop} />
                   <ScrollView
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={styles.tableBody}
                   >
                     {users.length === 0 && !loading && (
                       <View style={styles.emptyRow}>
-                        <Ionicons name="people-outline" size={32} color={tc.textMuted} />
+                        <View style={styles.emptyIconCircle}>
+                          <Ionicons name="people-outline" size={32} color={tc.textMuted} />
+                        </View>
                         <Text style={styles.emptyText}>No users found</Text>
+                        <Text style={styles.emptySubText}>Try a different search or add a new user</Text>
                       </View>
                     )}
                     {users.map((user) => (
@@ -494,6 +554,7 @@ const AdminUserManagementScreen: React.FC = () => {
                         selected={selectedUids.has(user.uid)}
                         onToggle={() => toggleSelect(user.uid)}
                         isWide={isWide}
+                        isDesktop={isDesktop}
                         onViewDetail={() => handleViewDetail(user.uid)}
                         onEditUser={() => handleEditUser(user)}
                       />
@@ -515,7 +576,8 @@ const AdminUserManagementScreen: React.FC = () => {
           {/* ── Load More ── */}
           {hasMore && !loading && (
             <TouchableOpacity style={styles.loadMoreBtn} onPress={fetchMore} activeOpacity={0.7}>
-              <Text style={styles.loadMoreText}>Load more users...</Text>
+              <Ionicons name="chevron-down" size={16} color={tc.accent} style={{ marginRight: 6 }} />
+              <Text style={styles.loadMoreText}>Load more users</Text>
             </TouchableOpacity>
           )}
         </>
@@ -549,18 +611,26 @@ const AdminUserManagementScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const createStyles = (tc: ThemeColors, screenWidth: number) => {
-  const isWide = Platform.OS === 'web' && screenWidth >= 600;
+const createStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => {
+  const isWeb = Platform.OS === 'web';
+  const isWide = isWeb && screenWidth >= BP_TABLET;
+  const isDesktop = isWeb && screenWidth >= BP_DESKTOP;
+  const isExtraWide = isWeb && screenWidth >= BP_WIDE;
+
+  const hPad = isExtraWide ? 48 : isDesktop ? 36 : isWide ? 28 : 16;
+
   const COL_CHECK_W = 44;
-  const COL_ID_W = isWide ? 100 : 64;
-  const COL_NAME_W = isWide ? 200 : 130;
-  const COL_EMAIL_W = isWide ? 260 : 180;
-  const COL_ACTIONS_W = isWide ? 160 : 0;
+  const COL_ID_W = isDesktop ? 110 : isWide ? 90 : 64;
+  const COL_NAME_W = isExtraWide ? 240 : isDesktop ? 200 : isWide ? 160 : 130;
+  const COL_EMAIL_W = isExtraWide ? 300 : isDesktop ? 260 : isWide ? 200 : 180;
+  const COL_ACTIONS_W = isDesktop ? 180 : isWide ? 140 : 0;
+
+  const bgColor = isDark ? tc.background : (isWide ? '#F5F6FA' : tc.surfaceAlt);
 
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isWide ? '#F5F6FA' : tc.surfaceAlt,
+      backgroundColor: bgColor,
     },
 
     // Header (mobile only)
@@ -571,7 +641,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       paddingHorizontal: 20,
       paddingTop: 14,
       paddingBottom: 8,
-      backgroundColor: tc.white,
+      backgroundColor: tc.surface,
       borderBottomWidth: 1,
       borderBottomColor: tc.divider,
     },
@@ -591,52 +661,63 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     headerSpacer: { width: 36 },
 
     // Page title (web)
+    pageTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: hPad,
+      paddingTop: isDesktop ? 32 : 24,
+      paddingBottom: 4,
+    },
     pageTitle: {
       fontFamily: fonts.bold,
-      fontSize: 28,
+      fontSize: isDesktop ? 28 : 24,
       color: tc.text,
-      paddingHorizontal: isWide ? 32 : 20,
-      paddingTop: isWide ? 28 : 16,
-      paddingBottom: 4,
+    },
+    pageSubtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      color: tc.textLight,
+      marginTop: 4,
     },
 
     // Toolbar
     toolbar: {
       flexDirection: isWide ? 'row' : 'column',
       alignItems: isWide ? 'center' : 'stretch',
-      paddingHorizontal: isWide ? 32 : 16,
-      marginTop: isWide ? 16 : 12,
+      paddingHorizontal: hPad,
+      marginTop: isWide ? 20 : 12,
       gap: 10,
     },
     searchInputWrapper: {
       flex: isWide ? 1 : undefined,
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: tc.white,
+      backgroundColor: tc.surface,
       borderRadius: 12,
       paddingHorizontal: 14,
-      height: isWide ? 46 : 44,
+      height: isDesktop ? 46 : 44,
       borderWidth: 1,
       borderColor: tc.cardBorder,
-      maxWidth: isWide ? 420 : undefined,
+      maxWidth: isDesktop ? 480 : isWide ? 380 : undefined,
     },
     searchInput: {
       flex: 1,
       fontFamily: fonts.medium,
       fontSize: 14,
       color: tc.text,
-      ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
+      ...(isWeb ? { outlineStyle: 'none' as any } : {}),
     },
     searchIconBtn: {
       paddingVertical: 6,
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       backgroundColor: tc.accent,
       borderRadius: 8,
       marginLeft: 8,
     },
     searchBtnText: {
       fontFamily: fonts.semiBold,
-      fontSize: 12,
+      fontSize: 13,
       color: tc.white,
     },
     actionBtns: {
@@ -651,7 +732,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       backgroundColor: tc.accent,
       borderRadius: 10,
       paddingVertical: 10,
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       gap: 6,
     },
     addBtnText: {
@@ -661,7 +742,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     },
     actionBtn: {
       flexDirection: 'row',
-      backgroundColor: tc.white,
+      backgroundColor: tc.surface,
       borderWidth: 1,
       borderColor: tc.accent,
       borderRadius: 10,
@@ -682,41 +763,57 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       color: tc.textMuted,
     },
 
-    // Stats Bar (mobile)
+    // Stats Bar
     statsBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      marginHorizontal: 16,
-      marginTop: 12,
-      marginBottom: 8,
-      backgroundColor: tc.white,
-      borderRadius: 12,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
+      marginHorizontal: hPad,
+      marginTop: 16,
+      marginBottom: 12,
+      backgroundColor: tc.surface,
+      borderRadius: 14,
+      paddingVertical: isDesktop ? 16 : 12,
+      paddingHorizontal: isDesktop ? 24 : 20,
       borderWidth: 1,
       borderColor: tc.cardBorder,
+      ...(isWide && isWeb
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: isDark ? 0.15 : 0.04,
+            shadowRadius: 6,
+          }
+        : {}),
     },
     statItem: {
+      flexDirection: isDesktop ? 'row' : 'column',
       alignItems: 'center',
       flex: 1,
+      gap: isDesktop ? 10 : 2,
+    },
+    statIconContainer: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      backgroundColor: tc.accentBg,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     statNumber: {
       fontFamily: fonts.bold,
-      fontSize: 18,
+      fontSize: isDesktop ? 18 : 16,
       color: tc.accent,
     },
     statLabel: {
       fontFamily: fonts.regular,
       fontSize: 11,
       color: tc.textLight,
-      marginTop: 2,
     },
     statDivider: {
       width: 1,
       height: 28,
       backgroundColor: tc.divider,
-      marginHorizontal: 16,
+      marginHorizontal: isDesktop ? 20 : 16,
     },
 
     // Delete
@@ -726,7 +823,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       backgroundColor: tc.error,
       borderRadius: 10,
       paddingVertical: 10,
-      paddingHorizontal: 14,
+      paddingHorizontal: 16,
       gap: 6,
     },
     deleteBtnText: {
@@ -739,7 +836,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       fontFamily: fonts.medium,
       fontSize: 13,
       color: tc.error,
-      paddingHorizontal: isWide ? 32 : 16,
+      paddingHorizontal: hPad,
       marginBottom: 6,
     },
 
@@ -753,7 +850,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       gap: 10,
     },
     userCard: {
-      backgroundColor: tc.white,
+      backgroundColor: tc.surface,
       borderRadius: 14,
       padding: 14,
       borderWidth: 1,
@@ -841,19 +938,19 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       color: tc.accent,
     },
 
-    // ── Desktop Table (unchanged) ──
+    // ── Desktop Table ──
     tableCard: {
       flex: 1,
-      marginHorizontal: isWide ? 32 : 0,
-      backgroundColor: isWide ? tc.white : 'transparent',
-      borderRadius: isWide ? 14 : 0,
-      borderWidth: isWide ? 1 : 0,
+      marginHorizontal: hPad,
+      backgroundColor: tc.surface,
+      borderRadius: 14,
+      borderWidth: 1,
       borderColor: tc.cardBorder,
-      ...(isWide && Platform.OS === 'web'
+      ...(isWide && isWeb
         ? {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.05,
+            shadowOpacity: isDark ? 0.2 : 0.05,
             shadowRadius: 12,
           }
         : {}),
@@ -861,7 +958,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     },
     tableContainer: {
       flex: 1,
-      paddingHorizontal: isWide ? 8 : 12,
+      paddingHorizontal: isDesktop ? 12 : 8,
     },
     tableBody: {
       paddingBottom: 12,
@@ -873,10 +970,10 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       alignItems: 'flex-end',
       borderBottomWidth: 1,
       borderBottomColor: tc.divider,
-      paddingBottom: 10,
-      paddingHorizontal: isWide ? 8 : 0,
+      paddingVertical: 12,
+      paddingHorizontal: isDesktop ? 8 : 0,
       marginBottom: 2,
-      backgroundColor: isWide ? tc.surfaceAlt : 'transparent',
+      backgroundColor: tc.surfaceAlt,
     },
     colCheck: { width: COL_CHECK_W, alignItems: 'center', justifyContent: 'center' },
     colId: { width: COL_ID_W, paddingRight: 4 },
@@ -887,6 +984,8 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       fontFamily: fonts.bold,
       fontSize: 13,
       color: tc.text,
+      textTransform: 'uppercase' as any,
+      letterSpacing: 0.5,
     },
     colSub: {
       fontFamily: fonts.regular,
@@ -899,8 +998,8 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     tableRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: isWide ? 12 : 10,
-      paddingHorizontal: isWide ? 8 : 0,
+      paddingVertical: isDesktop ? 14 : 10,
+      paddingHorizontal: isDesktop ? 8 : 0,
       borderBottomWidth: 0.5,
       borderBottomColor: tc.divider,
     },
@@ -910,16 +1009,34 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     },
     cellText: {
       fontFamily: fonts.regular,
-      fontSize: isWide ? 14 : 12,
+      fontSize: isDesktop ? 14 : 13,
       color: tc.text,
     },
     cellTextBold: {
       fontFamily: fonts.semiBold,
-      fontSize: isWide ? 14 : 13,
+      fontSize: isDesktop ? 14 : 13,
       color: tc.text,
     },
     cellTextSelected: {
       color: tc.accent,
+    },
+
+    // Row avatar (desktop only)
+    rowAvatar: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: tc.accentLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    rowAvatarSelected: {
+      backgroundColor: tc.accent,
+    },
+    rowAvatarText: {
+      fontFamily: fonts.bold,
+      fontSize: 11,
+      color: tc.white,
     },
 
     // Row actions (web)
@@ -927,8 +1044,9 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
-      paddingVertical: 4,
-      paddingHorizontal: 8,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
     },
     rowActionText: {
       fontFamily: fonts.medium,
@@ -945,7 +1063,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       borderColor: tc.textMuted,
       justifyContent: 'center',
       alignItems: 'center',
-      backgroundColor: tc.white,
+      backgroundColor: tc.surface,
     },
     checkboxChecked: {
       backgroundColor: tc.accent,
@@ -956,8 +1074,17 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     emptyRow: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 50,
-      gap: 8,
+      paddingVertical: 60,
+      gap: 10,
+    },
+    emptyIconCircle: {
+      width: 72,
+      height: 72,
+      borderRadius: 36,
+      backgroundColor: tc.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 4,
     },
     emptyText: {
       fontFamily: fonts.semiBold,
@@ -973,10 +1100,12 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     // Load more
     loadMoreBtn: {
       alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
       paddingVertical: 12,
       paddingHorizontal: 24,
-      marginBottom: 20,
-      backgroundColor: tc.white,
+      marginVertical: 16,
+      backgroundColor: tc.surface,
       borderRadius: 10,
       borderWidth: 1,
       borderColor: tc.accent,
@@ -998,7 +1127,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       alignItems: 'center',
     },
     modalContent: {
-      backgroundColor: tc.white,
+      backgroundColor: tc.surface,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       padding: 24,
@@ -1007,13 +1136,13 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     modalContentWeb: {
       borderRadius: 20,
       width: '100%',
-      maxWidth: 440,
+      maxWidth: 480,
       paddingBottom: 28,
-      ...(Platform.OS === 'web'
+      ...(isWeb
         ? {
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.12,
+            shadowOpacity: isDark ? 0.3 : 0.12,
             shadowRadius: 24,
           }
         : {}),
@@ -1026,15 +1155,15 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     },
     modalTitle: {
       fontFamily: fonts.bold,
-      fontSize: 18,
+      fontSize: 20,
       color: tc.text,
     },
     modalLabel: {
       fontFamily: fonts.medium,
       fontSize: 13,
-      color: tc.text,
+      color: tc.textLight,
       marginBottom: 6,
-      marginTop: 12,
+      marginTop: 14,
     },
     modalInput: {
       fontFamily: fonts.regular,
@@ -1046,7 +1175,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       paddingHorizontal: 14,
       paddingVertical: 12,
       backgroundColor: tc.inputBg,
-      ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
+      ...(isWeb ? { outlineStyle: 'none' as any } : {}),
     },
     modalSubmitBtn: {
       backgroundColor: tc.accent,
