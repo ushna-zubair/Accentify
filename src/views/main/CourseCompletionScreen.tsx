@@ -562,7 +562,11 @@ const CourseCompletionScreen: React.FC = () => {
 
   const handleProceed = useCallback(() => {
     // Navigate back to the Tutor screen to pick the next lesson
-    navigation.popToTop();
+    if (navigation.canGoBack()) {
+      navigation.popToTop();
+    } else {
+      navigation.navigate('TutorMain' as never);
+    }
   }, [navigation]);
 
   const handleAttemptAgain = useCallback(() => {

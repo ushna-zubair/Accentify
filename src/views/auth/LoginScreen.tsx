@@ -14,9 +14,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { GoogleAuthProvider, signInWithCredential, signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../config/firebase';
+import { useAuth } from '../../context/AuthContext';
 import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
@@ -28,6 +29,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const { width } = useWindowDimensions();
+  const { signInWithGoogle } = useAuth();
   const isWeb = Platform.OS === 'web';
   const isWideWeb = isWeb && width >= 600;
   const [email, setEmail] = useState('');
@@ -82,64 +84,19 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handleGoogleSignIn = async () => {
-    let GoogleSignin: any;
-    let statusCodes: any;
-
     try {
       setLoading(true);
-
-      try {
-        const googleSigninModule = await import('@react-native-google-signin/google-signin');
-        GoogleSignin = googleSigninModule.GoogleSignin;
-        statusCodes = googleSigninModule.statusCodes;
-
-        GoogleSignin.configure({
-          webClientId: '104124924088-xxx.apps.googleusercontent.com',
-          offlineAccess: true,
-        });
-      } catch {
-        Alert.alert(
-          'Google Sign-In unavailable',
-          'Google Sign-In is not available in Expo Go. Use a development build or sign in with your account.'
-        );
-        return;
-      }
-
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-
-      if (userInfo.data?.idToken) {
-        const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
-        const result = await signInWithCredential(auth, credential);
-
-        const userRef = doc(db, 'users', result.user.uid);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-          await setDoc(userRef, {
-            email: result.user.email,
-            role: 'learner',
-            fullName: userInfo.data.user.name || '',
-            profileComplete: false,
-            createdAt: serverTimestamp(),
-          });
-        }
-
-        navigation.navigate('SetYourFingerprint');
+      const { isNewUser } = await signInWithGoogle();
+      if (isNewUser) {
+        navigation.navigate('CreateProfile');
       } else {
-        Alert.alert('Error', 'Failed to get ID token from Google');
+        navigation.navigate('SetYourFingerprint');
       }
     } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+      if (error?.message?.includes('CANCELLED') || error?.message?.includes('cancelled')) {
         return;
       }
-      if (error.code === statusCodes.IN_PROGRESS) {
-        Alert.alert('Error', 'Sign in is in progress');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        Alert.alert('Error', 'Play Services not available');
-      } else {
-        Alert.alert('Error', error.message || 'Google Sign-In failed');
-      }
+      Alert.alert('Error', error.message || 'Google Sign-In failed');
     } finally {
       setLoading(false);
     }
@@ -316,7 +273,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   /* ── Title & Subtitle ── */
   title: {
     fontFamily: fonts.bold,
-    fontSize: 26,
+    fontSize: 20,
     color: tc.text,
     marginBottom: 8,
   },

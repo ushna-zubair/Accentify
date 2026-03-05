@@ -8,9 +8,9 @@ import {
   Animated,
   Easing,
   ScrollView,
-  SafeAreaView,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -29,9 +29,7 @@ const { width: SCREEN_W } = Dimensions.get('window');
 // ═══════════════════════════════════════════════
 
 /** Return a color for the progress badge based on current index */
-const getProgressColor = (index: number, total: number): string => {
-  const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+const getProgressColor = (index: number, total: number, tc: ThemeColors): string => {
   if (total <= 1) return tc.success;
   const ratio = index / (total - 1);
   if (ratio <= 0.34) return tc.success;
@@ -284,6 +282,7 @@ const VocabExerciseScreen: React.FC = () => {
   const progressColor = getProgressColor(
     exercise.currentIndex,
     exercise.totalPairs,
+    tc,
   );
 
   return (

@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Circle as SvgCircle, G } from 'react-native-svg';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useInsightsController, ENGLISH_LEVELS } from '../../controllers';
@@ -227,6 +228,7 @@ const CONVERSATION_COLORS = ['#2ECC71', '#F1C40F', '#E67E22', '#E74C3C'];
 
 const AdminInsightsScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const navigation = useNavigation();
   const {
@@ -270,7 +272,7 @@ const AdminInsightsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>

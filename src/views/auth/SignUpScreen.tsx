@@ -280,7 +280,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   /* ── Title ── */
   title: {
     fontFamily: fonts.bold,
-    fontSize: 26,
+    fontSize: 20,
     color: tc.text,
     textAlign: 'center',
     marginBottom: 28,

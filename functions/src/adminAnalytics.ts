@@ -112,7 +112,7 @@ async function aggregate(): Promise<void> {
         d.setDate(d.getDate() + offset);
         const dateKey = d.toISOString().split('T')[0];
         const daySnap = await db
-          .doc(`users/${userDoc.id}/progress/daily/${dateKey}`)
+          .doc(`users/${userDoc.id}/progress/daily/entries/${dateKey}`)
           .get();
         if (!daySnap.exists) continue;
 

@@ -176,38 +176,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [currentUser, fetchUserRole]);
 
   /**
-   * Google Sign-In: authenticates with Google then links to Firebase.
+   * Google Sign-In using expo-auth-session (works in Expo Go).
+   * Opens a browser-based OAuth flow, then exchanges the ID token with Firebase.
    * Returns { isNewUser: true } when no Firestore doc exists yet (→ onboarding).
    */
   const signInWithGoogle = useCallback(async (): Promise<{ isNewUser: boolean }> => {
-    let GoogleSignin: any;
-    let statusCodes: any;
+    let AuthSession: typeof import('expo-auth-session');
+    let WebBrowser: typeof import('expo-web-browser');
+    let CryptoModule: typeof import('expo-crypto');
 
     try {
-      const googleSigninModule = await import('@react-native-google-signin/google-signin');
-      GoogleSignin = googleSigninModule.GoogleSignin;
-      statusCodes = googleSigninModule.statusCodes;
-
-      GoogleSignin.configure({
-        webClientId: '104124924088-xxx.apps.googleusercontent.com', // Replace with your actual web client ID
-        offlineAccess: true,
-      });
+      AuthSession = await import('expo-auth-session');
+      WebBrowser = await import('expo-web-browser');
+      CryptoModule = await import('expo-crypto');
     } catch {
-      Alert.alert(
-        'Google Sign-In unavailable',
-        'Google Sign-In is not available in Expo Go. Use a development build or sign in with email.'
-      );
-      throw new Error('Google Sign-In not available');
+      Alert.alert('Unavailable', 'Required packages for Google Sign-In are not installed.');
+      throw new Error('Google Sign-In packages not available');
     }
 
-    await GoogleSignin.hasPlayServices();
-    const userInfo = await GoogleSignin.signIn();
+    // Ensure any previous browser session is dismissed
+    WebBrowser.maybeCompleteAuthSession();
 
-    if (!userInfo.data?.idToken) {
+    // Build the Google OAuth discovery document
+    const discovery = {
+      authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+      tokenEndpoint: 'https://oauth2.googleapis.com/token',
+    };
+
+    // Use the Firebase Auth domain redirect for Expo
+    const redirectUri = AuthSession.makeRedirectUri({ preferLocalhost: false });
+
+    // Generate PKCE code verifier + challenge
+    const codeVerifier = CryptoModule.getRandomBytes(32)
+      .reduce((acc, byte) => acc + byte.toString(16).padStart(2, '0'), '');
+    const codeChallenge = await CryptoModule.digestStringAsync(
+      CryptoModule.CryptoDigestAlgorithm.SHA256,
+      codeVerifier,
+    );
+
+    // Web client ID from Firebase Console → Authentication → Sign-in method → Google
+    const clientId = '104124924088-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com';
+
+    const authRequest = new AuthSession.AuthRequest({
+      clientId,
+      redirectUri,
+      scopes: ['openid', 'profile', 'email'],
+      responseType: AuthSession.ResponseType.IdToken,
+      usePKCE: false,
+      extraParams: { nonce: codeVerifier },
+    });
+
+    const authResult = await authRequest.promptAsync(discovery);
+
+    if (authResult.type !== 'success' || !authResult.params?.id_token) {
+      if (authResult.type === 'cancel' || authResult.type === 'dismiss') {
+        throw new Error('SIGN_IN_CANCELLED');
+      }
       throw new Error('Failed to get ID token from Google');
     }
 
-    const credential = GoogleAuthProvider.credential(userInfo.data.idToken);
+    const idToken = authResult.params.id_token;
+    const credential = GoogleAuthProvider.credential(idToken);
     const result = await signInWithCredential(auth, credential);
 
     // Check if user already has a Firestore profile
@@ -215,6 +244,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
+      // Update lastLoginAt
+      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => {});
       await fetchUserRole(result.user.uid);
       return { isNewUser: false };
     }

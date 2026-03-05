@@ -247,8 +247,12 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   // ── Cleanup on unmount ──
   useEffect(() => {
     return () => {
-      if (audioRecorder.isRecording) {
-        audioRecorder.stop().catch(() => {});
+      try {
+        if (audioRecorder.isRecording) {
+          audioRecorder.stop().catch(() => {});
+        }
+      } catch {
+        // AudioRecorder native object may already be released
       }
       if (durationTimerRef.current) clearInterval(durationTimerRef.current);
     };

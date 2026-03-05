@@ -14,6 +14,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import Svg, { Path, Circle } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useUserDetailController } from '../../controllers';
@@ -147,6 +148,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ visible, message, onYes, on
 
 const AdminUserDetailScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const isWide = isWeb && width >= 600;
@@ -231,7 +233,7 @@ const AdminUserDetailScreen: React.FC = () => {
       <View style={styles.container}>
         {/* ── Header (mobile) ── */}
         {!isWide && (
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Ionicons name="arrow-back" size={24} color={tc.text} />
             </TouchableOpacity>
@@ -450,7 +452,7 @@ const AdminUserDetailScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>

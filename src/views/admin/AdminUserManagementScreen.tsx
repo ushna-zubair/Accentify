@@ -16,6 +16,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useUserManagementController } from '../../controllers';
@@ -232,6 +233,7 @@ const UserFormModal: React.FC<{
 
 const AdminUserManagementScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const isWide = isWeb && width >= 600;
@@ -306,11 +308,67 @@ const AdminUserManagementScreen: React.FC = () => {
     setEditModalVisible(true);
   };
 
+  // ── Mobile User Card ──
+  const renderMobileUserCard = (user: ManagedUser) => {
+    const isSelected = selectedUids.has(user.uid);
+    const initials = user.fullName
+      .split(' ')
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+
+    return (
+      <TouchableOpacity
+        key={user.uid}
+        style={[styles.userCard, isSelected && styles.userCardSelected]}
+        onPress={() => toggleSelect(user.uid)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.userCardTop}>
+          <View style={styles.userCardLeft}>
+            <View style={[styles.userAvatar, isSelected && styles.userAvatarSelected]}>
+              <Text style={styles.userAvatarText}>{initials}</Text>
+            </View>
+            <View style={styles.userCardInfo}>
+              <Text style={[styles.userCardName, isSelected && styles.userCardNameSelected]} numberOfLines={1}>
+                {user.fullName}
+              </Text>
+              <Text style={styles.userCardEmail} numberOfLines={1}>{user.email}</Text>
+            </View>
+          </View>
+          <Checkbox checked={isSelected} onPress={() => toggleSelect(user.uid)} />
+        </View>
+        <View style={styles.userCardBottom}>
+          <Text style={styles.userCardId} numberOfLines={1}>ID: {user.userId}</Text>
+          <View style={styles.userCardActions}>
+            <TouchableOpacity
+              style={styles.userCardActionBtn}
+              onPress={() => handleViewDetail(user.uid)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="eye-outline" size={16} color={tc.accent} />
+              <Text style={styles.userCardActionText}>View</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.userCardActionBtn}
+              onPress={() => handleEditUser(user)}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="create-outline" size={16} color={tc.textLight} />
+              <Text style={[styles.userCardActionText, { color: tc.textLight }]}>Edit</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
       {!isWide && (
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color={tc.text} />
           </TouchableOpacity>
@@ -350,21 +408,15 @@ const AdminUserManagementScreen: React.FC = () => {
             <Ionicons name="add" size={18} color={tc.white} />
             <Text style={styles.addBtnText}>Add User</Text>
           </TouchableOpacity>
-          {!isWide && (
+          {!isWide && selectedUids.size > 0 && (
             <TouchableOpacity
-              style={[styles.actionBtn, selectedUids.size === 0 && styles.actionBtnDisabled]}
+              style={styles.actionBtn}
               onPress={handleContinue}
-              disabled={selectedUids.size === 0}
+              disabled={selectedUids.size !== 1}
               activeOpacity={0.7}
             >
-              <Text
-                style={[
-                  styles.actionBtnText,
-                  selectedUids.size === 0 && styles.actionBtnTextDisabled,
-                ]}
-              >
-                Continue
-              </Text>
+              <Ionicons name="arrow-forward" size={16} color={tc.accent} />
+              <Text style={styles.actionBtnText}>Detail</Text>
             </TouchableOpacity>
           )}
           {selectedUids.size > 0 && (
@@ -378,62 +430,95 @@ const AdminUserManagementScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* ── Instruction ── */}
-      <Text style={styles.instruction}>
-        {isWide
-          ? `Showing ${users.length} users • Select users to manage`
-          : 'Select any user to edit/delete/add'}
-      </Text>
+      {/* ── Stats Bar ── */}
+      <View style={styles.statsBar}>
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{users.length}</Text>
+          <Text style={styles.statLabel}>Users</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statNumber}>{selectedUids.size}</Text>
+          <Text style={styles.statLabel}>Selected</Text>
+        </View>
+      </View>
 
       {/* ── Error ── */}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
-      {/* ── Table ── */}
-      <View style={styles.tableCard}>
-        <View style={styles.tableContainer}>
-          <ScrollView horizontal={!isWide} showsHorizontalScrollIndicator={false}>
-            <View style={{ flex: 1, minWidth: isWide ? '100%' as unknown as number : undefined }}>
-              <TableHeader isWide={isWide} />
-              <ScrollView
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.tableBody}
-              >
-                {users.length === 0 && !loading && (
-                  <View style={styles.emptyRow}>
-                    <Ionicons name="people-outline" size={32} color={tc.textMuted} />
-                    <Text style={styles.emptyText}>No users found</Text>
-                  </View>
-                )}
-                {users.map((user) => (
-                  <TableRow
-                    key={user.uid}
-                    user={user}
-                    selected={selectedUids.has(user.uid)}
-                    onToggle={() => toggleSelect(user.uid)}
-                    isWide={isWide}
-                    onViewDetail={() => handleViewDetail(user.uid)}
-                    onEditUser={() => handleEditUser(user)}
-                  />
-                ))}
+      {/* ── Content: Card list on mobile, Table on desktop ── */}
+      {!isWide ? (
+        <ScrollView
+          style={styles.userListScroll}
+          contentContainerStyle={styles.userListContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {users.length === 0 && !loading && (
+            <View style={styles.emptyRow}>
+              <Ionicons name="people-outline" size={40} color={tc.textMuted} />
+              <Text style={styles.emptyText}>No users found</Text>
+              <Text style={styles.emptySubText}>Add users or adjust your search</Text>
+            </View>
+          )}
+          {users.map(renderMobileUserCard)}
+          {loading && (
+            <ActivityIndicator size="small" color={tc.accent} style={{ marginVertical: 16 }} />
+          )}
+          {hasMore && !loading && (
+            <TouchableOpacity style={styles.loadMoreBtn} onPress={fetchMore} activeOpacity={0.7}>
+              <Text style={styles.loadMoreText}>Load more users...</Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      ) : (
+        <>
+          <View style={styles.tableCard}>
+            <View style={styles.tableContainer}>
+              <ScrollView horizontal={!isWide} showsHorizontalScrollIndicator={false}>
+                <View style={{ flex: 1, minWidth: isWide ? '100%' as unknown as number : undefined }}>
+                  <TableHeader isWide={isWide} />
+                  <ScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.tableBody}
+                  >
+                    {users.length === 0 && !loading && (
+                      <View style={styles.emptyRow}>
+                        <Ionicons name="people-outline" size={32} color={tc.textMuted} />
+                        <Text style={styles.emptyText}>No users found</Text>
+                      </View>
+                    )}
+                    {users.map((user) => (
+                      <TableRow
+                        key={user.uid}
+                        user={user}
+                        selected={selectedUids.has(user.uid)}
+                        onToggle={() => toggleSelect(user.uid)}
+                        isWide={isWide}
+                        onViewDetail={() => handleViewDetail(user.uid)}
+                        onEditUser={() => handleEditUser(user)}
+                      />
+                    ))}
 
-                {loading && (
-                  <ActivityIndicator
-                    size="small"
-                    color={tc.accent}
-                    style={{ marginVertical: 16 }}
-                  />
-                )}
+                    {loading && (
+                      <ActivityIndicator
+                        size="small"
+                        color={tc.accent}
+                        style={{ marginVertical: 16 }}
+                      />
+                    )}
+                  </ScrollView>
+                </View>
               </ScrollView>
             </View>
-          </ScrollView>
-        </View>
-      </View>
+          </View>
 
-      {/* ── Load More ── */}
-      {hasMore && !loading && (
-        <TouchableOpacity style={styles.loadMoreBtn} onPress={fetchMore} activeOpacity={0.7}>
-          <Text style={styles.loadMoreText}>Load more users...</Text>
-        </TouchableOpacity>
+          {/* ── Load More ── */}
+          {hasMore && !loading && (
+            <TouchableOpacity style={styles.loadMoreBtn} onPress={fetchMore} activeOpacity={0.7}>
+              <Text style={styles.loadMoreText}>Load more users...</Text>
+            </TouchableOpacity>
+          )}
+        </>
       )}
 
       {/* ── Modals ── */}
@@ -475,7 +560,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
   return StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: isWide ? '#F5F6FA' : tc.background,
+      backgroundColor: isWide ? '#F5F6FA' : tc.surfaceAlt,
     },
 
     // Header (mobile only)
@@ -484,16 +569,26 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 20,
-      paddingTop: 16,
+      paddingTop: 14,
       paddingBottom: 8,
+      backgroundColor: tc.white,
+      borderBottomWidth: 1,
+      borderBottomColor: tc.divider,
     },
-    backBtn: { padding: 4 },
+    backBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: tc.surfaceAlt,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
     headerTitle: {
       fontFamily: fonts.bold,
-      fontSize: 20,
+      fontSize: 18,
       color: tc.text,
     },
-    headerSpacer: { width: 32 },
+    headerSpacer: { width: 36 },
 
     // Page title (web)
     pageTitle: {
@@ -509,17 +604,17 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     toolbar: {
       flexDirection: isWide ? 'row' : 'column',
       alignItems: isWide ? 'center' : 'stretch',
-      paddingHorizontal: isWide ? 32 : 20,
-      marginTop: isWide ? 16 : 8,
-      gap: 12,
+      paddingHorizontal: isWide ? 32 : 16,
+      marginTop: isWide ? 16 : 12,
+      gap: 10,
     },
     searchInputWrapper: {
       flex: isWide ? 1 : undefined,
       flexDirection: 'row',
       alignItems: 'center',
       backgroundColor: tc.white,
-      borderRadius: isWide ? 12 : 24,
-      paddingHorizontal: 16,
+      borderRadius: 12,
+      paddingHorizontal: 14,
       height: isWide ? 46 : 44,
       borderWidth: 1,
       borderColor: tc.cardBorder,
@@ -533,8 +628,8 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
     },
     searchIconBtn: {
-      paddingVertical: 4,
-      paddingHorizontal: 12,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
       backgroundColor: tc.accent,
       borderRadius: 8,
       marginLeft: 8,
@@ -548,6 +643,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
+      flexWrap: 'wrap',
     },
     addBtn: {
       flexDirection: 'row',
@@ -555,7 +651,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       backgroundColor: tc.accent,
       borderRadius: 10,
       paddingVertical: 10,
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       gap: 6,
     },
     addBtnText: {
@@ -564,13 +660,15 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       color: tc.white,
     },
     actionBtn: {
-      backgroundColor: tc.surface,
+      flexDirection: 'row',
+      backgroundColor: tc.white,
       borderWidth: 1,
-      borderColor: tc.cardBorder,
+      borderColor: tc.accent,
       borderRadius: 10,
       paddingVertical: 10,
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       alignItems: 'center',
+      gap: 4,
     },
     actionBtnDisabled: {
       opacity: 0.5,
@@ -578,20 +676,47 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     actionBtnText: {
       fontFamily: fonts.medium,
       fontSize: 13,
-      color: tc.text,
+      color: tc.accent,
     },
     actionBtnTextDisabled: {
       color: tc.textMuted,
     },
 
-    // Instruction
-    instruction: {
-      fontFamily: fonts.regular,
-      fontSize: 13,
-      color: tc.textLight,
-      paddingHorizontal: isWide ? 32 : 20,
+    // Stats Bar (mobile)
+    statsBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginHorizontal: 16,
       marginTop: 12,
       marginBottom: 8,
+      backgroundColor: tc.white,
+      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    },
+    statItem: {
+      alignItems: 'center',
+      flex: 1,
+    },
+    statNumber: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.accent,
+    },
+    statLabel: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textLight,
+      marginTop: 2,
+    },
+    statDivider: {
+      width: 1,
+      height: 28,
+      backgroundColor: tc.divider,
+      marginHorizontal: 16,
     },
 
     // Delete
@@ -601,7 +726,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       backgroundColor: tc.error,
       borderRadius: 10,
       paddingVertical: 10,
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       gap: 6,
     },
     deleteBtnText: {
@@ -614,11 +739,109 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       fontFamily: fonts.medium,
       fontSize: 13,
       color: tc.error,
-      paddingHorizontal: isWide ? 32 : 20,
+      paddingHorizontal: isWide ? 32 : 16,
       marginBottom: 6,
     },
 
-    // Table Card (web gets card wrapper)
+    // ── Mobile User Cards ──
+    userListScroll: {
+      flex: 1,
+    },
+    userListContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 32,
+      gap: 10,
+    },
+    userCard: {
+      backgroundColor: tc.white,
+      borderRadius: 14,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    },
+    userCardSelected: {
+      borderColor: tc.accent,
+      backgroundColor: tc.accentMuted,
+    },
+    userCardTop: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    userCardLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flex: 1,
+    },
+    userAvatar: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: tc.accentLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    userAvatarSelected: {
+      backgroundColor: tc.accent,
+    },
+    userAvatarText: {
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      color: tc.white,
+    },
+    userCardInfo: {
+      flex: 1,
+    },
+    userCardName: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+    },
+    userCardNameSelected: {
+      color: tc.accent,
+    },
+    userCardEmail: {
+      fontFamily: fonts.regular,
+      fontSize: 12,
+      color: tc.textLight,
+      marginTop: 2,
+    },
+    userCardBottom: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 10,
+      paddingTop: 10,
+      borderTopWidth: 1,
+      borderTopColor: tc.divider,
+    },
+    userCardId: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textMuted,
+      flex: 1,
+    },
+    userCardActions: {
+      flexDirection: 'row',
+      gap: 4,
+    },
+    userCardActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      borderRadius: 8,
+      backgroundColor: tc.surfaceAlt,
+    },
+    userCardActionText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.accent,
+    },
+
+    // ── Desktop Table (unchanged) ──
     tableCard: {
       flex: 1,
       marginHorizontal: isWide ? 32 : 0,
@@ -733,12 +956,17 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     emptyRow: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 40,
+      paddingVertical: 50,
       gap: 8,
     },
     emptyText: {
-      fontFamily: fonts.medium,
-      fontSize: 14,
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.textMuted,
+    },
+    emptySubText: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
       color: tc.textMuted,
     },
 
@@ -748,6 +976,10 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       paddingVertical: 12,
       paddingHorizontal: 24,
       marginBottom: 20,
+      backgroundColor: tc.white,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tc.accent,
     },
     loadMoreText: {
       fontFamily: fonts.medium,
@@ -818,7 +1050,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
     },
     modalSubmitBtn: {
       backgroundColor: tc.accent,
-      borderRadius: 28,
+      borderRadius: 14,
       paddingVertical: 14,
       alignItems: 'center',
       marginTop: 24,

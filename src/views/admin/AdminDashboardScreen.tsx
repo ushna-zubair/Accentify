@@ -17,6 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import BarChart from './components/BarChart';
@@ -96,6 +97,14 @@ const AdminsOnlineSection: React.FC<{ admins: AdminOnline[] }> = ({ admins }) =>
   );
 };
 
+// ─── Menu Icons Mapping ───
+const MENU_ICON_MAP: Record<string, keyof typeof Ionicons.glyphMap> = {
+  insights: 'analytics-outline',
+  user_management: 'people-outline',
+  content_management: 'document-text-outline',
+  create_announcement: 'megaphone-outline',
+};
+
 // ─── Menu Button ───
 const MenuButton: React.FC<{
   item: AdminMenuItem;
@@ -103,17 +112,22 @@ const MenuButton: React.FC<{
 }> = ({ item, onPress }) => {
   const { colors: tc } = useAppTheme();
   const mStyles = useMemo(() => createMStyles(tc), [tc]);
+  const iconName = MENU_ICON_MAP[item.key] ?? 'ellipse-outline';
   return (
   <TouchableOpacity
     style={[mStyles.menuButton, item.filled && mStyles.menuButtonFilled]}
     onPress={onPress}
     activeOpacity={0.7}
   >
+    <View style={[mStyles.menuIconWrap, item.filled && mStyles.menuIconWrapFilled]}>
+      <Ionicons name={iconName} size={20} color={item.filled ? tc.white : tc.accent} />
+    </View>
     <Text
       style={[mStyles.menuButtonText, item.filled && mStyles.menuButtonTextFilled]}
     >
       {item.label}
     </Text>
+    <Ionicons name="chevron-forward" size={18} color={item.filled ? tc.white : tc.accent} />
   </TouchableOpacity>
   );
 };
@@ -195,6 +209,7 @@ const CreateAnnouncementModal: React.FC<{
 // ─── Mobile Dashboard Screen ───
 const MobileAdminDashboard: React.FC = () => {
   const { colors: tc } = useAppTheme();
+  const insets = useSafeAreaInsets();
   const mStyles = useMemo(() => createMStyles(tc), [tc]);
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const { mobileData, loading, handleLogout, createAnnouncement } =
@@ -253,17 +268,26 @@ const MobileAdminDashboard: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <View style={mStyles.header}>
+        <View style={[mStyles.header, { paddingTop: insets.top + 14 }]}>
           <View style={mStyles.headerLeft}>
-            <AdminAvatar name={mobileData.adminName} size={52} />
-            <Text style={mStyles.headerName}>{mobileData.adminName}</Text>
-          </View>
-          <View style={mStyles.headerCenter}>
-            <Text style={mStyles.headerTitle}>Admin Dashboard</Text>
+            <AdminAvatar name={mobileData.adminName} size={46} />
+            <View style={mStyles.headerInfo}>
+              <Text style={mStyles.headerGreeting}>Welcome back,</Text>
+              <Text style={mStyles.headerName}>{mobileData.adminName}</Text>
+            </View>
           </View>
           <TouchableOpacity onPress={confirmLogout} style={mStyles.logoutBtn}>
-            <Ionicons name="log-out-outline" size={26} color={tc.error} />
+            <Ionicons name="log-out-outline" size={22} color={tc.error} />
           </TouchableOpacity>
+        </View>
+
+        {/* ── Dashboard Title Card ── */}
+        <View style={mStyles.titleCard}>
+          <Image source={require('../../../assets/logo.png')} style={mStyles.titleLogo} resizeMode="contain" />
+          <View style={mStyles.titleCardContent}>
+            <Text style={mStyles.titleCardHeading}>Admin Dashboard</Text>
+            <Text style={mStyles.titleCardSub}>Manage users, announcements & insights</Text>
+          </View>
         </View>
 
         {/* ── Announcement ── */}
@@ -277,6 +301,9 @@ const MobileAdminDashboard: React.FC = () => {
         {/* ── Admins Online ── */}
         <AdminsOnlineSection admins={mobileData.adminsOnline} />
 
+        {/* ── Quick Actions Label ── */}
+        <Text style={mStyles.sectionLabel}>Quick Actions</Text>
+
         {/* ── Menu Buttons ── */}
         <View style={mStyles.menuList}>
           {mobileData.menuItems.map((item) => (
@@ -289,8 +316,13 @@ const MobileAdminDashboard: React.FC = () => {
         </View>
 
         {/* ── Continue Button ── */}
-        <TouchableOpacity style={mStyles.continueBtn} activeOpacity={0.7}>
-          <Text style={mStyles.continueBtnText}>Continue</Text>
+        <TouchableOpacity
+          style={mStyles.continueBtn}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('AdminInsights')}
+        >
+          <Text style={mStyles.continueBtnText}>View Insights</Text>
+          <Ionicons name="arrow-forward" size={18} color={tc.white} />
         </TouchableOpacity>
       </ScrollView>
 
@@ -309,15 +341,16 @@ const MobileAdminDashboard: React.FC = () => {
 const createMStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tc.background,
+    backgroundColor: tc.surfaceAlt,
   },
   scrollContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+    paddingTop: 8,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: tc.background,
+    backgroundColor: tc.surfaceAlt,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -327,29 +360,67 @@ const createMStyles = (tc: ThemeColors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 16,
-    paddingBottom: 12,
+    paddingTop: 14,
+    paddingBottom: 10,
   },
   headerLeft: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-  },
-  headerCenter: {
+    gap: 12,
     flex: 1,
-    alignItems: 'center',
   },
-  headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
+  headerInfo: {
+    flex: 1,
   },
-  headerName: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
+  headerGreeting: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
     color: tc.textLight,
   },
+  headerName: {
+    fontFamily: fonts.bold,
+    fontSize: 17,
+    color: tc.text,
+    marginTop: 1,
+  },
   logoutBtn: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: tc.errorBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  // Title Card
+  titleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tc.accent,
+    borderRadius: 16,
+    padding: 18,
+    marginTop: 12,
+    gap: 14,
+  },
+  titleLogo: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+  },
+  titleCardContent: {
+    flex: 1,
+  },
+  titleCardHeading: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    color: tc.white,
+  },
+  titleCardSub: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    color: tc.white,
+    opacity: 0.8,
+    marginTop: 2,
   },
 
   // Avatar
@@ -369,24 +440,24 @@ const createMStyles = (tc: ThemeColors) => StyleSheet.create({
 
   // Announcement
   announcementCard: {
-    backgroundColor: tc.accentMuted,
+    backgroundColor: tc.white,
     borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: tc.accent,
-    padding: 18,
-    marginTop: 8,
+    borderWidth: 1,
+    borderColor: tc.cardBorder,
+    padding: 16,
+    marginTop: 16,
   },
   announcementTitle: {
     fontFamily: fonts.bold,
-    fontSize: 16,
+    fontSize: 15,
     color: tc.text,
     marginBottom: 6,
   },
   announcementBody: {
     fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.text,
-    lineHeight: 22,
+    fontSize: 13,
+    color: tc.textLight,
+    lineHeight: 20,
   },
 
   // Admins Online
@@ -395,13 +466,13 @@ const createMStyles = (tc: ThemeColors) => StyleSheet.create({
   },
   adminsOnlineTitle: {
     fontFamily: fonts.bold,
-    fontSize: 16,
+    fontSize: 15,
     color: tc.text,
     marginBottom: 10,
   },
   adminsOnlineRow: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 14,
   },
   adminOnlineItem: {
     alignItems: 'center',
@@ -415,29 +486,50 @@ const createMStyles = (tc: ThemeColors) => StyleSheet.create({
     textAlign: 'center',
   },
 
+  // Section Label
+  sectionLabel: {
+    fontFamily: fonts.bold,
+    fontSize: 15,
+    color: tc.text,
+    marginTop: 24,
+    marginBottom: 12,
+  },
+
   // Menu List
   menuList: {
-    marginTop: 24,
-    gap: 14,
-    alignItems: 'center',
+    gap: 10,
   },
   menuButton: {
-    width: '80%',
-    paddingVertical: 14,
-    borderRadius: 28,
-    borderWidth: 2,
-    borderColor: tc.accent,
+    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: tc.background,
+    backgroundColor: tc.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tc.cardBorder,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   menuButtonFilled: {
     backgroundColor: tc.accent,
     borderColor: tc.accent,
   },
+  menuIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: tc.accentMuted,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  menuIconWrapFilled: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
   menuButtonText: {
+    flex: 1,
     fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.accent,
+    fontSize: 15,
+    color: tc.text,
   },
   menuButtonTextFilled: {
     color: tc.white,
@@ -445,16 +537,18 @@ const createMStyles = (tc: ThemeColors) => StyleSheet.create({
 
   // Continue
   continueBtn: {
-    marginTop: 30,
+    marginTop: 24,
     backgroundColor: tc.accent,
-    borderRadius: 28,
+    borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
-    marginHorizontal: 16,
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
   continueBtnText: {
     fontFamily: fonts.bold,
-    fontSize: 17,
+    fontSize: 16,
     color: tc.white,
   },
 

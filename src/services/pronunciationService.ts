@@ -8,7 +8,6 @@
  * Also provides a helper to read a local audio file as base64.
  */
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { readAsStringAsync } from 'expo-file-system';
 import app from '../config/firebase';
 
 const functions = getFunctions(app);
@@ -53,13 +52,22 @@ export async function fetchSentences(
 
 /**
  * Read a local audio file as a base64 string.
- * This uses expo-file-system to read the file recorded by expo-av.
+ * Uses fetch + FileReader to avoid deprecated expo-file-system APIs.
  */
 export async function readAudioAsBase64(uri: string): Promise<string> {
-  const base64 = await readAsStringAsync(uri, {
-    encoding: 'base64',
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      // result is "data:<mime>;base64,<data>" — strip the prefix
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.split(',')[1] ?? '';
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
   });
-  return base64;
 }
 
 /**

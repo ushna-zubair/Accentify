@@ -419,8 +419,12 @@ export const useVocabExerciseController = (lessonId: string) => {
     fetchExercise();
     return () => {
       // Cleanup
-      if (audioRecorder.isRecording) {
-        audioRecorder.stop().catch(() => {});
+      try {
+        if (audioRecorder.isRecording) {
+          audioRecorder.stop().catch(() => {});
+        }
+      } catch {
+        // AudioRecorder native object may already be released
       }
     };
   }, [fetchExercise]);

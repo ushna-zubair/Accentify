@@ -17,7 +17,7 @@
  *   { completedLessons, totalHours, totalSessions, lastActiveAt,
  *     totalVocabWords, totalPronunciationAttempts }
  *
- * users/{uid}/progress/daily/{YYYY-MM-DD}
+ * users/{uid}/progress/daily/entries/{YYYY-MM-DD}
  *   { date, lessonsCompleted, pronunciationAttempts, vocabWordsLearned,
  *     conversationTurns, practiceMinutes,
  *     pronunciationScores: PronunciationScore[],
@@ -181,7 +181,7 @@ export const recordPronunciationActivity = async (
   score: PronunciationScore,
 ): Promise<void> => {
   const todayKey = toDateKey(new Date());
-  const ref = doc(db, 'users', uid, 'progress', 'daily', todayKey);
+  const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
 
   await setDoc(
     ref,
@@ -203,7 +203,7 @@ export const recordConversationActivity = async (
   metrics: ConversationMetricsResult,
 ): Promise<void> => {
   const todayKey = toDateKey(new Date());
-  const ref = doc(db, 'users', uid, 'progress', 'daily', todayKey);
+  const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
 
   await setDoc(
     ref,
@@ -225,7 +225,7 @@ export const recordVocabActivity = async (
   wordsLearned: number,
 ): Promise<void> => {
   const todayKey = toDateKey(new Date());
-  const ref = doc(db, 'users', uid, 'progress', 'daily', todayKey);
+  const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
 
   await setDoc(
     ref,
@@ -243,7 +243,7 @@ export const recordVocabActivity = async (
  */
 export const recordLessonCompletion = async (uid: string): Promise<void> => {
   const todayKey = toDateKey(new Date());
-  const ref = doc(db, 'users', uid, 'progress', 'daily', todayKey);
+  const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
 
   await setDoc(
     ref,
@@ -282,7 +282,7 @@ export const aggregateWeek = async (
     const day = new Date(weekStart);
     day.setDate(weekStart.getDate() + i);
     const key = toDateKey(day);
-    const ref = doc(db, 'users', uid, 'progress', 'daily', key);
+    const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', key);
     const snap = await getDoc(ref);
 
     if (snap.exists()) {
@@ -380,7 +380,7 @@ export const buildLessonDays = async (uid: string): Promise<LessonDay[]> => {
 
     if (!isFuture) {
       // Check if the user had any activity on this day
-      const ref = doc(db, 'users', uid, 'progress', 'daily', dateKey);
+      const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', dateKey);
       const snap = await getDoc(ref);
 
       if (snap.exists()) {

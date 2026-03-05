@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -30,7 +30,8 @@
       "expo-secure-store",
       "expo-font",
       "expo-apple-authentication",
-      "expo-audio"
+      "expo-audio",
+      "expo-web-browser"
     ],
     "extra": {
       "FIREBASE_API_KEY": "AIzaSyADW4-QogGi0N3pq_V8OPFZndSICCJ5YpM",

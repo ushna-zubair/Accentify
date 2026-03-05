@@ -13,7 +13,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
-  SafeAreaView,
   Animated,
   Easing,
   Dimensions,
@@ -23,6 +22,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
