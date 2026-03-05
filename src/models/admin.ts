@@ -262,3 +262,77 @@ export interface FeedbackStats {
 
 export type FeedbackTab = 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
 
+// ═══════════════════════════════════════════════
+//  MANAGE LESSONS (Admin)
+// ═══════════════════════════════════════════════
+
+export type LessonCategory = 'conversation' | 'pronunciation' | 'vocabulary';
+export type AdminLessonStatus = 'published' | 'draft' | 'archived';
+
+export const LESSON_CATEGORY_LABELS: Record<LessonCategory, string> = {
+  conversation: 'Conversation',
+  pronunciation: 'Pronunciation',
+  vocabulary: 'Vocabulary',
+};
+
+export const ADMIN_LESSON_STATUS_LABELS: Record<AdminLessonStatus, string> = {
+  published: 'Published',
+  draft: 'Draft',
+  archived: 'Archived',
+};
+
+export interface AdminLesson {
+  id: string;
+  title: string;
+  description: string;
+  fullDescription: string;
+  category: LessonCategory;
+  difficulty: 'Easy' | 'Medium' | 'Challenging';
+  order: number;
+  status: AdminLessonStatus;
+  focusTips: string[];
+  imageUrl: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  enrolledCount: number;
+  completedCount: number;
+  vocabPairCount: number;
+}
+
+export interface AdminLessonFormData {
+  title: string;
+  description: string;
+  fullDescription: string;
+  category: LessonCategory;
+  difficulty: 'Easy' | 'Medium' | 'Challenging';
+  order: number;
+  status: AdminLessonStatus;
+  focusTips: string[];
+  imageUrl: string;
+}
+
+export const DEFAULT_LESSON_FORM: AdminLessonFormData = {
+  title: '',
+  description: '',
+  fullDescription: '',
+  category: 'conversation',
+  difficulty: 'Easy',
+  order: 0,
+  status: 'draft',
+  focusTips: [],
+  imageUrl: '',
+};
+
+export interface AdminLessonStats {
+  total: number;
+  published: number;
+  draft: number;
+  archived: number;
+  totalEnrolled: number;
+  totalCompleted: number;
+  byCategory: Record<LessonCategory, number>;
+}
+
+export type ManageLessonsTab = 'all' | 'published' | 'draft' | 'archived';
+

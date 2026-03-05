@@ -16,3 +16,4 @@ export { useLoginDevicesController } from './useLoginDevicesController';
 export { useAccessControlController } from './useAccessControlController';
 export type { AccessControlTab, PendingInvite } from './useAccessControlController';
 export { useFeedbackReportsController } from './useFeedbackReportsController';
+export { useManageLessonsController } from './useManageLessonsController';

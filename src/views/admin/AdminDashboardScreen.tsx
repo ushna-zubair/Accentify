@@ -34,6 +34,7 @@ import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } f
 import AdminUserManagementScreen from './AdminUserManagementScreen';
 import AdminAccessControlScreen from './AdminAccessControlScreen';
 import AdminFeedbackReportsScreen from './AdminFeedbackReportsScreen';
+import AdminManageLessonsScreen from './AdminManageLessonsScreen';
 import { SettingsStackNavigator } from '../../navigation/AppNavigator';
 import { useDashboardAnalytics } from '../../hooks/useDashboardAnalytics';
 
@@ -1153,7 +1154,9 @@ const DesktopAdminDashboard: React.FC = () => {
         />
 
         {/* ── Conditionally render content based on active sidebar menu ── */}
-        {activeMenu === 'users' ? (
+        {activeMenu === 'lessons' ? (
+          <AdminManageLessonsScreen />
+        ) : activeMenu === 'users' ? (
           <AdminUserManagementScreen />
         ) : activeMenu === 'settings' ? (
           <View style={{ flex: 1 }}>
