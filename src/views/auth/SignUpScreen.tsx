@@ -9,6 +9,7 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -27,6 +28,9 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWideWeb = isWeb && width >= 600;
   const { signInWithGoogle, signInWithApple } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -116,47 +120,56 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWideWeb && styles.webScrollContent,
+        ]}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        <Image
-          source={require('../../../assets/logo.png')}
-          style={styles.logo}
-          resizeMode="contain"
-        />
+        <View style={isWideWeb ? styles.webCard : undefined}>
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
 
         <Text style={styles.title}>Create your Accentify Account</Text>
 
-        <CustomInput
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          leftIcon={<FontAwesome5 name="envelope" size={18} color={tc.accent} />}
-        />
+        <View style={styles.inputsContainer}>
+          <CustomInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
+          />
 
-        <CustomInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          leftIcon={<FontAwesome5 name="lock" size={18} color={tc.accent} />}
-        />
+          <CustomInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            leftIcon={<FontAwesome5 name="lock" size={16} color={tc.textMuted} />}
+          />
+        </View>
 
         <TouchableOpacity
           style={styles.checkboxContainer}
           onPress={() => setAgreeToTerms(!agreeToTerms)}
         >
           <View style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}>
-            {agreeToTerms && <FontAwesome5 name="check" size={12} color={tc.white} />}
+            {agreeToTerms && <FontAwesome5 name="check" size={10} color={tc.white} />}
           </View>
           <Text style={styles.checkboxText}>Agree to Terms and Conditions</Text>
         </TouchableOpacity>
 
-        <View style={styles.signUpButtonContainer}
-        >
+        <View style={styles.signUpButtonContainer}>
           <CustomButton
             title="Sign Up"
             onPress={handleSignUp}
@@ -165,11 +178,17 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
           />
         </View>
 
-        <Text style={styles.orContinueText}>Or continue with</Text>
+        {/* Or Continue With Divider */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Or Continue With</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
-        <View style={styles.socialButtonsContainer}>
+        {/* Social Login Buttons */}
+        <View style={styles.socialRow}>
           <TouchableOpacity
-            style={styles.socialButtonSmall}
+            style={styles.socialButton}
             onPress={handleGoogleSignUp}
             disabled={loading || socialLoading !== null}
             activeOpacity={0.7}
@@ -177,30 +196,31 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
             {socialLoading === 'google' ? (
               <ActivityIndicator color={tc.accent} size="small" />
             ) : (
-              <FontAwesome5 name="google" size={20} color={'#4285F4'} />
+              <FontAwesome5 name="google" size={22} color={'#4285F4'} />
             )}
           </TouchableOpacity>
-          {Platform.OS === 'ios' && (
-            <TouchableOpacity
-              style={styles.socialButtonSmall}
-              onPress={handleAppleSignUp}
-              disabled={loading || socialLoading !== null}
-              activeOpacity={0.7}
-            >
-              {socialLoading === 'apple' ? (
-                <ActivityIndicator color={tc.text} size="small" />
-              ) : (
-                <FontAwesome5 name="apple" size={20} color={'#000000'} />
-              )}
-            </TouchableOpacity>
-          )}
+
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleAppleSignUp}
+            disabled={loading || socialLoading !== null}
+            activeOpacity={0.7}
+          >
+            {socialLoading === 'apple' ? (
+              <ActivityIndicator color={tc.text} size="small" />
+            ) : (
+              <FontAwesome5 name="apple" size={22} color={'#000000'} />
+            )}
+          </TouchableOpacity>
         </View>
 
+        {/* Sign In Link */}
         <View style={styles.signInContainer}>
           <Text style={styles.signInText}>Already have an account? </Text>
           <TouchableOpacity onPress={() => navigation.navigate('Login')}>
             <Text style={styles.signInLink}>SIGN IN</Text>
           </TouchableOpacity>
+        </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -210,93 +230,143 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tc.background,
+    backgroundColor: tc.white,
+  },
+  webContainer: {
+    backgroundColor: '#F5F6FA',
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 20,
+    paddingTop: 16,
+    paddingBottom: 32,
+  },
+  webScrollContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 16,
+  },
+  webCard: {
+    width: '100%',
+    maxWidth: 480,
+    backgroundColor: tc.white,
+    borderRadius: 20,
+    paddingHorizontal: 36,
+    paddingVertical: 36,
+    ...(Platform.OS === 'web'
+      ? {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 24,
+        }
+      : {}),
+  },
+  /* ── Logo ── */
+  logoContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 8,
   },
   logo: {
-    width: 80,
-    height: 80,
-    alignSelf: 'center',
-    marginBottom: 24,
+    width: 100,
+    height: 100,
   },
+  /* ── Title ── */
   title: {
     fontFamily: fonts.bold,
-    fontSize: 24,
+    fontSize: 26,
     color: tc.text,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 28,
   },
+  /* ── Inputs ── */
+  inputsContainer: {
+    gap: 8,
+    marginBottom: 4,
+  },
+  /* ── Checkbox ── */
   checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 16,
-    gap: 12,
+    marginVertical: 12,
+    gap: 8,
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    width: 18,
+    height: 18,
     borderRadius: 4,
-    borderWidth: 2,
-    borderColor: tc.accent,
+    borderWidth: 1.5,
+    borderColor: tc.inputBorder,
     backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkboxChecked: {
     backgroundColor: tc.accent,
+    borderColor: tc.accent,
   },
   checkboxText: {
     fontFamily: fonts.medium,
-    fontSize: 14,
+    fontSize: 13,
     color: tc.text,
   },
+  /* ── Sign Up Button ── */
   signUpButtonContainer: {
-    marginTop: 24,
+    marginTop: 16,
     marginBottom: 28,
   },
-  orContinueText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.textLight,
-    textAlign: 'center',
-    marginBottom: 16,
+  /* ── Divider ── */
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
   },
-  socialButtonsContainer: {
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: tc.inputBorder,
+  },
+  dividerText: {
+    fontFamily: fonts.medium,
+    fontSize: 13,
+    color: tc.textLight,
+    marginHorizontal: 14,
+  },
+  /* ── Social Buttons ── */
+  socialRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 16,
+    gap: 24,
     marginBottom: 28,
   },
-  socialButtonSmall: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: tc.white,
+  socialButton: {
+    width: 60,
+    height: 52,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: tc.inputBorder,
+    backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  /* ── Sign In Link ── */
   signInContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 'auto',
-    paddingBottom: 20,
   },
   signInText: {
     fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.textLight,
+    fontSize: 13,
+    color: tc.text,
   },
   signInLink: {
     fontFamily: fonts.bold,
-    fontSize: 14,
+    fontSize: 13,
     color: tc.accent,
+    textDecorationLine: 'underline',
   },
 });
 
