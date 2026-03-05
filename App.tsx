@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
+import { Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
@@ -26,6 +27,22 @@ const ThemedStatusBar: React.FC = () => {
 };
 
 export default function App() {
+  // Web-only: inject Google Fonts CSS with display=swap to prevent
+  // "Slow network detected" browser intervention and OTS parsing errors.
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const id = 'google-fonts-poppins';
+      if (!document.getElementById(id)) {
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href =
+          'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap';
+        document.head.appendChild(link);
+      }
+    }
+  }, []);
+
   // Preload the FontAwesome5 icon font so icons appear instantly
   const [fontsLoaded] = useFonts({
     ...FontAwesome5.font,
