@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SectionList,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
@@ -18,10 +19,20 @@ type Props = NativeStackScreenProps<SettingsStackParamList, 'Notifications'>;
 
 // ------- Component -------
 const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
-  const { activeTab, setActiveTab, sections, markAllAsRead, markAsRead } =
+  const { activeTab, setActiveTab, sections, loading, markAllAsRead, markAsRead } =
     useNotificationController();
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={tc.accent} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   const renderItem = ({ item }: { item: NotificationItem }) => (
     <TouchableOpacity

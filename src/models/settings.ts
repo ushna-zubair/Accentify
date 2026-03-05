@@ -35,6 +35,8 @@ export interface NotificationItem {
   avatar: ImageSourcePropType;
   unread: boolean;
   tab: NotificationTab;
+  /** Firestore timestamp (ISO string) for sorting; falls back to `time` for display */
+  createdAt?: string;
 }
 
 export interface NotificationSection {

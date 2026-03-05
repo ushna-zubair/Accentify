@@ -43,7 +43,7 @@ export const useUserManagementController = () => {
       setError(null);
 
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, orderBy('fullName'), limit(PAGE_SIZE));
+      const q = query(usersRef, orderBy('createdAt', 'desc'), limit(PAGE_SIZE));
       const snapshot = await getDocs(q);
 
       const fetched: ManagedUser[] = snapshot.docs.map((d) => {
@@ -76,7 +76,7 @@ export const useUserManagementController = () => {
     try {
       setLoading(true);
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, orderBy('fullName'), startAfter(lastDoc), limit(PAGE_SIZE));
+      const q = query(usersRef, orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(PAGE_SIZE));
       const snapshot = await getDocs(q);
 
       const fetched: ManagedUser[] = snapshot.docs.map((d) => {

@@ -8,6 +8,7 @@ import {
   deleteDoc,
   doc,
   serverTimestamp,
+  where,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { Announcement } from '../models';
@@ -139,6 +140,28 @@ export const useAnnouncementsController = () => {
 
         setAnnouncements((prev) => [newAnnouncement, ...prev]);
         setDraftBody('');
+
+        // ── Deliver notification to all non-admin users ──
+        try {
+          const usersRef = collection(db, 'users');
+          const usersQ = query(usersRef, where('role', '!=', 'admin'));
+          const usersSnap = await getDocs(usersQ);
+
+          const promises = usersSnap.docs.map((userDoc) =>
+            addDoc(collection(db, 'users', userDoc.id, 'notifications'), {
+              text: body.trim(),
+              tab: 'Overall',
+              unread: true,
+              type: 'announcement',
+              announcementId: docRef.id,
+              createdAt: serverTimestamp(),
+            }),
+          );
+          await Promise.all(promises);
+        } catch (notifErr) {
+          // Non-critical: announcement was saved, notification delivery failed
+          console.warn('[Announcements] failed to deliver notifications:', notifErr);
+        }
       } catch (e: any) {
         console.error('[Announcements] post error:', e);
         setError(e.message ?? 'Failed to post announcement');

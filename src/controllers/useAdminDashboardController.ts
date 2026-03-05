@@ -206,12 +206,34 @@ export const useAdminMobileDashboardController = () => {
       if (!currentUser) return;
       try {
         const announcementsRef = collection(db, 'announcements');
-        await addDoc(announcementsRef, {
+        const docRef = await addDoc(announcementsRef, {
           title,
           body,
           createdBy: currentUser.uid,
           createdAt: serverTimestamp(),
         });
+
+        // ── Deliver notification to all non-admin users ──
+        try {
+          const usersRef = collection(db, 'users');
+          const usersQ = query(usersRef, where('role', '!=', 'admin'));
+          const usersSnap = await getDocs(usersQ);
+
+          const promises = usersSnap.docs.map((userDoc) =>
+            addDoc(collection(db, 'users', userDoc.id, 'notifications'), {
+              text: body,
+              tab: 'Overall',
+              unread: true,
+              type: 'announcement',
+              announcementId: docRef.id,
+              createdAt: serverTimestamp(),
+            }),
+          );
+          await Promise.all(promises);
+        } catch (notifErr) {
+          console.warn('[Dashboard] failed to deliver notifications:', notifErr);
+        }
+
         // Refresh dashboard to show the new announcement
         await fetchDashboard();
       } catch (e: any) {
