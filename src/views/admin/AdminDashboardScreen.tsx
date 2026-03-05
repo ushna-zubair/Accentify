@@ -30,6 +30,7 @@ import {
   OTHERS_ITEMS,
 } from '../../controllers';
 import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } from '../../models';
+import AdminUserManagementScreen from './AdminUserManagementScreen';
 
 // ═══════════════════════════════════════════════
 //  MOBILE ADMIN DASHBOARD
@@ -905,39 +906,44 @@ const DesktopAdminDashboard: React.FC = () => {
           onMenuToggle={() => setSidebarOpen((v) => !v)}
         />
 
-        <ScrollView
-          style={styles.scrollArea}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { maxWidth: 1400, alignSelf: 'center' as const, width: '100%' as unknown as number },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.pageTitle}>Dashboard</Text>
+        {/* ── Conditionally render content based on active sidebar menu ── */}
+        {activeMenu === 'users' ? (
+          <AdminUserManagementScreen />
+        ) : (
+          <ScrollView
+            style={styles.scrollArea}
+            contentContainerStyle={[
+              styles.scrollContent,
+              { maxWidth: 1400, alignSelf: 'center' as const, width: '100%' as unknown as number },
+            ]}
+            showsVerticalScrollIndicator={false}
+          >
+            <Text style={styles.pageTitle}>Dashboard</Text>
 
-          {/* Row 1: Revenue + Practice Activity */}
-          <View style={[styles.row, !canLayoutTwoCol && styles.rowColumn]}>
-            <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1.6 }]}>
-              <RevenueCard data={dashboardData} />
+            {/* Row 1: Revenue + Practice Activity */}
+            <View style={[styles.row, !canLayoutTwoCol && styles.rowColumn]}>
+              <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1.6 }]}>
+                <RevenueCard data={dashboardData} />
+              </View>
+              <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1 }]}>
+                <PracticeActivityCard data={dashboardData} />
+              </View>
             </View>
-            <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1 }]}>
-              <PracticeActivityCard data={dashboardData} />
-            </View>
-          </View>
 
-          {/* Row 2: Insights + Learners + Sessions */}
-          <View style={[styles.row, !canLayoutThreeCol && styles.rowColumn]}>
-            <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
-              <PerformanceInsightsCard data={dashboardData} />
+            {/* Row 2: Insights + Learners + Sessions */}
+            <View style={[styles.row, !canLayoutThreeCol && styles.rowColumn]}>
+              <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
+                <PerformanceInsightsCard data={dashboardData} />
+              </View>
+              <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
+                <TopLearnersCard data={dashboardData} />
+              </View>
+              <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
+                <PracticeSessionsCard data={dashboardData} />
+              </View>
             </View>
-            <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
-              <TopLearnersCard data={dashboardData} />
-            </View>
-            <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
-              <PracticeSessionsCard data={dashboardData} />
-            </View>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        )}
       </View>
     </View>
   );
@@ -1001,8 +1007,8 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     paddingLeft: 4,
   },
   logo: {
-    width: 140,
-    height: 36,
+    width: 48,
+    height: 48,
   },
   sidebarSection: {
     fontFamily: fonts.bold,
@@ -1100,9 +1106,9 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     gap: 8,
   },
   adminAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: tc.accentMuted,
   },
   adminLabel: {

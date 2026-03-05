@@ -1,4 +1,4 @@
-import React, { useState , useMemo} from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -30,38 +31,43 @@ const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({
   onPress,
 }) => {
   const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+  const styles = useMemo(() => createStyles(tc, 400), [tc]);
   return (
-  <TouchableOpacity
-    style={[styles.checkbox, checked && styles.checkboxChecked]}
-    onPress={onPress}
-    activeOpacity={0.7}
-    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-  >
-    {checked && <Ionicons name="checkmark" size={14} color={tc.white} />}
-  </TouchableOpacity>
+    <TouchableOpacity
+      style={[styles.checkbox, checked && styles.checkboxChecked]}
+      onPress={onPress}
+      activeOpacity={0.7}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+    >
+      {checked && <Ionicons name="checkmark" size={14} color={tc.white} />}
+    </TouchableOpacity>
   );
 };
 
 // ─── Table Header ───
-const TableHeader: React.FC = () => {
+const TableHeader: React.FC<{ isWide: boolean }> = ({ isWide }) => {
   const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+  const styles = useMemo(() => createStyles(tc, isWide ? 900 : 400), [tc, isWide]);
   return (
-  <View style={styles.tableHeader}>
-    <View style={styles.colCheck} />
-    <View style={styles.colId}>
-      <Text style={styles.colTitle}>User ID</Text>
+    <View style={styles.tableHeader}>
+      <View style={styles.colCheck} />
+      <View style={styles.colId}>
+        <Text style={styles.colTitle}>User ID</Text>
+      </View>
+      <View style={styles.colName}>
+        <Text style={styles.colTitle}>Name</Text>
+        <Text style={styles.colSub}>String | MAX – Length 65</Text>
+      </View>
+      <View style={styles.colEmail}>
+        <Text style={styles.colTitle}>Email</Text>
+        <Text style={styles.colSub}>String | MAX – Length 65</Text>
+      </View>
+      {isWide && (
+        <View style={styles.colActions}>
+          <Text style={styles.colTitle}>Actions</Text>
+        </View>
+      )}
     </View>
-    <View style={styles.colName}>
-      <Text style={styles.colTitle}>Name</Text>
-      <Text style={styles.colSub}>String | MAX – Length 65</Text>
-    </View>
-    <View style={styles.colEmail}>
-      <Text style={styles.colTitle}>Email</Text>
-      <Text style={styles.colSub}>String | MAX – Length 65</Text>
-    </View>
-  </View>
   );
 };
 
@@ -70,43 +76,66 @@ const TableRow: React.FC<{
   user: ManagedUser;
   selected: boolean;
   onToggle: () => void;
-}> = ({ user, selected, onToggle }) => {
+  isWide: boolean;
+  onViewDetail: () => void;
+  onEditUser: () => void;
+}> = ({ user, selected, onToggle, isWide, onViewDetail, onEditUser }) => {
   const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+  const styles = useMemo(() => createStyles(tc, isWide ? 900 : 400), [tc, isWide]);
   return (
-  <TouchableOpacity
-    style={[styles.tableRow, selected && styles.tableRowSelected]}
-    onPress={onToggle}
-    activeOpacity={0.7}
-  >
-    <View style={styles.colCheck}>
-      <Checkbox checked={selected} onPress={onToggle} />
-    </View>
-    <View style={styles.colId}>
-      <Text
-        style={[styles.cellText, selected && styles.cellTextSelected]}
-        numberOfLines={1}
-      >
-        {user.userId}
-      </Text>
-    </View>
-    <View style={styles.colName}>
-      <Text
-        style={[styles.cellTextBold, selected && styles.cellTextSelected]}
-        numberOfLines={1}
-      >
-        {user.fullName}
-      </Text>
-    </View>
-    <View style={styles.colEmail}>
-      <Text
-        style={[styles.cellText, selected && styles.cellTextSelected]}
-        numberOfLines={1}
-      >
-        {user.email}
-      </Text>
-    </View>
-  </TouchableOpacity>
+    <TouchableOpacity
+      style={[styles.tableRow, selected && styles.tableRowSelected]}
+      onPress={onToggle}
+      activeOpacity={0.7}
+    >
+      <View style={styles.colCheck}>
+        <Checkbox checked={selected} onPress={onToggle} />
+      </View>
+      <View style={styles.colId}>
+        <Text
+          style={[styles.cellText, selected && styles.cellTextSelected]}
+          numberOfLines={1}
+        >
+          {user.userId}
+        </Text>
+      </View>
+      <View style={styles.colName}>
+        <Text
+          style={[styles.cellTextBold, selected && styles.cellTextSelected]}
+          numberOfLines={1}
+        >
+          {user.fullName}
+        </Text>
+      </View>
+      <View style={styles.colEmail}>
+        <Text
+          style={[styles.cellText, selected && styles.cellTextSelected]}
+          numberOfLines={1}
+        >
+          {user.email}
+        </Text>
+      </View>
+      {isWide && (
+        <View style={styles.colActions}>
+          <TouchableOpacity
+            style={styles.rowActionBtn}
+            onPress={onViewDetail}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="eye-outline" size={16} color={tc.accent} />
+            <Text style={styles.rowActionText}>View</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.rowActionBtn}
+            onPress={onEditUser}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="create-outline" size={16} color={tc.textLight} />
+            <Text style={[styles.rowActionText, { color: tc.textLight }]}>Edit</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </TouchableOpacity>
   );
 };
 
@@ -121,7 +150,9 @@ const UserFormModal: React.FC<{
   onSubmit: (name: string, email: string) => void;
 }> = ({ visible, title, initialName = '', initialEmail = '', loading: submitting, onClose, onSubmit }) => {
   const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web' && width >= 600;
+  const styles = useMemo(() => createStyles(tc, width), [tc, width]);
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
 
@@ -139,12 +170,12 @@ const UserFormModal: React.FC<{
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
+    <Modal visible={visible} transparent animationType={isWeb ? 'fade' : 'slide'}>
       <KeyboardAvoidingView
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, isWeb && styles.modalOverlayCenter]}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.modalContent}>
+        <View style={[styles.modalContent, isWeb && styles.modalContentWeb]}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>{title}</Text>
             <TouchableOpacity onPress={onClose}>
@@ -201,7 +232,10 @@ const UserFormModal: React.FC<{
 
 const AdminUserManagementScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === 'web';
+  const isWide = isWeb && width >= 600;
+  const styles = useMemo(() => createStyles(tc, width), [tc, width]);
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const {
     users,
@@ -238,7 +272,6 @@ const AdminUserManagementScreen: React.FC = () => {
   };
 
   const handleContinue = () => {
-    // If exactly one user is selected, navigate to detail screen
     if (selectedUids.size === 1) {
       const uid = Array.from(selectedUids)[0];
       navigation.navigate('AdminUserDetail', { uid });
@@ -247,37 +280,57 @@ const AdminUserManagementScreen: React.FC = () => {
 
   const handleDelete = () => {
     if (selectedUids.size === 0) return;
-    Alert.alert(
-      'Delete Users',
-      `Are you sure you want to delete ${selectedUids.size} selected user(s)?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: deleteSelected,
-        },
-      ],
-    );
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-restricted-globals
+      if (confirm(`Are you sure you want to delete ${selectedUids.size} selected user(s)?`)) {
+        deleteSelected();
+      }
+    } else {
+      Alert.alert(
+        'Delete Users',
+        `Are you sure you want to delete ${selectedUids.size} selected user(s)?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: deleteSelected },
+        ],
+      );
+    }
+  };
+
+  const handleViewDetail = (uid: string) => {
+    navigation.navigate('AdminUserDetail', { uid });
+  };
+
+  const handleEditUser = (user: ManagedUser) => {
+    setEditingUser(user);
+    setEditModalVisible(true);
   };
 
   return (
     <View style={styles.container}>
       {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={tc.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>User Management</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      {!isWide && (
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Ionicons name="arrow-back" size={24} color={tc.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>User Management</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+      )}
 
-      {/* ── Search + Action Buttons ── */}
-      <View style={styles.searchRow}>
+      {/* ── Web Page Title ── */}
+      {isWide && (
+        <Text style={styles.pageTitle}>Manage Users</Text>
+      )}
+
+      {/* ── Toolbar: Search + Actions ── */}
+      <View style={styles.toolbar}>
         <View style={styles.searchInputWrapper}>
+          <Ionicons name="search" size={18} color={tc.textMuted} style={{ marginRight: 8 }} />
           <TextInput
             style={styles.searchInput}
-            placeholder="user_ID"
+            placeholder="Search by User ID"
             placeholderTextColor={tc.textMuted}
             value={searchId}
             onChangeText={setSearchId}
@@ -285,85 +338,101 @@ const AdminUserManagementScreen: React.FC = () => {
             onSubmitEditing={handleSearch}
           />
           <TouchableOpacity onPress={handleSearch} style={styles.searchIconBtn}>
-            <Ionicons name="search" size={16} color={tc.textMuted} />
+            <Text style={styles.searchBtnText}>Search</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.actionBtns}>
           <TouchableOpacity
-            style={styles.actionBtn}
+            style={styles.addBtn}
             onPress={() => setAddModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.actionBtnText}>Add</Text>
+            <Ionicons name="add" size={18} color={tc.white} />
+            <Text style={styles.addBtnText}>Add User</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, selectedUids.size === 0 && styles.actionBtnDisabled]}
-            onPress={handleContinue}
-            disabled={selectedUids.size === 0}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.actionBtnText,
-                selectedUids.size === 0 && styles.actionBtnTextDisabled,
-              ]}
+          {!isWide && (
+            <TouchableOpacity
+              style={[styles.actionBtn, selectedUids.size === 0 && styles.actionBtnDisabled]}
+              onPress={handleContinue}
+              disabled={selectedUids.size === 0}
+              activeOpacity={0.7}
             >
-              Continue
-            </Text>
-          </TouchableOpacity>
+              <Text
+                style={[
+                  styles.actionBtnText,
+                  selectedUids.size === 0 && styles.actionBtnTextDisabled,
+                ]}
+              >
+                Continue
+              </Text>
+            </TouchableOpacity>
+          )}
+          {selectedUids.size > 0 && (
+            <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
+              <Ionicons name="trash-outline" size={16} color={tc.white} />
+              <Text style={styles.deleteBtnText}>
+                Delete ({selectedUids.size})
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
       {/* ── Instruction ── */}
-      <Text style={styles.instruction}>Select any user to edit/delete/add</Text>
-
-      {/* ── Delete Button (shows when selection > 0) ── */}
-      {selectedUids.size > 0 && (
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
-          <Ionicons name="trash-outline" size={16} color={tc.white} />
-          <Text style={styles.deleteBtnText}>
-            Delete {selectedUids.size} selected
-          </Text>
-        </TouchableOpacity>
-      )}
+      <Text style={styles.instruction}>
+        {isWide
+          ? `Showing ${users.length} users • Select users to manage`
+          : 'Select any user to edit/delete/add'}
+      </Text>
 
       {/* ── Error ── */}
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       {/* ── Table ── */}
-      <View style={styles.tableContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View>
-            <TableHeader />
-            <ScrollView
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.tableBody}
-            >
-              {users.map((user) => (
-                <TableRow
-                  key={user.uid}
-                  user={user}
-                  selected={selectedUids.has(user.uid)}
-                  onToggle={() => toggleSelect(user.uid)}
-                />
-              ))}
+      <View style={styles.tableCard}>
+        <View style={styles.tableContainer}>
+          <ScrollView horizontal={!isWide} showsHorizontalScrollIndicator={false}>
+            <View style={{ flex: 1, minWidth: isWide ? '100%' as unknown as number : undefined }}>
+              <TableHeader isWide={isWide} />
+              <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.tableBody}
+              >
+                {users.length === 0 && !loading && (
+                  <View style={styles.emptyRow}>
+                    <Ionicons name="people-outline" size={32} color={tc.textMuted} />
+                    <Text style={styles.emptyText}>No users found</Text>
+                  </View>
+                )}
+                {users.map((user) => (
+                  <TableRow
+                    key={user.uid}
+                    user={user}
+                    selected={selectedUids.has(user.uid)}
+                    onToggle={() => toggleSelect(user.uid)}
+                    isWide={isWide}
+                    onViewDetail={() => handleViewDetail(user.uid)}
+                    onEditUser={() => handleEditUser(user)}
+                  />
+                ))}
 
-              {loading && (
-                <ActivityIndicator
-                  size="small"
-                  color={tc.accent}
-                  style={{ marginVertical: 16 }}
-                />
-              )}
-            </ScrollView>
-          </View>
-        </ScrollView>
+                {loading && (
+                  <ActivityIndicator
+                    size="small"
+                    color={tc.accent}
+                    style={{ marginVertical: 16 }}
+                  />
+                )}
+              </ScrollView>
+            </View>
+          </ScrollView>
+        </View>
       </View>
 
       {/* ── Load More ── */}
       {hasMore && !loading && (
         <TouchableOpacity style={styles.loadMoreBtn} onPress={fetchMore} activeOpacity={0.7}>
-          <Text style={styles.loadMoreText}>search 500+ more...</Text>
+          <Text style={styles.loadMoreText}>Load more users...</Text>
         </TouchableOpacity>
       )}
 
@@ -395,267 +464,374 @@ const AdminUserManagementScreen: React.FC = () => {
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const COL_CHECK_W = 40;
-const COL_ID_W = 64;
-const COL_NAME_W = 130;
-const COL_EMAIL_W = 180;
+const createStyles = (tc: ThemeColors, screenWidth: number) => {
+  const isWide = Platform.OS === 'web' && screenWidth >= 600;
+  const COL_CHECK_W = 44;
+  const COL_ID_W = isWide ? 100 : 64;
+  const COL_NAME_W = isWide ? 200 : 130;
+  const COL_EMAIL_W = isWide ? 260 : 180;
+  const COL_ACTIONS_W = isWide ? 160 : 0;
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: isWide ? '#F5F6FA' : tc.background,
+    },
 
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
-  },
-  backBtn: { padding: 4 },
-  headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-  },
-  headerSpacer: { width: 32 },
+    // Header (mobile only)
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 8,
+    },
+    backBtn: { padding: 4 },
+    headerTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 20,
+      color: tc.text,
+    },
+    headerSpacer: { width: 32 },
 
-  // Search row
-  searchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 8,
-    gap: 10,
-  },
-  searchInputWrapper: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tc.accentMuted,
-    borderRadius: 24,
-    paddingHorizontal: 18,
-    height: 44,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  searchIconBtn: {
-    padding: 4,
-  },
-  actionBtns: {
-    gap: 6,
-  },
-  actionBtn: {
-    backgroundColor: tc.surface,
-    borderWidth: 1,
-    borderColor: tc.cardBorder,
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-  },
-  actionBtnDisabled: {
-    opacity: 0.5,
-  },
-  actionBtnText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.text,
-  },
-  actionBtnTextDisabled: {
-    color: tc.textMuted,
-  },
+    // Page title (web)
+    pageTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 28,
+      color: tc.text,
+      paddingHorizontal: isWide ? 32 : 20,
+      paddingTop: isWide ? 28 : 16,
+      paddingBottom: 4,
+    },
 
-  // Instruction
-  instruction: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: tc.textLight,
-    paddingHorizontal: 20,
-    marginTop: 10,
-    marginBottom: 6,
-  },
+    // Toolbar
+    toolbar: {
+      flexDirection: isWide ? 'row' : 'column',
+      alignItems: isWide ? 'center' : 'stretch',
+      paddingHorizontal: isWide ? 32 : 20,
+      marginTop: isWide ? 16 : 8,
+      gap: 12,
+    },
+    searchInputWrapper: {
+      flex: isWide ? 1 : undefined,
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.white,
+      borderRadius: isWide ? 12 : 24,
+      paddingHorizontal: 16,
+      height: isWide ? 46 : 44,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+      maxWidth: isWide ? 420 : undefined,
+    },
+    searchInput: {
+      flex: 1,
+      fontFamily: fonts.medium,
+      fontSize: 14,
+      color: tc.text,
+      ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
+    },
+    searchIconBtn: {
+      paddingVertical: 4,
+      paddingHorizontal: 12,
+      backgroundColor: tc.accent,
+      borderRadius: 8,
+      marginLeft: 8,
+    },
+    searchBtnText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 12,
+      color: tc.white,
+    },
+    actionBtns: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    addBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      gap: 6,
+    },
+    addBtnText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 13,
+      color: tc.white,
+    },
+    actionBtn: {
+      backgroundColor: tc.surface,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    actionBtnDisabled: {
+      opacity: 0.5,
+    },
+    actionBtnText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.text,
+    },
+    actionBtnTextDisabled: {
+      color: tc.textMuted,
+    },
 
-  // Delete
-  deleteBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: tc.error,
-    borderRadius: 8,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    marginLeft: 20,
-    marginBottom: 6,
-    gap: 6,
-  },
-  deleteBtnText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: tc.white,
-  },
+    // Instruction
+    instruction: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      paddingHorizontal: isWide ? 32 : 20,
+      marginTop: 12,
+      marginBottom: 8,
+    },
 
-  errorText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.error,
-    paddingHorizontal: 20,
-    marginBottom: 6,
-  },
+    // Delete
+    deleteBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.error,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      gap: 6,
+    },
+    deleteBtnText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 13,
+      color: tc.white,
+    },
 
-  // Table
-  tableContainer: {
-    flex: 1,
-    paddingHorizontal: 12,
-  },
-  tableBody: {
-    paddingBottom: 12,
-  },
+    errorText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.error,
+      paddingHorizontal: isWide ? 32 : 20,
+      marginBottom: 6,
+    },
 
-  // Table header
-  tableHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    borderBottomWidth: 1,
-    borderBottomColor: tc.divider,
-    paddingBottom: 8,
-    marginBottom: 2,
-  },
-  colCheck: { width: COL_CHECK_W, alignItems: 'center', justifyContent: 'center' },
-  colId: { width: COL_ID_W, paddingRight: 4 },
-  colName: { width: COL_NAME_W, paddingRight: 4 },
-  colEmail: { width: COL_EMAIL_W },
-  colTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: tc.text,
-  },
-  colSub: {
-    fontFamily: fonts.regular,
-    fontSize: 8,
-    color: tc.textMuted,
-    marginTop: 1,
-  },
+    // Table Card (web gets card wrapper)
+    tableCard: {
+      flex: 1,
+      marginHorizontal: isWide ? 32 : 0,
+      backgroundColor: isWide ? tc.white : 'transparent',
+      borderRadius: isWide ? 14 : 0,
+      borderWidth: isWide ? 1 : 0,
+      borderColor: tc.cardBorder,
+      ...(isWide && Platform.OS === 'web'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.05,
+            shadowRadius: 12,
+          }
+        : {}),
+      overflow: 'hidden',
+    },
+    tableContainer: {
+      flex: 1,
+      paddingHorizontal: isWide ? 8 : 12,
+    },
+    tableBody: {
+      paddingBottom: 12,
+    },
 
-  // Table row
-  tableRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 0.5,
-    borderBottomColor: tc.divider,
-  },
-  tableRowSelected: {
-    backgroundColor: tc.accentMuted,
-    borderRadius: 6,
-  },
-  cellText: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: tc.text,
-  },
-  cellTextBold: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: tc.text,
-  },
-  cellTextSelected: {
-    color: tc.accent,
-  },
+    // Table header
+    tableHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-end',
+      borderBottomWidth: 1,
+      borderBottomColor: tc.divider,
+      paddingBottom: 10,
+      paddingHorizontal: isWide ? 8 : 0,
+      marginBottom: 2,
+      backgroundColor: isWide ? tc.surfaceAlt : 'transparent',
+    },
+    colCheck: { width: COL_CHECK_W, alignItems: 'center', justifyContent: 'center' },
+    colId: { width: COL_ID_W, paddingRight: 4 },
+    colName: { width: COL_NAME_W, paddingRight: 4 },
+    colEmail: { flex: isWide ? 1 : undefined, width: isWide ? undefined : COL_EMAIL_W },
+    colActions: { width: COL_ACTIONS_W, alignItems: 'center' },
+    colTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 13,
+      color: tc.text,
+    },
+    colSub: {
+      fontFamily: fonts.regular,
+      fontSize: 9,
+      color: tc.textMuted,
+      marginTop: 1,
+    },
 
-  // Checkbox
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: tc.textMuted,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: tc.white,
-  },
-  checkboxChecked: {
-    backgroundColor: tc.accent,
-    borderColor: tc.accent,
-  },
+    // Table row
+    tableRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: isWide ? 12 : 10,
+      paddingHorizontal: isWide ? 8 : 0,
+      borderBottomWidth: 0.5,
+      borderBottomColor: tc.divider,
+    },
+    tableRowSelected: {
+      backgroundColor: tc.accentMuted,
+      borderRadius: 8,
+    },
+    cellText: {
+      fontFamily: fonts.regular,
+      fontSize: isWide ? 14 : 12,
+      color: tc.text,
+    },
+    cellTextBold: {
+      fontFamily: fonts.semiBold,
+      fontSize: isWide ? 14 : 13,
+      color: tc.text,
+    },
+    cellTextSelected: {
+      color: tc.accent,
+    },
 
-  // Load more
-  loadMoreBtn: {
-    alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  loadMoreText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.accent,
-  },
+    // Row actions (web)
+    rowActionBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 4,
+      paddingHorizontal: 8,
+    },
+    rowActionText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.accent,
+    },
 
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: tc.overlay,
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: tc.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  modalTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-  },
-  modalLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.text,
-    marginBottom: 6,
-    marginTop: 12,
-  },
-  modalInput: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.text,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: tc.inputBg,
-  },
-  modalSubmitBtn: {
-    backgroundColor: tc.accent,
-    borderRadius: 28,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  modalSubmitBtnDisabled: {
-    opacity: 0.5,
-  },
-  modalSubmitText: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.white,
-  },
-});
+    // Checkbox
+    checkbox: {
+      width: 20,
+      height: 20,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: tc.textMuted,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: tc.white,
+    },
+    checkboxChecked: {
+      backgroundColor: tc.accent,
+      borderColor: tc.accent,
+    },
+
+    // Empty state
+    emptyRow: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+      gap: 8,
+    },
+    emptyText: {
+      fontFamily: fonts.medium,
+      fontSize: 14,
+      color: tc.textMuted,
+    },
+
+    // Load more
+    loadMoreBtn: {
+      alignSelf: 'center',
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      marginBottom: 20,
+    },
+    loadMoreText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.accent,
+    },
+
+    // Modal
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: tc.overlay,
+      justifyContent: 'flex-end',
+    },
+    modalOverlayCenter: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: tc.white,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 24,
+      paddingBottom: 40,
+    },
+    modalContentWeb: {
+      borderRadius: 20,
+      width: '100%',
+      maxWidth: 440,
+      paddingBottom: 28,
+      ...(Platform.OS === 'web'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.12,
+            shadowRadius: 24,
+          }
+        : {}),
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    modalTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+    },
+    modalLabel: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.text,
+      marginBottom: 6,
+      marginTop: 12,
+    },
+    modalInput: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      color: tc.text,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      borderRadius: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      backgroundColor: tc.inputBg,
+      ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
+    },
+    modalSubmitBtn: {
+      backgroundColor: tc.accent,
+      borderRadius: 28,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginTop: 24,
+    },
+    modalSubmitBtnDisabled: {
+      opacity: 0.5,
+    },
+    modalSubmitText: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.white,
+    },
+  });
+};
 
 export default AdminUserManagementScreen;
