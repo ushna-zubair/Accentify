@@ -32,6 +32,7 @@ import {
 } from '../../controllers';
 import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } from '../../models';
 import AdminUserManagementScreen from './AdminUserManagementScreen';
+import AdminAccessControlScreen from './AdminAccessControlScreen';
 import { SettingsStackNavigator } from '../../navigation/AppNavigator';
 import { useDashboardAnalytics } from '../../hooks/useDashboardAnalytics';
 
@@ -1157,6 +1158,8 @@ const DesktopAdminDashboard: React.FC = () => {
           <View style={{ flex: 1 }}>
             <SettingsStackNavigator />
           </View>
+        ) : activeMenu === 'access' ? (
+          <AdminAccessControlScreen />
         ) : (
           <ScrollView
             style={styles.scrollArea}

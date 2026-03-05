@@ -84,3 +84,110 @@ export interface PerformanceBubbleData {
   color: string;
   size: number;
 }
+
+// ─── Admin Access Control Models ───
+
+export type AdminRole = 'super_admin' | 'admin' | 'moderator' | 'viewer';
+
+export interface AdminPermissions {
+  manageUsers: boolean;
+  manageLessons: boolean;
+  manageAnnouncements: boolean;
+  viewAnalytics: boolean;
+  manageAdmins: boolean;
+  manageSettings: boolean;
+  manageBilling: boolean;
+  viewLogs: boolean;
+}
+
+export const DEFAULT_ROLE_PERMISSIONS: Record<AdminRole, AdminPermissions> = {
+  super_admin: {
+    manageUsers: true,
+    manageLessons: true,
+    manageAnnouncements: true,
+    viewAnalytics: true,
+    manageAdmins: true,
+    manageSettings: true,
+    manageBilling: true,
+    viewLogs: true,
+  },
+  admin: {
+    manageUsers: true,
+    manageLessons: true,
+    manageAnnouncements: true,
+    viewAnalytics: true,
+    manageAdmins: false,
+    manageSettings: true,
+    manageBilling: false,
+    viewLogs: true,
+  },
+  moderator: {
+    manageUsers: true,
+    manageLessons: false,
+    manageAnnouncements: true,
+    viewAnalytics: true,
+    manageAdmins: false,
+    manageSettings: false,
+    manageBilling: false,
+    viewLogs: false,
+  },
+  viewer: {
+    manageUsers: false,
+    manageLessons: false,
+    manageAnnouncements: false,
+    viewAnalytics: true,
+    manageAdmins: false,
+    manageSettings: false,
+    manageBilling: false,
+    viewLogs: false,
+  },
+};
+
+export const ADMIN_ROLE_LABELS: Record<AdminRole, string> = {
+  super_admin: 'Super Admin',
+  admin: 'Admin',
+  moderator: 'Moderator',
+  viewer: 'Viewer',
+};
+
+export const PERMISSION_LABELS: Record<keyof AdminPermissions, string> = {
+  manageUsers: 'Manage Users',
+  manageLessons: 'Manage Lessons',
+  manageAnnouncements: 'Manage Announcements',
+  viewAnalytics: 'View Analytics',
+  manageAdmins: 'Manage Admins',
+  manageSettings: 'Manage Settings',
+  manageBilling: 'Manage Billing',
+  viewLogs: 'View Activity Logs',
+};
+
+export interface AdminMember {
+  uid: string;
+  email: string;
+  fullName: string;
+  avatarUrl: string;
+  adminRole: AdminRole;
+  permissions: AdminPermissions;
+  status: 'active' | 'suspended' | 'deactivated';
+  lastSeen: string | null;
+  createdAt: string;
+  twoFactorEnabled: boolean;
+  invitedBy: string | null;
+}
+
+export interface AdminActivityLog {
+  id: string;
+  adminUid: string;
+  adminName: string;
+  action: string;
+  target: string;
+  timestamp: string;
+  details: string;
+}
+
+export interface InviteAdminPayload {
+  email: string;
+  fullName: string;
+  adminRole: AdminRole;
+  permissions: AdminPermissions;
+}

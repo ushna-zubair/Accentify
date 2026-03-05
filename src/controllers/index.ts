@@ -13,3 +13,5 @@ export { usePronunciationExerciseController } from './usePronunciationExerciseCo
 export { useWavyChatController } from './useWavyChatController';
 export { useConversationExerciseController } from './useConversationExerciseController';
 export { useLoginDevicesController } from './useLoginDevicesController';
+export { useAccessControlController } from './useAccessControlController';
+export type { AccessControlTab, PendingInvite } from './useAccessControlController';
