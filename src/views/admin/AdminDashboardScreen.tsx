@@ -33,6 +33,7 @@ import {
 import type { DashboardData, AdminOnline, AdminMenuItem, AdminStackParamList } from '../../models';
 import AdminUserManagementScreen from './AdminUserManagementScreen';
 import { SettingsStackNavigator } from '../../navigation/AppNavigator';
+import { useDashboardAnalytics } from '../../hooks/useDashboardAnalytics';
 
 // ═══════════════════════════════════════════════
 //  MOBILE ADMIN DASHBOARD
@@ -215,6 +216,7 @@ const MobileAdminDashboard: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<AdminStackParamList>>();
   const { mobileData, loading, handleLogout, createAnnouncement } =
     useAdminMobileDashboardController();
+  const { data: analyticsData, isLoading: analyticsLoading } = useDashboardAnalytics();
   const [announcementModalVisible, setAnnouncementModalVisible] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -301,6 +303,70 @@ const MobileAdminDashboard: React.FC = () => {
 
         {/* ── Admins Online ── */}
         <AdminsOnlineSection admins={mobileData.adminsOnline} />
+
+        {/* ── Analytics Summary ── */}
+        {analyticsData && !analyticsLoading && (
+          <>
+            <Text style={mStyles.sectionLabel}>Overview</Text>
+            <View style={mStyles.statsGrid}>
+              <View style={[mStyles.statCard, { backgroundColor: tc.accent + '12' }]}>
+                <Ionicons name="people" size={22} color={tc.accent} />
+                <Text style={[mStyles.statValue, { color: tc.accent }]}>{analyticsData.activeUsers.toLocaleString()}</Text>
+                <Text style={mStyles.statLabel}>Active Users</Text>
+              </View>
+              <View style={[mStyles.statCard, { backgroundColor: tc.success + '12' }]}>
+                <Ionicons name="trending-up" size={22} color={tc.success} />
+                <Text style={[mStyles.statValue, { color: tc.success }]}>{analyticsData.totalSessions.toLocaleString()}</Text>
+                <Text style={mStyles.statLabel}>Total Sessions</Text>
+              </View>
+              <View style={[mStyles.statCard, { backgroundColor: tc.warning + '12' }]}>
+                <Ionicons name="mic" size={22} color={tc.warning} />
+                <Text style={[mStyles.statValue, { color: tc.warning }]}>{analyticsData.pronunciationAccuracy}%</Text>
+                <Text style={mStyles.statLabel}>Pronunciation</Text>
+              </View>
+              <View style={[mStyles.statCard, { backgroundColor: tc.accentLight + '30' }]}>
+                <Ionicons name="book" size={22} color={tc.accentLight} />
+                <Text style={[mStyles.statValue, { color: tc.accentDark ?? tc.accent }]}>{analyticsData.vocabularyRetention}%</Text>
+                <Text style={mStyles.statLabel}>Vocab Retention</Text>
+              </View>
+            </View>
+
+            {/* Growth indicator */}
+            <View style={mStyles.growthCard}>
+              <View style={mStyles.growthCardRow}>
+                <Text style={mStyles.growthCardLabel}>Weekly Growth</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons
+                    name={analyticsData.growthPct >= 0 ? 'arrow-up' : 'arrow-down'}
+                    size={14}
+                    color={analyticsData.growthPct >= 0 ? tc.success : tc.error}
+                  />
+                  <Text style={[mStyles.growthCardValue, { color: analyticsData.growthPct >= 0 ? tc.success : tc.error }]}>
+                    {Math.abs(analyticsData.growthPct)}%
+                  </Text>
+                </View>
+              </View>
+              <View style={mStyles.growthCardRow}>
+                <Text style={mStyles.growthCardLabel}>Sessions Growth</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <Ionicons
+                    name={analyticsData.sessionsGrowth >= 0 ? 'arrow-up' : 'arrow-down'}
+                    size={14}
+                    color={analyticsData.sessionsGrowth >= 0 ? tc.success : tc.error}
+                  />
+                  <Text style={[mStyles.growthCardValue, { color: analyticsData.sessionsGrowth >= 0 ? tc.success : tc.error }]}>
+                    {analyticsData.sessionsGrowth >= 0 ? '+' : ''}{analyticsData.sessionsGrowth}%
+                  </Text>
+                </View>
+              </View>
+              {analyticsData.lastAggregatedAt && (
+                <Text style={mStyles.growthCardTimestamp}>
+                  Updated: {new Date(analyticsData.lastAggregatedAt).toLocaleString()}
+                </Text>
+              )}
+            </View>
+          </>
+        )}
 
         {/* ── Quick Actions Label ── */}
         <Text style={mStyles.sectionLabel}>Quick Actions</Text>
@@ -551,6 +617,59 @@ const createMStyles = (tc: ThemeColors) => StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 16,
     color: tc.white,
+  },
+
+  // Analytics summary
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 12,
+  },
+  statCard: {
+    width: '47%' as any,
+    borderRadius: 14,
+    padding: 16,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  statValue: {
+    fontFamily: fonts.bold,
+    fontSize: 22,
+  },
+  statLabel: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    color: tc.textMuted,
+  },
+  growthCard: {
+    backgroundColor: tc.white,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: tc.cardBorder,
+    padding: 16,
+    marginBottom: 4,
+    gap: 10,
+  },
+  growthCardRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  growthCardLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 14,
+    color: tc.text,
+  },
+  growthCardValue: {
+    fontFamily: fonts.bold,
+    fontSize: 15,
+  },
+  growthCardTimestamp: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: tc.textMuted,
+    marginTop: 2,
   },
 
   // Modal
@@ -950,6 +1069,7 @@ const DesktopAdminDashboard: React.FC = () => {
     isLoading,
     error,
     refetch,
+    runAggregation,
     handleLogout,
   } = useAdminDashboardController();
 
@@ -1046,7 +1166,25 @@ const DesktopAdminDashboard: React.FC = () => {
             ]}
             showsVerticalScrollIndicator={false}
           >
-            <Text style={styles.pageTitle}>Dashboard</Text>
+            {/* Dashboard header with refresh */}
+            <View style={styles.dashboardHeader}>
+              <View>
+                <Text style={styles.pageTitle}>Dashboard</Text>
+                {dashboardData.lastAggregatedAt && (
+                  <Text style={styles.lastUpdatedText}>
+                    Last updated: {new Date(dashboardData.lastAggregatedAt).toLocaleString()}
+                  </Text>
+                )}
+              </View>
+              <TouchableOpacity
+                style={styles.refreshBtn}
+                onPress={runAggregation}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="refresh" size={16} color={tc.white} />
+                <Text style={styles.refreshBtnText}>Refresh Data</Text>
+              </TouchableOpacity>
+            </View>
 
             {/* Row 1: Revenue + Practice Activity */}
             <View style={[styles.row, !canLayoutTwoCol && styles.rowColumn]}>
@@ -1270,7 +1408,33 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 24,
     color: tc.text,
+    marginBottom: 0,
+  },
+  dashboardHeader: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'flex-start' as const,
     marginBottom: 20,
+  },
+  lastUpdatedText: {
+    fontFamily: fonts.regular,
+    fontSize: 12,
+    color: tc.textMuted,
+    marginTop: 4,
+  },
+  refreshBtn: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+    backgroundColor: tc.accent,
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  refreshBtnText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 13,
+    color: tc.white,
   },
   row: {
     flexDirection: 'row' as const,
@@ -1393,10 +1557,19 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   learnerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  learnerEmoji: {
-    fontSize: 18,
+  learnerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  learnerInitials: {
+    fontFamily: fonts.bold,
+    fontSize: 13,
+    color: tc.white,
   },
   learnerName: {
     fontFamily: fonts.medium,

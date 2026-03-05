@@ -19,6 +19,7 @@ export interface DashboardData {
   sessionsGrowth: number;
   sessionsThisWeek: number[];
   sessionsLastWeek: number[];
+  lastAggregatedAt: string | null;
 }
 
 export interface SidebarItem {

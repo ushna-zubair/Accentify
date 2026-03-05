@@ -58,4 +58,5 @@ export interface InsightsUserData {
   weeklyProgress: WeeklyProgress;
   lessonDays: LessonDay[];
   weekLabel: string;
+  hasData: boolean;
 }

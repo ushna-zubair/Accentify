@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState, useCallback } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { DashboardData } from '../models';
 import {
@@ -46,6 +46,7 @@ const SEED_DATA: DashboardData = {
   sessionsGrowth: 0,
   sessionsThisWeek: [],
   sessionsLastWeek: [],
+  lastAggregatedAt: null,
 };
 
 export interface UseDashboardAnalyticsResult {
@@ -61,6 +62,25 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Parse raw Firestore data into DashboardData
+  const parseRaw = (raw: any): DashboardData => ({
+    activeUsers: raw.activeUsers ?? 0,
+    growthPct: raw.growthPct ?? 0,
+    usageDateRange: raw.usageDateRange ?? '',
+    weeklyBarData: raw.weeklyBarData ?? [],
+    practiceActivity: raw.practiceActivity ?? { morning: 0, afternoon: 0, night: 0 },
+    pronunciationAccuracy: raw.pronunciationAccuracy ?? 0,
+    fluencyAccuracy: raw.fluencyAccuracy ?? 0,
+    vocabularyRetention: raw.vocabularyRetention ?? 0,
+    topLearners: raw.topLearners ?? [],
+    totalSessions: raw.totalSessions ?? 0,
+    sessionsGrowth: raw.sessionsGrowth ?? 0,
+    sessionsThisWeek: raw.sessionsThisWeek ?? [],
+    sessionsLastWeek: raw.sessionsLastWeek ?? [],
+    lastAggregatedAt: raw.lastAggregatedAt?.toDate?.()?.toISOString()
+      ?? raw.lastAggregatedAt ?? null,
+  });
+
   const fetchAnalytics = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -69,31 +89,13 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
       const snap = await getDoc(doc(db, 'admin_analytics', 'global_stats'));
 
       if (snap.exists()) {
-        const raw = snap.data();
-
-        const parsed: DashboardData = {
-          activeUsers: raw.activeUsers ?? 0,
-          growthPct: raw.growthPct ?? 0,
-          usageDateRange: raw.usageDateRange ?? '',
-          weeklyBarData: raw.weeklyBarData ?? [],
-          practiceActivity: raw.practiceActivity ?? { morning: 0, afternoon: 0, night: 0 },
-          pronunciationAccuracy: raw.pronunciationAccuracy ?? 0,
-          fluencyAccuracy: raw.fluencyAccuracy ?? 0,
-          vocabularyRetention: raw.vocabularyRetention ?? 0,
-          topLearners: raw.topLearners ?? [],
-          totalSessions: raw.totalSessions ?? 0,
-          sessionsGrowth: raw.sessionsGrowth ?? 0,
-          sessionsThisWeek: raw.sessionsThisWeek ?? [],
-          sessionsLastWeek: raw.sessionsLastWeek ?? [],
-        };
-
-        setData(parsed);
+        setData(parseRaw(snap.data()));
       } else {
         // Document doesn't exist yet – seed it and try to aggregate
         await seedGlobalStats(SEED_DATA);
         try {
           const aggregated = await aggregateGlobalStats();
-          setData(aggregated);
+          setData({ ...aggregated, lastAggregatedAt: new Date().toISOString() });
         } catch {
           // Aggregation may fail if no user data exists yet – use seed
           setData(SEED_DATA);
@@ -114,7 +116,7 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
 
     try {
       const aggregated = await aggregateGlobalStats();
-      setData(aggregated);
+      setData({ ...aggregated, lastAggregatedAt: new Date().toISOString() });
     } catch (e: any) {
       console.error('useDashboardAnalytics aggregation error:', e);
       setError(e.message || 'Failed to aggregate analytics.');
@@ -123,8 +125,30 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
     }
   }, []);
 
+  // Real-time listener for live updates
   useEffect(() => {
+    const ref = doc(db, 'admin_analytics', 'global_stats');
+
+    // Initial fetch (handles seeding if doc doesn't exist)
     fetchAnalytics();
+
+    // Subscribe to real-time changes
+    const unsubscribe = onSnapshot(
+      ref,
+      (snap) => {
+        if (snap.exists()) {
+          setData(parseRaw(snap.data()));
+          setIsLoading(false);
+          setError(null);
+        }
+      },
+      (err) => {
+        console.error('useDashboardAnalytics snapshot error:', err);
+        // Don't overwrite data on snapshot error if we already have data
+      },
+    );
+
+    return unsubscribe;
   }, [fetchAnalytics]);
 
   return { data, isLoading, error, refetch: fetchAnalytics, runAggregation };

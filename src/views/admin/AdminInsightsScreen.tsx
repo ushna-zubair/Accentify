@@ -317,6 +317,19 @@ const AdminInsightsScreen: React.FC = () => {
         {/* ── Content (only once we have a userId) ── */}
         {!!insightsData.userId && !loading && (
           <>
+            {/* ── No data indicator ── */}
+            {!insightsData.hasData && (
+              <View style={[styles.sectionCard, { alignItems: 'center', paddingVertical: 24 }]}>
+                <Ionicons name="information-circle-outline" size={32} color={tc.textMuted} />
+                <Text style={[styles.sectionCardTitle, { marginTop: 8, textAlign: 'center' }]}>
+                  No Progress Data Available
+                </Text>
+                <Text style={[styles.errorText, { color: tc.textMuted, marginTop: 4 }]}>
+                  This user hasn't completed any exercises yet. Data shown below reflects zero values.
+                </Text>
+              </View>
+            )}
+
             {/* ── Weekly Progress Insight ── */}
             <View style={styles.weeklyHeader}>
               <Text style={styles.weeklyTitle}>Weekly Progress Insight</Text>

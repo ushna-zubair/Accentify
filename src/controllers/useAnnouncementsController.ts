@@ -113,17 +113,23 @@ export const useAnnouncementsController = () => {
 
   // ── Post a new announcement ──
   const postAnnouncement = useCallback(
-    async (body: string) => {
+    async (body: string, title?: string) => {
       if (!body.trim()) return;
 
       try {
         setSubmitting(true);
         setError(null);
 
-        const uid = auth.currentUser?.uid ?? 'admin';
+        const uid = auth.currentUser?.uid;
+        if (!uid) {
+          setError('You must be signed in to post announcements');
+          return;
+        }
+
+        const announcementTitle = title?.trim() || 'Announcement';
 
         const docRef = await addDoc(collection(db, 'announcements'), {
-          title: 'Announcement',
+          title: announcementTitle,
           body: body.trim(),
           createdBy: uid,
           createdAt: serverTimestamp(),
@@ -132,7 +138,7 @@ export const useAnnouncementsController = () => {
         // Optimistically prepend to list
         const newAnnouncement: Announcement = {
           id: docRef.id,
-          title: 'Announcement',
+          title: announcementTitle,
           body: body.trim(),
           createdAt: new Date().toISOString(),
           createdBy: uid,

@@ -169,7 +169,7 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
         d.setDate(d.getDate() + offset);
         const dateKey = d.toISOString().split('T')[0];
         const daySnap = await getDoc(
-          doc(db, 'users', userDoc.id, 'progress', 'daily', dateKey),
+          doc(db, 'users', userDoc.id, 'progress', 'daily', 'entries', dateKey),
         );
 
         if (!daySnap.exists()) continue;
@@ -342,6 +342,7 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
     sessionsGrowth,
     sessionsThisWeek,
     sessionsLastWeek,
+    lastAggregatedAt: new Date().toISOString(),
   };
 
   // ── 5. Write to Firestore ──

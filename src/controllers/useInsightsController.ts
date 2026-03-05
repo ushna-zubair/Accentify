@@ -65,6 +65,7 @@ const DEFAULT_INSIGHTS: InsightsUserData = {
   weeklyProgress: DEFAULT_WEEKLY,
   lessonDays: [],
   weekLabel: '',
+  hasData: false,
 };
 
 // ─── Controller ───
@@ -108,7 +109,7 @@ export const useInsightsController = () => {
       const lessonsSnap = await getDoc(doc(db, 'users', uid, 'progress', 'lessons'));
       const lessonDays: LessonDay[] = lessonsSnap.exists()
         ? (lessonsSnap.data().days as LessonDay[]) ?? []
-        : generateDefaultLessonDays();
+        : [];
 
       // 3. Fetch latest weekly progress entry
       const weeklyRef = collection(db, 'users', uid, 'progress', 'weekly', 'entries');
@@ -117,6 +118,7 @@ export const useInsightsController = () => {
 
       let weekly: WeeklyProgress = DEFAULT_WEEKLY;
       let weekLabel = '';
+      let hasData = false;
 
       if (!weeklySnap.empty) {
         const weekDoc = weeklySnap.docs[0].data();
@@ -129,10 +131,11 @@ export const useInsightsController = () => {
           overallPerformance: weekDoc.overallPerformance ?? DEFAULT_OVERALL,
         };
         weekLabel = formatWeekLabel(weekly.weekStartDate);
+        hasData = true;
       } else {
-        // Seed sample data so the charts aren't empty
-        weekly = generateSampleWeekly();
-        weekLabel = formatWeekLabel(new Date().toISOString());
+        // No progress data exists for this user — show zeros
+        weekLabel = 'No data available';
+        hasData = false;
       }
 
       setInsightsData({
@@ -141,6 +144,7 @@ export const useInsightsController = () => {
         weeklyProgress: weekly,
         lessonDays,
         weekLabel,
+        hasData,
       });
     } catch (e: any) {
       console.error('[InsightsController] fetchUserInsights error:', e);
@@ -194,52 +198,6 @@ function formatWeekLabel(isoDate: string): string {
   } catch {
     return '';
   }
-}
-
-function generateDefaultLessonDays(): LessonDay[] {
-  const days: LessonDay[] = [];
-  const today = new Date();
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    days.push({
-      id: `day-${i + 1}`,
-      day: i + 1,
-      status: i < 2 ? 'completed' : i === 2 ? 'in_progress' : 'upcoming',
-      date: d.toISOString().split('T')[0],
-    });
-  }
-  return days;
-}
-
-function generateSampleWeekly(): WeeklyProgress {
-  return {
-    weekNumber: 1,
-    weekStartDate: new Date().toISOString(),
-    pronunciation: {
-      clarity: 45,
-      soundAccuracy: 72,
-      smoothness: 58,
-      rhythmAndTone: 80,
-    },
-    conversation: {
-      fluency: 70,
-      vocabulary: 65,
-      grammarUsage: 55,
-      turnTaking: 40,
-    },
-    vocabularyGrowth: [
-      { label: 'W1', value: 20 },
-      { label: 'W2', value: 35 },
-      { label: 'W3', value: 50 },
-      { label: 'W4', value: 45 },
-    ],
-    overallPerformance: {
-      speechAccuracy: 65,
-      speechFluency: 20,
-      speechConsistency: 15,
-    },
-  };
 }
 
 export { DEFAULT_INSIGHTS };
