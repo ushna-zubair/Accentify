@@ -51,8 +51,9 @@ export const useUserManagementController = () => {
         return {
           uid: d.id,
           userId: data.shortId ?? d.id.slice(0, 5),
-          fullName: data.fullName ?? data.profile?.fullName ?? '',
+          fullName: data.profile?.fullName ?? data.fullName ?? '',
           email: data.email ?? '',
+          status: data.status ?? 'active',
         };
       });
 
@@ -83,8 +84,9 @@ export const useUserManagementController = () => {
         return {
           uid: d.id,
           userId: data.shortId ?? d.id.slice(0, 5),
-          fullName: data.fullName ?? data.profile?.fullName ?? '',
+          fullName: data.profile?.fullName ?? data.fullName ?? '',
           email: data.email ?? '',
+          status: data.status ?? 'active',
         };
       });
 
@@ -124,8 +126,9 @@ export const useUserManagementController = () => {
             {
               uid: docSnap.id,
               userId: data.shortId ?? docSnap.id.slice(0, 5),
-              fullName: data.fullName ?? data.profile?.fullName ?? '',
+              fullName: data.profile?.fullName ?? data.fullName ?? '',
               email: data.email ?? '',
+              status: data.status ?? 'active',
             },
           ]);
         } else {
@@ -138,8 +141,9 @@ export const useUserManagementController = () => {
           return {
             uid: d.id,
             userId: data.shortId ?? d.id.slice(0, 5),
-            fullName: data.fullName ?? data.profile?.fullName ?? '',
+            fullName: data.profile?.fullName ?? data.fullName ?? '',
             email: data.email ?? '',
+            status: data.status ?? 'active',
           };
         });
         setUsers(fetched);
@@ -185,11 +189,45 @@ export const useUserManagementController = () => {
 
         await setDoc(newDocRef, {
           email: email.trim(),
-          fullName: fullName.trim(),
-          shortId,
           role: 'learner',
+          authProvider: 'email',
+          shortId,
+          status: 'active',
           profileComplete: false,
+          emailVerified: false,
+          termsAccepted: false,
           createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          lastLoginAt: null,
+          profile: {
+            fullName: fullName.trim(),
+            nickName: '',
+            dateOfBirth: '',
+            phoneNumber: '',
+            gender: '',
+            profilePictureUrl: '',
+            country: '',
+            timeZone: '',
+          },
+          security: {
+            appPinHash: null,
+            biometricsEnabled: false,
+            twoFactorEnabled: false,
+            twoFactorMethod: 'none',
+            passwordChangedAt: null,
+          },
+          preferences: {
+            tutor_personality: 'friendly coach',
+            accessibility_mode: false,
+            cultural_context: true,
+            notificationsEnabled: true,
+            appLanguage: 'en',
+          },
+          studyPlan: {
+            learningGoals: [],
+            nativeLanguage: '',
+            englishLevel: '',
+          },
         });
 
         const newUser: ManagedUser = {
@@ -197,6 +235,7 @@ export const useUserManagementController = () => {
           userId: shortId,
           fullName: fullName.trim(),
           email: email.trim(),
+          status: 'active',
         };
 
         setUsers((prev) => [newUser, ...prev]);
@@ -218,8 +257,9 @@ export const useUserManagementController = () => {
         setError(null);
 
         await updateDoc(doc(db, 'users', uid), {
-          fullName: fullName.trim(),
+          'profile.fullName': fullName.trim(),
           email: email.trim(),
+          updatedAt: new Date().toISOString(),
         });
 
         setUsers((prev) =>

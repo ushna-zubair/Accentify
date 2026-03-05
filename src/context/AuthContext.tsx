@@ -9,10 +9,10 @@ import {
   OAuthProvider,
   signInWithCredential,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { Platform, Alert } from 'react-native';
 import { auth, db } from '../config/firebase';
-import { UserRole, UserProfile, OnboardingPayload } from '../models';
+import { UserRole, UserProfile, OnboardingPayload, AccountStatus } from '../models';
 import { recordDeviceSession } from '../services/deviceService';
 
 // Re-export for backward compatibility
@@ -34,6 +34,34 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Hash a 4-digit PIN using SHA-256 so it's never stored in plaintext.
+ * Uses the Web Crypto API (available in RN Hermes & web).
+ */
+async function hashPin(pin: string): Promise<string> {
+  try {
+    const Crypto = await import('expo-crypto');
+    return await Crypto.digestStringAsync(
+      Crypto.CryptoDigestAlgorithm.SHA256,
+      pin,
+    );
+  } catch {
+    // Fallback: basic hash for environments without expo-crypto
+    let hash = 0;
+    for (let i = 0; i < pin.length; i++) {
+      const char = pin.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash |= 0;
+    }
+    return `sha256_fallback_${Math.abs(hash).toString(16)}`;
+  }
+}
+
+/** Generate a 5-digit numeric short ID. */
+function generateShortId(): string {
+  return String(Math.floor(10000 + Math.random() * 90000));
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -44,10 +72,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
-        const data = userDoc.data() as UserProfile;
-        setUserRole(data.role);
-        setUserProfile(data);
-        return data.role;
+        const data = userDoc.data();
+        const role = data.role as UserRole;
+        setUserRole(role);
+        setUserProfile({
+          email: data.email ?? '',
+          role,
+          status: (data.status as AccountStatus) ?? 'active',
+          profileComplete: data.profileComplete ?? false,
+          fullName: data.profile?.fullName ?? data.fullName ?? '',
+          createdAt: data.createdAt,
+        });
+        return role;
       }
       return null;
     } catch (error) {
@@ -69,6 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = useCallback(async (email: string, password: string) => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
+      // Update lastLoginAt on the Firestore doc
+      updateDoc(doc(db, 'users', result.user.uid), {
+        lastLoginAt: new Date().toISOString(),
+      }).catch(() => {}); // non-blocking
       await fetchUserRole(result.user.uid);
     } catch (error) {
       throw error;
@@ -79,29 +119,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeOnboarding = useCallback(async (data: OnboardingPayload) => {
     if (!currentUser) throw new Error('No authenticated user found');
 
+    // Hash the PIN before storing — NEVER store plaintext PINs
+    let appPinHash: string | null = null;
+    if (data.security.appPin) {
+      appPinHash = await hashPin(data.security.appPin);
+    }
+
+    const shortId = generateShortId();
+
     // Write the COMPLETE user document — Document ID MUST match the Auth user.uid
     await setDoc(doc(db, 'users', currentUser.uid), {
       email: currentUser.email,
-      role: 'learner' as UserRole, // CRITICAL: Default role must be learner
+      role: 'learner' as UserRole,
+      authProvider: 'email',
+      shortId,
+      status: 'active',
+      profileComplete: true,
+      emailVerified: currentUser.emailVerified ?? false,
+      termsAccepted: true,
       createdAt: serverTimestamp(),
-      termsAccepted: true, // From the Sign Up UI checkbox
+      updatedAt: serverTimestamp(),
+      lastLoginAt: new Date().toISOString(),
       profile: {
         fullName: data.profile.fullName,
         nickName: data.profile.nickName,
-        dateOfBirth: data.profile.dateOfBirth,   // Format: YYYY-MM-DD
+        dateOfBirth: data.profile.dateOfBirth,
         phoneNumber: data.profile.phoneNumber,
         gender: data.profile.gender,
         profilePictureUrl: data.profile.profilePictureUrl,
+        country: '',
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
       },
       security: {
-        appPin: data.security.appPin,
+        appPinHash,
         biometricsEnabled: data.security.biometricsEnabled,
         twoFactorEnabled: data.security.twoFactorEnabled,
+        twoFactorMethod: data.security.twoFactorEnabled ? 'email' : 'none',
+        passwordChangedAt: null,
       },
       preferences: {
         tutor_personality: 'friendly coach',
         accessibility_mode: false,
         cultural_context: true,
+        notificationsEnabled: true,
+        appLanguage: 'en',
       },
       studyPlan: {
         learningGoals: data.studyPlan.learningGoals,

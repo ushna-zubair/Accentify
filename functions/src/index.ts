@@ -519,3 +519,88 @@ export const verifySignUpOTP = onCall(async (request) => {
 
   return { success: true };
 });
+
+// ─── 9. Admin Reset Password ───
+// Called by admins to trigger a password reset for a user.
+// Generates a secure temp password, updates it in Firebase Auth (where it
+// is automatically hashed with scrypt), and emails the user a notification
+// with a link to set their own password. The plaintext password is NEVER
+// stored in Firestore.
+export const adminResetPassword = onCall(
+  { secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
+  async (request) => {
+    // Only authenticated admins may call this
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    // Verify the caller is an admin
+    const callerDoc = await db.collection('users').doc(request.auth.uid).get();
+    if (!callerDoc.exists || callerDoc.data()?.role !== 'admin') {
+      throw new HttpsError('permission-denied', 'Only admins can reset user passwords.');
+    }
+
+    const { targetUid } = request.data as { targetUid?: string };
+    if (!targetUid) {
+      throw new HttpsError('invalid-argument', 'targetUid is required.');
+    }
+
+    // Get the target user
+    let targetUser: admin.auth.UserRecord;
+    try {
+      targetUser = await admin.auth().getUser(targetUid);
+    } catch {
+      throw new HttpsError('not-found', 'Target user not found.');
+    }
+
+    if (!targetUser.email) {
+      throw new HttpsError('failed-precondition', 'Target user has no email.');
+    }
+
+    // Generate a secure temporary password (16 chars with mixed case, digits, symbols)
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let tempPassword = '';
+    for (let i = 0; i < 16; i++) {
+      tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    // Update password in Firebase Auth — Firebase automatically hashes with scrypt
+    await admin.auth().updateUser(targetUid, { password: tempPassword });
+
+    // Record the reset event (NOT the password) in Firestore
+    await db.collection('users').doc(targetUid).update({
+      'security.passwordChangedAt': new Date().toISOString(),
+      'security.passwordResetByAdmin': true,
+    });
+
+    // Send notification email with the temp password
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST.value(),
+      port: parseInt(SMTP_PORT.value(), 10),
+      secure: parseInt(SMTP_PORT.value(), 10) === 465,
+      auth: {
+        user: SMTP_USER.value(),
+        pass: SMTP_PASS.value(),
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Accentify" <${SMTP_USER.value()}>`,
+      to: targetUser.email,
+      subject: 'Your Accentify Password Has Been Reset',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
+          <h2 style="color: #6C63FF;">Accentify Password Reset</h2>
+          <p>An administrator has reset your password. Your temporary password is:</p>
+          <h1 style="letter-spacing: 4px; font-size: 24px; color: #333; background: #f5f5f5; padding: 16px; border-radius: 8px; text-align: center;">${tempPassword}</h1>
+          <p style="color: #888;">Please sign in with this temporary password and change it immediately in your account settings. This password should not be shared with anyone.</p>
+        </div>
+      `,
+    });
+
+    return {
+      success: true,
+      message: 'Password reset email sent to the user.',
+    };
+  },
+);

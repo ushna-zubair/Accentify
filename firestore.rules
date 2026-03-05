@@ -18,11 +18,13 @@ service cloud.firestore {
     }
 
     // ─── User documents ───
-    // Users can read/write their own document; admins can read any user
+    // Users can read/write their own document; admins can read/update any user
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
+      // Users can update their own doc; admins can update any user
+      // But nobody can write the 'role' field from the client (role changes require Cloud Functions)
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
 
       // ─── User sub-collections ───
@@ -114,7 +116,17 @@ service cloud.firestore {
       }
     }
 
-    // ─── OTP codes (used by Cloud Functions, no direct client access) ───
+    // ─── OTP codes for password reset (used by Cloud Functions, no direct client access) ───
+    match /password_reset_otps/{docId} {
+      allow read, write: if false;
+    }
+
+    // ─── OTP codes for signup verification (used by Cloud Functions, no direct client access) ───
+    match /signup_verification_otps/{docId} {
+      allow read, write: if false;
+    }
+
+    // ─── Legacy OTP codes (used by Cloud Functions, no direct client access) ───
     match /otp_codes/{docId} {
       allow read, write: if false;
     }

@@ -1,7 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app, { db } from '../config/firebase';
 import type { UserDetailData, AccountStatus } from '../models';
+
+const functions = getFunctions(app);
 
 const DEFAULT_DETAIL: UserDetailData = {
   uid: '',
@@ -9,10 +12,14 @@ const DEFAULT_DETAIL: UserDetailData = {
   fullName: '',
   email: '',
   userId: '',
-  password: '',
   status: 'active',
   activeSince: '',
   role: 'learner',
+  authProvider: 'email',
+  emailVerified: false,
+  lastLoginAt: null,
+  twoFactorEnabled: false,
+  twoFactorMethod: 'none',
 };
 
 // ─── Controller ───
@@ -22,7 +29,6 @@ export const useUserDetailController = (uid: string) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const clearSuccess = useCallback(() => setSuccessMessage(null), []);
@@ -45,7 +51,7 @@ export const useUserDetailController = (uid: string) => {
       const data = snap.data();
 
       // Derive username from fullName (e.g. "Mason Clarke" → "MC_566")
-      const nameParts = (data.fullName ?? data.profile?.fullName ?? '').split(' ');
+      const nameParts = (data.profile?.fullName ?? data.fullName ?? '').split(' ');
       const initials = nameParts.map((p: string) => p[0]?.toUpperCase() ?? '').join('');
       const shortId = data.shortId ?? snap.id.slice(0, 5);
       const username = data.username ?? `${initials}_${shortId.slice(-3)}`;
@@ -67,10 +73,14 @@ export const useUserDetailController = (uid: string) => {
         fullName: data.fullName ?? data.profile?.fullName ?? '',
         email: data.email ?? '',
         userId: shortId,
-        password: data.password ?? '••••••••••••',
         status: data.status ?? 'active',
         activeSince,
         role: data.role ?? 'learner',
+        authProvider: data.authProvider ?? 'email',
+        emailVerified: data.emailVerified ?? false,
+        lastLoginAt: data.lastLoginAt ?? null,
+        twoFactorEnabled: data.security?.twoFactorEnabled ?? false,
+        twoFactorMethod: data.security?.twoFactorMethod ?? 'none',
       });
     } catch (e: any) {
       console.error('[UserDetail] fetchDetail error:', e);
@@ -105,10 +115,11 @@ export const useUserDetailController = (uid: string) => {
 
       const userRef = doc(db, 'users', uid);
       await updateDoc(userRef, {
-        fullName: detail.fullName,
+        'profile.fullName': detail.fullName,
         email: detail.email,
         username: detail.username,
         role: detail.role,
+        updatedAt: new Date().toISOString(),
       });
 
       setIsEditing(false);
@@ -121,31 +132,32 @@ export const useUserDetailController = (uid: string) => {
     }
   }, [uid, detail]);
 
-  // ── Reset password ──
+  // ── Reset password via Cloud Function (admin-only) ──
+  // The Cloud Function generates a temp password, updates it in Firebase Auth
+  // (where it's automatically hashed), and sends a reset email to the user.
+  // The password is NEVER stored in Firestore.
   const resetPassword = useCallback(async () => {
     try {
       setSaving(true);
       setError(null);
 
-      // Generate a temporary password
-      const tempPassword = `Temp${Math.random().toString(36).slice(2, 8)}!`;
+      const adminResetPassword = httpsCallable<
+        { targetUid: string },
+        { success: boolean; message: string }
+      >(functions, 'adminResetPassword');
 
-      await updateDoc(doc(db, 'users', uid), {
-        passwordReset: true,
-        tempPassword,
-        passwordResetAt: new Date().toISOString(),
-      });
+      await adminResetPassword({ targetUid: uid });
 
-      setDetail((prev) => ({ ...prev, password: tempPassword }));
-      setShowPassword(true);
-      setSuccessMessage(`Password for ${detail.username} has been successfully reset.`);
+      setSuccessMessage(
+        `A password reset email has been sent to ${detail.email}. The user will need to set a new password.`,
+      );
     } catch (e: any) {
       console.error('[UserDetail] resetPassword error:', e);
       setError(e.message ?? 'Failed to reset password');
     } finally {
       setSaving(false);
     }
-  }, [uid]);
+  }, [uid, detail.email]);
 
   // ── Deactivate / Reactivate account ──
   const toggleAccountStatus = useCallback(async () => {
@@ -181,9 +193,7 @@ export const useUserDetailController = (uid: string) => {
     saving,
     error,
     isEditing,
-    showPassword,
     successMessage,
-    setShowPassword,
     toggleEdit,
     updateField,
     saveEdits,

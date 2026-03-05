@@ -161,8 +161,6 @@ const AdminUserDetailScreen: React.FC = () => {
     saving,
     error,
     isEditing,
-    showPassword,
-    setShowPassword,
     toggleEdit,
     updateField,
     saveEdits,
@@ -331,24 +329,10 @@ const AdminUserDetailScreen: React.FC = () => {
                 <Field label="Full Name" value={detail.fullName} editable={isEditing} onChange={(v) => updateField('fullName', v)} isWide />
                 <Field label="Email" value={detail.email} editable={isEditing} onChange={(v) => updateField('email', v)} isWide />
                 <Field label="User ID" value={detail.userId} isWide />
-                <Field
-                  label="Password"
-                  value={detail.password}
-                  secureTextEntry={!showPassword}
-                  isWide
-                  rightIcon={
-                    <TouchableOpacity
-                      onPress={() => setShowPassword(!showPassword)}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Ionicons
-                        name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                        size={22}
-                        color={tc.textMuted}
-                      />
-                    </TouchableOpacity>
-                  }
-                />
+                <Field label="Auth Provider" value={detail.authProvider === 'google' ? 'Google' : detail.authProvider === 'apple' ? 'Apple' : 'Email'} isWide />
+                <Field label="Email Verified" value={detail.emailVerified ? 'Yes' : 'No'} isWide />
+                <Field label="2FA" value={detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'} isWide />
+                <Field label="Last Login" value={detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'} isWide />
               </View>
             </View>
 
@@ -370,6 +354,30 @@ const AdminUserDetailScreen: React.FC = () => {
                 <View style={styles.webStatusMetaRow}>
                   <Text style={styles.webMetaLabel}>Role</Text>
                   <Text style={styles.webMetaValue}>{roleLabel}</Text>
+                </View>
+                <View style={styles.webStatusMetaRow}>
+                  <Text style={styles.webMetaLabel}>Auth Provider</Text>
+                  <Text style={styles.webMetaValue}>
+                    {detail.authProvider === 'google' ? 'Google' : detail.authProvider === 'apple' ? 'Apple' : 'Email'}
+                  </Text>
+                </View>
+                <View style={styles.webStatusMetaRow}>
+                  <Text style={styles.webMetaLabel}>Email Verified</Text>
+                  <Text style={[styles.webMetaValue, { color: detail.emailVerified ? tc.success : tc.warning }]}>
+                    {detail.emailVerified ? 'Yes' : 'No'}
+                  </Text>
+                </View>
+                <View style={styles.webStatusMetaRow}>
+                  <Text style={styles.webMetaLabel}>2FA</Text>
+                  <Text style={styles.webMetaValue}>
+                    {detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'}
+                  </Text>
+                </View>
+                <View style={styles.webStatusMetaRow}>
+                  <Text style={styles.webMetaLabel}>Last Login</Text>
+                  <Text style={styles.webMetaValue}>
+                    {detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'}
+                  </Text>
                 </View>
               </View>
 
@@ -462,23 +470,10 @@ const AdminUserDetailScreen: React.FC = () => {
         <Field label="Full Name" value={detail.fullName} editable={isEditing} onChange={(v) => updateField('fullName', v)} />
         <Field label="Email" value={detail.email} editable={isEditing} onChange={(v) => updateField('email', v)} />
         <Field label="User ID" value={detail.userId} />
-        <Field
-          label="Password"
-          value={detail.password}
-          secureTextEntry={!showPassword}
-          rightIcon={
-            <TouchableOpacity
-              onPress={() => setShowPassword(!showPassword)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons
-                name={showPassword ? 'eye-outline' : 'eye-off-outline'}
-                size={22}
-                color={tc.textMuted}
-              />
-            </TouchableOpacity>
-          }
-        />
+        <Field label="Auth Provider" value={detail.authProvider === 'google' ? 'Google' : detail.authProvider === 'apple' ? 'Apple' : 'Email'} />
+        <Field label="Email Verified" value={detail.emailVerified ? 'Yes' : 'No'} />
+        <Field label="2FA" value={detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'} />
+        <Field label="Last Login" value={detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'} />
 
         {/* ── Status & Role ── */}
         <View style={styles.statusSection}>
