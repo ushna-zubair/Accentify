@@ -191,3 +191,74 @@ export interface InviteAdminPayload {
   adminRole: AdminRole;
   permissions: AdminPermissions;
 }
+
+// ═══════════════════════════════════════════════
+//  FEEDBACK & REPORTS
+// ═══════════════════════════════════════════════
+
+export type FeedbackCategory = 'bug' | 'feature' | 'content' | 'ui' | 'performance' | 'other';
+export type FeedbackPriority = 'critical' | 'high' | 'medium' | 'low';
+export type FeedbackStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | 'archived';
+
+export const FEEDBACK_CATEGORY_LABELS: Record<FeedbackCategory, string> = {
+  bug: 'Bug Report',
+  feature: 'Feature Request',
+  content: 'Content Issue',
+  ui: 'UI / UX',
+  performance: 'Performance',
+  other: 'Other',
+};
+
+export const FEEDBACK_PRIORITY_LABELS: Record<FeedbackPriority, string> = {
+  critical: 'Critical',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
+};
+
+export const FEEDBACK_STATUS_LABELS: Record<FeedbackStatus, string> = {
+  open: 'Open',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+  archived: 'Archived',
+};
+
+export interface FeedbackItem {
+  id: string;
+  userId: string;
+  userFullName: string;
+  userEmail: string;
+  category: FeedbackCategory;
+  priority: FeedbackPriority;
+  status: FeedbackStatus;
+  subject: string;
+  description: string;
+  attachmentUrls: string[];
+  createdAt: string;
+  updatedAt: string;
+  assignedTo: string | null;
+  assignedToName: string | null;
+  adminNotes: string;
+  responseMessage: string;
+  respondedAt: string | null;
+  respondedBy: string | null;
+  respondedByName: string | null;
+  tags: string[];
+  deviceInfo: string;
+  appVersion: string;
+}
+
+export interface FeedbackStats {
+  total: number;
+  open: number;
+  inProgress: number;
+  resolved: number;
+  closed: number;
+  critical: number;
+  avgResolutionHours: number;
+  satisfactionRate: number;
+}
+
+export type FeedbackTab = 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
+
