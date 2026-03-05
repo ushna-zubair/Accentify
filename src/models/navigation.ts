@@ -20,6 +20,7 @@ export type AuthStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   SignUp: undefined;
+  EmailVerification: { maskedEmail: string };
   CreateProfile: undefined;
   ForgotPassword: { email: string };
   OTPVerification: { uid: string; method: 'email' | 'sms'; maskedContact: string };

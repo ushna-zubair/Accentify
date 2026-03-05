@@ -17,6 +17,7 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../config/firebase';
 import { AuthStackParamList } from '../../models';
+import { sendSignUpOTP } from '../../services/signUpVerificationService';
 import { useAuth } from '../../context/AuthContext';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
@@ -55,8 +56,11 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       // The full Firestore document is written at END of onboarding (TwoFactorAuth screen)
       await createUserWithEmailAndPassword(auth, email, password);
 
-      Alert.alert('Success', 'Account created! Let\'s set up your profile.');
-      navigation.navigate('CreateProfile');
+      // Send verification code to the user's email
+      const { maskedEmail } = await sendSignUpOTP();
+
+      Alert.alert('Verify Your Email', 'A verification code has been sent to your email.');
+      navigation.navigate('EmailVerification', { maskedEmail });
     } catch (error: any) {
       // Handle specific Firebase Auth error codes
       let message = 'Sign up failed. Please try again.';

@@ -50,6 +50,7 @@ import NativeLanguageScreen from '../views/auth/NativeLanguageScreen';
 import EnglishLevelScreen from '../views/auth/EnglishLevelScreen';
 import ChooseVerificationMethodScreen from '../views/auth/ChooseVerificationMethodScreen';
 import SetupAuthenticatorScreen from '../views/auth/SetupAuthenticatorScreen';
+import EmailVerificationScreen from '../views/auth/EmailVerificationScreen';
 const SetYourFingerprintScreen = require('../views/auth/SetYourFingerprintScreen').default;
 
 // Views – Main (barrel)
@@ -135,6 +136,7 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+      <AuthStack.Screen name="EmailVerification" component={EmailVerificationScreen} />
       <AuthStack.Screen name="CreateProfile" component={CreateProfileScreen} />
       <AuthStack.Screen name="LearningGoals" component={LearningGoalsScreen} />
       <AuthStack.Screen name="NativeLanguage" component={NativeLanguageScreen} />

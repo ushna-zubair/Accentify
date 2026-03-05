@@ -397,3 +397,125 @@ export const verify2FACode = onCall(async (request) => {
     enabled: newEnabled,
   };
 });
+
+// ─── 7. Send Sign-Up Email Verification OTP ───
+// Sends a 4-digit code to the newly registered user's email so they can
+// prove ownership before continuing to the profile-creation screens.
+export const sendSignUpOTP = onCall(
+  { secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
+  async (request) => {
+    // The user is authenticated (createUserWithEmailAndPassword already ran)
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+
+    const uid = request.auth.uid;
+
+    let userRecord: admin.auth.UserRecord;
+    try {
+      userRecord = await admin.auth().getUser(uid);
+    } catch {
+      throw new HttpsError('not-found', 'User not found.');
+    }
+
+    if (!userRecord.email) {
+      throw new HttpsError('failed-precondition', 'No email on file.');
+    }
+
+    const code = generateOTP();
+    const expiresAt = admin.firestore.Timestamp.fromDate(
+      new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
+    );
+
+    // Store the code in Firestore
+    const codeRef = db.collection('signup_verification_otps').doc(uid);
+    await codeRef.set({
+      code,
+      attempts: 0,
+      expiresAt,
+      verified: false,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    // Send the email
+    const transporter = nodemailer.createTransport({
+      host: SMTP_HOST.value(),
+      port: parseInt(SMTP_PORT.value(), 10),
+      secure: parseInt(SMTP_PORT.value(), 10) === 465,
+      auth: {
+        user: SMTP_USER.value(),
+        pass: SMTP_PASS.value(),
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"Accentify" <${SMTP_USER.value()}>`,
+      to: userRecord.email,
+      subject: 'Verify Your Accentify Account',
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
+          <h2 style="color: #6C63FF;">Welcome to Accentify!</h2>
+          <p>Thanks for signing up. Please verify your email with the code below:</p>
+          <h1 style="letter-spacing: 12px; font-size: 36px; color: #333;">${code}</h1>
+          <p style="color: #888;">This code expires in 5 minutes. If you didn't create an account, you can safely ignore this email.</p>
+        </div>
+      `,
+    });
+
+    return {
+      success: true,
+      maskedEmail: maskEmail(userRecord.email),
+    };
+  },
+);
+
+// ─── 8. Verify Sign-Up OTP ───
+// Validates the code the user entered after signing up.
+export const verifySignUpOTP = onCall(async (request) => {
+  if (!request.auth) {
+    throw new HttpsError('unauthenticated', 'Authentication required.');
+  }
+
+  const uid = request.auth.uid;
+  const { code } = request.data as { code?: string };
+
+  if (!code) {
+    throw new HttpsError('invalid-argument', 'code is required.');
+  }
+
+  const codeRef = db.collection('signup_verification_otps').doc(uid);
+  const codeSnap = await codeRef.get();
+
+  if (!codeSnap.exists) {
+    throw new HttpsError('not-found', 'No pending verification. Please request a new code.');
+  }
+
+  const codeData = codeSnap.data()!;
+
+  // Check expiry
+  if (codeData.expiresAt.toDate() < new Date()) {
+    await codeRef.delete();
+    throw new HttpsError('deadline-exceeded', 'Code has expired. Please request a new one.');
+  }
+
+  // Check attempts (max 5)
+  if (codeData.attempts >= 5) {
+    await codeRef.delete();
+    throw new HttpsError('resource-exhausted', 'Too many attempts. Please request a new code.');
+  }
+
+  // Increment attempts
+  await codeRef.update({ attempts: admin.firestore.FieldValue.increment(1) });
+
+  if (codeData.code !== code) {
+    throw new HttpsError('permission-denied', 'Incorrect code. Please try again.');
+  }
+
+  // Mark the Firebase Auth user's email as verified
+  await admin.auth().updateUser(uid, { emailVerified: true });
+
+  // Cleanup
+  await codeRef.delete();
+
+  return { success: true };
+});
