@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { doc, getDoc, collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { doc, getDoc, collection, query, orderBy, getDocs, where } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type {
   TutorLesson,
@@ -124,7 +124,8 @@ export const useTutorController = () => {
       let lessons: TutorLesson[] = [];
       try {
         const lessonsRef = collection(db, 'lessons');
-        const lessonsQ = query(lessonsRef, orderBy('order', 'asc'));
+        // Only show published lessons to learners
+        const lessonsQ = query(lessonsRef, where('status', '==', 'published'), orderBy('order', 'asc'));
         const lessonsSnap = await getDocs(lessonsQ);
 
         if (!lessonsSnap.empty) {

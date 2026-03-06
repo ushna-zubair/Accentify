@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,27 @@ import {
   ScrollView,
   Platform,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import {
+  collection,
+  query,
+  orderBy,
+  limit,
+  getDocs,
+  where,
+} from 'firebase/firestore';
+import { db, auth } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
-import type { HomeStackParamList } from '../../models';
+import type { HomeStackParamList, Announcement } from '../../models';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
 
@@ -29,6 +40,104 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
   const firstName = userProfile?.fullName?.split(' ')[0] ?? 'Learner';
   const styles = useMemo(() => createStyles(tc), [tc]);
 
+  // ── Announcements state ──
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
+
+  // ── Recent lessons state ──
+  interface RecentLesson {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    difficulty: string;
+  }
+  const [recentLessons, setRecentLessons] = useState<RecentLesson[]>([]);
+  const [loadingLessons, setLoadingLessons] = useState(true);
+
+  // ── Unread notification count ──
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchHomeData = useCallback(async () => {
+    const uid = auth.currentUser?.uid;
+
+    // Fetch latest announcements (top 3)
+    try {
+      const annRef = collection(db, 'announcements');
+      const annQ = query(annRef, orderBy('createdAt', 'desc'), limit(3));
+      const annSnap = await getDocs(annQ);
+      const items: Announcement[] = annSnap.docs.map((d) => {
+        const data = d.data();
+        let createdAt = '';
+        try {
+          const ts = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+          createdAt = ts.toISOString();
+        } catch { createdAt = ''; }
+        return { id: d.id, title: data.title ?? 'Announcement', body: data.body ?? '', createdAt, createdBy: data.createdBy ?? '' };
+      });
+      setAnnouncements(items);
+    } catch (e: any) {
+      console.warn('[Home] announcements fetch:', e.message);
+    } finally {
+      setLoadingAnnouncements(false);
+    }
+
+    // Fetch latest published lessons (top 5)
+    try {
+      const lessonsRef = collection(db, 'lessons');
+      const lessonsQ = query(lessonsRef, where('status', '==', 'published'), orderBy('order', 'asc'), limit(5));
+      const lessonsSnap = await getDocs(lessonsQ);
+      const items: RecentLesson[] = lessonsSnap.docs.map((d) => {
+        const data = d.data();
+        return { id: d.id, title: data.title ?? '', description: data.description ?? '', category: data.category ?? 'conversation', difficulty: data.difficulty ?? 'Easy' };
+      });
+      setRecentLessons(items);
+    } catch (e: any) {
+      console.warn('[Home] lessons fetch:', e.message);
+    } finally {
+      setLoadingLessons(false);
+    }
+
+    // Fetch unread notification count
+    if (uid) {
+      try {
+        const notifRef = collection(db, 'users', uid, 'notifications');
+        const notifQ = query(notifRef, where('unread', '==', true));
+        const notifSnap = await getDocs(notifQ);
+        setUnreadCount(notifSnap.size);
+      } catch { /* ignore */ }
+    }
+  }, []);
+
+  useEffect(() => { fetchHomeData(); }, [fetchHomeData]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchHomeData();
+    setRefreshing(false);
+  }, [fetchHomeData]);
+
+  /** Format announcement date */
+  const formatDate = (iso: string) => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const now = new Date();
+      const diffMs = now.getTime() - d.getTime();
+      const diffH = Math.floor(diffMs / 3600000);
+      if (diffH < 1) return 'Just now';
+      if (diffH < 24) return `${diffH}h ago`;
+      const diffD = Math.floor(diffH / 24);
+      if (diffD === 1) return 'Yesterday';
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch { return ''; }
+  };
+
+  const CATEGORY_COLORS: Record<string, string> = { conversation: '#9FB2FD', pronunciation: '#FEC79C', vocabulary: '#9DE09D' };
+  const CATEGORY_ICONS: Record<string, string> = { conversation: 'chatbubbles', pronunciation: 'mic', vocabulary: 'book' };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -36,6 +145,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
       >
         {/* ── Header / Greeting ── */}
         <View style={styles.header}>
@@ -47,6 +157,32 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             <Ionicons name="person" size={22} color={tc.accent} />
           </View>
         </View>
+
+        {/* ── Announcements Banner ── */}
+        {!loadingAnnouncements && announcements.length > 0 && (
+          <View style={styles.announcementsSection}>
+            <View style={styles.sectionHeader}>
+              <View style={styles.sectionHeaderLeft}>
+                <Ionicons name="megaphone" size={18} color={tc.accent} />
+                <Text style={styles.sectionTitle}>Announcements</Text>
+              </View>
+            </View>
+            {announcements.map((ann) => (
+              <View key={ann.id} style={styles.announcementCard}>
+                <View style={styles.announcementIconWrap}>
+                  <Ionicons name="megaphone-outline" size={18} color={tc.accent} />
+                </View>
+                <View style={styles.announcementContent}>
+                  <View style={styles.announcementTopRow}>
+                    <Text style={styles.announcementTitle} numberOfLines={1}>{ann.title}</Text>
+                    <Text style={styles.announcementTime}>{formatDate(ann.createdAt)}</Text>
+                  </View>
+                  <Text style={styles.announcementBody} numberOfLines={2}>{ann.body}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* ── Daily Practice Card ── */}
         <TouchableOpacity
@@ -145,6 +281,40 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>
+
+        {/* ── Available Lessons from Firestore ── */}
+        {!loadingLessons && recentLessons.length > 0 && (
+          <>
+            <View style={[styles.sectionHeader, { marginTop: 12 }]}>
+              <View style={styles.sectionHeaderLeft}>
+                <Ionicons name="library" size={18} color={tc.accent} />
+                <Text style={styles.sectionTitle}>Available Lessons</Text>
+              </View>
+            </View>
+            {recentLessons.map((lesson) => {
+              const catColor = CATEGORY_COLORS[lesson.category] ?? tc.accentLight;
+              const catIcon = CATEGORY_ICONS[lesson.category] ?? 'book';
+              return (
+                <TouchableOpacity
+                  key={lesson.id}
+                  style={styles.exerciseCard}
+                  activeOpacity={0.8}
+                >
+                  <View style={[styles.exerciseIcon, { backgroundColor: `${catColor}30` }]}>
+                    <Ionicons name={catIcon as any} size={24} color={catColor} />
+                  </View>
+                  <View style={styles.exerciseInfo}>
+                    <Text style={styles.exerciseTitle}>{lesson.title}</Text>
+                    <Text style={styles.exerciseDesc} numberOfLines={1}>{lesson.description}</Text>
+                  </View>
+                  <View style={[styles.difficultyPill, { backgroundColor: `${catColor}18` }]}>
+                    <Text style={[styles.difficultyText, { color: catColor }]}>{lesson.difficulty}</Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </>
+        )}
 
         {/* Bottom spacer for tab bar */}
         <View style={{ height: 100 }} />
@@ -264,6 +434,81 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontSize: 18,
     color: tc.text,
     marginBottom: 14,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  sectionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  // ── Announcements ──
+  announcementsSection: {
+    marginBottom: 24,
+  },
+  announcementCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: tc.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: tc.cardBorder,
+    borderLeftWidth: 3,
+    borderLeftColor: tc.accent,
+  },
+  announcementIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: tc.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  announcementContent: {
+    flex: 1,
+  },
+  announcementTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  announcementTitle: {
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
+    color: tc.text,
+    flex: 1,
+    marginRight: 8,
+  },
+  announcementTime: {
+    fontFamily: fonts.regular,
+    fontSize: 11,
+    color: tc.textMuted,
+  },
+  announcementBody: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: tc.textLight,
+    lineHeight: 18,
+  },
+
+  // ── Difficulty pill ──
+  difficultyPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  difficultyText: {
+    fontFamily: fonts.medium,
+    fontSize: 11,
   },
 
   // ── Stats Row ──

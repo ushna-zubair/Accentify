@@ -24,6 +24,7 @@ import type {
   AdminLesson,
   AdminLessonFormData,
   AdminLessonStats,
+  AdminVocabPairForm,
   LessonCategory,
   AdminLessonStatus,
 } from '../models';
@@ -51,6 +52,14 @@ const mapLessonDoc = (docSnap: any): AdminLesson => {
     status: d.status ?? 'published',
     focusTips: d.focusTips ?? [],
     imageUrl: d.imageUrl ?? '',
+    level: d.level ?? 1,
+    estimatedMinutes: d.estimatedMinutes ?? 15,
+    completionMessage: d.completionMessage ?? '',
+    completionImageUrl: d.completionImageUrl ?? '',
+    tags: d.tags ?? [],
+    prerequisites: d.prerequisites ?? [],
+    passingScore: d.passingScore ?? 70,
+    maxAttempts: d.maxAttempts ?? 0,
     createdAt: tsToISO(d.createdAt),
     updatedAt: tsToISO(d.updatedAt),
     createdBy: d.createdBy ?? '',
@@ -82,9 +91,12 @@ export const fetchAllLessons = async (): Promise<AdminLesson[]> => {
   return enriched;
 };
 
+/** Lesson fields that go to the main document (excludes vocabPairs sub-collection) */
+type LessonDocFields = Omit<AdminLessonFormData, 'vocabPairs'>;
+
 // ─── Create lesson ───
 export const createLesson = async (
-  formData: AdminLessonFormData,
+  formData: LessonDocFields,
   adminUid: string,
 ): Promise<string> => {
   const docRef = await addDoc(collection(db, LESSONS_COL), {
@@ -101,7 +113,7 @@ export const createLesson = async (
 // ─── Update lesson ───
 export const updateLesson = async (
   lessonId: string,
-  formData: Partial<AdminLessonFormData>,
+  formData: Partial<LessonDocFields>,
 ): Promise<void> => {
   await updateDoc(doc(db, LESSONS_COL, lessonId), {
     ...formData,
@@ -109,8 +121,13 @@ export const updateLesson = async (
   });
 };
 
-// ─── Delete lesson ───
+// ─── Delete lesson (cascade vocabPairs) ───
 export const deleteLesson = async (lessonId: string): Promise<void> => {
+  // First delete all vocabPairs in the sub-collection
+  const pairsSnap = await getDocs(collection(db, LESSONS_COL, lessonId, 'vocabPairs'));
+  const deletions = pairsSnap.docs.map((d) => deleteDoc(d.ref));
+  await Promise.all(deletions);
+  // Then delete the lesson document
   await deleteDoc(doc(db, LESSONS_COL, lessonId));
 };
 
@@ -136,7 +153,7 @@ export const updateLessonOrder = async (
   });
 };
 
-// ─── Duplicate lesson ───
+// ─── Duplicate lesson (including vocabPairs) ───
 export const duplicateLesson = async (
   lessonId: string,
   adminUid: string,
@@ -155,13 +172,87 @@ export const duplicateLesson = async (
     status: 'draft',
     focusTips: data.focusTips ?? [],
     imageUrl: data.imageUrl ?? '',
+    level: data.level ?? 1,
+    estimatedMinutes: data.estimatedMinutes ?? 15,
+    completionMessage: data.completionMessage ?? '',
+    completionImageUrl: data.completionImageUrl ?? '',
+    tags: data.tags ?? [],
+    prerequisites: data.prerequisites ?? [],
+    passingScore: data.passingScore ?? 70,
+    maxAttempts: data.maxAttempts ?? 0,
     createdBy: adminUid,
     enrolledCount: 0,
     completedCount: 0,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  // Copy vocab pairs to the new lesson
+  const pairsSnap = await getDocs(collection(db, LESSONS_COL, lessonId, 'vocabPairs'));
+  const copies = pairsSnap.docs.map((d) => {
+    const pd = d.data();
+    return addDoc(collection(db, LESSONS_COL, docRef.id, 'vocabPairs'), {
+      basicWord: pd.basicWord ?? '',
+      vocabWord: pd.vocabWord ?? '',
+      basicPhonetic: pd.basicPhonetic ?? '',
+      vocabPhonetic: pd.vocabPhonetic ?? '',
+      basicDefinition: pd.basicDefinition ?? '',
+      vocabDefinition: pd.vocabDefinition ?? '',
+      exampleSentence: pd.exampleSentence ?? '',
+    });
+  });
+  await Promise.all(copies);
+
   return docRef.id;
+};
+
+// ═══════════════════════════════════════════════
+//  VOCAB PAIR CRUD
+// ═══════════════════════════════════════════════
+
+/** Fetch all vocab pairs for a lesson */
+export const fetchVocabPairs = async (lessonId: string): Promise<AdminVocabPairForm[]> => {
+  const snap = await getDocs(collection(db, LESSONS_COL, lessonId, 'vocabPairs'));
+  return snap.docs.map((d) => {
+    const data = d.data();
+    return {
+      id: d.id,
+      basicWord: data.basicWord ?? '',
+      vocabWord: data.vocabWord ?? '',
+      basicPhonetic: data.basicPhonetic ?? '',
+      vocabPhonetic: data.vocabPhonetic ?? '',
+      basicDefinition: data.basicDefinition ?? '',
+      vocabDefinition: data.vocabDefinition ?? '',
+      exampleSentence: data.exampleSentence ?? '',
+    };
+  });
+};
+
+/** Save all vocab pairs for a lesson (replaces existing set) */
+export const saveVocabPairs = async (
+  lessonId: string,
+  pairs: AdminVocabPairForm[],
+): Promise<void> => {
+  const colRef = collection(db, LESSONS_COL, lessonId, 'vocabPairs');
+
+  // Delete existing pairs
+  const existing = await getDocs(colRef);
+  const deletions = existing.docs.map((d) => deleteDoc(d.ref));
+  await Promise.all(deletions);
+
+  // Write new pairs
+  const additions = pairs.map((p) =>
+    addDoc(colRef, {
+      basicWord: p.basicWord,
+      vocabWord: p.vocabWord,
+      basicPhonetic: p.basicPhonetic,
+      vocabPhonetic: p.vocabPhonetic,
+      basicDefinition: p.basicDefinition,
+      vocabDefinition: p.vocabDefinition,
+      exampleSentence: p.exampleSentence,
+    }),
+  );
+  await Promise.all(additions);
 };
 
 // ─── Compute stats from items ───

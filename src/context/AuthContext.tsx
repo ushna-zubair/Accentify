@@ -24,7 +24,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signUp: (email: string, password: string) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<UserRole | null>;
   signOut: () => Promise<void>;
   fetchUserRole: (uid: string) => Promise<UserRole | null>;
   completeOnboarding: (data: OnboardingPayload) => Promise<void>;
@@ -102,14 +102,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string): Promise<UserRole | null> => {
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       // Update lastLoginAt on the Firestore doc
       updateDoc(doc(db, 'users', result.user.uid), {
         lastLoginAt: new Date().toISOString(),
       }).catch(() => {}); // non-blocking
-      await fetchUserRole(result.user.uid);
+      const role = await fetchUserRole(result.user.uid);
+      return role;
     } catch (error) {
       throw error;
     }

@@ -88,6 +88,14 @@ const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   }, [isWideWeb]);
 
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const handleResend = async () => {
     if (!canResend || isResending) return;
     setIsResending(true);
@@ -96,9 +104,9 @@ const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
       reset();
       setResendTimer(OTP_RESEND_SECONDS);
       setCanResend(false);
-      Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
+      showAlert('Code Sent', 'A new verification code has been sent to your email.');
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Failed to resend code.');
+      showAlert('Error', err.message ?? 'Failed to resend code.');
     } finally {
       setIsResending(false);
     }
@@ -109,10 +117,10 @@ const EmailVerificationScreen: React.FC<Props> = ({ navigation, route }) => {
     setIsVerifying(true);
     try {
       await verifySignUpOTP(otp.join(''));
-      Alert.alert('Email Verified!', 'Your email has been verified. Let\'s set up your profile.');
+      showAlert('Email Verified!', 'Your email has been verified. Let\'s set up your profile.');
       navigation.navigate('CreateProfile');
     } catch (err: any) {
-      Alert.alert(
+      showAlert(
         'Verification Failed',
         err.message ?? 'Incorrect code. Please try again.',
       );

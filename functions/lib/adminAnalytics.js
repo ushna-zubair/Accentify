@@ -186,7 +186,7 @@ async function aggregate() {
         const yesterday = new Date(now);
         yesterday.setDate(yesterday.getDate() - 1);
         const prevSnap = await db
-            .doc(`admin_analytics/daily_snapshots/${yesterday.toISOString().split('T')[0]}`)
+            .doc(`admin_analytics/global_stats/daily_snapshots/${yesterday.toISOString().split('T')[0]}`)
             .get();
         if (prevSnap.exists) {
             const prevActive = prevSnap.data().activeUsers ?? 0;
@@ -250,7 +250,7 @@ async function aggregate() {
         lastAggregatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
     await db
-        .doc(`admin_analytics/daily_snapshots/${today}`)
+        .doc(`admin_analytics/global_stats/daily_snapshots/${today}`)
         .set({
         activeUsers,
         totalSessions,

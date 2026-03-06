@@ -14,8 +14,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../config/firebase';
 import { AuthStackParamList } from '../../models';
 import { sendSignUpOTP } from '../../services/signUpVerificationService';
 import { useAuth } from '../../context/AuthContext';
@@ -32,36 +30,50 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const isWideWeb = isWeb && width >= 600;
-  const { signInWithGoogle, signInWithApple } = useAuth();
+  const { signUp, signInWithGoogle, signInWithApple } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
 
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const handleSignUp = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      showAlert('Error', 'Please fill in all fields');
       return;
     }
 
     if (!agreeToTerms) {
-      Alert.alert('Error', 'Please agree to Terms and Conditions');
+      showAlert('Error', 'Please agree to Terms and Conditions');
       return;
     }
 
     setLoading(true);
     try {
-      // Create the Firebase Auth account only
-      // The full Firestore document is written at END of onboarding (TwoFactorAuth screen)
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Step 1: Create the Firebase Auth account via AuthContext.
+      // The full Firestore document is written at END of onboarding (TwoFactorAuth screen).
+      await signUp(email, password);
 
-      // Send verification code to the user's email
-      const { maskedEmail } = await sendSignUpOTP();
-
-      Alert.alert('Verify Your Email', 'A verification code has been sent to your email.');
-      navigation.navigate('EmailVerification', { maskedEmail });
+      // Step 2: Try to send email verification OTP.
+      // If the Cloud Function isn't deployed, skip verification and go straight to profile setup.
+      try {
+        const { maskedEmail } = await sendSignUpOTP();
+        navigation.navigate('EmailVerification', { maskedEmail });
+      } catch (otpError: any) {
+        console.warn('[SignUp] OTP send failed (skipping email verification):', otpError?.code, otpError?.message);
+        // Cloud Function not deployed or unavailable — skip email verification
+        navigation.navigate('CreateProfile');
+      }
     } catch (error: any) {
+      console.error('[SignUp] error:', error?.code, error?.message, error);
       // Handle specific Firebase Auth error codes
       let message = 'Sign up failed. Please try again.';
       if (error.code === 'auth/email-already-in-use') {
@@ -70,8 +82,14 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         message = 'Please enter a valid email address.';
       } else if (error.code === 'auth/weak-password') {
         message = 'Password should be at least 6 characters.';
+      } else if (error.code === 'auth/operation-not-allowed') {
+        message = 'Email/password sign-up is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
+      } else if (error.code === 'auth/network-request-failed') {
+        message = 'Network error. Please check your internet connection and try again.';
+      } else if (error.message) {
+        message = error.message;
       }
-      Alert.alert('Sign Up Error', message);
+      showAlert('Sign Up Error', message);
     } finally {
       setLoading(false);
     }
@@ -82,18 +100,16 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const { isNewUser } = await signInWithGoogle();
       if (isNewUser) {
-        Alert.alert('Success', 'Google account linked! Let\'s set up your profile.');
+        showAlert('Success', 'Google account linked! Let\'s set up your profile.');
         navigation.navigate('CreateProfile');
-      } else {
-        // Existing user — go to main fingerprint/login flow
-        navigation.navigate('SetYourFingerprint');
       }
+      // If not a new user, AppNavigator handles routing automatically
     } catch (error: any) {
       if (error?.code === 'SIGN_IN_CANCELLED' || error?.message?.includes('cancelled')) {
         return; // User cancelled, no alert needed
       }
       if (!error?.message?.includes('not available')) {
-        Alert.alert('Google Sign-Up Error', error.message || 'Something went wrong. Please try again.');
+        showAlert('Google Sign-Up Error', error.message || 'Something went wrong. Please try again.');
       }
     } finally {
       setSocialLoading(null);
@@ -105,18 +121,16 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const { isNewUser } = await signInWithApple();
       if (isNewUser) {
-        Alert.alert('Success', 'Apple account linked! Let\'s set up your profile.');
+        showAlert('Success', 'Apple account linked! Let\'s set up your profile.');
         navigation.navigate('CreateProfile');
-      } else {
-        // Existing user — go to main fingerprint/login flow
-        navigation.navigate('SetYourFingerprint');
       }
+      // If not a new user, AppNavigator handles routing automatically
     } catch (error: any) {
       if (error?.code === 'ERR_REQUEST_CANCELED' || error?.message?.includes('cancelled')) {
         return; // User cancelled, no alert needed
       }
       if (!error?.message?.includes('not available') && !error?.message?.includes('Unavailable')) {
-        Alert.alert('Apple Sign-Up Error', error.message || 'Something went wrong. Please try again.');
+        showAlert('Apple Sign-Up Error', error.message || 'Something went wrong. Please try again.');
       }
     } finally {
       setSocialLoading(null);

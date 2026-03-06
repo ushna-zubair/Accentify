@@ -35,6 +35,7 @@ import AdminUserManagementScreen from './AdminUserManagementScreen';
 import AdminAccessControlScreen from './AdminAccessControlScreen';
 import AdminFeedbackReportsScreen from './AdminFeedbackReportsScreen';
 import AdminManageLessonsScreen from './AdminManageLessonsScreen';
+import AdminSupportLogsScreen from './AdminSupportLogsScreen';
 import { SettingsStackNavigator } from '../../navigation/AppNavigator';
 import { useDashboardAnalytics } from '../../hooks/useDashboardAnalytics';
 
@@ -1166,6 +1167,16 @@ const DesktopAdminDashboard: React.FC = () => {
           <AdminAccessControlScreen />
         ) : activeMenu === 'feedback' ? (
           <AdminFeedbackReportsScreen />
+        ) : activeMenu === 'support' ? (
+          <AdminSupportLogsScreen />
+        ) : activeMenu === 'billing' ? (
+          <View style={styles.comingSoonContainer}>
+            <Ionicons name="card-outline" size={64} color="#C4B5FD" />
+            <Text style={styles.comingSoonTitle}>Subscription & Billing</Text>
+            <Text style={styles.comingSoonText}>
+              This feature is currently under development and will be available soon.{'\n'}Thank you for your patience.
+            </Text>
+          </View>
         ) : (
           <ScrollView
             style={styles.scrollArea}
@@ -1418,6 +1429,26 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontSize: 24,
     color: tc.text,
     marginBottom: 0,
+  },
+  comingSoonContainer: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: 32,
+  },
+  comingSoonTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 22,
+    color: tc.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  comingSoonText: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    color: '#6B7280',
+    textAlign: 'center' as const,
+    lineHeight: 22,
   },
   dashboardHeader: {
     flexDirection: 'row' as const,

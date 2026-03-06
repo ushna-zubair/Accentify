@@ -418,6 +418,15 @@ const AdminDashboardScreen: React.FC = () => {
       <View style={styles.mainArea}>
         <TopBar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
+        {activeMenu === 'billing' ? (
+          <View style={styles.comingSoonContainer}>
+            <Ionicons name="card-outline" size={64} color="#C4B5FD" />
+            <Text style={styles.comingSoonTitle}>Subscription & Billing</Text>
+            <Text style={styles.comingSoonText}>
+              This feature is currently under development and will be available soon.{'\n'}Thank you for your patience.
+            </Text>
+          </View>
+        ) : (
         <ScrollView
           style={styles.scrollArea}
           contentContainerStyle={styles.scrollContent}
@@ -448,6 +457,7 @@ const AdminDashboardScreen: React.FC = () => {
             </View>
           </View>
         </ScrollView>
+        )}
       </View>
     </View>
   );
@@ -587,6 +597,25 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontWeight: '700',
     color: '#1A1A2E',
     marginBottom: 20,
+  },
+  comingSoonContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  comingSoonTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#1A1A2E',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  comingSoonText: {
+    fontSize: 15,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 22,
   },
   // Layout
   row: {

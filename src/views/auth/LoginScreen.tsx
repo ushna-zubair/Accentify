@@ -14,9 +14,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { AuthStackParamList } from '../../models';
 import CustomInput from '../../components/CustomInput';
@@ -29,7 +26,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const { width } = useWindowDimensions();
-  const { signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const isWeb = Platform.OS === 'web';
   const isWideWeb = isWeb && width >= 600;
   const [email, setEmail] = useState('');
@@ -37,37 +34,33 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const handleSignInWithAccount = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please enter your email and password.');
+      showAlert('Error', 'Please enter your email and password.');
       return;
     }
 
     setLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Use AuthContext.signIn — it calls Firebase Auth + fetches user role.
+      // AppNavigator will automatically switch to LearnerNavigator/AdminNavigator
+      // once the role is set in context state.
+      const role = await signIn(email, password);
 
-      const userDocRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userDocRef);
-
-      if (!userSnap.exists()) {
-        Alert.alert('Error', 'User profile not found. Please contact support.');
-        return;
+      if (!role) {
+        // User exists in Firebase Auth but has no Firestore doc
+        // (incomplete onboarding) — send them to complete their profile.
+        navigation.navigate('CreateProfile');
       }
-
-      const userData = userSnap.data();
-      const role = userData.role;
-
-      if (role === 'learner') {
-        navigation.navigate('SetYourFingerprint');
-      } else if (role === 'content_author') {
-        navigation.navigate('SetYourFingerprint');
-      } else if (role === 'admin') {
-        navigation.navigate('SetYourFingerprint');
-      } else {
-        navigation.navigate('SetYourFingerprint');
-      }
+      // If role is set, AppNavigator handles navigation automatically — no manual nav needed.
     } catch (error: any) {
       let message = 'Sign in failed. Please try again.';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -77,7 +70,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       } else if (error.code === 'auth/too-many-requests') {
         message = 'Too many failed attempts. Please try again later.';
       }
-      Alert.alert('Sign In Error', message);
+      showAlert('Sign In Error', message);
     } finally {
       setLoading(false);
     }
@@ -89,14 +82,13 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       const { isNewUser } = await signInWithGoogle();
       if (isNewUser) {
         navigation.navigate('CreateProfile');
-      } else {
-        navigation.navigate('SetYourFingerprint');
       }
+      // If not a new user, AppNavigator handles routing automatically
     } catch (error: any) {
       if (error?.message?.includes('CANCELLED') || error?.message?.includes('cancelled')) {
         return;
       }
-      Alert.alert('Error', error.message || 'Google Sign-In failed');
+      showAlert('Error', error.message || 'Google Sign-In failed');
     } finally {
       setLoading(false);
     }

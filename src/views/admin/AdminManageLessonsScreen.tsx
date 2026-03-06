@@ -30,12 +30,14 @@ import type {
   AdminLesson,
   AdminLessonFormData,
   AdminLessonStatus,
+  AdminVocabPairForm,
   LessonCategory,
   ManageLessonsTab,
 } from '../../models';
 import {
   LESSON_CATEGORY_LABELS,
   ADMIN_LESSON_STATUS_LABELS,
+  DEFAULT_VOCAB_PAIR,
 } from '../../models';
 
 // ─── Constants ───
@@ -344,11 +346,39 @@ const LessonCard: React.FC<{
           {lesson.description}
         </Text>
 
-        {/* Order badge */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 12 }}>
-          <Ionicons name="reorder-three" size={14} color={tc.textMuted} />
-          <Text style={{ fontFamily: fonts.medium, fontSize: 11, color: tc.textMuted }}>Order: {lesson.order}</Text>
+        {/* Order + Level + Duration row */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <Ionicons name="reorder-three" size={14} color={tc.textMuted} />
+            <Text style={{ fontFamily: fonts.medium, fontSize: 11, color: tc.textMuted }}>Order: {lesson.order}</Text>
+          </View>
+          {(lesson.level ?? 0) > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="flag" size={12} color={tc.accent} />
+              <Text style={{ fontFamily: fonts.medium, fontSize: 11, color: tc.accent }}>Level {lesson.level}</Text>
+            </View>
+          )}
+          {(lesson.estimatedMinutes ?? 0) > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <Ionicons name="time-outline" size={12} color={tc.textMuted} />
+              <Text style={{ fontFamily: fonts.medium, fontSize: 11, color: tc.textMuted }}>{lesson.estimatedMinutes}m</Text>
+            </View>
+          )}
         </View>
+
+        {/* Tags */}
+        {(lesson.tags ?? []).length > 0 && (
+          <View style={{ flexDirection: 'row', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+            {lesson.tags.slice(0, 3).map((tag, i) => (
+              <View key={i} style={{ backgroundColor: tc.accent + '10', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}>
+                <Text style={{ fontFamily: fonts.medium, fontSize: 10, color: tc.accent }}>{tag}</Text>
+              </View>
+            ))}
+            {lesson.tags.length > 3 && (
+              <Text style={{ fontFamily: fonts.medium, fontSize: 10, color: tc.textMuted }}>+{lesson.tags.length - 3}</Text>
+            )}
+          </View>
+        )}
 
         {/* Metrics row */}
         <View style={{ flexDirection: 'row', gap: 16, paddingTop: 12, borderTopWidth: 1, borderTopColor: tc.divider }}>
@@ -402,7 +432,166 @@ const LessonCard: React.FC<{
 };
 
 // ═══════════════════════════════════════════════
-//  LESSON FORM MODAL
+//  VOCAB PAIR ROW (used inside form)
+// ═══════════════════════════════════════════════
+const VocabPairRow: React.FC<{
+  pair: AdminVocabPairForm;
+  index: number;
+  onEdit: () => void;
+  onRemove: () => void;
+  tc: ThemeColors;
+}> = ({ pair, index, onEdit, onRemove, tc }) => (
+  <View
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.surfaceAlt,
+      borderRadius: 12,
+      padding: 12,
+      marginBottom: 8,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    }}
+  >
+    {/* Number */}
+    <View style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: tc.accent + '18', justifyContent: 'center', alignItems: 'center', marginRight: 10 }}>
+      <Text style={{ fontFamily: fonts.bold, fontSize: 12, color: tc.accent }}>{index + 1}</Text>
+    </View>
+    {/* Words */}
+    <View style={{ flex: 1 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+        <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }}>{pair.basicWord}</Text>
+        <Ionicons name="arrow-forward" size={14} color={tc.accent} />
+        <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.accent }}>{pair.vocabWord}</Text>
+      </View>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+        {pair.basicPhonetic ? (
+          <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>/{pair.basicPhonetic}/</Text>
+        ) : null}
+        {pair.vocabPhonetic ? (
+          <>
+            <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>→</Text>
+            <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>/{pair.vocabPhonetic}/</Text>
+          </>
+        ) : null}
+      </View>
+      {pair.exampleSentence ? (
+        <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textLight, marginTop: 2, fontStyle: 'italic' }} numberOfLines={1}>
+          "{pair.exampleSentence}"
+        </Text>
+      ) : null}
+    </View>
+    {/* Actions */}
+    <TouchableOpacity onPress={onEdit} style={{ padding: 6 }}>
+      <Ionicons name="create-outline" size={18} color={tc.accent} />
+    </TouchableOpacity>
+    <TouchableOpacity onPress={onRemove} style={{ padding: 6 }}>
+      <Ionicons name="trash-outline" size={18} color={tc.error} />
+    </TouchableOpacity>
+  </View>
+);
+
+// ═══════════════════════════════════════════════
+//  VOCAB PAIR FORM (inline form for add/edit pair)
+// ═══════════════════════════════════════════════
+const VocabPairFormInline: React.FC<{
+  data: AdminVocabPairForm;
+  updateField: <K extends keyof AdminVocabPairForm>(key: K, val: AdminVocabPairForm[K]) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  isEditing: boolean;
+  tc: ThemeColors;
+}> = ({ data, updateField, onSave, onCancel, isEditing, tc }) => {
+  const inputStyle = {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: tc.text,
+    borderWidth: 1,
+    borderColor: tc.inputBorder,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: tc.inputBg,
+    ...(Platform.OS === 'web' ? { outlineStyle: 'none' as any } : {}),
+  };
+  const labelStyle = { fontFamily: fonts.medium, fontSize: 12, color: tc.text, marginBottom: 4 };
+  const canSave = data.basicWord.trim() && data.vocabWord.trim();
+
+  return (
+    <View style={{ backgroundColor: tc.white, borderRadius: 14, borderWidth: 1.5, borderColor: tc.accent + '40', padding: 16, marginBottom: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <Ionicons name={isEditing ? 'create' : 'add-circle'} size={18} color={tc.accent} />
+        <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }}>
+          {isEditing ? 'Edit Word Pair' : 'Add Word Pair'}
+        </Text>
+      </View>
+
+      {/* Basic Word + Vocab Word row */}
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={labelStyle}>Basic Word *</Text>
+          <TextInput style={inputStyle} placeholder="e.g. Help" placeholderTextColor={tc.textMuted} value={data.basicWord} onChangeText={(v) => updateField('basicWord', v)} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={labelStyle}>Vocab Word *</Text>
+          <TextInput style={inputStyle} placeholder="e.g. Assist" placeholderTextColor={tc.textMuted} value={data.vocabWord} onChangeText={(v) => updateField('vocabWord', v)} />
+        </View>
+      </View>
+
+      {/* Phonetics row */}
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={labelStyle}>Basic Phonetic</Text>
+          <TextInput style={inputStyle} placeholder="e.g. help" placeholderTextColor={tc.textMuted} value={data.basicPhonetic} onChangeText={(v) => updateField('basicPhonetic', v)} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={labelStyle}>Vocab Phonetic</Text>
+          <TextInput style={inputStyle} placeholder="e.g. uh-sist" placeholderTextColor={tc.textMuted} value={data.vocabPhonetic} onChangeText={(v) => updateField('vocabPhonetic', v)} />
+        </View>
+      </View>
+
+      {/* Definitions row */}
+      <View style={{ flexDirection: 'row', gap: 10, marginBottom: 10 }}>
+        <View style={{ flex: 1 }}>
+          <Text style={labelStyle}>Basic Definition</Text>
+          <TextInput style={{ ...inputStyle, minHeight: 56, textAlignVertical: 'top' }} placeholder="Definition of the basic word…" placeholderTextColor={tc.textMuted} value={data.basicDefinition} onChangeText={(v) => updateField('basicDefinition', v)} multiline />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={labelStyle}>Vocab Definition</Text>
+          <TextInput style={{ ...inputStyle, minHeight: 56, textAlignVertical: 'top' }} placeholder="Definition of the vocab word…" placeholderTextColor={tc.textMuted} value={data.vocabDefinition} onChangeText={(v) => updateField('vocabDefinition', v)} multiline />
+        </View>
+      </View>
+
+      {/* Example Sentence */}
+      <Text style={labelStyle}>Example Sentence (optional)</Text>
+      <TextInput style={{ ...inputStyle, marginBottom: 14 }} placeholder="Use both words in a sentence…" placeholderTextColor={tc.textMuted} value={data.exampleSentence} onChangeText={(v) => updateField('exampleSentence', v)} />
+
+      {/* Action buttons */}
+      <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
+        <TouchableOpacity
+          onPress={onCancel}
+          style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, borderWidth: 1, borderColor: tc.cardBorder }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.textLight }}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={onSave}
+          disabled={!canSave}
+          style={{ paddingVertical: 8, paddingHorizontal: 16, borderRadius: 8, backgroundColor: tc.accent, opacity: canSave ? 1 : 0.4 }}
+          activeOpacity={0.7}
+        >
+          <Text style={{ fontFamily: fonts.bold, fontSize: 13, color: tc.white }}>
+            {isEditing ? 'Update Pair' : 'Add Pair'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+// ═══════════════════════════════════════════════
+//  LESSON FORM MODAL (multi-step: Details + Vocab Pairs)
 // ═══════════════════════════════════════════════
 const LessonFormModal: React.FC<{
   visible: boolean;
@@ -413,11 +602,40 @@ const LessonFormModal: React.FC<{
   setFocusTipInput: (v: string) => void;
   addFocusTip: () => void;
   removeFocusTip: (i: number) => void;
+  tagInput: string;
+  setTagInput: (v: string) => void;
+  addTag: () => void;
+  removeTag: (i: number) => void;
+  addPrerequisite: (id: string) => void;
+  removePrerequisite: (i: number) => void;
+  allLessons: { id: string; title: string }[];
   onSave: () => void;
   onClose: () => void;
   submitting: boolean;
   tc: ThemeColors;
-}> = ({ visible, isEditing, formData, updateField, focusTipInput, setFocusTipInput, addFocusTip, removeFocusTip, onSave, onClose, submitting, tc }) => {
+  // Form step
+  formStep: 'details' | 'vocabPairs';
+  setFormStep: (s: 'details' | 'vocabPairs') => void;
+  // Vocab pair management
+  loadingPairs: boolean;
+  pairFormVisible: boolean;
+  pairFormData: AdminVocabPairForm;
+  editingPairIndex: number | null;
+  openAddPairForm: () => void;
+  openEditPairForm: (i: number) => void;
+  closePairForm: () => void;
+  updatePairField: <K extends keyof AdminVocabPairForm>(key: K, val: AdminVocabPairForm[K]) => void;
+  savePair: () => void;
+  removePair: (i: number) => void;
+}> = ({
+  visible, isEditing, formData, updateField, focusTipInput, setFocusTipInput,
+  addFocusTip, removeFocusTip, tagInput, setTagInput, addTag, removeTag,
+  addPrerequisite, removePrerequisite, allLessons,
+  onSave, onClose, submitting, tc,
+  formStep, setFormStep,
+  loadingPairs, pairFormVisible, pairFormData, editingPairIndex,
+  openAddPairForm, openEditPairForm, closePairForm, updatePairField, savePair, removePair,
+}) => {
   const inputStyle = {
     fontFamily: fonts.regular,
     fontSize: 14,
@@ -434,6 +652,26 @@ const LessonFormModal: React.FC<{
 
   const labelStyle = { fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 6 };
 
+  const isVocabCategory = formData.category === 'vocabulary';
+
+  const [prerequisiteInput, setPrerequisiteInput] = useState('');
+  const [showPrereqDropdown, setShowPrereqDropdown] = useState(false);
+  const availablePrereqs = allLessons.filter(
+    (l) => !formData.prerequisites.includes(l.id) && l.id !== (isEditing ? allLessons.find((x) => x.title === formData.title)?.id : ''),
+  );
+
+  const SectionHeader: React.FC<{ icon: string; title: string; subtitle?: string }> = ({ icon, title, subtitle }) => (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20, marginBottom: 12, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: tc.divider }}>
+      <View style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: tc.accent + '12', justifyContent: 'center', alignItems: 'center' }}>
+        <Ionicons name={icon as any} size={14} color={tc.accent} />
+      </View>
+      <View>
+        <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }}>{title}</Text>
+        {subtitle && <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>{subtitle}</Text>}
+      </View>
+    </View>
+  );
+
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={{ flex: 1, backgroundColor: tc.overlay, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
@@ -442,8 +680,8 @@ const LessonFormModal: React.FC<{
             backgroundColor: tc.white,
             borderRadius: 18,
             width: '100%',
-            maxWidth: 620,
-            maxHeight: '92%' as any,
+            maxWidth: 700,
+            maxHeight: '94%' as any,
             ...(Platform.OS === 'web'
               ? { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 30 }
               : {}),
@@ -460,7 +698,9 @@ const LessonFormModal: React.FC<{
                   {isEditing ? 'Edit Lesson' : 'Create Lesson'}
                 </Text>
                 <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}>
-                  {isEditing ? 'Update lesson details' : 'Add a new lesson to the curriculum'}
+                  {formStep === 'details'
+                    ? (isEditing ? 'Update lesson details' : 'Add a new lesson to the curriculum')
+                    : `Manage vocabulary word pairs (${formData.vocabPairs.length} pairs)`}
                 </Text>
               </View>
             </View>
@@ -469,44 +709,92 @@ const LessonFormModal: React.FC<{
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={{ padding: 24, maxHeight: 500 }} showsVerticalScrollIndicator={false}>
-            {/* Title */}
-            <Text style={labelStyle}>Title *</Text>
-            <TextInput
-              style={inputStyle}
-              placeholder="e.g. Café Conversation"
-              placeholderTextColor={tc.textMuted}
-              value={formData.title}
-              onChangeText={(v) => updateField('title', v)}
-            />
+          {/* Step indicator (only show for vocab category) */}
+          {isVocabCategory && (
+            <View style={{ flexDirection: 'row', paddingHorizontal: 24, paddingTop: 16, gap: 8 }}>
+              {(['details', 'vocabPairs'] as const).map((step, idx) => {
+                const isActive = formStep === step;
+                const stepLabel = idx === 0 ? 'Lesson Details' : 'Word Pairs';
+                const stepIcon = idx === 0 ? 'document-text' : 'layers';
+                return (
+                  <TouchableOpacity
+                    key={step}
+                    onPress={() => setFormStep(step)}
+                    activeOpacity={0.7}
+                    style={{
+                      flex: 1,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                      paddingVertical: 10,
+                      borderRadius: 10,
+                      backgroundColor: isActive ? tc.accent + '12' : tc.surfaceAlt,
+                      borderWidth: 1.5,
+                      borderColor: isActive ? tc.accent : tc.cardBorder,
+                    }}
+                  >
+                    <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: isActive ? tc.accent : tc.disabled, justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontFamily: fonts.bold, fontSize: 11, color: tc.white }}>{idx + 1}</Text>
+                    </View>
+                    <Ionicons name={stepIcon as any} size={16} color={isActive ? tc.accent : tc.textMuted} />
+                    <Text style={{ fontFamily: isActive ? fonts.semiBold : fonts.medium, fontSize: 13, color: isActive ? tc.accent : tc.textLight }}>
+                      {stepLabel}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
 
-            {/* Short Description */}
-            <Text style={labelStyle}>Short Description</Text>
-            <TextInput
-              style={{ ...inputStyle, minHeight: 60, textAlignVertical: 'top' }}
-              placeholder="Brief summary shown in lesson cards…"
-              placeholderTextColor={tc.textMuted}
-              value={formData.description}
-              onChangeText={(v) => updateField('description', v)}
-              multiline
-            />
+          <ScrollView style={{ padding: 24, maxHeight: 520 }} showsVerticalScrollIndicator={false}>
+            {/* ═══ STEP 1: DETAILS ═══ */}
+            {formStep === 'details' && (
+              <>
+                {/* ── SECTION: Basic Information ── */}
+                <SectionHeader icon="document-text" title="Basic Information" subtitle="Core lesson details" />
 
-            {/* Full Description */}
-            <Text style={labelStyle}>Full Description</Text>
-            <TextInput
-              style={{ ...inputStyle, minHeight: 100, textAlignVertical: 'top' }}
-              placeholder="Detailed description shown on the lesson detail page…"
-              placeholderTextColor={tc.textMuted}
-              value={formData.fullDescription}
-              onChangeText={(v) => updateField('fullDescription', v)}
-              multiline
-            />
+                {/* Title */}
+                <Text style={labelStyle}>Title <Text style={{ color: tc.error }}>*</Text></Text>
+                <TextInput
+                  style={inputStyle}
+                  placeholder="e.g. Vocabulary Growth"
+                  placeholderTextColor={tc.textMuted}
+                  value={formData.title}
+                  onChangeText={(v) => updateField('title', v)}
+                />
 
-            {/* Category + Difficulty row */}
-            <View style={{ flexDirection: 'row', gap: 12, marginBottom: 16 }}>
-              <View style={{ flex: 1 }}>
-                <Text style={labelStyle}>Category</Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                {/* Short Description */}
+                <Text style={labelStyle}>Short Description <Text style={{ color: tc.error }}>*</Text></Text>
+                <TextInput
+                  style={{ ...inputStyle, minHeight: 60, textAlignVertical: 'top' }}
+                  placeholder="Brief summary shown on lesson cards…"
+                  placeholderTextColor={tc.textMuted}
+                  value={formData.description}
+                  onChangeText={(v) => updateField('description', v)}
+                  multiline
+                />
+
+                {/* Full Description (shown on intro screen) */}
+                <Text style={labelStyle}>
+                  Full Description
+                  <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}> (shown on intro screen)</Text>
+                </Text>
+                <TextInput
+                  style={{ ...inputStyle, minHeight: 100, textAlignVertical: 'top' }}
+                  placeholder="Expand your vocabulary with the AI tutor. Learn new words, understand their meanings, and practice using them in real-life sentences."
+                  placeholderTextColor={tc.textMuted}
+                  value={formData.fullDescription}
+                  onChangeText={(v) => updateField('fullDescription', v)}
+                  multiline
+                />
+
+                {/* ── SECTION: Classification ── */}
+                <SectionHeader icon="grid" title="Classification" subtitle="Category, difficulty, and level" />
+
+                {/* Category */}
+                <Text style={labelStyle}>Category <Text style={{ color: tc.error }}>*</Text></Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
                   {ALL_CATEGORIES.map((cat) => {
                     const selected = formData.category === cat;
                     const cc = categoryColor(cat);
@@ -535,144 +823,535 @@ const LessonFormModal: React.FC<{
                     );
                   })}
                 </View>
-              </View>
-            </View>
 
-            {/* Difficulty */}
-            <Text style={labelStyle}>Difficulty</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-              {ALL_DIFFICULTIES.map((diff) => {
-                const selected = formData.difficulty === diff;
-                const dc = difficultyColor(diff, tc);
-                return (
-                  <TouchableOpacity
-                    key={diff}
-                    onPress={() => updateField('difficulty', diff)}
-                    activeOpacity={0.7}
-                    style={{
-                      paddingVertical: 7,
-                      paddingHorizontal: 14,
-                      borderRadius: 10,
-                      borderWidth: 1.5,
-                      borderColor: selected ? dc.text : tc.cardBorder,
-                      backgroundColor: selected ? dc.bg : 'transparent',
-                    }}
-                  >
-                    <Text style={{ fontFamily: selected ? fonts.semiBold : fonts.medium, fontSize: 12, color: selected ? dc.text : tc.textLight }}>
-                      {diff}
+                {/* Difficulty */}
+                <Text style={labelStyle}>Difficulty</Text>
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                  {ALL_DIFFICULTIES.map((diff) => {
+                    const selected = formData.difficulty === diff;
+                    const dc = difficultyColor(diff, tc);
+                    return (
+                      <TouchableOpacity
+                        key={diff}
+                        onPress={() => updateField('difficulty', diff)}
+                        activeOpacity={0.7}
+                        style={{
+                          paddingVertical: 7,
+                          paddingHorizontal: 14,
+                          borderRadius: 10,
+                          borderWidth: 1.5,
+                          borderColor: selected ? dc.text : tc.cardBorder,
+                          backgroundColor: selected ? dc.bg : 'transparent',
+                        }}
+                      >
+                        <Text style={{ fontFamily: selected ? fonts.semiBold : fonts.medium, fontSize: 12, color: selected ? dc.text : tc.textLight }}>
+                          {diff}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Level + Order row */}
+                <View style={{ flexDirection: 'row', gap: 12, marginBottom: 0 }}>
+                  <View style={{ width: 100 }}>
+                    <Text style={labelStyle}>Level</Text>
+                    <TextInput
+                      style={inputStyle}
+                      value={String(formData.level)}
+                      onChangeText={(v) => updateField('level', parseInt(v, 10) || 1)}
+                      keyboardType="number-pad"
+                      placeholder="1"
+                      placeholderTextColor={tc.textMuted}
+                    />
+                  </View>
+                  <View style={{ width: 100 }}>
+                    <Text style={labelStyle}>Order</Text>
+                    <TextInput
+                      style={inputStyle}
+                      value={String(formData.order)}
+                      onChangeText={(v) => updateField('order', parseInt(v, 10) || 0)}
+                      keyboardType="number-pad"
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={labelStyle}>Est. Duration (min)</Text>
+                    <TextInput
+                      style={inputStyle}
+                      value={String(formData.estimatedMinutes)}
+                      onChangeText={(v) => updateField('estimatedMinutes', parseInt(v, 10) || 0)}
+                      keyboardType="number-pad"
+                      placeholder="15"
+                      placeholderTextColor={tc.textMuted}
+                    />
+                  </View>
+                </View>
+
+                {/* ── SECTION: Status & Scoring ── */}
+                <SectionHeader icon="settings" title="Status & Scoring" subtitle="Publishing state and passing criteria" />
+
+                {/* Status */}
+                <Text style={labelStyle}>Status</Text>
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+                  {ALL_STATUSES.map((s) => {
+                    const selected = formData.status === s;
+                    const sc = statusColor(s, tc);
+                    return (
+                      <TouchableOpacity
+                        key={s}
+                        onPress={() => updateField('status', s)}
+                        activeOpacity={0.7}
+                        style={{
+                          paddingVertical: 7,
+                          paddingHorizontal: 14,
+                          borderRadius: 10,
+                          borderWidth: 1.5,
+                          borderColor: selected ? sc.text : tc.cardBorder,
+                          backgroundColor: selected ? sc.bg : 'transparent',
+                        }}
+                      >
+                        <Text style={{ fontFamily: selected ? fonts.semiBold : fonts.medium, fontSize: 12, color: selected ? sc.text : tc.textLight }}>
+                          {ADMIN_LESSON_STATUS_LABELS[s]}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+
+                {/* Passing Score + Max Attempts row */}
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={labelStyle}>
+                      Passing Score
+                      <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}> (0–100)</Text>
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {/* Status */}
-            <Text style={labelStyle}>Status</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
-              {ALL_STATUSES.map((s) => {
-                const selected = formData.status === s;
-                const sc = statusColor(s, tc);
-                return (
-                  <TouchableOpacity
-                    key={s}
-                    onPress={() => updateField('status', s)}
-                    activeOpacity={0.7}
-                    style={{
-                      paddingVertical: 7,
-                      paddingHorizontal: 14,
-                      borderRadius: 10,
-                      borderWidth: 1.5,
-                      borderColor: selected ? sc.text : tc.cardBorder,
-                      backgroundColor: selected ? sc.bg : 'transparent',
-                    }}
-                  >
-                    <Text style={{ fontFamily: selected ? fonts.semiBold : fonts.medium, fontSize: 12, color: selected ? sc.text : tc.textLight }}>
-                      {ADMIN_LESSON_STATUS_LABELS[s]}
+                    <TextInput
+                      style={inputStyle}
+                      value={String(formData.passingScore)}
+                      onChangeText={(v) => {
+                        const n = parseInt(v, 10);
+                        updateField('passingScore', isNaN(n) ? 0 : Math.min(100, Math.max(0, n)));
+                      }}
+                      keyboardType="number-pad"
+                      placeholder="70"
+                      placeholderTextColor={tc.textMuted}
+                    />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={labelStyle}>
+                      Max Attempts
+                      <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}> (0 = unlimited)</Text>
                     </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                    <TextInput
+                      style={inputStyle}
+                      value={String(formData.maxAttempts)}
+                      onChangeText={(v) => updateField('maxAttempts', parseInt(v, 10) || 0)}
+                      keyboardType="number-pad"
+                      placeholder="0"
+                      placeholderTextColor={tc.textMuted}
+                    />
+                  </View>
+                </View>
 
-            {/* Order + Image URL row */}
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <View style={{ width: 90 }}>
-                <Text style={labelStyle}>Order</Text>
+                {/* ── SECTION: Media & Images ── */}
+                <SectionHeader icon="image" title="Media" subtitle="Lesson images and illustrations" />
+
+                {/* Intro Image URL */}
+                <Text style={labelStyle}>
+                  Intro Image URL
+                  <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}> (shown on lesson detail/intro page)</Text>
+                </Text>
                 <TextInput
                   style={inputStyle}
-                  value={String(formData.order)}
-                  onChangeText={(v) => updateField('order', parseInt(v, 10) || 0)}
-                  keyboardType="number-pad"
-                />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={labelStyle}>Image URL (optional)</Text>
-                <TextInput
-                  style={inputStyle}
-                  placeholder="https://…"
+                  placeholder="https://example.com/lesson-illustration.png"
                   placeholderTextColor={tc.textMuted}
                   value={formData.imageUrl}
                   onChangeText={(v) => updateField('imageUrl', v)}
                   autoCapitalize="none"
                 />
-              </View>
-            </View>
 
-            {/* Focus Tips */}
-            <Text style={labelStyle}>Focus Tips</Text>
-            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
-              <TextInput
-                style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
-                placeholder="Add a focus tip…"
-                placeholderTextColor={tc.textMuted}
-                value={focusTipInput}
-                onChangeText={setFocusTipInput}
-                onSubmitEditing={addFocusTip}
-              />
-              <TouchableOpacity
-                onPress={addFocusTip}
-                style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 10,
-                  backgroundColor: tc.accent,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  opacity: !focusTipInput.trim() ? 0.4 : 1,
-                }}
-                disabled={!focusTipInput.trim()}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="add" size={22} color={tc.white} />
-              </TouchableOpacity>
-            </View>
-            {formData.focusTips.length > 0 && (
-              <View style={{ gap: 6, marginBottom: 16 }}>
-                {formData.focusTips.map((tip, idx) => (
-                  <View
-                    key={idx}
+                {/* Completion Image URL */}
+                <Text style={labelStyle}>
+                  Completion Image URL
+                  <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}> (celebration screen after finishing)</Text>
+                </Text>
+                <TextInput
+                  style={inputStyle}
+                  placeholder="https://example.com/celebration.png"
+                  placeholderTextColor={tc.textMuted}
+                  value={formData.completionImageUrl}
+                  onChangeText={(v) => updateField('completionImageUrl', v)}
+                  autoCapitalize="none"
+                />
+
+                {/* ── SECTION: Focus Tips ── */}
+                <SectionHeader icon="bulb" title="Focus Tips" subtitle="Study tips shown on the intro screen" />
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                  <TextInput
+                    style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
+                    placeholder="e.g. Focus on Context"
+                    placeholderTextColor={tc.textMuted}
+                    value={focusTipInput}
+                    onChangeText={setFocusTipInput}
+                    onSubmitEditing={addFocusTip}
+                  />
+                  <TouchableOpacity
+                    onPress={addFocusTip}
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 10,
+                      backgroundColor: tc.accent,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      opacity: !focusTipInput.trim() ? 0.4 : 1,
+                    }}
+                    disabled={!focusTipInput.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add" size={22} color={tc.white} />
+                  </TouchableOpacity>
+                </View>
+                {formData.focusTips.length > 0 && (
+                  <View style={{ gap: 6, marginBottom: 8 }}>
+                    {formData.focusTips.map((tip, idx) => (
+                      <View
+                        key={idx}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          backgroundColor: tc.surfaceAlt,
+                          borderRadius: 8,
+                          paddingVertical: 8,
+                          paddingHorizontal: 12,
+                        }}
+                      >
+                        <Ionicons name="bulb-outline" size={14} color={tc.accent} style={{ marginRight: 8 }} />
+                        <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.text, flex: 1 }}>{tip}</Text>
+                        <TouchableOpacity onPress={() => removeFocusTip(idx)}>
+                          <Ionicons name="close-circle" size={18} color={tc.error} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* ── SECTION: Tags ── */}
+                <SectionHeader icon="pricetags" title="Tags" subtitle="Keywords for organization and search" />
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                  <TextInput
+                    style={{ ...inputStyle, flex: 1, marginBottom: 0 }}
+                    placeholder="e.g. beginner, pronunciation, daily"
+                    placeholderTextColor={tc.textMuted}
+                    value={tagInput}
+                    onChangeText={setTagInput}
+                    onSubmitEditing={addTag}
+                  />
+                  <TouchableOpacity
+                    onPress={addTag}
+                    style={{
+                      width: 42,
+                      height: 42,
+                      borderRadius: 10,
+                      backgroundColor: tc.accent,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      opacity: !tagInput.trim() ? 0.4 : 1,
+                    }}
+                    disabled={!tagInput.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons name="add" size={22} color={tc.white} />
+                  </TouchableOpacity>
+                </View>
+                {formData.tags.length > 0 && (
+                  <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+                    {formData.tags.map((tag, idx) => (
+                      <View
+                        key={idx}
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                          backgroundColor: tc.accent + '12',
+                          borderRadius: 16,
+                          paddingVertical: 5,
+                          paddingLeft: 10,
+                          paddingRight: 6,
+                        }}
+                      >
+                        <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.accent }}>{tag}</Text>
+                        <TouchableOpacity onPress={() => removeTag(idx)} style={{ padding: 2 }}>
+                          <Ionicons name="close-circle" size={16} color={tc.accent} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+
+                {/* ── SECTION: Completion Screen ── */}
+                <SectionHeader icon="trophy" title="Completion Screen" subtitle="What users see after finishing the lesson" />
+
+                <Text style={labelStyle}>
+                  Completion Message
+                  <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}> (congratulations text)</Text>
+                </Text>
+                <TextInput
+                  style={{ ...inputStyle, minHeight: 70, textAlignVertical: 'top' }}
+                  placeholder="Congratulations! You have successfully completed this course. You may attempt again for more practice or proceed to the next level."
+                  placeholderTextColor={tc.textMuted}
+                  value={formData.completionMessage}
+                  onChangeText={(v) => updateField('completionMessage', v)}
+                  multiline
+                />
+
+                {/* ── SECTION: Prerequisites ── */}
+                <SectionHeader icon="git-branch" title="Prerequisites" subtitle="Lessons that must be completed first" />
+                <View style={{ position: 'relative' as any, marginBottom: 8 }}>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => setShowPrereqDropdown(!showPrereqDropdown)}
+                      activeOpacity={0.7}
+                      style={{
+                        ...inputStyle,
+                        flex: 1,
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 0,
+                      }}
+                    >
+                      <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted }}>
+                        {availablePrereqs.length > 0 ? 'Select a prerequisite lesson…' : 'No other lessons available'}
+                      </Text>
+                      <Ionicons name="chevron-down" size={16} color={tc.textMuted} />
+                    </TouchableOpacity>
+                  </View>
+                  {showPrereqDropdown && availablePrereqs.length > 0 && (
+                    <View
+                      style={{
+                        position: 'absolute' as any,
+                        top: 48,
+                        left: 0,
+                        right: 0,
+                        backgroundColor: tc.white,
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: tc.cardBorder,
+                        zIndex: 200,
+                        maxHeight: 180,
+                        ...(Platform.OS === 'web' ? { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 } : {}),
+                      }}
+                    >
+                      <ScrollView nestedScrollEnabled style={{ maxHeight: 180 }}>
+                        {availablePrereqs.map((lesson) => (
+                          <TouchableOpacity
+                            key={lesson.id}
+                            style={{ paddingVertical: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: tc.divider }}
+                            onPress={() => {
+                              addPrerequisite(lesson.id);
+                              setShowPrereqDropdown(false);
+                            }}
+                          >
+                            <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>{lesson.title}</Text>
+                            <Text style={{ fontFamily: fonts.regular, fontSize: 10, color: tc.textMuted }}>{lesson.id}</Text>
+                          </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                    </View>
+                  )}
+                </View>
+                {formData.prerequisites.length > 0 && (
+                  <View style={{ gap: 6, marginBottom: 8 }}>
+                    {formData.prerequisites.map((prereqId, idx) => {
+                      const prereqLesson = allLessons.find((l) => l.id === prereqId);
+                      return (
+                        <View
+                          key={idx}
+                          style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            backgroundColor: tc.surfaceAlt,
+                            borderRadius: 8,
+                            paddingVertical: 8,
+                            paddingHorizontal: 12,
+                          }}
+                        >
+                          <Ionicons name="git-branch-outline" size={14} color={tc.accent} style={{ marginRight: 8 }} />
+                          <View style={{ flex: 1 }}>
+                            <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>
+                              {prereqLesson ? prereqLesson.title : prereqId}
+                            </Text>
+                          </View>
+                          <TouchableOpacity onPress={() => removePrerequisite(idx)}>
+                            <Ionicons name="close-circle" size={18} color={tc.error} />
+                          </TouchableOpacity>
+                        </View>
+                      );
+                    })}
+                  </View>
+                )}
+
+                {/* Vocab pairs summary nudge (for vocabulary category) */}
+                {isVocabCategory && (
+                  <TouchableOpacity
+                    onPress={() => setFormStep('vocabPairs')}
+                    activeOpacity={0.7}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
-                      backgroundColor: tc.surfaceAlt,
-                      borderRadius: 8,
-                      paddingVertical: 8,
-                      paddingHorizontal: 12,
+                      gap: 10,
+                      backgroundColor: '#9DE09D12',
+                      borderRadius: 12,
+                      padding: 14,
+                      borderWidth: 1,
+                      borderColor: '#22C55E40',
+                      marginTop: 16,
                     }}
                   >
-                    <Ionicons name="bulb-outline" size={14} color={tc.accent} style={{ marginRight: 8 }} />
-                    <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.text, flex: 1 }}>{tip}</Text>
-                    <TouchableOpacity onPress={() => removeFocusTip(idx)}>
-                      <Ionicons name="close-circle" size={18} color={tc.error} />
-                    </TouchableOpacity>
+                    <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: '#22C55E18', justifyContent: 'center', alignItems: 'center' }}>
+                      <Ionicons name="layers" size={18} color="#22C55E" />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.text }}>
+                        Vocabulary Word Pairs
+                      </Text>
+                      <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}>
+                        {formData.vocabPairs.length > 0
+                          ? `${formData.vocabPairs.length} pair${formData.vocabPairs.length !== 1 ? 's' : ''} configured — tap to manage`
+                          : 'No pairs yet — tap to add word pairs'}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={18} color={tc.accent} />
+                  </TouchableOpacity>
+                )}
+              </>
+            )}
+
+            {/* ═══ STEP 2: VOCAB PAIRS ═══ */}
+            {formStep === 'vocabPairs' && (
+              <>
+                {/* Loading state */}
+                {loadingPairs && (
+                  <View style={{ alignItems: 'center', paddingVertical: 30 }}>
+                    <ActivityIndicator size="small" color={tc.accent} />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.textMuted, marginTop: 8 }}>
+                      Loading word pairs…
+                    </Text>
                   </View>
-                ))}
-              </View>
+                )}
+
+                {/* Info banner */}
+                {!loadingPairs && (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 10,
+                      backgroundColor: tc.accent + '08',
+                      borderRadius: 10,
+                      padding: 12,
+                      marginBottom: 16,
+                      borderWidth: 1,
+                      borderColor: tc.accent + '20',
+                    }}
+                  >
+                    <Ionicons name="information-circle" size={20} color={tc.accent} />
+                    <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textLight, flex: 1 }}>
+                      Each word pair consists of a basic word and its advanced vocabulary equivalent.
+                      Users will practice pronouncing both and learn definitions.
+                    </Text>
+                  </View>
+                )}
+
+                {/* Add pair button */}
+                {!loadingPairs && !pairFormVisible && (
+                  <TouchableOpacity
+                    onPress={openAddPairForm}
+                    activeOpacity={0.7}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      paddingVertical: 12,
+                      borderRadius: 12,
+                      borderWidth: 1.5,
+                      borderStyle: 'dashed' as any,
+                      borderColor: tc.accent + '60',
+                      backgroundColor: tc.accent + '06',
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Ionicons name="add-circle" size={20} color={tc.accent} />
+                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.accent }}>
+                      Add Word Pair
+                    </Text>
+                  </TouchableOpacity>
+                )}
+
+                {/* Inline pair form */}
+                {pairFormVisible && (
+                  <VocabPairFormInline
+                    data={pairFormData}
+                    updateField={updatePairField}
+                    onSave={savePair}
+                    onCancel={closePairForm}
+                    isEditing={editingPairIndex !== null}
+                    tc={tc}
+                  />
+                )}
+
+                {/* Existing pairs list */}
+                {!loadingPairs && formData.vocabPairs.length > 0 && (
+                  <View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }}>
+                        Word Pairs ({formData.vocabPairs.length})
+                      </Text>
+                    </View>
+                    {formData.vocabPairs.map((pair, idx) => (
+                      <VocabPairRow
+                        key={pair.id || idx}
+                        pair={pair}
+                        index={idx}
+                        onEdit={() => openEditPairForm(idx)}
+                        onRemove={() => removePair(idx)}
+                        tc={tc}
+                      />
+                    ))}
+                  </View>
+                )}
+
+                {/* Empty state */}
+                {!loadingPairs && formData.vocabPairs.length === 0 && !pairFormVisible && (
+                  <View style={{ alignItems: 'center', paddingVertical: 30 }}>
+                    <Ionicons name="layers-outline" size={48} color={tc.disabled} />
+                    <Text style={{ fontFamily: fonts.medium, fontSize: 15, color: tc.textMuted, marginTop: 12 }}>
+                      No word pairs yet
+                    </Text>
+                    <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 4, textAlign: 'center' }}>
+                      Add vocabulary word pairs for students to practice pronunciation and learn definitions
+                    </Text>
+                  </View>
+                )}
+              </>
             )}
           </ScrollView>
 
           {/* Footer */}
           <View style={{ flexDirection: 'row', gap: 12, padding: 24, borderTopWidth: 1, borderTopColor: tc.divider }}>
+            {/* Back button (on vocab step) */}
+            {formStep === 'vocabPairs' && (
+              <TouchableOpacity
+                style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 12, borderWidth: 1.5, borderColor: tc.cardBorder }}
+                onPress={() => setFormStep('details')}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="arrow-back" size={16} color={tc.textLight} />
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.textLight }}>Back</Text>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={{ flex: 1, paddingVertical: 13, borderRadius: 12, borderWidth: 1.5, borderColor: tc.cardBorder, alignItems: 'center' }}
               onPress={onClose}
@@ -680,6 +1359,30 @@ const LessonFormModal: React.FC<{
             >
               <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.textLight }}>Cancel</Text>
             </TouchableOpacity>
+
+            {/* Next step button (on details step for vocab category) */}
+            {formStep === 'details' && isVocabCategory && (
+              <TouchableOpacity
+                style={{
+                  flex: 1,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  paddingVertical: 13,
+                  borderRadius: 12,
+                  backgroundColor: tc.accent + '15',
+                  borderWidth: 1.5,
+                  borderColor: tc.accent,
+                }}
+                onPress={() => setFormStep('vocabPairs')}
+                activeOpacity={0.7}
+              >
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.accent }}>Word Pairs</Text>
+                <Ionicons name="arrow-forward" size={16} color={tc.accent} />
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               style={{
                 flex: 1,
@@ -687,10 +1390,10 @@ const LessonFormModal: React.FC<{
                 borderRadius: 12,
                 backgroundColor: tc.accent,
                 alignItems: 'center',
-                opacity: !formData.title.trim() || submitting ? 0.5 : 1,
+                opacity: !formData.title.trim() || !formData.description.trim() || submitting ? 0.5 : 1,
               }}
               onPress={onSave}
-              disabled={!formData.title.trim() || submitting}
+              disabled={!formData.title.trim() || !formData.description.trim() || submitting}
               activeOpacity={0.7}
             >
               {submitting ? (
@@ -1004,10 +1707,29 @@ const AdminManageLessonsScreen: React.FC = () => {
         setFocusTipInput={ctrl.setFocusTipInput}
         addFocusTip={ctrl.addFocusTip}
         removeFocusTip={ctrl.removeFocusTip}
+        tagInput={ctrl.tagInput}
+        setTagInput={ctrl.setTagInput}
+        addTag={ctrl.addTag}
+        removeTag={ctrl.removeTag}
+        addPrerequisite={ctrl.addPrerequisite}
+        removePrerequisite={ctrl.removePrerequisite}
+        allLessons={ctrl.allLessons.map((l) => ({ id: l.id, title: l.title }))}
         onSave={ctrl.handleSave}
         onClose={ctrl.closeForm}
         submitting={ctrl.submitting}
         tc={tc}
+        formStep={ctrl.formStep}
+        setFormStep={ctrl.setFormStep}
+        loadingPairs={ctrl.loadingPairs}
+        pairFormVisible={ctrl.pairFormVisible}
+        pairFormData={ctrl.pairFormData}
+        editingPairIndex={ctrl.editingPairIndex}
+        openAddPairForm={ctrl.openAddPairForm}
+        openEditPairForm={ctrl.openEditPairForm}
+        closePairForm={ctrl.closePairForm}
+        updatePairField={ctrl.updatePairField}
+        savePair={ctrl.savePair}
+        removePair={ctrl.removePair}
       />
     </View>
   );

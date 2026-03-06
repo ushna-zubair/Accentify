@@ -15,7 +15,7 @@
  *     totalSessions, sessionsGrowth, sessionsThisWeek[], sessionsLastWeek[],
  *     lastAggregatedAt }
  *
- * admin_analytics/daily_snapshots/{YYYY-MM-DD}
+ * admin_analytics/global_stats/daily_snapshots/{YYYY-MM-DD}
  *   { activeUsers, totalSessions, date }   ← lightweight daily snapshot
  *     for computing growth percentages
  */
@@ -260,7 +260,7 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayKey = yesterday.toISOString().split('T')[0];
     const prevSnap = await getDoc(
-      doc(db, 'admin_analytics', 'daily_snapshots', yesterdayKey),
+      doc(db, 'admin_analytics', 'global_stats', 'daily_snapshots', yesterdayKey),
     );
     if (prevSnap.exists()) {
       const prevActive = prevSnap.data().activeUsers ?? 0;
@@ -352,7 +352,7 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
   });
 
   // Write daily snapshot for tomorrow's growth calc
-  await setDoc(doc(db, 'admin_analytics', 'daily_snapshots', today), {
+  await setDoc(doc(db, 'admin_analytics', 'global_stats', 'daily_snapshots', today), {
     activeUsers,
     totalSessions,
     date: today,
