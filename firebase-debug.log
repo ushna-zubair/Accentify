@@ -1,0 +1,16 @@
+[debug] [2026-03-07T00:06:33.687Z] ----------------------------------------------------------------------
+[debug] [2026-03-07T00:06:33.690Z] Command:       /usr/bin/node /usr/bin/firebase deploy --only storage
+[debug] [2026-03-07T00:06:33.690Z] CLI Version:   15.8.0
+[debug] [2026-03-07T00:06:33.690Z] Platform:      linux
+[debug] [2026-03-07T00:06:33.691Z] Node Version:  v25.6.0
+[debug] [2026-03-07T00:06:33.691Z] Time:          Sat Mar 07 2026 05:06:33 GMT+0500 (Pakistan Standard Time)
+[debug] [2026-03-07T00:06:33.691Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-03-07T00:06:34.617Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-03-07T00:06:34.617Z] > authorizing via signed-in user (blockstomubashir@gmail.com)
+[debug] [2026-03-07T00:06:34.617Z] [iam] checking project accentify-capstone for permissions ["firebase.projects.get","firebaserules.releases.create","firebaserules.releases.update","firebaserules.rulesets.create"]
+[debug] [2026-03-07T00:06:34.618Z] Checked if tokens are valid: false, expires at: 1772842649598
+[debug] [2026-03-07T00:06:34.618Z] Checked if tokens are valid: false, expires at: 1772842649598
+[debug] [2026-03-07T00:06:34.619Z] > refreshing access token with scopes: []
+[debug] [2026-03-07T00:06:34.620Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2026-03-07T00:06:34.620Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]

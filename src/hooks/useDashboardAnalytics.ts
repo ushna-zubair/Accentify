@@ -81,7 +81,7 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
       ?? raw.lastAggregatedAt ?? null,
   });
 
-  const fetchAnalytics = useCallback(async () => {
+  const fetchAnalytics = useCallback(async (retryCount = 0) => {
     setIsLoading(true);
     setError(null);
 
@@ -102,6 +102,12 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
         }
       }
     } catch (e: any) {
+      // On permission errors (e.g. stale auth token after page refresh), retry once
+      if (retryCount < 2 && e?.code === 'permission-denied') {
+        console.warn('useDashboardAnalytics: permission-denied, retrying…', retryCount + 1);
+        setTimeout(() => fetchAnalytics(retryCount + 1), 1500);
+        return;
+      }
       console.error('useDashboardAnalytics fetch error:', e);
       setError(e.message || 'Failed to load dashboard analytics.');
     } finally {

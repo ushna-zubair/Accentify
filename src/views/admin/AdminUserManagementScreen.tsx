@@ -391,7 +391,7 @@ const AdminUserManagementScreen: React.FC = () => {
       {/* ── Header ── */}
       {!isWide && (
         <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={24} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>User Management</Text>

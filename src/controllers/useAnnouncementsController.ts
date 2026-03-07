@@ -155,8 +155,8 @@ export const useAnnouncementsController = () => {
 
           const promises = usersSnap.docs.map((userDoc) =>
             addDoc(collection(db, 'users', userDoc.id, 'notifications'), {
-              text: body.trim(),
-              tab: 'Overall',
+              text: `📢 ${announcementTitle}: ${body.trim()}`,
+              tab: 'Direct',
               unread: true,
               type: 'announcement',
               announcementId: docRef.id,

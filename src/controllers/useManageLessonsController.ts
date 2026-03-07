@@ -54,8 +54,8 @@ async function notifyUsersAboutLesson(title: string, lessonId: string): Promise<
 
     const promises = usersSnap.docs.map((userDoc) =>
       addDoc(collection(db, 'users', userDoc.id, 'notifications'), {
-        text: `New lesson available: ${title}`,
-        tab: 'Overall',
+        text: `📚 New lesson available: ${title}`,
+        tab: 'Direct',
         unread: true,
         type: 'new_lesson',
         lessonId,

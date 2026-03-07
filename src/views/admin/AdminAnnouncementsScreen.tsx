@@ -52,7 +52,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Announcements</Text>

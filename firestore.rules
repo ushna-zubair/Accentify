@@ -70,7 +70,8 @@ service cloud.firestore {
 
       // Notifications
       match /notifications/{notifId} {
-        allow read, write: if isOwner(userId);
+        allow read: if isOwner(userId);
+        allow write: if isOwner(userId) || isAdmin();
       }
 
       // Login devices
@@ -110,7 +111,7 @@ service cloud.firestore {
       allow write: if isAdmin();
 
       // Daily snapshots sub-collection
-      match /{snapshotId} {
+      match /daily_snapshots/{snapshotId} {
         allow read: if isAdmin();
         allow write: if isAdmin();
       }

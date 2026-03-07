@@ -234,7 +234,7 @@ const AdminUserDetailScreen: React.FC = () => {
         {/* ── Header (mobile) ── */}
         {!isWide && (
           <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
               <Ionicons name="arrow-back" size={24} color={tc.text} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>User Management</Text>
@@ -252,7 +252,7 @@ const AdminUserDetailScreen: React.FC = () => {
                 activeOpacity={0.7}
                 onPress={() => {
                   clearSuccess();
-                  navigation.goBack();
+                  if (navigation.canGoBack()) navigation.goBack();
                 }}
               >
                 <Text style={styles.successBtnText}>Go back to menu</Text>
@@ -268,7 +268,7 @@ const AdminUserDetailScreen: React.FC = () => {
                 activeOpacity={0.7}
                 onPress={() => {
                   clearSuccess();
-                  navigation.goBack();
+                  if (navigation.canGoBack()) navigation.goBack();
                 }}
               >
                 <Text style={styles.successBtnText}>Go back to menu</Text>
@@ -292,7 +292,7 @@ const AdminUserDetailScreen: React.FC = () => {
           {/* Breadcrumb / Back */}
           <View style={styles.webBreadcrumb}>
             <TouchableOpacity
-              onPress={() => navigation.goBack()}
+              onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }}
               style={styles.webBackBtn}
               activeOpacity={0.7}
             >
@@ -453,7 +453,7 @@ const AdminUserDetailScreen: React.FC = () => {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>User Management</Text>
