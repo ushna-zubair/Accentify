@@ -12,7 +12,7 @@ import {
   Dimensions,
   Image,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CommonActions } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, {
@@ -561,12 +561,13 @@ const CourseCompletionScreen: React.FC = () => {
   }, [currentUser, lessonId]);
 
   const handleProceed = useCallback(() => {
-    // Navigate back to the Tutor screen to pick the next lesson
-    if (navigation.canGoBack()) {
-      navigation.popToTop();
-    } else {
-      navigation.navigate('TutorMain' as never);
-    }
+    // Reset the TutorStack back to TutorMain so the user picks the next lesson
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'TutorMain' }],
+      }),
+    );
   }, [navigation]);
 
   const handleAttemptAgain = useCallback(() => {

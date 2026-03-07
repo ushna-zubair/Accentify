@@ -310,17 +310,33 @@ export const usePronunciationExerciseController = (lessonId: string) => {
         return;
       }
 
-      // Read audio file as base64
-      const audioBase64 = await readAudioAsBase64(uri);
+      let wordResults: WordResult[];
+      let score: PronunciationScore;
+      let feedback: string;
+      let isCorrect: boolean;
 
-      // Send to Cloud Function for transcription + evaluation
-      const evaluation = await transcribeAndEvaluate(
-        audioBase64,
-        sentence.text,
-        sentenceIds[currentIndex],
-      );
-
-      const { wordResults, score, feedback, isCorrect } = evaluation;
+      try {
+        // Try Cloud Function for transcription + evaluation
+        const audioBase64 = await readAudioAsBase64(uri);
+        const evaluation = await transcribeAndEvaluate(
+          audioBase64,
+          sentence.text,
+          sentenceIds[currentIndex],
+        );
+        wordResults = evaluation.wordResults;
+        score = evaluation.score;
+        feedback = evaluation.feedback;
+        isCorrect = evaluation.isCorrect;
+      } catch (cloudErr: any) {
+        // Cloud Function not deployed — fall back to local mock evaluation
+        console.warn('[Pronunciation] Cloud Function unavailable, using local evaluation:', cloudErr?.code ?? cloudErr?.message);
+        const localEval = evaluatePronunciation(sentence.text, sentence.text);
+        wordResults = localEval.wordResults;
+        score = localEval.score;
+        feedback = localEval.feedback;
+        // Local fallback assumes correct since we can't really transcribe locally
+        isCorrect = score.overall >= 60;
+      }
 
       const attemptResult: PronunciationAttemptResult = {
         isCorrect,

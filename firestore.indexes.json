@@ -7,6 +7,21 @@
         { "fieldPath": "year", "order": "ASCENDING" },
         { "fieldPath": "weekNumber", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "lessons",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "order", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "unread", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
