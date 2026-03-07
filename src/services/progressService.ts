@@ -35,8 +35,6 @@ import {
   setDoc,
   getDocs,
   collection,
-  query,
-  orderBy,
   Timestamp,
   increment,
   arrayUnion,
@@ -98,9 +96,15 @@ const weekDocId = (d: Date) => {
   return `week-${yr}-${String(wn).padStart(2, '0')}`;
 };
 
-/** Parse YYYY-MM-DD → Date (local midnight). */
-const parseDate = (s: string): Date => {
-  const [y, m, d] = s.split('-').map(Number);
+/** Parse YYYY-MM-DD → Date (local midnight). Handles Timestamps and edge cases. */
+const parseDate = (s: any): Date => {
+  if (!s) return new Date(0);
+  // Firestore Timestamp
+  if (typeof s === 'object' && typeof s.toDate === 'function') return s.toDate();
+  if (typeof s !== 'string') return new Date(0);
+  const parts = s.split('-').map(Number);
+  if (parts.length < 3 || parts.some(isNaN)) return new Date(0);
+  const [y, m, d] = parts;
   return new Date(y, m - 1, d);
 };
 
@@ -138,7 +142,11 @@ export const updateStreak = async (uid: string): Promise<number> => {
 
   if (snap.exists()) {
     const data = snap.data();
-    const lastDate = data.lastActiveDate as string | undefined;
+    const rawDate = data.lastActiveDate;
+    // Normalize: if it's a Timestamp, convert to YYYY-MM-DD string
+    const lastDate = rawDate && typeof rawDate === 'object' && typeof rawDate.toDate === 'function'
+      ? toDateKey(rawDate.toDate())
+      : (rawDate as string | undefined);
     const prevStreak = (data.dayStreak as number) ?? 0;
     longestStreak = (data.longestStreak as number) ?? prevStreak;
 
@@ -427,14 +435,18 @@ export const fetchFullProgress = async (uid: string) => {
   // ── 2. Lesson days for current week ──
   const lessonDays = await buildLessonDays(uid);
 
-  // ── 3. Weekly entries ──
+  // ── 3. Weekly entries (sort client-side to avoid composite index) ──
   const weeksRef = collection(db, 'users', uid, 'progress', 'weekly', 'entries');
-  const weeksQ = query(weeksRef, orderBy('year', 'asc'), orderBy('weekNumber', 'asc'));
-  const weeksSnap = await getDocs(weeksQ);
+  const weeksSnap = await getDocs(weeksRef);
 
   let weeks: WeeklyProgress[] = [];
   if (!weeksSnap.empty) {
-    weeks = weeksSnap.docs.map((d) => d.data() as WeeklyProgress);
+    weeks = weeksSnap.docs
+      .map((d) => d.data() as WeeklyProgress)
+      .sort((a, b) => {
+        if ((a as any).year !== (b as any).year) return ((a as any).year ?? 0) - ((b as any).year ?? 0);
+        return (a.weekNumber ?? 0) - (b.weekNumber ?? 0);
+      });
   }
 
   // If no weekly entry exists for the current week, create one

@@ -326,18 +326,19 @@ const WavyChatOverlay: React.FC<{
 
       {/* Input */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={60}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 20}
       >
         <View style={chatStyles.inputRow}>
           <TextInput
             style={chatStyles.textInput}
             placeholder="Type your message..."
-            placeholderTextColor="rgba(255,255,255,0.5)"
+            placeholderTextColor="rgba(255,255,255,0.45)"
             value={inputText}
             onChangeText={setInputText}
             onSubmitEditing={handleSend}
             returnKeyType="send"
+            selectionColor="rgba(255,255,255,0.6)"
           />
           <TouchableOpacity
             onPress={handleSend}
@@ -1041,20 +1042,29 @@ const chatStyles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(0,0,0,0.1)',
   },
   textInput: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.22)',
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.25)',
     paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 10,
     fontFamily: fonts.regular,
-    fontSize: 14,
+    fontSize: 15,
     color: '#FFFFFF',
+    minHeight: 44,
   },
   sendBtn: {
     marginLeft: 10,
-    padding: 6,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

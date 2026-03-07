@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Circle, Path } from 'react-native-svg';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import {
@@ -20,6 +21,8 @@ import {
   orderBy,
   limit,
   getDocs,
+  getDoc,
+  doc,
   where,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
@@ -51,12 +54,18 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
     description: string;
     category: string;
     difficulty: string;
+    order: number;
   }
   const [recentLessons, setRecentLessons] = useState<RecentLesson[]>([]);
   const [loadingLessons, setLoadingLessons] = useState(true);
 
   // ── Unread notification count ──
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // ── Dynamic stats ──
+  const [dayStreak, setDayStreak] = useState(0);
+  const [completedToday, setCompletedToday] = useState(0);
+  const [practiceMinutes, setPracticeMinutes] = useState(0);
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -84,15 +93,18 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
       setLoadingAnnouncements(false);
     }
 
-    // Fetch latest published lessons (top 5)
+    // Fetch latest published lessons (top 5) — sort client-side to avoid composite index
     try {
       const lessonsRef = collection(db, 'lessons');
-      const lessonsQ = query(lessonsRef, where('status', '==', 'published'), orderBy('order', 'asc'), limit(5));
+      const lessonsQ = query(lessonsRef, where('status', '==', 'published'));
       const lessonsSnap = await getDocs(lessonsQ);
-      const items: RecentLesson[] = lessonsSnap.docs.map((d) => {
-        const data = d.data();
-        return { id: d.id, title: data.title ?? '', description: data.description ?? '', category: data.category ?? 'conversation', difficulty: data.difficulty ?? 'Easy' };
-      });
+      const items: RecentLesson[] = lessonsSnap.docs
+        .map((d) => {
+          const data = d.data();
+          return { id: d.id, title: data.title ?? '', description: data.description ?? '', category: data.category ?? 'conversation', difficulty: data.difficulty ?? 'Easy', order: data.order ?? 0 };
+        })
+        .sort((a, b) => a.order - b.order)
+        .slice(0, 5);
       setRecentLessons(items);
     } catch (e: any) {
       console.warn('[Home] lessons fetch:', e.message);
@@ -107,6 +119,29 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         const notifQ = query(notifRef, where('unread', '==', true));
         const notifSnap = await getDocs(notifQ);
         setUnreadCount(notifSnap.size);
+      } catch { /* ignore */ }
+
+      // Fetch day streak
+      try {
+        const streakSnap = await getDoc(doc(db, 'users', uid, 'progress', 'streak'));
+        if (streakSnap.exists()) {
+          setDayStreak(streakSnap.data().dayStreak ?? 0);
+        }
+      } catch { /* ignore */ }
+
+      // Fetch today's activity
+      try {
+        const todayKey = new Date().toISOString().split('T')[0];
+        const dailySnap = await getDoc(doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey));
+        if (dailySnap.exists()) {
+          const d = dailySnap.data();
+          const lessons = (d.lessonsCompleted ?? 0);
+          const pron = (d.pronunciationAttempts ?? 0);
+          const conv = (d.conversationTurns ?? 0);
+          const vocab = (d.vocabWordsLearned ?? 0);
+          setCompletedToday(lessons + pron + conv + vocab);
+          setPracticeMinutes(d.practiceMinutes ?? Math.round((pron + conv + vocab) * 2));
+        }
       } catch { /* ignore */ }
     }
   }, []);
@@ -214,6 +249,40 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.progressLabel}>3 sentences • ~5 min</Text>
         </TouchableOpacity>
 
+        {/* ── Chat with Wavy Card ── */}
+        <TouchableOpacity
+          style={styles.wavyCard}
+          activeOpacity={0.85}
+          onPress={() => navigation.navigate('WavyChat')}
+        >
+          <View style={styles.wavyCardInner}>
+            <View style={styles.wavyAvatarWrap}>
+              <Svg width={44} height={44} viewBox="0 0 44 44">
+                <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
+                <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
+                <Circle cx={16} cy={19} r={2.5} fill="#FFFFFF" />
+                <Circle cx={28} cy={19} r={2.5} fill="#FFFFFF" />
+                <Path
+                  d="M18 26 Q22 30 26 26"
+                  stroke="#FFFFFF"
+                  strokeWidth={1.5}
+                  fill="none"
+                  strokeLinecap="round"
+                />
+              </Svg>
+            </View>
+            <View style={styles.wavyInfo}>
+              <Text style={styles.wavyTitle}>Chat with Wavy</Text>
+              <Text style={styles.wavySubtitle}>
+                Ask questions, practice English, or get help
+              </Text>
+            </View>
+            <View style={styles.wavyArrow}>
+              <Ionicons name="chatbubble-ellipses" size={22} color="#FFFFFF" />
+            </View>
+          </View>
+        </TouchableOpacity>
+
         {/* ── Quick Stats ── */}
         <Text style={styles.sectionTitle}>Today's Overview</Text>
         <View style={styles.statsRow}>
@@ -221,7 +290,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.statIcon, { backgroundColor: tc.accentMuted }]}>
               <Ionicons name="flame" size={20} color={tc.accent} />
             </View>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>{dayStreak}</Text>
             <Text style={styles.statLabel}>Day Streak</Text>
           </View>
 
@@ -229,7 +298,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.statIcon, { backgroundColor: tc.successBg }]}>
               <Ionicons name="checkmark-circle" size={20} color={tc.success} />
             </View>
-            <Text style={styles.statValue}>0</Text>
+            <Text style={styles.statValue}>{completedToday}</Text>
             <Text style={styles.statLabel}>Completed</Text>
           </View>
 
@@ -237,7 +306,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             <View style={[styles.statIcon, { backgroundColor: tc.warningBg }]}>
               <Ionicons name="time" size={20} color={tc.warning} />
             </View>
-            <Text style={styles.statValue}>0m</Text>
+            <Text style={styles.statValue}>{practiceMinutes}m</Text>
             <Text style={styles.statLabel}>Practice</Text>
           </View>
         </View>
@@ -299,6 +368,13 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
                   key={lesson.id}
                   style={styles.exerciseCard}
                   activeOpacity={0.8}
+                  onPress={() => {
+                    // Navigate to Tutor tab → LessonDetail
+                    (navigation as any).navigate('Tutor', {
+                      screen: 'LessonDetail',
+                      params: { lessonId: lesson.id },
+                    });
+                  }}
                 >
                   <View style={[styles.exerciseIcon, { backgroundColor: `${catColor}30` }]}>
                     <Ionicons name={catIcon as any} size={24} color={catColor} />
@@ -426,6 +502,51 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontFamily: fonts.medium,
     fontSize: 12,
     color: tc.textLight,
+  },
+
+  // ── Wavy Chat Card ──
+  wavyCard: {
+    backgroundColor: '#6B4EAB',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 28,
+    overflow: 'hidden',
+  },
+  wavyCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  wavyAvatarWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  wavyInfo: {
+    flex: 1,
+  },
+  wavyTitle: {
+    fontFamily: fonts.bold,
+    fontSize: 16,
+    color: '#FFFFFF',
+    marginBottom: 2,
+  },
+  wavySubtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: 'rgba(255,255,255,0.7)',
+  },
+  wavyArrow: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
 
   // ── Section Title ──

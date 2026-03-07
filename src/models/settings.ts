@@ -35,6 +35,10 @@ export interface NotificationItem {
   avatar: ImageSourcePropType;
   unread: boolean;
   tab: NotificationTab;
+  /** Notification type for icon/styling */
+  type?: 'announcement' | 'system' | 'lesson' | 'achievement';
+  /** Original title (e.g. announcement title) */
+  title?: string;
   /** Firestore timestamp (ISO string) for sorting; falls back to `time` for display */
   createdAt?: string;
 }

@@ -277,7 +277,7 @@ export async function fetchPendingInvitations(): Promise<
   Array<{ id: string; email: string; fullName: string; adminRole: AdminRole; createdAt: string }>
 > {
   const invRef = collection(db, 'admin_invitations');
-  const q = query(invRef, where('status', '==', 'pending'), orderBy('createdAt', 'desc'));
+  const q = query(invRef, where('status', '==', 'pending'));
   const snap = await getDocs(q);
 
   return snap.docs.map((d) => {
@@ -289,7 +289,7 @@ export async function fetchPendingInvitations(): Promise<
       adminRole: data.adminRole ?? 'admin',
       createdAt: data.createdAt?.toDate?.()?.toISOString() ?? '',
     };
-  });
+  }).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 // ─── Revoke Invitation ───

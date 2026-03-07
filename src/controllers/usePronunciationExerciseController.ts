@@ -329,7 +329,8 @@ export const usePronunciationExerciseController = (lessonId: string) => {
         isCorrect = evaluation.isCorrect;
       } catch (cloudErr: any) {
         // Cloud Function not deployed — fall back to local mock evaluation
-        console.warn('[Pronunciation] Cloud Function unavailable, using local evaluation:', cloudErr?.code ?? cloudErr?.message);
+        // Expected when Cloud Functions are not deployed — silent fallback
+        if (__DEV__) console.log('[Pronunciation] Using local evaluation (Cloud Function not deployed)');
         const localEval = evaluatePronunciation(sentence.text, sentence.text);
         wordResults = localEval.wordResults;
         score = localEval.score;

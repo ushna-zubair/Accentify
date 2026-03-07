@@ -1,5 +1,10 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  getFirestore,
+} from 'firebase/firestore';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
@@ -48,7 +53,26 @@ if (Platform.OS === 'web') {
 }
 
 export { auth };
-export const db = getFirestore(app);
+
+// ─── Firestore with offline persistence ───
+// Web → IndexedDB multi-tab persistent cache
+// Native → Firestore SDK enables offline persistence by default
+let db: ReturnType<typeof getFirestore>;
+if (Platform.OS === 'web') {
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch {
+    // Firestore may already be initialized (e.g., hot reload)
+    db = getFirestore(app);
+  }
+} else {
+  db = getFirestore(app);
+}
+export { db };
 
 import { getStorage } from 'firebase/storage';
 export const storage = getStorage(app);

@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { Alert, ActionSheetIOS, Platform } from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import * as ImagePicker from 'expo-image-picker';
-import { db, storage } from '../config/firebase';
+import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useProfileData } from '../hooks/useProfileData';
 import type { LearningGoal, ProfileState } from '../models';
@@ -118,17 +117,26 @@ export const useProfileSettingsController = () => {
     setPhotoUploading(true);
     try {
       const uri = result.assets[0].uri;
+
+      let downloadURL: string;
+
+      // Convert image to base64 data URI via fetch + FileReader (works on all platforms)
       const response = await fetch(uri);
       const blob = await response.blob();
-      const storageRef = ref(storage, `profilePhotos/${currentUser.uid}`);
-      await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(storageRef);
+      const reader = new FileReader();
+      downloadURL = await new Promise<string>((resolve, reject) => {
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
 
+      // Store directly in Firestore (works without Firebase Storage)
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'profile.profilePictureUrl': downloadURL,
       });
       setLocalOverrides((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
     } catch (e: any) {
+      console.error('[ProfileSettings] Photo upload error:', e);
       webAlert('Error', e.message || 'Failed to upload photo.');
     } finally {
       setPhotoUploading(false);
@@ -143,12 +151,6 @@ export const useProfileSettingsController = () => {
 
     setPhotoUploading(true);
     try {
-      // Delete from Storage (ignore if doesn't exist)
-      try {
-        const storageRef = ref(storage, `profilePhotos/${currentUser.uid}`);
-        await deleteObject(storageRef);
-      } catch { /* file may not exist */ }
-
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'profile.profilePictureUrl': '',
       });

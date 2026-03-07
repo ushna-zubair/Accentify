@@ -26,10 +26,6 @@ import {
   setDoc,
   getDocs,
   collection,
-  query,
-  where,
-  orderBy,
-  limit,
   increment,
   Timestamp,
 } from 'firebase/firestore';
@@ -208,11 +204,16 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
         'weekly',
         'entries',
       );
-      const wq = query(weeklyRef, orderBy('weekNumber', 'desc'), limit(1));
-      const weeklySnap = await getDocs(wq);
+      const weeklySnap = await getDocs(weeklyRef);
 
       if (!weeklySnap.empty) {
-        const wd = weeklySnap.docs[0].data();
+        // Sort client-side to get latest week and avoid composite index requirement
+        const sortedDocs = weeklySnap.docs.sort((a, b) => {
+          const aW = a.data().weekNumber ?? 0;
+          const bW = b.data().weekNumber ?? 0;
+          return bW - aW;
+        });
+        const wd = sortedDocs[0].data();
         const pron = wd.pronunciation ?? {};
         const conv = wd.conversation ?? {};
 

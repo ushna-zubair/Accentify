@@ -49,6 +49,7 @@ export type SettingsStackParamList = {
 export type HomeStackParamList = {
   HomeMain: undefined;
   HomePronunciation: { lessonId?: string };
+  WavyChat: undefined;
 };
 
 export type LearnerTabParamList = {

@@ -3,7 +3,7 @@ import {
   collection,
   query,
   orderBy,
-  getDocs,
+  onSnapshot,
   updateDoc,
   doc,
   writeBatch,
@@ -85,55 +85,57 @@ export const useNotificationController = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ── Fetch notifications from Firestore ──
-  const fetchNotifications = useCallback(async () => {
+  // ── Real-time listener for notifications ──
+  useEffect(() => {
     const uid = auth.currentUser?.uid;
     if (!uid) {
       setLoading(false);
       return;
     }
 
-    try {
-      setLoading(true);
+    setLoading(true);
+    const notifRef = collection(db, 'users', uid, 'notifications');
+    const q = query(notifRef, orderBy('createdAt', 'desc'));
 
-      const notifRef = collection(db, 'users', uid, 'notifications');
-      const q = query(notifRef, orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(q);
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const items: NotificationItem[] = snapshot.docs.map((d) => {
+          const data = d.data();
+          let createdAt = '';
+          try {
+            const ts = data.createdAt?.toDate
+              ? data.createdAt.toDate()
+              : new Date(data.createdAt);
+            createdAt = ts.toISOString();
+          } catch {
+            createdAt = new Date().toISOString();
+          }
 
-      const items: NotificationItem[] = snapshot.docs.map((d) => {
-        const data = d.data();
-        let createdAt = '';
-        try {
-          const ts = data.createdAt?.toDate
-            ? data.createdAt.toDate()
-            : new Date(data.createdAt);
-          createdAt = ts.toISOString();
-        } catch {
-          createdAt = new Date().toISOString();
-        }
+          return {
+            id: d.id,
+            text: data.text ?? data.body ?? '',
+            title: data.title ?? undefined,
+            time: formatRelativeTime(createdAt),
+            avatar: DEFAULT_AVATAR,
+            unread: data.unread ?? true,
+            tab: (data.tab as NotificationTab) ?? 'Overall',
+            type: data.type ?? 'system',
+            createdAt,
+          };
+        });
 
-        return {
-          id: d.id,
-          text: data.text ?? data.body ?? '',
-          time: formatRelativeTime(createdAt),
-          avatar: DEFAULT_AVATAR,
-          unread: data.unread ?? true,
-          tab: (data.tab as NotificationTab) ?? 'Overall',
-          createdAt,
-        };
-      });
+        setNotifications(items);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('[Notifications] snapshot error:', error);
+        setLoading(false);
+      },
+    );
 
-      setNotifications(items);
-    } catch (e: any) {
-      console.error('[Notifications] fetch error:', e);
-    } finally {
-      setLoading(false);
-    }
+    return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
 
   const filtered = notifications.filter((n) => n.tab === activeTab);
   const sections = groupByDate(filtered);
@@ -186,6 +188,5 @@ export const useNotificationController = () => {
     loading,
     markAllAsRead,
     markAsRead,
-    refresh: fetchNotifications,
   };
 };

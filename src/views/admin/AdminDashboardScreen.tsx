@@ -36,7 +36,7 @@ import AdminAccessControlScreen from './AdminAccessControlScreen';
 import AdminFeedbackReportsScreen from './AdminFeedbackReportsScreen';
 import AdminManageLessonsScreen from './AdminManageLessonsScreen';
 import AdminSupportLogsScreen from './AdminSupportLogsScreen';
-import { SettingsStackNavigator } from '../../navigation/AppNavigator';
+import SettingsStackNavigator from '../../navigation/SettingsStackNavigator';
 import { useDashboardAnalytics } from '../../hooks/useDashboardAnalytics';
 
 // ═══════════════════════════════════════════════
@@ -922,7 +922,7 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   );
 };
 
-const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+const PracticeActivityCard: React.FC<{ data: DashboardData; onViewReport?: () => void }> = ({ data, onViewReport }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
 
@@ -941,7 +941,7 @@ const PracticeActivityCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>User Practice Activity</Text>
-      <TouchableOpacity style={styles.outlineBtn}>
+      <TouchableOpacity style={styles.outlineBtn} onPress={onViewReport}>
         <Text style={styles.outlineBtnText}>View Report</Text>
       </TouchableOpacity>
     </View>
@@ -1019,14 +1019,14 @@ const TopLearnersCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   );
 };
 
-const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
+const PracticeSessionsCard: React.FC<{ data: DashboardData; onViewStats?: () => void }> = ({ data, onViewStats }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
       <Text style={styles.cardTitle}>User Practice Sessions</Text>
-      <TouchableOpacity style={styles.outlineBtn}>
+      <TouchableOpacity style={styles.outlineBtn} onPress={onViewStats}>
         <Text style={styles.outlineBtnText}>View Stats</Text>
       </TouchableOpacity>
     </View>
@@ -1060,6 +1060,153 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   );
 };
 
+// ------- Report & Stats Modals -------
+const ReportModal: React.FC<{ visible: boolean; onClose: () => void; data: DashboardData }> = ({ visible, onClose, data }) => {
+  const { colors: tc } = useAppTheme();
+  const { morning, afternoon, night } = data.practiceActivity;
+  const total = morning + afternoon + night || 1;
+  const morningPct = Math.round((morning / total) * 100);
+  const afternoonPct = Math.round((afternoon / total) * 100);
+  const nightPct = Math.round((night / total) * 100);
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ backgroundColor: tc.surface, borderRadius: 16, width: '90%', maxWidth: 500, maxHeight: '85%' }}>
+          <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 20, color: tc.text }}>Practice Activity Report</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={tc.textLight} />
+            </TouchableOpacity>
+          </View>
+          <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: tc.textLight, marginBottom: 16 }}>
+            {data.usageDateRange ? `Period: ${data.usageDateRange}` : 'Current period'}
+          </Text>
+
+          {/* Time Distribution */}
+          <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: tc.text, marginBottom: 12 }}>Session Time Distribution</Text>
+          {[{ label: 'Morning (5am - 12pm)', pct: morningPct, count: morning, color: tc.accentLight },
+            { label: 'Afternoon (12pm - 6pm)', pct: afternoonPct, count: afternoon, color: tc.accent },
+            { label: 'Night (6pm - 5am)', pct: nightPct, count: night, color: tc.accentMuted },
+          ].map((item) => (
+            <View key={item.label} style={{ marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>{item.label}</Text>
+                <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.text }}>{item.pct}% ({item.count} sessions)</Text>
+              </View>
+              <View style={{ height: 8, borderRadius: 4, backgroundColor: tc.surfaceAlt }}>
+                <View style={{ height: 8, borderRadius: 4, backgroundColor: item.color, width: `${item.pct}%` as any }} />
+              </View>
+            </View>
+          ))}
+
+          {/* Daily Breakdown */}
+          <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: tc.text, marginTop: 16, marginBottom: 12 }}>Daily Activity (This Week)</Text>
+          {data.weeklyBarData.map((day) => (
+            <View key={day.label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: tc.cardBorder }}>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>{day.label}</Text>
+              <View style={{ flexDirection: 'row', gap: 16 }}>
+                <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.accent }}>This: {day.thisWeek}</Text>
+                <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.textMuted }}>Last: {day.lastWeek}</Text>
+              </View>
+            </View>
+          ))}
+
+          <TouchableOpacity onPress={onClose} style={{ marginTop: 20, backgroundColor: tc.accent, borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.white }}>Close Report</Text>
+          </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
+const StatsModal: React.FC<{ visible: boolean; onClose: () => void; data: DashboardData }> = ({ visible, onClose, data }) => {
+  const { colors: tc } = useAppTheme();
+  const thisWeekTotal = data.sessionsThisWeek.length > 0 ? data.sessionsThisWeek[data.sessionsThisWeek.length - 1] : 0;
+  const lastWeekTotal = data.sessionsLastWeek.length > 0 ? data.sessionsLastWeek[data.sessionsLastWeek.length - 1] : 0;
+  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  // De-cumulate session data to get per-day values
+  const thisWeekPerDay = data.sessionsThisWeek.map((v, i) => i === 0 ? v : v - (data.sessionsThisWeek[i - 1] ?? 0));
+  const lastWeekPerDay = data.sessionsLastWeek.map((v, i) => i === 0 ? v : v - (data.sessionsLastWeek[i - 1] ?? 0));
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' }}>
+        <View style={{ backgroundColor: tc.surface, borderRadius: 16, width: '90%', maxWidth: 500, maxHeight: '85%' }}>
+          <ScrollView contentContainerStyle={{ padding: 24 }} showsVerticalScrollIndicator={false}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 20, color: tc.text }}>Session Statistics</Text>
+            <TouchableOpacity onPress={onClose}>
+              <Ionicons name="close" size={24} color={tc.textLight} />
+            </TouchableOpacity>
+          </View>
+
+          {/* Summary */}
+          <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20 }}>
+            <View style={{ flex: 1, backgroundColor: tc.accent + '15', borderRadius: 12, padding: 14, alignItems: 'center' }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: tc.accent }}>{data.totalSessions}</Text>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textLight }}>Total Sessions</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: tc.success + '15', borderRadius: 12, padding: 14, alignItems: 'center' }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: tc.success }}>{thisWeekTotal}</Text>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textLight }}>This Week</Text>
+            </View>
+            <View style={{ flex: 1, backgroundColor: tc.textMuted + '15', borderRadius: 12, padding: 14, alignItems: 'center' }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: tc.textMuted }}>{lastWeekTotal}</Text>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textLight }}>Last Week</Text>
+            </View>
+          </View>
+
+          {/* Growth */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+            <Ionicons name={data.sessionsGrowth >= 0 ? 'arrow-up' : 'arrow-down'} size={16} color={data.sessionsGrowth >= 0 ? tc.success : tc.error} />
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: data.sessionsGrowth >= 0 ? tc.success : tc.error }}>
+              {data.sessionsGrowth >= 0 ? '+' : ''}{data.sessionsGrowth}% vs last week
+            </Text>
+          </View>
+
+          {/* Daily Breakdown Table */}
+          <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: tc.text, marginBottom: 12 }}>Daily Breakdown</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 2, borderBottomColor: tc.cardBorder }}>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 12, color: tc.textMuted, flex: 1 }}>Day</Text>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 12, color: tc.accent, flex: 1, textAlign: 'center' as any }}>This Week</Text>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 12, color: tc.textMuted, flex: 1, textAlign: 'right' as any }}>Last Week</Text>
+          </View>
+          {dayLabels.map((label, i) => (
+            <View key={label} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: tc.cardBorder }}>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, flex: 1 }}>{label}</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent, flex: 1, textAlign: 'center' as any }}>{thisWeekPerDay[i] ?? 0}</Text>
+              <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.textMuted, flex: 1, textAlign: 'right' as any }}>{lastWeekPerDay[i] ?? 0}</Text>
+            </View>
+          ))}
+
+          {/* Top Performers */}
+          {data.topLearners.length > 0 && (
+            <>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: tc.text, marginTop: 16, marginBottom: 12 }}>Top Performers</Text>
+              {data.topLearners.map((l, i) => (
+                <View key={`${l.name}-${i}`} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 }}>
+                  <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>#{i + 1} {l.name}</Text>
+                  <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>{l.sessions} sessions</Text>
+                </View>
+              ))}
+            </>
+          )}
+
+          <TouchableOpacity onPress={onClose} style={{ marginTop: 20, backgroundColor: tc.accent, borderRadius: 10, paddingVertical: 12, alignItems: 'center' }}>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.white }}>Close Stats</Text>
+          </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+};
+
 // ------- Desktop Main Screen -------
 const DesktopAdminDashboard: React.FC = () => {
   const { colors: tc } = useAppTheme();
@@ -1079,6 +1226,8 @@ const DesktopAdminDashboard: React.FC = () => {
 
   const { width } = useWindowDimensions();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showReport, setShowReport] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   // Breakpoints: >= 1024 full sidebar, 600-1023 collapsible sidebar, < 600 mobile (handled by router)
   const isDesktop = width >= 1024;
   const isTablet = width >= 600 && width < 1024;
@@ -1212,7 +1361,7 @@ const DesktopAdminDashboard: React.FC = () => {
                 <RevenueCard data={dashboardData} />
               </View>
               <View style={[styles.rowItem, canLayoutTwoCol && { flex: 1 }]}>
-                <PracticeActivityCard data={dashboardData} />
+                <PracticeActivityCard data={dashboardData} onViewReport={() => setShowReport(true)} />
               </View>
             </View>
 
@@ -1225,12 +1374,16 @@ const DesktopAdminDashboard: React.FC = () => {
                 <TopLearnersCard data={dashboardData} />
               </View>
               <View style={[styles.rowItem, canLayoutThreeCol && { flex: 1 }]}>
-                <PracticeSessionsCard data={dashboardData} />
+                <PracticeSessionsCard data={dashboardData} onViewStats={() => setShowStats(true)} />
               </View>
             </View>
           </ScrollView>
         )}
       </View>
+
+      {/* ── Modals ── */}
+      {dashboardData && <ReportModal visible={showReport} onClose={() => setShowReport(false)} data={dashboardData} />}
+      {dashboardData && <StatsModal visible={showStats} onClose={() => setShowStats(false)} data={dashboardData} />}
     </View>
   );
 };

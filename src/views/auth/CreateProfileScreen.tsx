@@ -176,7 +176,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
     country.name.toLowerCase().includes(countryQuery.trim().toLowerCase())
   );
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!fullName || !nickName || !dateOfBirth || !selectedGender) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
@@ -189,6 +189,23 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
     const callingCode = selectedCountry?.callingCode || '+1';
     const fullPhoneNumber = phoneNumber ? `${callingCode}${phoneNumber}` : '';
 
+    // Convert avatar to base64 data URI if one was picked
+    let profilePictureUrl = '';
+    if (avatarUri) {
+      try {
+        const response = await fetch(avatarUri);
+        const blob = await response.blob();
+        const reader = new FileReader();
+        profilePictureUrl = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch {
+        // If conversion fails, proceed without profile picture
+      }
+    }
+
     // Pass collected profile data to the next screen (LearningGoals)
     navigation.navigate('LearningGoals', {
       profile: {
@@ -197,7 +214,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
         dateOfBirth: formattedDOB,
         phoneNumber: fullPhoneNumber,
         gender: selectedGender,
-        profilePictureUrl: '', // Will be set when profile picture upload is implemented
+        profilePictureUrl,
       },
     });
   };

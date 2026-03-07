@@ -26,12 +26,7 @@ import {
 export type { ProfileData, StudyPlanData, AuthStackParamList, SettingsStackParamList, HomeStackParamList, LearnerTabParamList, CMSStackParamList, AdminStackParamList, TutorStackParamList };
 
 // Views – Main
-import AccessibilityScreen from '../views/main/AccessibilityScreen';
-import NotificationsScreen from '../views/main/NotificationsScreen';
-import AppPreferenceScreen from '../views/main/AppPreferenceScreen';
-import ProfileSettingsScreen from '../views/main/ProfileSettingsScreen';
-import LoginDevicesScreen from '../views/main/LoginDevicesScreen';
-import TwoFactorSettingsScreen from '../views/main/TwoFactorSettingsScreen';
+import SettingsStackNavigator from './SettingsStackNavigator';
 
 // Views – Auth
 import SplashScreen from '../views/auth/SplashScreen';
@@ -62,6 +57,7 @@ import VocabExerciseScreen from '../views/main/VocabExerciseScreen';
 import PronunciationExerciseScreen from '../views/main/PronunciationExerciseScreen';
 import ConversationExerciseScreen from '../views/main/ConversationExerciseScreen';
 import CourseCompletionScreen from '../views/main/CourseCompletionScreen';
+import WavyChatScreen from '../views/main/WavyChatScreen';
 
 // Views – Admin
 import AdminDashboardScreen from '../views/admin/AdminDashboardScreen';
@@ -71,31 +67,17 @@ import AdminUserDetailScreen from '../views/admin/AdminUserDetailScreen';
 import AdminAnnouncementsScreen from '../views/admin/AdminAnnouncementsScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const SettingsStack = createNativeStackNavigator<SettingsStackParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
 const TutorStack = createNativeStackNavigator<TutorStackParamList>();
 const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 const LearnerTab = createBottomTabNavigator<LearnerTabParamList>();
-
-export const SettingsStackNavigator = () => {
-  return (
-    <SettingsStack.Navigator screenOptions={{ headerShown: false }}>
-      <SettingsStack.Screen name="SettingsMain" component={SettingsScreen} />
-      <SettingsStack.Screen name="Accessibility" component={AccessibilityScreen} />
-      <SettingsStack.Screen name="Notifications" component={NotificationsScreen} />
-      <SettingsStack.Screen name="AppPreferences" component={AppPreferenceScreen} />
-      <SettingsStack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
-      <SettingsStack.Screen name="LoginDevices" component={LoginDevicesScreen} />
-      <SettingsStack.Screen name="TwoFactorSettings" component={TwoFactorSettingsScreen} />
-    </SettingsStack.Navigator>
-  );
-};
 
 const HomeStackNavigator = () => {
   return (
     <HomeStack.Navigator screenOptions={{ headerShown: false }}>
       <HomeStack.Screen name="HomeMain" component={HomeMainScreen} />
       <HomeStack.Screen name="HomePronunciation" component={HomePronunciationScreen} />
+      <HomeStack.Screen name="WavyChat" component={WavyChatScreen} />
     </HomeStack.Navigator>
   );
 };
@@ -285,7 +267,9 @@ const tabStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  iconWrapActive: {},
+  iconWrapActive: {
+    borderRadius: 17,
+  },
   label: {
     fontFamily: fonts.semiBold,
     fontSize: 10,

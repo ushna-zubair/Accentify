@@ -49,6 +49,52 @@ function maskPhone(phone: string): string {
   return `***-***-*${digits.slice(-2)}`;
 }
 
+/**
+ * Rate-limit OTP sending per user.
+ * Uses a `rate_limits/{collection}_{identifier}` doc to track request count
+ * within a rolling window. Throws if the limit is exceeded.
+ *
+ * @param identifier  Unique key (usually uid or email)
+ * @param collection  The OTP collection name (for namespacing)
+ * @param maxRequests Maximum allowed requests in the window (default 5)
+ * @param windowMs    Rolling window in ms (default 15 minutes)
+ */
+async function enforceRateLimit(
+  identifier: string,
+  collection: string,
+  maxRequests = 5,
+  windowMs = 15 * 60 * 1000,
+): Promise<void> {
+  const rateLimitRef = db.collection('rate_limits').doc(`${collection}_${identifier}`);
+  const snap = await rateLimitRef.get();
+  const now = Date.now();
+
+  if (snap.exists) {
+    const data = snap.data()!;
+    const windowStart = data.windowStart?.toDate?.() ? data.windowStart.toDate().getTime() : data.windowStart;
+
+    // If still inside the current window
+    if (now - windowStart < windowMs) {
+      if (data.count >= maxRequests) {
+        const retryAfterSec = Math.ceil((windowMs - (now - windowStart)) / 1000);
+        throw new HttpsError(
+          'resource-exhausted',
+          `Too many requests. Please try again in ${Math.ceil(retryAfterSec / 60)} minute(s).`,
+        );
+      }
+      // Increment counter
+      await rateLimitRef.update({ count: admin.firestore.FieldValue.increment(1) });
+      return;
+    }
+  }
+
+  // Reset / create window
+  await rateLimitRef.set({
+    count: 1,
+    windowStart: admin.firestore.Timestamp.fromDate(new Date(now)),
+  });
+}
+
 // ─── 1. Look Up User ───
 // Accepts an email, returns masked email + phone (if available) so the
 // ForgotPasswordScreen can show real user data instead of hardcoded strings.
@@ -88,6 +134,9 @@ export const sendOTP = onCall(
     if (!uid || !method) {
       throw new HttpsError('invalid-argument', 'uid and method are required.');
     }
+
+    // Rate limit: max 5 OTP requests per 15 minutes per user
+    await enforceRateLimit(uid, 'password_reset_otps');
 
     // Fetch user
     let userRecord: admin.auth.UserRecord;
@@ -272,6 +321,9 @@ export const send2FACode = onCall(
       throw new HttpsError('invalid-argument', 'action must be "enable" or "disable".');
     }
 
+    // Rate limit: max 5 2FA code requests per 15 minutes per user
+    await enforceRateLimit(uid, 'two_factor_codes');
+
     // Get user email
     let userRecord: admin.auth.UserRecord;
     try {
@@ -410,6 +462,9 @@ export const sendSignUpOTP = onCall(
     }
 
     const uid = request.auth.uid;
+
+    // Rate limit: max 5 sign-up OTP requests per 15 minutes per user
+    await enforceRateLimit(uid, 'signup_verification_otps');
 
     let userRecord: admin.auth.UserRecord;
     try {

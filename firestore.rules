@@ -173,5 +173,10 @@ service cloud.firestore {
     match /two_factor_codes/{docId} {
       allow read, write: if false;
     }
+
+    // ─── Rate limiting (used by Cloud Functions, no direct client access) ───
+    match /rate_limits/{docId} {
+      allow read, write: if false;
+    }
   }
 }

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,18 @@ import {
   Image,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path, Circle, Rect, Ellipse } from 'react-native-svg';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useLessonDetailController, CATEGORY_COLORS } from '../../controllers';
+import { useTabBarVisibility } from '../../context/TabBarVisibilityContext';
 import type { TutorStackParamList } from '../../models';
 
 type DetailRoute = RouteProp<TutorStackParamList, 'LessonDetail'>;
@@ -124,7 +128,27 @@ const LessonDetailScreen: React.FC = () => {
   const styles = useMemo(() => createStyles(tc), [tc]);
   const route = useRoute<DetailRoute>();
   const navigation = useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { lessonId } = route.params;
+
+  // Hide bottom tab bar while this screen is focused
+  const { translateY } = useTabBarVisibility();
+  useFocusEffect(
+    useCallback(() => {
+      Animated.timing(translateY, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+      return () => {
+        Animated.timing(translateY, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      };
+    }, [translateY]),
+  );
 
   const { detail, loading, starting, error, startLesson } =
     useLessonDetailController(lessonId);
@@ -149,6 +173,21 @@ const LessonDetailScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      {/* ── Header with back arrow ── */}
+      <View style={[styles.header, { paddingTop: Platform.OS === 'web' ? 16 : insets.top + 8 }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>
+          {detail.title}
+        </Text>
+        <View style={styles.backBtn} />
+      </View>
+
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -230,9 +269,32 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Header
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingBottom: 10,
+    backgroundColor: tc.accentMuted,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    flex: 1,
+    fontFamily: fonts.semiBold,
+    fontSize: 18,
+    color: tc.text,
+    textAlign: 'center',
+  },
+
   scrollContent: {
     paddingHorizontal: 28,
-    paddingTop: 24,
+    paddingTop: 16,
     paddingBottom: 100,
     alignItems: 'center',
   },

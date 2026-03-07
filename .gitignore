@@ -33,6 +33,11 @@ yarn-error.*
 # local env files
 .env*.local
 
+# Sensitive keys — never commit
+key
+key.pub
+*.pem
+
 # typescript
 *.tsbuildinfo
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Platform,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
@@ -515,10 +516,18 @@ const ProgressScreen: React.FC = () => {
     weekDateLabel,
     selectedWeekIndex,
     selectWeek,
+    fetchProgress,
   } = useProgressController();
   const { handleScroll } = useTabBarScroll();
   const r = useResponsive();
   const { colors: tc } = useAppTheme();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchProgress();
+    setRefreshing(false);
+  }, [fetchProgress]);
 
   // Responsive layout helpers
   const hPad = r.s(20);
@@ -577,6 +586,7 @@ const ProgressScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
       >
         {/* ── Streak Banner ── */}
         <DayStreakBanner streak={progressData.dayStreak} r={r} tc={tc} />

@@ -38,7 +38,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
   return (
     <View style={styles.container}>
       <Svg width={size} height={size}>
-        <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
+        <G transform={`rotate(-90, ${size / 2}, ${size / 2})`}>
           {/* Background track */}
           <SvgCircle
             cx={size / 2}

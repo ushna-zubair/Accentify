@@ -5,12 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   SectionList,
-  Image,
   ActivityIndicator,
   Platform,
   useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useNotificationController } from '../../controllers';
@@ -20,6 +20,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 const isWeb = Platform.OS === 'web';
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'Notifications'>;
+
+/** Icon + color mapping per notification type */
+const NOTIF_TYPE_CONFIG: Record<string, { icon: keyof typeof Ionicons.glyphMap; bg: string; fg: string }> = {
+  announcement: { icon: 'megaphone', bg: '#EDE7F6', fg: '#7B4DB8' },
+  lesson:       { icon: 'book',      bg: '#E8F5E9', fg: '#388E3C' },
+  achievement:  { icon: 'trophy',    bg: '#FFF8E1', fg: '#F9A825' },
+  system:       { icon: 'notifications', bg: '#E3F2FD', fg: '#1976D2' },
+};
 
 // ------- Component -------
 const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
@@ -40,19 +48,30 @@ const NotificationsScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  const renderItem = ({ item }: { item: NotificationItem }) => (
-    <TouchableOpacity
-      style={styles.notificationRow}
-      activeOpacity={0.7}
-      onPress={() => markAsRead(item.id)}
-    >
-      {item.unread && <View style={styles.unreadDot} />}
-      {!item.unread && <View style={styles.unreadDotPlaceholder} />}
-      <Image source={item.avatar} style={styles.avatar} />
-      <Text style={styles.notificationText}>{item.text}</Text>
-      <Text style={styles.notificationTime}>{item.time}</Text>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }: { item: NotificationItem }) => {
+    const config = NOTIF_TYPE_CONFIG[item.type ?? 'system'] ?? NOTIF_TYPE_CONFIG.system;
+    return (
+      <TouchableOpacity
+        style={[styles.notificationCard, item.unread && styles.notificationCardUnread]}
+        activeOpacity={0.7}
+        onPress={() => markAsRead(item.id)}
+      >
+        <View style={[styles.notifIconWrap, { backgroundColor: config.bg }]}>
+          <Ionicons name={config.icon} size={20} color={config.fg} />
+        </View>
+        <View style={styles.notifContent}>
+          <View style={styles.notifTopRow}>
+            <Text style={styles.notifTitle} numberOfLines={1}>
+              {item.type === 'announcement' ? '📢 Announcement' : item.type === 'lesson' ? '📖 Lesson' : item.type === 'achievement' ? '🏆 Achievement' : '🔔 Notification'}
+            </Text>
+            <Text style={styles.notifTime}>{item.time}</Text>
+          </View>
+          <Text style={styles.notifText} numberOfLines={2}>{item.text}</Text>
+        </View>
+        {item.unread && <View style={styles.unreadDot} />}
+      </TouchableOpacity>
+    );
+  };
 
   const renderSectionHeader = ({ section }: { section: NotificationSection }) => (
     <View style={styles.sectionHeaderContainer}>
@@ -148,55 +167,75 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   },
   // Section headers
   sectionHeaderContainer: {
-    backgroundColor: tc.inputBorder,
     paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    marginTop: 8,
+    paddingHorizontal: 4,
+    marginTop: 12,
     marginBottom: 4,
   },
   sectionHeaderText: {
     fontFamily: fonts.bold,
     fontSize: 14,
-    color: tc.text,
+    color: tc.textLight,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  // Notification row
-  notificationRow: {
+  // Notification card
+  notificationCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    gap: 10,
+    backgroundColor: tc.surface,
+    borderRadius: 14,
+    padding: 14,
+    marginVertical: 5,
+    borderWidth: 1,
+    borderColor: tc.inputBorder,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: tc.text,
+  notificationCardUnread: {
+    backgroundColor: tc.accentMuted,
+    borderColor: tc.accent,
+    borderWidth: 1,
   },
-  unreadDotPlaceholder: {
-    width: 8,
-    height: 8,
-  },
-  avatar: {
+  notifIconWrap: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: tc.inputBorder,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
-  notificationText: {
+  notifContent: {
     flex: 1,
-    fontFamily: fonts.regular,
+  },
+  notifTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  notifTitle: {
+    fontFamily: fonts.semiBold,
     fontSize: 14,
     color: tc.text,
-    lineHeight: 20,
+    flex: 1,
   },
-  notificationTime: {
+  notifTime: {
     fontFamily: fonts.regular,
-    fontSize: 12,
+    fontSize: 11,
     color: tc.textLight,
-    marginLeft: 4,
-    alignSelf: 'flex-end',
+    marginLeft: 8,
+  },
+  notifText: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    color: tc.textLight,
+    lineHeight: 19,
+  },
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: tc.accent,
+    marginLeft: 8,
   },
   listContent: {
     paddingBottom: 30,

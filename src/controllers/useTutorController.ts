@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { doc, getDoc, collection, query, orderBy, getDocs, where } from 'firebase/firestore';
+import { doc, getDoc, collection, query, getDocs, where } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type {
   TutorLesson,
@@ -125,7 +125,8 @@ export const useTutorController = () => {
       try {
         const lessonsRef = collection(db, 'lessons');
         // Only show published lessons to learners
-        const lessonsQ = query(lessonsRef, where('status', '==', 'published'), orderBy('order', 'asc'));
+        // Fetch published lessons — sort client-side to avoid composite index requirement
+        const lessonsQ = query(lessonsRef, where('status', '==', 'published'));
         const lessonsSnap = await getDocs(lessonsQ);
 
         if (!lessonsSnap.empty) {
@@ -149,7 +150,7 @@ export const useTutorController = () => {
               order: lData.order ?? 0,
               thumbnail: getThumbnail(lData.category ?? 'conversation'),
             };
-          });
+          }).sort((a, b) => a.order - b.order);
         }
       } catch (e: any) {
         console.warn('[Tutor] Lessons fetch warning:', e.message);
@@ -170,7 +171,7 @@ export const useTutorController = () => {
       setData({
         userName: fullName,
         avatarUrl,
-        stats: stats.completedLessons > 0 ? stats : { completedLessons: 4, totalHours: 2.3 },
+        stats,
         recentLessons,
         studyPath,
       });
