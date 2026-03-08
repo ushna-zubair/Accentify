@@ -890,6 +890,26 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const isPositiveGrowth = data.growthPct >= 0;
+
+  // Dynamic bar data: only show days up to today with date labels
+  const dynamicBarData = useMemo(() => {
+    const now = new Date();
+    const jsDay = now.getDay(); // 0=Sun
+    const todayIdx = jsDay === 0 ? 6 : jsDay - 1; // 0=Mon … 6=Sun
+    const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + mondayOffset);
+
+    return data.weeklyBarData
+      .slice(0, todayIdx + 1)
+      .map((item, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        const dateLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        return { ...item, label: dateLabel };
+      });
+  }, [data.weeklyBarData]);
+
   return (
   <View style={styles.card}>
     <View style={styles.cardHeaderRow}>
@@ -906,7 +926,7 @@ const RevenueCard: React.FC<{ data: DashboardData }> = ({ data }) => {
     </View>
     <Text style={styles.dateRange}>{data.usageDateRange ? `Usage from ${data.usageDateRange}` : 'Loading date range…'}</Text>
     <View style={styles.chartContainer}>
-      <BarChart data={data.weeklyBarData} height={160} />
+      <BarChart data={dynamicBarData} height={160} />
     </View>
     <View style={styles.legendRow}>
       <View style={styles.legendItem}>
@@ -1139,7 +1159,19 @@ const StatsModal: React.FC<{ visible: boolean; onClose: () => void; data: Dashbo
   const { colors: tc } = useAppTheme();
   const thisWeekTotal = data.sessionsThisWeek.length > 0 ? data.sessionsThisWeek[data.sessionsThisWeek.length - 1] : 0;
   const lastWeekTotal = data.sessionsLastWeek.length > 0 ? data.sessionsLastWeek[data.sessionsLastWeek.length - 1] : 0;
-  const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  // Dynamic day labels: actual dates for this week up to today
+  const dayLabels = (() => {
+    const now = new Date();
+    const jsDay = now.getDay();
+    const mondayOffset = jsDay === 0 ? -6 : 1 - jsDay;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + mondayOffset);
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    });
+  })();
 
   // De-cumulate session data to get per-day values
   const thisWeekPerDay = data.sessionsThisWeek.map((v, i) => i === 0 ? v : v - (data.sessionsThisWeek[i - 1] ?? 0));

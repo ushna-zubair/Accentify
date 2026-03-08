@@ -49,11 +49,11 @@ function startOfWeek(d: Date): Date {
   return monday;
 }
 
-/** Format a date range label: "Oct 10 - 16 Oct, 25" */
+/** Format a date range label: "Mar 2 - Mar 8, 2026" */
 function formatDateRange(start: Date, end: Date): string {
   const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
   const s = start.toLocaleDateString('en-US', opts);
-  const e = end.toLocaleDateString('en-US', { ...opts, year: '2-digit' });
+  const e = end.toLocaleDateString('en-US', { ...opts, year: 'numeric' });
   return `${s} - ${e}`;
 }
 
@@ -337,10 +337,8 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
         )
       : 0;
 
-  // Date range label
-  const weekEnd = new Date(thisWeekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
-  const usageDateRange = formatDateRange(thisWeekStart, weekEnd);
+  // Date range label — ends at today, not always Sunday
+  const usageDateRange = formatDateRange(thisWeekStart, now);
 
   // ── 4. Build final object ──
   const dashboardData: DashboardData = {
