@@ -92,9 +92,9 @@ const mapLogDoc = (d: any): SystemLog => {
 //  SUPPORT TICKETS
 // ═══════════════════════════════════════════════
 
-export async function fetchSupportTickets(): Promise<SupportTicket[]> {
+export async function fetchSupportTickets(maxItems = 200): Promise<SupportTicket[]> {
   const ref = collection(db, TICKETS_COL);
-  const q = query(ref, orderBy('createdAt', 'desc'));
+  const q = query(ref, orderBy('createdAt', 'desc'), limit(maxItems));
   const snap = await getDocs(q);
   return snap.docs.map(mapTicketDoc);
 }

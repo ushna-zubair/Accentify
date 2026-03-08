@@ -99,6 +99,11 @@ export interface UserProfile {
   /** Resolved from nested `profile.fullName` or root `fullName` (backward compat) */
   fullName: string;
   createdAt?: Timestamp;
+  /** Nested profile data from Firestore `users/{uid}.profile` */
+  profile?: {
+    fullName?: string;
+    profilePictureUrl?: string;
+  };
 }
 
 /**

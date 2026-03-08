@@ -161,7 +161,7 @@ export const useNotificationController = () => {
       setNotifications((prev) =>
         prev.map((n) => (n.tab === activeTab ? { ...n, unread: false } : n)),
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Notifications] markAllAsRead error:', e);
     }
   }, [activeTab, notifications]);
@@ -176,7 +176,7 @@ export const useNotificationController = () => {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, unread: false } : n)),
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Notifications] markAsRead error:', e);
     }
   }, []);

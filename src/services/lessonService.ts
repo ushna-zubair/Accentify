@@ -15,9 +15,11 @@ import {
   deleteDoc,
   query,
   orderBy,
+  limit,
   serverTimestamp,
   getCountFromServer,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type {
@@ -70,8 +72,8 @@ const mapLessonDoc = (docSnap: any): AdminLesson => {
 };
 
 // ─── Fetch all lessons ───
-export const fetchAllLessons = async (): Promise<AdminLesson[]> => {
-  const q = query(collection(db, LESSONS_COL), orderBy('order', 'asc'));
+export const fetchAllLessons = async (maxItems = 200): Promise<AdminLesson[]> => {
+  const q = query(collection(db, LESSONS_COL), orderBy('order', 'asc'), limit(maxItems));
   const snap = await getDocs(q);
   const lessons = snap.docs.map(mapLessonDoc);
 
@@ -138,17 +140,6 @@ export const updateLessonStatus = async (
 ): Promise<void> => {
   await updateDoc(doc(db, LESSONS_COL, lessonId), {
     status: newStatus,
-    updatedAt: serverTimestamp(),
-  });
-};
-
-// ─── Reorder lesson ───
-export const updateLessonOrder = async (
-  lessonId: string,
-  newOrder: number,
-): Promise<void> => {
-  await updateDoc(doc(db, LESSONS_COL, lessonId), {
-    order: newOrder,
     updatedAt: serverTimestamp(),
   });
 };
@@ -228,21 +219,23 @@ export const fetchVocabPairs = async (lessonId: string): Promise<AdminVocabPairF
   });
 };
 
-/** Save all vocab pairs for a lesson (replaces existing set) */
+/** Save all vocab pairs for a lesson (replaces existing set atomically) */
 export const saveVocabPairs = async (
   lessonId: string,
   pairs: AdminVocabPairForm[],
 ): Promise<void> => {
   const colRef = collection(db, LESSONS_COL, lessonId, 'vocabPairs');
+  const existing = await getDocs(colRef);
+
+  const batch = writeBatch(db);
 
   // Delete existing pairs
-  const existing = await getDocs(colRef);
-  const deletions = existing.docs.map((d) => deleteDoc(d.ref));
-  await Promise.all(deletions);
+  existing.docs.forEach((d) => batch.delete(d.ref));
 
   // Write new pairs
-  const additions = pairs.map((p) =>
-    addDoc(colRef, {
+  pairs.forEach((p) => {
+    const newRef = doc(colRef);
+    batch.set(newRef, {
       basicWord: p.basicWord,
       vocabWord: p.vocabWord,
       basicPhonetic: p.basicPhonetic,
@@ -250,9 +243,10 @@ export const saveVocabPairs = async (
       basicDefinition: p.basicDefinition,
       vocabDefinition: p.vocabDefinition,
       exampleSentence: p.exampleSentence,
-    }),
-  );
-  await Promise.all(additions);
+    });
+  });
+
+  await batch.commit();
 };
 
 // ─── Compute stats from items ───

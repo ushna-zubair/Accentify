@@ -59,8 +59,8 @@ export const useFeedbackReportsController = () => {
   // Current admin info
   const currentAdminUid = currentUser?.uid ?? '';
   const currentAdminName =
-    (userProfile as any)?.fullName ??
-    (userProfile as any)?.profile?.fullName ??
+    userProfile?.profile?.fullName ??
+    userProfile?.fullName ??
     currentUser?.displayName ??
     'Admin';
 
@@ -71,16 +71,18 @@ export const useFeedbackReportsController = () => {
       setError(null);
       const data = await fetchFeedbackItems();
       setItems(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[FeedbackReports] fetch error:', e);
-      setError(e.message ?? 'Failed to load feedback');
+      setError(e instanceof Error ? e.message : 'Failed to load feedback');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     fetchAll();
+    return () => { ignore = true; };
   }, [fetchAll]);
 
   // ── Stats ──
@@ -166,8 +168,8 @@ export const useFeedbackReportsController = () => {
         if (selectedItem?.id === feedbackId) {
           setSelectedItem((prev) => prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : prev);
         }
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to update status');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to update status');
       } finally {
         setSubmitting(false);
       }
@@ -187,8 +189,8 @@ export const useFeedbackReportsController = () => {
         if (selectedItem?.id === feedbackId) {
           setSelectedItem((prev) => prev ? { ...prev, priority: newPriority } : prev);
         }
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to update priority');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to update priority');
       } finally {
         setSubmitting(false);
       }
@@ -235,8 +237,8 @@ export const useFeedbackReportsController = () => {
         // Refresh activity
         const logs = await fetchFeedbackActivity(feedbackId);
         setActivityLog(logs);
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to send response');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to send response');
       } finally {
         setSubmitting(false);
       }
@@ -256,8 +258,8 @@ export const useFeedbackReportsController = () => {
         if (selectedItem?.id === feedbackId) {
           setSelectedItem((prev) => prev ? { ...prev, adminNotes: adminNotesText.trim() } : prev);
         }
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to save notes');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to save notes');
       } finally {
         setSubmitting(false);
       }
@@ -275,8 +277,8 @@ export const useFeedbackReportsController = () => {
           prev.map((i) => (i.id === feedbackId ? { ...i, status: 'archived' as FeedbackStatus } : i)),
         );
         closeDetail();
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to archive');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to archive');
       } finally {
         setSubmitting(false);
       }
@@ -292,8 +294,8 @@ export const useFeedbackReportsController = () => {
         await deleteFeedback(feedbackId, currentAdminUid, currentAdminName);
         setItems((prev) => prev.filter((i) => i.id !== feedbackId));
         closeDetail();
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to delete');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to delete');
       } finally {
         setSubmitting(false);
       }

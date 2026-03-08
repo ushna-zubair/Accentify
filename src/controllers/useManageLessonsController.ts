@@ -92,16 +92,18 @@ export const useManageLessonsController = () => {
       setError(null);
       const data = await fetchAllLessons();
       setLessons(data);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[ManageLessons] fetch error:', e);
-      setError(e.message ?? 'Failed to load lessons');
+      setError(e instanceof Error ? e.message : 'Failed to load lessons');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     fetchAll();
+    return () => { ignore = true; };
   }, [fetchAll]);
 
   // ── Stats ──
@@ -203,7 +205,7 @@ export const useManageLessonsController = () => {
       setLoadingPairs(true);
       const pairs = await fetchVocabPairs(lesson.id);
       setFormData((prev) => ({ ...prev, vocabPairs: pairs }));
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.warn('[ManageLessons] Failed to fetch vocab pairs:', e);
     } finally {
       setLoadingPairs(false);
@@ -383,8 +385,8 @@ export const useManageLessonsController = () => {
         }
       }
       closeForm();
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to save lesson');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to save lesson');
     } finally {
       setSubmitting(false);
     }
@@ -397,8 +399,8 @@ export const useManageLessonsController = () => {
         setSubmitting(true);
         await deleteLesson(lessonId);
         setLessons((prev) => prev.filter((l) => l.id !== lessonId));
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to delete lesson');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to delete lesson');
       } finally {
         setSubmitting(false);
       }
@@ -427,8 +429,8 @@ export const useManageLessonsController = () => {
         if (newStatus === 'published' && wasDraft && lesson) {
           notifyUsersAboutLesson(lesson.title, lessonId).catch(() => {});
         }
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to update status');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to update status');
       } finally {
         setSubmitting(false);
       }
@@ -443,8 +445,8 @@ export const useManageLessonsController = () => {
         setSubmitting(true);
         await duplicateLesson(lessonId, adminUid);
         await fetchAll();
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to duplicate lesson');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to duplicate lesson');
       } finally {
         setSubmitting(false);
       }

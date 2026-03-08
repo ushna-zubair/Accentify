@@ -6,10 +6,12 @@ import {
   AudioModule,
   setAudioModeAsync,
 } from 'expo-audio';
+import Constants from 'expo-constants';
 import { doc, getDoc, setDoc, collection, getDocs, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { VocabWordPair, VocabExerciseData, SpeechRecognitionResult } from '../models';
 import { onExerciseComplete } from '../services/progressService';
+import { levenshtein } from '../utils/stringUtils';
 
 // ═══════════════════════════════════════════════
 //  SAMPLE WORD PAIRS (fallback)
@@ -90,27 +92,6 @@ const SUCCESS_MESSAGES = [
 const pickSuccessMessage = (): string =>
   SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)];
 
-/**
- * Compute a simple Levenshtein distance between two strings.
- * Used for fuzzy pronunciation matching.
- */
-const levenshtein = (a: string, b: string): number => {
-  const m = a.length;
-  const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] =
-        a[i - 1] === b[j - 1]
-          ? dp[i - 1][j - 1]
-          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[m][n];
-};
-
 /** Generate human-readable pronunciation feedback */
 const generateFeedback = (
   targetWord: string,
@@ -150,103 +131,42 @@ const generateFeedback = (
 };
 
 // ═══════════════════════════════════════════════
-//  WHISPER API PLACEHOLDER
+//  WHISPER API INTEGRATION
 // ═══════════════════════════════════════════════
 
-/**
- * ┌─────────────────────────────────────────────────────┐
- * │  PLACEHOLDER: Whisper / HuggingFace STT Integration │
- * ├─────────────────────────────────────────────────────┤
- * │  Replace this function with your actual API call     │
- * │  to the HuggingFace Inference API (Whisper model).   │
- * │                                                     │
- * │  Expected flow:                                     │
- * │  1. Record audio via expo-av (done in controller)   │
- * │  2. Send audio file/blob to HuggingFace endpoint    │
- * │  3. Receive transcription text                      │
- * │  4. Compare with both basic + vocab target words    │
- * │  5. Return enriched SpeechRecognitionResult          │
- * │                                                     │
- * │  API endpoint (example):                            │
- * │  POST https://api-inference.huggingface.co/models/  │
- * │       openai/whisper-large-v3                       │
- * │  Headers: Authorization: Bearer <HF_TOKEN>          │
- * │  Body: audio file (binary)                          │
- * └─────────────────────────────────────────────────────┘
- */
+/** Read HF token from app.json extra config (set via EAS or local .env) */
+const HF_API_TOKEN: string =
+  (Constants.expoConfig?.extra?.hfApiToken as string) ?? '';
 
-// TODO: Replace with your HuggingFace API key
-const HF_API_TOKEN = '';
-
-// TODO: Replace with your preferred Whisper model endpoint
 const WHISPER_API_URL =
   'https://api-inference.huggingface.co/models/openai/whisper-large-v3';
 
 /**
  * Send recorded audio to Whisper API for speech-to-text.
- * Evaluates pronunciation of BOTH the basic and vocab words.
- *
- * @param audioUri - Local file URI of the recorded audio
- * @param pair     - The VocabWordPair being practised
- * @returns SpeechRecognitionResult with per-word feedback
+ * Falls back to a mock when no HF_API_TOKEN is configured.
  */
 export const transcribeAudio = async (
   audioUri: string,
   pair: VocabWordPair,
 ): Promise<SpeechRecognitionResult> => {
-  // ─── PLACEHOLDER IMPLEMENTATION ───
   if (!HF_API_TOKEN) {
     console.warn(
-      '[Whisper] No HF_API_TOKEN set. Using mock transcription. ' +
-        'Set your token in useVocabExerciseController.ts to enable real STT.',
+      '[Whisper] No hfApiToken in app config. Using mock transcription.',
     );
-
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    // Mock: basic word almost always correct, vocab word ~50%
-    const basicCorrect = Math.random() > 0.15;
-    const vocabCorrect = Math.random() > 0.5;
-    const isCorrect = basicCorrect && vocabCorrect;
-
-    const basicTranscript = basicCorrect
-      ? pair.basicWord.toLowerCase()
-      : pair.basicWord.toLowerCase().slice(0, -1) + 'x';
-    const vocabTranscript = vocabCorrect
-      ? pair.vocabWord.toLowerCase()
-      : pair.vocabWord.toLowerCase().replace(pair.vocabWord[0], 'X');
-
-    return {
-      transcript: `${basicTranscript} ${vocabTranscript}`,
-      confidence: isCorrect ? 0.92 : 0.45,
-      isCorrect,
-      basicAttemptPhonetic: basicCorrect
-        ? pair.basicPhonetic
-        : pair.basicPhonetic.replace(/-/g, '-') + 'x',
-      basicCorrect,
-      basicFeedback: generateFeedback(pair.basicWord, basicTranscript, basicCorrect),
-      vocabAttemptPhonetic: vocabCorrect
-        ? pair.vocabPhonetic
-        : pair.vocabPhonetic.replace(/^./, 'X'),
-      vocabCorrect,
-      vocabFeedback: generateFeedback(pair.vocabWord, vocabTranscript, vocabCorrect),
-    };
+    return mockTranscription(pair);
   }
 
-  // ─── REAL API CALL (uncomment when HF_API_TOKEN is set) ───
-  /*
   try {
     const formData = new FormData();
     formData.append('file', {
       uri: audioUri,
       type: 'audio/m4a',
       name: 'recording.m4a',
-    } as any);
+    } as unknown as Blob);
 
     const response = await fetch(WHISPER_API_URL, {
       method: 'POST',
-      headers: {
-        Authorization: `Bearer ${HF_API_TOKEN}`,
-      },
+      headers: { Authorization: `Bearer ${HF_API_TOKEN}` },
       body: formData,
     });
 
@@ -257,7 +177,6 @@ export const transcribeAudio = async (
     const result = await response.json();
     const transcript = (result.text ?? '').trim().toLowerCase();
 
-    // Split transcript — user is expected to say both words
     const words = transcript.split(/\s+/);
     const basicSpoken = words[0] ?? '';
     const vocabSpoken = words.slice(1).join(' ') || words[0] || '';
@@ -266,11 +185,9 @@ export const transcribeAudio = async (
     const vocabTarget = pair.vocabWord.toLowerCase();
 
     const basicCorrect =
-      basicSpoken === basicTarget ||
-      levenshtein(basicSpoken, basicTarget) <= 2;
+      basicSpoken === basicTarget || levenshtein(basicSpoken, basicTarget) <= 2;
     const vocabCorrect =
-      vocabSpoken === vocabTarget ||
-      levenshtein(vocabSpoken, vocabTarget) <= 2;
+      vocabSpoken === vocabTarget || levenshtein(vocabSpoken, vocabTarget) <= 2;
 
     return {
       transcript,
@@ -283,8 +200,9 @@ export const transcribeAudio = async (
       vocabCorrect,
       vocabFeedback: generateFeedback(pair.vocabWord, vocabSpoken, vocabCorrect),
     };
-  } catch (error: any) {
-    console.error('[Whisper] API call failed:', error);
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[Whisper] API call failed:', msg);
     return {
       transcript: '',
       confidence: 0,
@@ -297,19 +215,39 @@ export const transcribeAudio = async (
       vocabFeedback: 'Could not process audio. Please try again.',
     };
   }
-  */
+};
 
-  // Fallback (should not reach here if real API is uncommented)
+/** Deterministic-ish mock for development when no API token is available */
+const mockTranscription = async (
+  pair: VocabWordPair,
+): Promise<SpeechRecognitionResult> => {
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+
+  const basicCorrect = Math.random() > 0.15;
+  const vocabCorrect = Math.random() > 0.5;
+  const isCorrect = basicCorrect && vocabCorrect;
+
+  const basicTranscript = basicCorrect
+    ? pair.basicWord.toLowerCase()
+    : pair.basicWord.toLowerCase().slice(0, -1) + 'x';
+  const vocabTranscript = vocabCorrect
+    ? pair.vocabWord.toLowerCase()
+    : pair.vocabWord.toLowerCase().replace(pair.vocabWord[0], 'X');
+
   return {
-    transcript: '',
-    confidence: 0,
-    isCorrect: false,
-    basicAttemptPhonetic: '',
-    basicCorrect: false,
-    basicFeedback: 'API not configured.',
-    vocabAttemptPhonetic: '',
-    vocabCorrect: false,
-    vocabFeedback: 'API not configured.',
+    transcript: `${basicTranscript} ${vocabTranscript}`,
+    confidence: isCorrect ? 0.92 : 0.45,
+    isCorrect,
+    basicAttemptPhonetic: basicCorrect
+      ? pair.basicPhonetic
+      : pair.basicPhonetic.replace(/-/g, '-') + 'x',
+    basicCorrect,
+    basicFeedback: generateFeedback(pair.basicWord, basicTranscript, basicCorrect),
+    vocabAttemptPhonetic: vocabCorrect
+      ? pair.vocabPhonetic
+      : pair.vocabPhonetic.replace(/^./, 'X'),
+    vocabCorrect,
+    vocabFeedback: generateFeedback(pair.vocabWord, vocabTranscript, vocabCorrect),
   };
 };
 
@@ -369,10 +307,10 @@ export const useVocabExerciseController = (lessonId: string) => {
             };
           });
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // Permission errors are expected if rules aren't deployed yet
         if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
-          console.warn('[VocabExercise] Firestore fetch warning:', e.message);
+          console.warn('[VocabExercise] Firestore fetch warning:', e instanceof Error ? e.message : String(e));
         }
       }
 
@@ -407,17 +345,19 @@ export const useVocabExerciseController = (lessonId: string) => {
         currentIndex,
         totalPairs: wordPairs.length,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[VocabExercise] fetchExercise error:', e);
-      setError(e.message ?? 'Failed to load exercise');
+      setError(e instanceof Error ? e.message : 'Failed to load exercise');
     } finally {
       setLoading(false);
     }
   }, [lessonId]);
 
   useEffect(() => {
+    let ignore = false;
     fetchExercise();
     return () => {
+      ignore = true;
       // Cleanup
       try {
         if (audioRecorder.isRecording) {
@@ -478,7 +418,7 @@ export const useVocabExerciseController = (lessonId: string) => {
       durationTimerRef.current = setInterval(() => {
         setRecordingDuration((prev) => prev + 100);
       }, 100);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[VocabExercise] startRecording error:', e);
       setError('Failed to start recording');
     }
@@ -562,7 +502,7 @@ export const useVocabExerciseController = (lessonId: string) => {
           // Non-critical — don't block UX
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[VocabExercise] stopRecording error:', e);
       setError('Failed to process recording');
     } finally {

@@ -6,7 +6,6 @@ import {
   getDoc,
   setDoc,
   updateDoc,
-  deleteDoc,
   query,
   orderBy,
   limit,
@@ -14,17 +13,14 @@ import {
   where,
   DocumentSnapshot,
 } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { db } from '../config/firebase';
+import { generateShortId } from '../utils/idUtils';
 import type { ManagedUser } from '../models';
 
 const PAGE_SIZE = 20;
-
-/**
- * Generate a 5-digit numeric short ID for display.
- */
-function generateShortId(): string {
-  return String(Math.floor(10000 + Math.random() * 90000));
-}
+const functions = getFunctions(undefined, 'us-central1');
+const adminDeleteUser = httpsCallable(functions, 'adminDeleteUser');
 
 // ─── Controller ───
 export const useUserManagementController = () => {
@@ -61,9 +57,9 @@ export const useUserManagementController = () => {
       setLastDoc(snapshot.docs[snapshot.docs.length - 1] ?? null);
       setHasMore(snapshot.docs.length === PAGE_SIZE);
       setSelectedUids(new Set());
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserMgmt] fetchUsers error:', e);
-      setError(e.message ?? 'Failed to load users');
+      setError(e instanceof Error ? e.message : 'Failed to load users');
     } finally {
       setLoading(false);
     }
@@ -93,9 +89,9 @@ export const useUserManagementController = () => {
       setUsers((prev) => [...prev, ...fetched]);
       setLastDoc(snapshot.docs[snapshot.docs.length - 1] ?? null);
       setHasMore(snapshot.docs.length === PAGE_SIZE);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserMgmt] fetchMore error:', e);
-      setError(e.message ?? 'Failed to load more users');
+      setError(e instanceof Error ? e.message : 'Failed to load more users');
     } finally {
       setLoading(false);
     }
@@ -151,9 +147,9 @@ export const useUserManagementController = () => {
 
       setHasMore(false);
       setSelectedUids(new Set());
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserMgmt] searchUser error:', e);
-      setError(e.message ?? 'Search failed');
+      setError(e instanceof Error ? e.message : 'Search failed');
     } finally {
       setLoading(false);
     }
@@ -239,9 +235,9 @@ export const useUserManagementController = () => {
         };
 
         setUsers((prev) => [newUser, ...prev]);
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[UserMgmt] addUser error:', e);
-        setError(e.message ?? 'Failed to add user');
+        setError(e instanceof Error ? e.message : 'Failed to add user');
       } finally {
         setLoading(false);
       }
@@ -269,9 +265,9 @@ export const useUserManagementController = () => {
               : u,
           ),
         );
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[UserMgmt] editUser error:', e);
-        setError(e.message ?? 'Failed to update user');
+        setError(e instanceof Error ? e.message : 'Failed to update user');
       } finally {
         setLoading(false);
       }
@@ -279,7 +275,7 @@ export const useUserManagementController = () => {
     [],
   );
 
-  // ── Delete selected users ──
+  // ── Delete selected users (server-side: disables Auth + soft-deletes doc) ──
   const deleteSelected = useCallback(async () => {
     if (selectedUids.size === 0) return;
 
@@ -287,16 +283,14 @@ export const useUserManagementController = () => {
       setLoading(true);
       setError(null);
 
-      const promises = Array.from(selectedUids).map((uid) =>
-        deleteDoc(doc(db, 'users', uid)),
-      );
-      await Promise.all(promises);
+      const uids = Array.from(selectedUids);
+      await adminDeleteUser({ uids });
 
       setUsers((prev) => prev.filter((u) => !selectedUids.has(u.uid)));
       setSelectedUids(new Set());
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserMgmt] deleteSelected error:', e);
-      setError(e.message ?? 'Failed to delete users');
+      setError(e instanceof Error ? e.message : 'Failed to delete users');
     } finally {
       setLoading(false);
     }
@@ -304,7 +298,9 @@ export const useUserManagementController = () => {
 
   // ── Initial fetch ──
   useEffect(() => {
+    let ignore = false;
     fetchUsers();
+    return () => { ignore = true; };
   }, [fetchUsers]);
 
   return {

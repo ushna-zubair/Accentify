@@ -79,13 +79,13 @@ export const useProgressController = () => {
 
       setProgressData(result);
       setSelectedWeekIndex(data.currentWeekIndex);
-    } catch (e: any) {
+    } catch (e: unknown) {
       if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
         console.warn('[Progress] Firestore permission denied, using fallback');
       } else {
         console.error('Error fetching progress:', e);
       }
-      setError(e.message ?? 'Failed to load progress data');
+      setError(e instanceof Error ? e.message : 'Failed to load progress data');
       setProgressData(EMPTY_PROGRESS);
     } finally {
       setLoading(false);
@@ -109,7 +109,7 @@ export const useProgressController = () => {
         }
         return { ...prev, weeks, currentWeekIndex: weeks.length - 1 };
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.warn('[Progress] refreshCurrentWeek error:', e);
     }
   }, [currentUser]);
@@ -135,7 +135,9 @@ export const useProgressController = () => {
 
   // ── Auto-fetch on mount ──
   useEffect(() => {
+    let ignore = false;
     fetchProgress();
+    return () => { ignore = true; };
   }, [fetchProgress]);
 
   return {

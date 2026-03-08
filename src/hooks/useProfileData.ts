@@ -47,10 +47,10 @@ export function useProfileData(): UseProfileDataResult {
         } else {
           setError('User profile not found.');
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         if (!cancelled) {
           console.error('useProfileData fetch error:', e);
-          setError(e.message || 'Failed to load profile.');
+          setError(e instanceof Error ? e.message : 'Failed to load profile.');
         }
       } finally {
         if (!cancelled) setIsLoading(false);

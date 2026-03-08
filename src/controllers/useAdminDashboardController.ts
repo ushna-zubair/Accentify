@@ -117,14 +117,14 @@ export const useAdminMobileDashboardController = () => {
 
       // 1. Admin's own name & avatar from profile
       const adminName =
-        (userProfile as any)?.profile?.fullName ??
+        userProfile?.profile?.fullName ??
         userProfile?.fullName ??
         currentUser.displayName ??
         currentUser.email?.split('@')[0] ??
         'Admin';
 
       const adminAvatarUrl =
-        (userProfile as any)?.profile?.profilePictureUrl ??
+        userProfile?.profile?.profilePictureUrl ??
         undefined;
 
       // 2. Latest announcement from Firestore
@@ -192,9 +192,9 @@ export const useAdminMobileDashboardController = () => {
         adminsOnline,
         menuItems: ADMIN_MENU,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('Error fetching admin dashboard:', e);
-      setError(e.message ?? 'Failed to load dashboard');
+      setError(e instanceof Error ? e.message : 'Failed to load dashboard');
     } finally {
       setLoading(false);
     }
@@ -225,7 +225,7 @@ export const useAdminMobileDashboardController = () => {
 
         // Refresh dashboard to show the new announcement
         await fetchDashboard();
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('Error creating announcement:', e);
         throw e;
       }
@@ -244,7 +244,9 @@ export const useAdminMobileDashboardController = () => {
 
   // ── Auto-fetch on mount ──
   useEffect(() => {
+    let ignore = false;
     fetchDashboard();
+    return () => { ignore = true; };
   }, [fetchDashboard]);
 
   return {

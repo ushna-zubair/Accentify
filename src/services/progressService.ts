@@ -38,6 +38,7 @@ import {
   Timestamp,
   increment,
   arrayUnion,
+  runTransaction,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import {
@@ -83,47 +84,50 @@ export {
  */
 export const updateStreak = async (uid: string): Promise<number> => {
   const ref = doc(db, 'users', uid, 'progress', 'streak');
-  const snap = await getDoc(ref);
-  const today = new Date();
-  const todayKey = toDateKey(today);
 
-  let dayStreak = 1;
-  let longestStreak = 1;
+  return runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(ref);
+    const today = new Date();
+    const todayKey = toDateKey(today);
 
-  if (snap.exists()) {
-    const data = snap.data();
-    const rawDate = data.lastActiveDate;
-    // Normalize: if it's a Timestamp, convert to YYYY-MM-DD string
-    const lastDate = rawDate && typeof rawDate === 'object' && typeof rawDate.toDate === 'function'
-      ? toDateKey(rawDate.toDate())
-      : (rawDate as string | undefined);
-    const prevStreak = (data.dayStreak as number) ?? 0;
-    longestStreak = (data.longestStreak as number) ?? prevStreak;
+    let dayStreak = 1;
+    let longestStreak = 1;
 
-    if (lastDate === todayKey) {
-      // Already recorded today
-      return prevStreak;
-    }
+    if (snap.exists()) {
+      const data = snap.data();
+      const rawDate = data.lastActiveDate;
+      // Normalize: if it's a Timestamp, convert to YYYY-MM-DD string
+      const lastDate = rawDate && typeof rawDate === 'object' && typeof rawDate.toDate === 'function'
+        ? toDateKey(rawDate.toDate())
+        : (rawDate as string | undefined);
+      const prevStreak = (data.dayStreak as number) ?? 0;
+      longestStreak = (data.longestStreak as number) ?? prevStreak;
 
-    if (lastDate) {
-      const lastD = parseDate(lastDate);
-      if (isYesterday(lastD, today)) {
-        dayStreak = prevStreak + 1;
+      if (lastDate === todayKey) {
+        // Already recorded today
+        return prevStreak;
       }
-      // else: gap ≥ 2 days → reset to 1
+
+      if (lastDate) {
+        const lastD = parseDate(lastDate);
+        if (isYesterday(lastD, today)) {
+          dayStreak = prevStreak + 1;
+        }
+        // else: gap ≥ 2 days → reset to 1
+      }
+
+      if (dayStreak > longestStreak) longestStreak = dayStreak;
     }
 
-    if (dayStreak > longestStreak) longestStreak = dayStreak;
-  }
+    transaction.set(ref, {
+      dayStreak,
+      longestStreak,
+      lastActiveDate: todayKey,
+      updatedAt: Timestamp.now(),
+    });
 
-  await setDoc(ref, {
-    dayStreak,
-    longestStreak,
-    lastActiveDate: todayKey,
-    updatedAt: Timestamp.now(),
+    return dayStreak;
   });
-
-  return dayStreak;
 };
 
 // ═══════════════════════════════════════════════
@@ -411,7 +415,7 @@ export const fetchFullProgress = async (uid: string) => {
     weeks = weeksSnap.docs
       .map((d) => d.data() as WeeklyProgress)
       .sort((a, b) => {
-        if ((a as any).year !== (b as any).year) return ((a as any).year ?? 0) - ((b as any).year ?? 0);
+        if ((a.year ?? 0) !== (b.year ?? 0)) return (a.year ?? 0) - (b.year ?? 0);
         return (a.weekNumber ?? 0) - (b.weekNumber ?? 0);
       });
   }
@@ -422,7 +426,7 @@ export const fetchFullProgress = async (uid: string) => {
   const curWn = getWeekNumber(today);
   const curYr = getWeekYear(today);
   const hasCurrentWeek = weeks.some(
-    (w) => w.weekNumber === curWn && (w as any).year === curYr,
+    (w) => w.weekNumber === curWn && w.year === curYr,
   );
 
   if (!hasCurrentWeek) {

@@ -23,10 +23,10 @@ import {
   orderBy,
   Timestamp,
 } from 'firebase/firestore';
-import Constants from 'expo-constants';
 import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
-import type { LoginDevice, DevicePlatform } from '../models';
+import { getDeviceId, getDeviceName, getDevicePlatform } from '../services/deviceService';
+import type { LoginDevice } from '../models';
 
 const isWeb = Platform.OS === 'web';
 
@@ -53,29 +53,6 @@ const webConfirm = (title: string, message?: string): Promise<boolean> => {
 };
 
 // ─── Helpers ───
-
-/** Generate a stable-ish device id based on platform + installationId */
-const getDeviceId = (): string => {
-  const installId = Constants.installationId ?? 'unknown';
-  return `${Platform.OS}-${installId}`.replace(/[^a-zA-Z0-9-]/g, '');
-};
-
-/** Derive a human-readable device name */
-const getDeviceName = (): string => {
-  const deviceName = Constants.deviceName; // e.g. "Mubashir's iPhone"
-  if (deviceName) return deviceName;
-
-  // Fallback
-  if (Platform.OS === 'ios') return 'iPhone';
-  if (Platform.OS === 'android') return 'Android Device';
-  return 'Web Browser';
-};
-
-const getDevicePlatform = (): DevicePlatform => {
-  if (Platform.OS === 'ios') return 'ios';
-  if (Platform.OS === 'android') return 'android';
-  return 'web';
-};
 
 /** Format ISO string or Firestore Timestamp into "Feb 28, 2026 · 3:42 PM" */
 const formatDate = (raw: string | Timestamp | undefined): string => {
@@ -133,7 +110,7 @@ export const useLoginDevicesController = () => {
       list.sort((a, b) => (a.isCurrent ? -1 : b.isCurrent ? 1 : 0));
 
       setDevices(list);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[LoginDevices] fetch error:', e);
     } finally {
       setLoading(false);
@@ -156,9 +133,9 @@ export const useLoginDevicesController = () => {
         },
         { merge: true },
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Silently fail — not critical
-      console.warn('[LoginDevices] Failed to record device:', e.message);
+      console.warn('[LoginDevices] Failed to record device:', e instanceof Error ? e.message : String(e));
     }
   }, [currentUser, currentDeviceId]);
 
@@ -185,8 +162,8 @@ export const useLoginDevicesController = () => {
       try {
         await deleteDoc(doc(db, 'users', currentUser.uid, 'devices', deviceId));
         setDevices((prev) => prev.filter((d) => d.id !== deviceId));
-      } catch (e: any) {
-        webAlert('Error', e.message || 'Failed to revoke device.');
+      } catch (e: unknown) {
+        webAlert('Error', e instanceof Error ? e.message : 'Failed to revoke device.');
       } finally {
         setRevoking(null);
       }
@@ -196,10 +173,12 @@ export const useLoginDevicesController = () => {
 
   // ── Auto-record & fetch on mount ──
   useEffect(() => {
+    let ignore = false;
     (async () => {
       await recordCurrentDevice();
       await fetchDevices();
     })();
+    return () => { ignore = true; };
   }, [recordCurrentDevice, fetchDevices]);
 
   return {

@@ -63,8 +63,8 @@ export const useAccessControlController = () => {
   // Get current admin info
   const currentAdminUid = currentUser?.uid ?? '';
   const currentAdminName =
-    (userProfile as any)?.fullName ??
-    (userProfile as any)?.profile?.fullName ??
+    userProfile?.profile?.fullName ??
+    userProfile?.fullName ??
     currentUser?.displayName ??
     'Admin';
 
@@ -83,16 +83,18 @@ export const useAccessControlController = () => {
       setMembers(membersData);
       setActivityLogs(logsData);
       setPendingInvites(invitesData);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[AccessControl] fetchAll error:', e);
-      setError(e.message ?? 'Failed to load access control data');
+      setError(e instanceof Error ? e.message : 'Failed to load access control data');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     fetchAll();
+    return () => { ignore = true; };
   }, [fetchAll]);
 
   // ── Filtered members ──
@@ -122,8 +124,8 @@ export const useAccessControlController = () => {
         // Refresh logs
         const logs = await fetchActivityLogs(50);
         setActivityLogs(logs);
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to update role');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to update role');
       } finally {
         setSubmitting(false);
       }
@@ -142,8 +144,8 @@ export const useAccessControlController = () => {
         );
         const logs = await fetchActivityLogs(50);
         setActivityLogs(logs);
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to update permissions');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to update permissions');
       } finally {
         setSubmitting(false);
       }
@@ -163,8 +165,8 @@ export const useAccessControlController = () => {
         );
         const logs = await fetchActivityLogs(50);
         setActivityLogs(logs);
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to update status');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to update status');
       } finally {
         setSubmitting(false);
       }
@@ -181,8 +183,8 @@ export const useAccessControlController = () => {
         setMembers((prev) => prev.filter((m) => m.uid !== targetUid));
         const logs = await fetchActivityLogs(50);
         setActivityLogs(logs);
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to remove admin');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to remove admin');
       } finally {
         setSubmitting(false);
         setEditMemberModalVisible(false);
@@ -220,8 +222,8 @@ export const useAccessControlController = () => {
       setInviteFullName('');
       setInviteRole('admin');
       setInviteModalVisible(false);
-    } catch (e: any) {
-      setError(e.message ?? 'Failed to invite admin');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to invite admin');
     } finally {
       setSubmitting(false);
     }
@@ -236,8 +238,8 @@ export const useAccessControlController = () => {
         setPendingInvites((prev) => prev.filter((i) => i.id !== invitationId));
         const logs = await fetchActivityLogs(50);
         setActivityLogs(logs);
-      } catch (e: any) {
-        setError(e.message ?? 'Failed to revoke invitation');
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Failed to revoke invitation');
       } finally {
         setSubmitting(false);
       }

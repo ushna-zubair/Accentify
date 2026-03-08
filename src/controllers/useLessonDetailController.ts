@@ -141,10 +141,10 @@ export const useLessonDetailController = (lessonId: string) => {
             status,
           };
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         // Permission errors are expected if rules aren't deployed yet
         if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
-          console.warn('[LessonDetail] Firestore fetch warning:', e.message);
+          console.warn('[LessonDetail] Firestore fetch warning:', e instanceof Error ? e.message : String(e));
         }
       }
 
@@ -160,16 +160,18 @@ export const useLessonDetailController = (lessonId: string) => {
       }
 
       setDetail(lessonData);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[LessonDetail] fetchDetail error:', e);
-      setError(e.message ?? 'Failed to load lesson');
+      setError(e instanceof Error ? e.message : 'Failed to load lesson');
     } finally {
       setLoading(false);
     }
   }, [lessonId]);
 
   useEffect(() => {
+    let ignore = false;
     fetchDetail();
+    return () => { ignore = true; };
   }, [fetchDetail]);
 
   // ── Start / Continue the lesson ──
@@ -220,9 +222,9 @@ export const useLessonDetailController = (lessonId: string) => {
       } catch {
         // Non-critical, ignore
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[LessonDetail] startLesson error:', e);
-      setError(e.message ?? 'Failed to start lesson');
+      setError(e instanceof Error ? e.message : 'Failed to start lesson');
     } finally {
       setStarting(false);
     }

@@ -95,8 +95,8 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
       setMaskedEmail(result.maskedEmail);
       setStep('verifying');
       reset();
-    } catch (e: any) {
-      webAlert('Error', e.message || 'Failed to send verification code.');
+    } catch (e: unknown) {
+      webAlert('Error', e instanceof Error ? e.message : 'Failed to send verification code.');
     } finally {
       setSending(false);
     }
@@ -119,8 +119,8 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
           ? 'Two-Factor Authentication has been enabled.'
           : 'Two-Factor Authentication has been disabled.',
       );
-    } catch (e: any) {
-      setError(e.message || 'Incorrect code. Please try again.');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Incorrect code. Please try again.');
       reset();
     } finally {
       setVerifying(false);
@@ -137,8 +137,8 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
       const result = await send2FACode(pendingAction);
       setMaskedEmail(result.maskedEmail);
       webAlert('Code Sent', 'A new verification code has been sent to your email.');
-    } catch (e: any) {
-      webAlert('Error', e.message || 'Failed to resend code.');
+    } catch (e: unknown) {
+      webAlert('Error', e instanceof Error ? e.message : 'Failed to resend code.');
     } finally {
       setSending(false);
     }

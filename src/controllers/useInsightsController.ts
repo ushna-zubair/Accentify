@@ -146,9 +146,9 @@ export const useInsightsController = () => {
         weekLabel,
         hasData,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[InsightsController] fetchUserInsights error:', e);
-      setError(e.message ?? 'Failed to fetch user data');
+      setError(e instanceof Error ? e.message : 'Failed to fetch user data');
     } finally {
       setLoading(false);
     }
@@ -168,9 +168,9 @@ export const useInsightsController = () => {
         });
 
         setInsightsData((prev) => ({ ...prev, currentLevel: newLevel }));
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[InsightsController] updateUserLevel error:', e);
-        setError(e.message ?? 'Failed to update level');
+        setError(e instanceof Error ? e.message : 'Failed to update level');
       }
     },
     [insightsData.userId],

@@ -35,6 +35,7 @@ export interface OverallPerformance {
 
 export interface WeeklyProgress {
   weekNumber: number;
+  year: number;
   weekStartDate: string;
   pronunciation: PronunciationMetrics;
   conversation: ConversationMetrics;

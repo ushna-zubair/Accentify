@@ -17,6 +17,10 @@ import { AccessibilityProvider } from './src/context/AccessibilityContext';
 import { AppPreferenceProvider, useAppPreference } from './src/context/AppPreferenceContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
+import { initDeviceId } from './src/services/deviceService';
+
+// Initialise the device installation ID as early as possible (async).
+initDeviceId().catch(() => {});
 
 // Keep the native splash screen visible while fonts load.
 // Wrap in catch — on web this can silently fail and should not block the app.

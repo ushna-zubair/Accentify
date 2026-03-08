@@ -60,16 +60,18 @@ export const useAnnouncementsController = () => {
       });
 
       setAnnouncements(items);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Announcements] fetch error:', e);
-      setError(e.message ?? 'Failed to load announcements');
+      setError(e instanceof Error ? e.message : 'Failed to load announcements');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let ignore = false;
     fetchAnnouncements();
+    return () => { ignore = true; };
   }, [fetchAnnouncements]);
 
   // ── Toggle selection ──
@@ -102,9 +104,9 @@ export const useAnnouncementsController = () => {
         prev.filter((a) => !selectedIds.has(a.id)),
       );
       setSelectedIds(new Set());
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Announcements] delete error:', e);
-      setError(e.message ?? 'Failed to delete announcements');
+      setError(e instanceof Error ? e.message : 'Failed to delete announcements');
     } finally {
       setSubmitting(false);
     }
@@ -160,9 +162,9 @@ export const useAnnouncementsController = () => {
           // Non-critical: announcement was saved, notification delivery failed
           console.warn('[Announcements] failed to deliver notifications:', notifErr);
         }
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[Announcements] post error:', e);
-        setError(e.message ?? 'Failed to post announcement');
+        setError(e instanceof Error ? e.message : 'Failed to post announcement');
       } finally {
         setSubmitting(false);
       }

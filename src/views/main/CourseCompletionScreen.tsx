@@ -552,7 +552,7 @@ const CourseCompletionScreen: React.FC = () => {
           },
           { merge: true },
         );
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error('[CourseCompletion] Error recording completion:', e);
       }
     };

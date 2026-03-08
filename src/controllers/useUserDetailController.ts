@@ -82,16 +82,18 @@ export const useUserDetailController = (uid: string) => {
         twoFactorEnabled: data.security?.twoFactorEnabled ?? false,
         twoFactorMethod: data.security?.twoFactorMethod ?? 'none',
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserDetail] fetchDetail error:', e);
-      setError(e.message ?? 'Failed to load user');
+      setError(e instanceof Error ? e.message : 'Failed to load user');
     } finally {
       setLoading(false);
     }
   }, [uid]);
 
   useEffect(() => {
+    let ignore = false;
     fetchDetail();
+    return () => { ignore = true; };
   }, [fetchDetail]);
 
   // ── Toggle edit mode ──
@@ -124,9 +126,9 @@ export const useUserDetailController = (uid: string) => {
 
       setIsEditing(false);
       setSuccessMessage(`Account ${detail.username} has been successfully updated.`);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserDetail] saveEdits error:', e);
-      setError(e.message ?? 'Failed to save changes');
+      setError(e instanceof Error ? e.message : 'Failed to save changes');
     } finally {
       setSaving(false);
     }
@@ -151,9 +153,9 @@ export const useUserDetailController = (uid: string) => {
       setSuccessMessage(
         `A password reset email has been sent to ${detail.email}. The user will need to set a new password.`,
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserDetail] resetPassword error:', e);
-      setError(e.message ?? 'Failed to reset password');
+      setError(e instanceof Error ? e.message : 'Failed to reset password');
     } finally {
       setSaving(false);
     }
@@ -179,9 +181,9 @@ export const useUserDetailController = (uid: string) => {
           ? `Account ${detail.username} has been successfully reactivated.`
           : `Account ${detail.username} has been successfully deactivated.`,
       );
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[UserDetail] toggleAccountStatus error:', e);
-      setError(e.message ?? 'Failed to update account status');
+      setError(e instanceof Error ? e.message : 'Failed to update account status');
     } finally {
       setSaving(false);
     }

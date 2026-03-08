@@ -152,8 +152,8 @@ export const useTutorController = () => {
             };
           }).sort((a, b) => a.order - b.order);
         }
-      } catch (e: any) {
-        console.warn('[Tutor] Lessons fetch warning:', e.message);
+      } catch (e: unknown) {
+        console.warn('[Tutor] Lessons fetch warning:', e instanceof Error ? e.message : String(e));
       }
 
       // If no Firestore lessons, use sample data
@@ -175,14 +175,14 @@ export const useTutorController = () => {
         recentLessons,
         studyPath,
       });
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Permission errors are expected if rules aren't deployed yet — use fallback silently
       if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
         console.warn('[Tutor] Firestore permission denied, using sample data');
       } else {
         console.error('[Tutor] fetchTutorData error:', e);
       }
-      setError(e.message ?? 'Failed to load tutor data');
+      setError(e instanceof Error ? e.message : 'Failed to load tutor data');
       applyFallback();
     } finally {
       setLoading(false);
@@ -205,7 +205,9 @@ export const useTutorController = () => {
   };
 
   useEffect(() => {
+    let ignore = false;
     fetchTutorData();
+    return () => { ignore = true; };
   }, [fetchTutorData]);
 
   return {

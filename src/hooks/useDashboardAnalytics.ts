@@ -16,12 +16,16 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { db } from '../config/firebase';
+import { getFunctions } from 'firebase/functions';
 import type { DashboardData } from '../models';
 import {
   seedGlobalStats,
-  aggregateGlobalStats,
 } from '../services/adminService';
+
+const functions = getFunctions(undefined, 'us-central1');
+const runAdminAggregation = httpsCallable(functions, 'runAdminAggregation');
 
 // Sensible defaults so the dashboard is never totally empty
 const SEED_DATA: DashboardData = {
@@ -94,14 +98,16 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
         // Document doesn't exist yet – seed it and try to aggregate
         await seedGlobalStats(SEED_DATA);
         try {
-          const aggregated = await aggregateGlobalStats();
-          setData({ ...aggregated, lastAggregatedAt: new Date().toISOString() });
+          await runAdminAggregation();
+          // Re-read the freshly aggregated document
+          const freshSnap = await getDoc(doc(db, 'admin_analytics', 'global_stats'));
+          setData(freshSnap.exists() ? parseRaw(freshSnap.data()) : SEED_DATA);
         } catch {
           // Aggregation may fail if no user data exists yet – use seed
           setData(SEED_DATA);
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       // On permission errors (e.g. stale auth token after page refresh), retry once
       if (retryCount < 2 && e?.code === 'permission-denied') {
         console.warn('useDashboardAnalytics: permission-denied, retrying…', retryCount + 1);
@@ -109,7 +115,7 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
         return;
       }
       console.error('useDashboardAnalytics fetch error:', e);
-      setError(e.message || 'Failed to load dashboard analytics.');
+      setError(e instanceof Error ? e.message : 'Failed to load dashboard analytics.');
     } finally {
       setIsLoading(false);
     }
@@ -121,11 +127,15 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
     setError(null);
 
     try {
-      const aggregated = await aggregateGlobalStats();
-      setData({ ...aggregated, lastAggregatedAt: new Date().toISOString() });
-    } catch (e: any) {
+      await runAdminAggregation();
+      // Re-read the freshly aggregated document
+      const freshSnap = await getDoc(doc(db, 'admin_analytics', 'global_stats'));
+      if (freshSnap.exists()) {
+        setData(parseRaw(freshSnap.data()));
+      }
+    } catch (e: unknown) {
       console.error('useDashboardAnalytics aggregation error:', e);
-      setError(e.message || 'Failed to aggregate analytics.');
+      setError(e instanceof Error ? e.message : 'Failed to aggregate analytics.');
     } finally {
       setIsLoading(false);
     }

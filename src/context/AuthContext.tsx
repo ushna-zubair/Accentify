@@ -14,6 +14,7 @@ import { Platform, Alert } from 'react-native';
 import { auth, db } from '../config/firebase';
 import { UserRole, UserProfile, OnboardingPayload, AccountStatus } from '../models';
 import { recordDeviceSession } from '../services/deviceService';
+import { generateShortId } from '../utils/idUtils';
 
 // Re-export for backward compatibility
 export type { UserRole, UserProfile, OnboardingPayload };
@@ -46,11 +47,6 @@ async function hashPin(pin: string): Promise<string> {
   );
 }
 
-/** Generate a 5-digit numeric short ID. */
-function generateShortId(): string {
-  return String(Math.floor(10000 + Math.random() * 90000));
-}
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -71,6 +67,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           profileComplete: data.profileComplete ?? false,
           fullName: data.profile?.fullName ?? data.fullName ?? '',
           createdAt: data.createdAt,
+          profile: {
+            fullName: data.profile?.fullName,
+            profilePictureUrl: data.profile?.profilePictureUrl,
+          },
         });
         return role;
       }
@@ -266,7 +266,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Generate a cryptographically secure nonce
     const nonceBytes = Crypto.getRandomBytes(16);
-    const rawNonce = Array.from(nonceBytes)
+    const rawNonce = Array.from(nonceBytes as Uint8Array)
       .map((b: number) => b.toString(16).padStart(2, '0'))
       .join('');
     const hashedNonce = await Crypto.digestStringAsync(

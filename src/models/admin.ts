@@ -64,27 +64,6 @@ export interface AdminMobileDashboardData {
   menuItems: AdminMenuItem[];
 }
 
-// ─── Chart Models ───
-export interface BarChartDataPoint {
-  label: string;
-  thisWeek: number;
-  lastWeek: number;
-}
-
-export interface DonutSegment {
-  label: string;
-  value: number;
-  color: string;
-}
-
-export interface PerformanceBubbleData {
-  label: string;
-  subLabel: string;
-  value: number;
-  color: string;
-  size: number;
-}
-
 // ─── Admin Access Control Models ───
 
 export type AdminRole = 'super_admin' | 'admin' | 'moderator' | 'viewer';

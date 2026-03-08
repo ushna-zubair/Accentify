@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert, ActionSheetIOS, Platform } from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
 import * as ImagePicker from 'expo-image-picker';
-import { db } from '../config/firebase';
+import { db, storage } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useProfileData } from '../hooks/useProfileData';
 import type { LearningGoal, ProfileState } from '../models';
@@ -118,26 +119,20 @@ export const useProfileSettingsController = () => {
     try {
       const uri = result.assets[0].uri;
 
-      let downloadURL: string;
-
-      // Convert image to base64 data URI via fetch + FileReader (works on all platforms)
+      // Upload to Firebase Storage instead of storing base64 in Firestore
       const response = await fetch(uri);
       const blob = await response.blob();
-      const reader = new FileReader();
-      downloadURL = await new Promise<string>((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
+      const storageRef = ref(storage, `profile_photos/${currentUser.uid}`);
+      await uploadBytes(storageRef, blob);
+      const downloadURL = await getDownloadURL(storageRef);
 
-      // Store directly in Firestore (works without Firebase Storage)
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'profile.profilePictureUrl': downloadURL,
       });
       setLocalOverrides((prev) => ({ ...prev, profilePictureUrl: downloadURL }));
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[ProfileSettings] Photo upload error:', e);
-      webAlert('Error', e.message || 'Failed to upload photo.');
+      webAlert('Error', e instanceof Error ? e.message : 'Failed to upload photo.');
     } finally {
       setPhotoUploading(false);
     }
@@ -155,8 +150,8 @@ export const useProfileSettingsController = () => {
         'profile.profilePictureUrl': '',
       });
       setLocalOverrides((prev) => ({ ...prev, profilePictureUrl: '' }));
-    } catch (e: any) {
-      webAlert('Error', e.message || 'Failed to remove photo.');
+    } catch (e: unknown) {
+      webAlert('Error', e instanceof Error ? e.message : 'Failed to remove photo.');
     } finally {
       setPhotoUploading(false);
     }
@@ -225,8 +220,8 @@ export const useProfileSettingsController = () => {
       setEditingField(null);
       setFieldValue('');
       setCurrentPassword('');
-    } catch (e: any) {
-      webAlert('Error', e.message || 'Failed to update password.');
+    } catch (e: unknown) {
+      webAlert('Error', e instanceof Error ? e.message : 'Failed to update password.');
     }
   };
 

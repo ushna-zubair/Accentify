@@ -82,8 +82,8 @@ export function useSupportLogsController() {
     try {
       const data = await fetchSupportTickets();
       setTickets(data);
-    } catch (e: any) {
-      setTicketsError(e.message ?? 'Failed to load tickets');
+    } catch (e: unknown) {
+      setTicketsError(e instanceof Error ? e.message : 'Failed to load tickets');
     } finally {
       setTicketsLoading(false);
     }
@@ -96,8 +96,8 @@ export function useSupportLogsController() {
     try {
       const data = await fetchUnifiedLogs(200);
       setLogs(data);
-    } catch (e: any) {
-      setLogsError(e.message ?? 'Failed to load logs');
+    } catch (e: unknown) {
+      setLogsError(e instanceof Error ? e.message : 'Failed to load logs');
     } finally {
       setLogsLoading(false);
     }
@@ -105,13 +105,17 @@ export function useSupportLogsController() {
 
   // Initial load
   useEffect(() => {
+    let ignore = false;
     fetchTickets();
+    return () => { ignore = true; };
   }, [fetchTickets]);
 
   useEffect(() => {
+    let ignore = false;
     if (mainTab === 'logs' && logs.length === 0 && !logsLoading) {
       fetchLogs();
     }
+    return () => { ignore = true; };
   }, [mainTab, logs.length, logsLoading, fetchLogs]);
 
   // ─── Computed stats ───
@@ -280,8 +284,8 @@ export function useSupportLogsController() {
         ]);
       }
       closeForm();
-    } catch (e: any) {
-      setTicketsError(e.message ?? 'Failed to save ticket');
+    } catch (e: unknown) {
+      setTicketsError(e instanceof Error ? e.message : 'Failed to save ticket');
     } finally {
       setSubmitting(false);
     }
@@ -318,8 +322,8 @@ export function useSupportLogsController() {
               : null,
           );
         }
-      } catch (e: any) {
-        setTicketsError(e.message ?? 'Failed to update status');
+      } catch (e: unknown) {
+        setTicketsError(e instanceof Error ? e.message : 'Failed to update status');
       } finally {
         setSubmitting(false);
       }
@@ -338,8 +342,8 @@ export function useSupportLogsController() {
             t.id === ticketId ? { ...t, priority: newPriority, updatedAt: new Date().toISOString() } : t,
           ),
         );
-      } catch (e: any) {
-        setTicketsError(e.message ?? 'Failed to update priority');
+      } catch (e: unknown) {
+        setTicketsError(e instanceof Error ? e.message : 'Failed to update priority');
       } finally {
         setSubmitting(false);
       }
@@ -360,8 +364,8 @@ export function useSupportLogsController() {
               : t,
           ),
         );
-      } catch (e: any) {
-        setTicketsError(e.message ?? 'Failed to assign ticket');
+      } catch (e: unknown) {
+        setTicketsError(e instanceof Error ? e.message : 'Failed to assign ticket');
       } finally {
         setSubmitting(false);
       }
@@ -387,8 +391,8 @@ export function useSupportLogsController() {
           );
         }
         setResponseInput('');
-      } catch (e: any) {
-        setTicketsError(e.message ?? 'Failed to send response');
+      } catch (e: unknown) {
+        setTicketsError(e instanceof Error ? e.message : 'Failed to send response');
       } finally {
         setSubmitting(false);
       }
@@ -403,8 +407,8 @@ export function useSupportLogsController() {
       await deleteTicket(ticketId);
       setTickets((prev) => prev.filter((t) => t.id !== ticketId));
       if (detailTicket?.id === ticketId) setDetailTicket(null);
-    } catch (e: any) {
-      setTicketsError(e.message ?? 'Failed to delete ticket');
+    } catch (e: unknown) {
+      setTicketsError(e instanceof Error ? e.message : 'Failed to delete ticket');
     } finally {
       setSubmitting(false);
     }

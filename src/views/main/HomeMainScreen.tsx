@@ -87,8 +87,8 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         return { id: d.id, title: data.title ?? 'Announcement', body: data.body ?? '', createdAt, createdBy: data.createdBy ?? '' };
       });
       setAnnouncements(items);
-    } catch (e: any) {
-      console.warn('[Home] announcements fetch:', e.message);
+    } catch (e: unknown) {
+      console.warn('[Home] announcements fetch:', e instanceof Error ? e.message : String(e));
     } finally {
       setLoadingAnnouncements(false);
     }
@@ -106,8 +106,8 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         .sort((a, b) => a.order - b.order)
         .slice(0, 5);
       setRecentLessons(items);
-    } catch (e: any) {
-      console.warn('[Home] lessons fetch:', e.message);
+    } catch (e: unknown) {
+      console.warn('[Home] lessons fetch:', e instanceof Error ? e.message : String(e));
     } finally {
       setLoadingLessons(false);
     }

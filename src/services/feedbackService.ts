@@ -11,7 +11,6 @@ import {
   collection,
   doc,
   getDocs,
-  getDoc,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -21,6 +20,7 @@ import {
   limit,
   Timestamp,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type {
@@ -71,28 +71,10 @@ const mapDoc = (docSnap: any): FeedbackItem => {
 };
 
 // ─── Fetch all feedback items ───
-export const fetchFeedbackItems = async (): Promise<FeedbackItem[]> => {
-  const q = query(collection(db, FEEDBACK_COL), orderBy('createdAt', 'desc'));
+export const fetchFeedbackItems = async (maxItems = 200): Promise<FeedbackItem[]> => {
+  const q = query(collection(db, FEEDBACK_COL), orderBy('createdAt', 'desc'), limit(maxItems));
   const snap = await getDocs(q);
   return snap.docs.map(mapDoc);
-};
-
-// ─── Fetch feedback by status ───
-export const fetchFeedbackByStatus = async (status: FeedbackStatus): Promise<FeedbackItem[]> => {
-  const q = query(
-    collection(db, FEEDBACK_COL),
-    where('status', '==', status),
-    orderBy('createdAt', 'desc'),
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(mapDoc);
-};
-
-// ─── Fetch single feedback ───
-export const fetchFeedbackById = async (id: string): Promise<FeedbackItem | null> => {
-  const snap = await getDoc(doc(db, FEEDBACK_COL, id));
-  if (!snap.exists()) return null;
-  return mapDoc(snap);
 };
 
 // ─── Update feedback status ───
@@ -102,11 +84,19 @@ export const updateFeedbackStatus = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await updateDoc(doc(db, FEEDBACK_COL, feedbackId), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, FEEDBACK_COL, feedbackId), {
     status: newStatus,
     updatedAt: serverTimestamp(),
   });
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'status_change', `Changed status to ${newStatus}`);
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'status_change',
+    details: `Changed status to ${newStatus}`,
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 // ─── Update feedback priority ───
@@ -116,11 +106,19 @@ export const updateFeedbackPriority = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await updateDoc(doc(db, FEEDBACK_COL, feedbackId), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, FEEDBACK_COL, feedbackId), {
     priority: newPriority,
     updatedAt: serverTimestamp(),
   });
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'priority_change', `Changed priority to ${newPriority}`);
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'priority_change',
+    details: `Changed priority to ${newPriority}`,
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 // ─── Assign feedback to admin ───
@@ -131,12 +129,20 @@ export const assignFeedback = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await updateDoc(doc(db, FEEDBACK_COL, feedbackId), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, FEEDBACK_COL, feedbackId), {
     assignedTo: assigneeUid,
     assignedToName: assigneeName,
     updatedAt: serverTimestamp(),
   });
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'assigned', `Assigned to ${assigneeName}`);
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'assigned',
+    details: `Assigned to ${assigneeName}`,
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 // ─── Add admin notes ───
@@ -146,11 +152,19 @@ export const updateAdminNotes = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await updateDoc(doc(db, FEEDBACK_COL, feedbackId), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, FEEDBACK_COL, feedbackId), {
     adminNotes: notes,
     updatedAt: serverTimestamp(),
   });
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'notes_update', 'Updated admin notes');
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'notes_update',
+    details: 'Updated admin notes',
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 // ─── Send response to user ───
@@ -160,7 +174,8 @@ export const respondToFeedback = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await updateDoc(doc(db, FEEDBACK_COL, feedbackId), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, FEEDBACK_COL, feedbackId), {
     responseMessage: message,
     respondedAt: serverTimestamp(),
     respondedBy: adminUid,
@@ -168,7 +183,14 @@ export const respondToFeedback = async (
     status: 'in_progress',
     updatedAt: serverTimestamp(),
   });
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'responded', 'Sent response to user');
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'responded',
+    details: 'Sent response to user',
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 // ─── Delete / Archive feedback ───
@@ -177,11 +199,19 @@ export const archiveFeedback = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await updateDoc(doc(db, FEEDBACK_COL, feedbackId), {
+  const batch = writeBatch(db);
+  batch.update(doc(db, FEEDBACK_COL, feedbackId), {
     status: 'archived',
     updatedAt: serverTimestamp(),
   });
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'archived', 'Archived feedback');
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'archived',
+    details: 'Archived feedback',
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 export const deleteFeedback = async (
@@ -189,8 +219,16 @@ export const deleteFeedback = async (
   adminUid: string,
   adminName: string,
 ): Promise<void> => {
-  await deleteDoc(doc(db, FEEDBACK_COL, feedbackId));
-  await logFeedbackActivity(feedbackId, adminUid, adminName, 'deleted', 'Deleted feedback item');
+  const batch = writeBatch(db);
+  batch.delete(doc(db, FEEDBACK_COL, feedbackId));
+  const logRef = doc(collection(db, ACTIVITY_COL));
+  batch.set(logRef, {
+    feedbackId, adminUid, adminName,
+    action: 'deleted',
+    details: 'Deleted feedback item',
+    timestamp: serverTimestamp(),
+  });
+  await batch.commit();
 };
 
 // ─── Compute stats from items ───

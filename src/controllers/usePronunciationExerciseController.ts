@@ -26,6 +26,7 @@ import type {
   PronunciationSentence,
 } from '../models';
 import { onExerciseComplete } from '../services/progressService';
+import { levenshtein, normalize } from '../utils/stringUtils';
 
 // ═══════════════════════════════════════════════
 //  DEFAULT SENTENCES (used while loading from backend)
@@ -72,9 +73,6 @@ const FEEDBACK_TEMPLATES = [
 const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 /** Strip punctuation, normalize for comparison */
-const normalize = (w: string): string =>
-  w.toLowerCase().replace(/[^a-zA-Z0-9']/g, '');
-
 /** Simple phonetic approximation for feedback */
 const toPhonetic = (word: string): string => {
   const map: Record<string, string> = {
@@ -104,26 +102,6 @@ const toPhonetic = (word: string): string => {
     working: 'wer-king',
   };
   return map[word.toLowerCase()] ?? word.toLowerCase();
-};
-
-/** Levenshtein distance */
-const levenshtein = (a: string, b: string): number => {
-  const m = a.length;
-  const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () =>
-    Array(n + 1).fill(0),
-  );
-  for (let i = 0; i <= m; i++) dp[i][0] = i;
-  for (let j = 0; j <= n; j++) dp[0][j] = j;
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
-      dp[i][j] =
-        a[i - 1] === b[j - 1]
-          ? dp[i - 1][j - 1]
-          : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
-    }
-  }
-  return dp[m][n];
 };
 
 /**
@@ -283,7 +261,7 @@ export const usePronunciationExerciseController = (lessonId: string) => {
       durationTimerRef.current = setInterval(() => {
         setRecordingDuration((p) => p + 100);
       }, 100);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Pronunciation] startRecording:', e);
       setError('Failed to start recording');
     }
@@ -369,9 +347,9 @@ export const usePronunciationExerciseController = (lessonId: string) => {
           // Non-critical — attempt already stored by Cloud Function
         }
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error('[Pronunciation] stopRecording:', e);
-      setError(e.message ?? 'Failed to process recording');
+      setError(e instanceof Error ? e.message : 'Failed to process recording');
       setPhase('idle');
     }
   }, [sentence, currentIndex, attemptCount, lessonId, sentenceIds]);

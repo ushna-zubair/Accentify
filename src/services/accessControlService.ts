@@ -23,6 +23,7 @@ import {
   limit,
   serverTimestamp,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type {
@@ -78,22 +79,27 @@ export async function updateAdminRole(
   performerUid: string,
   performerName: string,
 ): Promise<void> {
+  const batch = writeBatch(db);
   const userRef = doc(db, 'users', targetUid);
   const newPermissions = DEFAULT_ROLE_PERMISSIONS[newRole];
 
-  await updateDoc(userRef, {
+  batch.update(userRef, {
     adminRole: newRole,
     adminPermissions: newPermissions,
     updatedAt: serverTimestamp(),
   });
 
-  await logActivity(
-    performerUid,
-    performerName,
-    'role_change',
-    targetUid,
-    `Changed role to ${newRole}`,
-  );
+  const logRef = doc(collection(db, 'admin_activity_logs'));
+  batch.set(logRef, {
+    adminUid: performerUid,
+    adminName: performerName,
+    action: 'role_change',
+    target: targetUid,
+    details: `Changed role to ${newRole}`,
+    timestamp: serverTimestamp(),
+  });
+
+  await batch.commit();
 }
 
 // ─── Update Admin Permissions ───
@@ -104,20 +110,25 @@ export async function updateAdminPermissions(
   performerUid: string,
   performerName: string,
 ): Promise<void> {
+  const batch = writeBatch(db);
   const userRef = doc(db, 'users', targetUid);
 
-  await updateDoc(userRef, {
+  batch.update(userRef, {
     adminPermissions: permissions,
     updatedAt: serverTimestamp(),
   });
 
-  await logActivity(
-    performerUid,
-    performerName,
-    'permissions_update',
-    targetUid,
-    'Updated custom permissions',
-  );
+  const logRef = doc(collection(db, 'admin_activity_logs'));
+  batch.set(logRef, {
+    adminUid: performerUid,
+    adminName: performerName,
+    action: 'permissions_update',
+    target: targetUid,
+    details: 'Updated custom permissions',
+    timestamp: serverTimestamp(),
+  });
+
+  await batch.commit();
 }
 
 // ─── Suspend / Reactivate Admin ───
@@ -128,20 +139,26 @@ export async function updateAdminStatus(
   performerUid: string,
   performerName: string,
 ): Promise<void> {
+  const batch = writeBatch(db);
   const userRef = doc(db, 'users', targetUid);
 
-  await updateDoc(userRef, {
+  batch.update(userRef, {
     status: newStatus,
     updatedAt: serverTimestamp(),
   });
 
-  await logActivity(
-    performerUid,
-    performerName,
-    newStatus === 'active' ? 'reactivate' : newStatus === 'suspended' ? 'suspend' : 'deactivate',
-    targetUid,
-    `Account status changed to ${newStatus}`,
-  );
+  const action = newStatus === 'active' ? 'reactivate' : newStatus === 'suspended' ? 'suspend' : 'deactivate';
+  const logRef = doc(collection(db, 'admin_activity_logs'));
+  batch.set(logRef, {
+    adminUid: performerUid,
+    adminName: performerName,
+    action,
+    target: targetUid,
+    details: `Account status changed to ${newStatus}`,
+    timestamp: serverTimestamp(),
+  });
+
+  await batch.commit();
 }
 
 // ─── Invite New Admin ───

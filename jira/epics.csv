@@ -1,6 +1,0 @@
-Issue Type,Summary,Epic Name,Priority,Labels,Components,Description
-Epic,Authentication & Account Recovery,Authentication & Account Recovery,High,accentify auth,Auth,User login signup account recovery and OTP reset flows.
-Epic,Pronunciation Learning Experience,Pronunciation Learning Experience,High,accentify pronunciation,Mobile;Firebase Functions,Pronunciation lesson flow recording STT scoring and progress persistence.
-Epic,Wavy Chat Assistant,Wavy Chat Assistant,High,accentify wavy-chat,Mobile,Rule-based pronunciation assistant behavior content and analytics.
-Epic,Admin & Moderation,Admin & Moderation,Medium,accentify admin,Admin,Admin operations for users announcements feedback and access control.
-Epic,Quality Security & Release,Quality Security & Release,High,accentify quality,QA;DevOps,Security hardening test coverage CI stability and release readiness.
