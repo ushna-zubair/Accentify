@@ -1,5 +1,5 @@
 import React from 'react';
-import { Platform, View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { Platform, View, Text, TouchableOpacity, StyleSheet, Animated, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -303,7 +303,14 @@ const AppNavigator: React.FC = () => {
   const { currentUser, userRole, loading } = useAuth();
 
   if (loading) {
-    return null;
+    return (
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        ...(Platform.OS === 'web' ? { minHeight: '100vh' as any } : {}),
+      }}>
+        <ActivityIndicator size="large" color="#6C63FF" />
+      </View>
+    );
   }
 
   if (!currentUser) {
