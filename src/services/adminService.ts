@@ -119,136 +119,150 @@ export async function aggregateGlobalStats(): Promise<DashboardData> {
   // Top learners tracker
   const learnerMap = new Map<string, { name: string; sessions: number }>();
 
-  // ── 2. Iterate users ──
-  for (const userDoc of usersSnap.docs) {
-    const userData = userDoc.data();
+  // ── Pre-compute the 14 date keys once (shared across all users) ──
+  const dateKeys: { key: string; date: Date }[] = [];
+  for (let offset = 0; offset < 14; offset++) {
+    const d = new Date(lastWeekStart);
+    d.setDate(d.getDate() + offset);
+    dateKeys.push({ key: d.toISOString().split('T')[0], date: new Date(d) });
+  }
 
-    // Skip admin users
-    if (userData.role === 'admin') continue;
+  // ── 2. Process all users in parallel ──
+  const learnerDocs = usersSnap.docs.filter((d) => d.data().role !== 'admin');
 
-    // Check if the user was active in the last 30 days
-    const lastActive = userData.lastSeen?.toDate?.()
-      ?? userData.lastActiveAt?.toDate?.()
-      ?? null;
+  const userResults = await Promise.allSettled(
+    learnerDocs.map(async (userDoc) => {
+      const userData = userDoc.data();
+      let userActive = false;
+      let userSessions = 0;
+      let userName = userData.fullName ?? userData.profile?.fullName ?? 'User';
 
-    if (lastActive && now.getTime() - lastActive.getTime() < 30 * 24 * 60 * 60 * 1000) {
-      activeUsers++;
-    }
+      // Per-day accumulators local to this user
+      const localThisWeek = [0, 0, 0, 0, 0, 0, 0];
+      const localLastWeek = [0, 0, 0, 0, 0, 0, 0];
+      let localMorning = 0;
+      let localAfternoon = 0;
+      let localNight = 0;
+      let localPron = 0;
+      let localFluency = 0;
+      let localVocab = 0;
+      let hasMetrics = false;
 
-    // ── 2a. Read progress summary ──
-    try {
-      const summarySnap = await getDoc(
-        doc(db, 'users', userDoc.id, 'progress', 'summary'),
-      );
-
-      if (summarySnap.exists()) {
-        const summary = summarySnap.data();
-        totalSessions += summary.totalSessions ?? 0;
-
-        // Track as potential top learner
-        const userName =
-          userData.fullName ?? userData.profile?.fullName ?? 'User';
-        learnerMap.set(userDoc.id, {
-          name: userName,
-          sessions: summary.totalSessions ?? 0,
-        });
+      // Check if the user was active in the last 30 days
+      const lastActive = userData.lastSeen?.toDate?.()
+        ?? userData.lastActiveAt?.toDate?.()
+        ?? null;
+      if (lastActive && now.getTime() - lastActive.getTime() < 30 * 24 * 60 * 60 * 1000) {
+        userActive = true;
       }
-    } catch {
-      // Skip unreachable docs
-    }
 
-    // ── 2b. Read daily logs for this week + last week ──
-    try {
-      // Iterate dates for both weeks
-      for (let offset = 0; offset < 14; offset++) {
-        const d = new Date(lastWeekStart);
-        d.setDate(d.getDate() + offset);
-        const dateKey = d.toISOString().split('T')[0];
-        const daySnap = await getDoc(
-          doc(db, 'users', userDoc.id, 'progress', 'daily', 'entries', dateKey),
+      // ── 2a. Read progress summary ──
+      try {
+        const summarySnap = await getDoc(
+          doc(db, 'users', userDoc.id, 'progress', 'summary'),
+        );
+        if (summarySnap.exists()) {
+          userSessions = summarySnap.data().totalSessions ?? 0;
+        }
+      } catch { /* skip */ }
+
+      // ── 2b. Read daily logs for this week + last week (batched) ──
+      try {
+        const daySnaps = await Promise.all(
+          dateKeys.map(({ key }) =>
+            getDoc(doc(db, 'users', userDoc.id, 'progress', 'daily', 'entries', key)),
+          ),
         );
 
-        if (!daySnap.exists()) continue;
-
-        const dayData = daySnap.data();
-        const sessions =
-          (dayData.lessonsCompleted ?? 0) +
-          (dayData.pronunciationAttempts ?? 0) +
-          (dayData.conversationTurns ?? 0);
-
-        const idx = dowIndex(d);
-        if (d >= thisWeekStart) {
-          sessionsPerDayThisWeek[idx] += sessions;
-        } else {
-          sessionsPerDayLastWeek[idx] += sessions;
-        }
-
-        // Practice activity (time-of-day)
-        const hour = dayData.primaryHour ?? 12;
-        const tod = timeOfDay(hour);
-        if (tod === 'morning') morningCount++;
-        else if (tod === 'afternoon') afternoonCount++;
-        else nightCount++;
-      }
-    } catch {
-      // Skip
-    }
-
-    // ── 2c. Read latest weekly entry for accuracy metrics ──
-    try {
-      const weeklyRef = collection(
-        db,
-        'users',
-        userDoc.id,
-        'progress',
-        'weekly',
-        'entries',
-      );
-      const weeklySnap = await getDocs(weeklyRef);
-
-      if (!weeklySnap.empty) {
-        // Sort client-side to get latest week and avoid composite index requirement
-        const sortedDocs = weeklySnap.docs.sort((a, b) => {
-          const aW = a.data().weekNumber ?? 0;
-          const bW = b.data().weekNumber ?? 0;
-          return bW - aW;
+        daySnaps.forEach((daySnap, i) => {
+          if (!daySnap.exists()) return;
+          const dayData = daySnap.data();
+          const sessions =
+            (dayData.lessonsCompleted ?? 0) +
+            (dayData.pronunciationAttempts ?? 0) +
+            (dayData.conversationTurns ?? 0);
+          const idx = dowIndex(dateKeys[i].date);
+          if (dateKeys[i].date >= thisWeekStart) {
+            localThisWeek[idx] += sessions;
+          } else {
+            localLastWeek[idx] += sessions;
+          }
+          const hour = dayData.primaryHour ?? 12;
+          const tod = timeOfDay(hour);
+          if (tod === 'morning') localMorning++;
+          else if (tod === 'afternoon') localAfternoon++;
+          else localNight++;
         });
-        const wd = sortedDocs[0].data();
-        const pron = wd.pronunciation ?? {};
-        const conv = wd.conversation ?? {};
+      } catch { /* skip */ }
 
-        // Average pronunciation sub-scores
-        const pronAvg =
-          ((pron.clarity ?? 0) +
-            (pron.soundAccuracy ?? 0) +
-            (pron.smoothness ?? 0) +
-            (pron.rhythmAndTone ?? 0)) /
-          4;
-
-        // Average conversation sub-scores → fluency proxy
-        const convAvg =
-          ((conv.fluency ?? 0) +
-            (conv.vocabulary ?? 0) +
-            (conv.grammarUsage ?? 0) +
-            (conv.turnTaking ?? 0)) /
-          4;
-
-        // Vocabulary retention from vocab growth
-        const vocabGrowth: { value: number }[] = wd.vocabularyGrowth ?? [];
-        const vocabLast = vocabGrowth[vocabGrowth.length - 1]?.value ?? 0;
-        const vocabFirst = vocabGrowth[0]?.value ?? 0;
-        const vocabRetention =
-          vocabFirst > 0
+      // ── 2c. Read latest weekly entry for accuracy metrics ──
+      try {
+        const weeklyRef = collection(
+          db, 'users', userDoc.id, 'progress', 'weekly', 'entries',
+        );
+        const weeklySnap = await getDocs(weeklyRef);
+        if (!weeklySnap.empty) {
+          const sortedDocs = weeklySnap.docs.sort((a, b) => {
+            return (b.data().weekNumber ?? 0) - (a.data().weekNumber ?? 0);
+          });
+          const wd = sortedDocs[0].data();
+          const pron = wd.pronunciation ?? {};
+          const conv = wd.conversation ?? {};
+          localPron =
+            ((pron.clarity ?? 0) + (pron.soundAccuracy ?? 0) +
+             (pron.smoothness ?? 0) + (pron.rhythmAndTone ?? 0)) / 4;
+          localFluency =
+            ((conv.fluency ?? 0) + (conv.vocabulary ?? 0) +
+             (conv.grammarUsage ?? 0) + (conv.turnTaking ?? 0)) / 4;
+          const vocabGrowth: { value: number }[] = wd.vocabularyGrowth ?? [];
+          const vocabLast = vocabGrowth[vocabGrowth.length - 1]?.value ?? 0;
+          const vocabFirst = vocabGrowth[0]?.value ?? 0;
+          localVocab = vocabFirst > 0
             ? Math.min(100, Math.round((vocabLast / vocabFirst) * 100))
             : 0;
+          hasMetrics = true;
+        }
+      } catch { /* skip */ }
 
-        totalPronunciation += pronAvg;
-        totalFluency += convAvg;
-        totalVocab += vocabRetention;
-        usersWithMetrics++;
-      }
-    } catch {
-      // Skip
+      return {
+        userActive,
+        userSessions,
+        userName,
+        userId: userDoc.id,
+        localThisWeek,
+        localLastWeek,
+        localMorning,
+        localAfternoon,
+        localNight,
+        localPron,
+        localFluency,
+        localVocab,
+        hasMetrics,
+      };
+    }),
+  );
+
+  // ── Merge parallel results ──
+  for (const result of userResults) {
+    if (result.status !== 'fulfilled') continue;
+    const r = result.value;
+    if (r.userActive) activeUsers++;
+    totalSessions += r.userSessions;
+    if (r.userSessions > 0) {
+      learnerMap.set(r.userId, { name: r.userName, sessions: r.userSessions });
+    }
+    for (let i = 0; i < 7; i++) {
+      sessionsPerDayThisWeek[i] += r.localThisWeek[i];
+      sessionsPerDayLastWeek[i] += r.localLastWeek[i];
+    }
+    morningCount += r.localMorning;
+    afternoonCount += r.localAfternoon;
+    nightCount += r.localNight;
+    if (r.hasMetrics) {
+      totalPronunciation += r.localPron;
+      totalFluency += r.localFluency;
+      totalVocab += r.localVocab;
+      usersWithMetrics++;
     }
   }
 

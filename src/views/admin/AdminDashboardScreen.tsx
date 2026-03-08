@@ -1042,7 +1042,19 @@ const PracticeSessionsCard: React.FC<{ data: DashboardData; onViewStats?: () => 
     <LineChart
       thisWeek={data.sessionsThisWeek}
       lastWeek={data.sessionsLastWeek}
-      labels={['01', '02', '03', '04', '05', '06']}
+      labels={(() => {
+        // Generate dynamic day-of-month labels from the current week
+        const now = new Date();
+        const day = now.getDay();
+        const mondayOffset = day === 0 ? -6 : 1 - day;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + mondayOffset);
+        return Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(monday);
+          d.setDate(monday.getDate() + i);
+          return String(d.getDate()).padStart(2, '0');
+        });
+      })()}
       height={120}
       width={240}
     />
