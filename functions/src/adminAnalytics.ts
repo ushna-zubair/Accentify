@@ -10,25 +10,26 @@
 
 import * as admin from 'firebase-admin';
 import { onSchedule } from 'firebase-functions/v2/scheduler';
-import { onCall } from 'firebase-functions/v2/https';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 
 const db = admin.firestore();
+const REGION = 'us-central1';
 
 // ─── Helpers ───
 
 const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
 
 function startOfWeek(d: Date): Date {
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const day = d.getUTCDay();
+  const diff = d.getUTCDate() - day + (day === 0 ? -6 : 1);
   const monday = new Date(d);
-  monday.setDate(diff);
-  monday.setHours(0, 0, 0, 0);
+  monday.setUTCDate(diff);
+  monday.setUTCHours(0, 0, 0, 0);
   return monday;
 }
 
 function dowIndex(d: Date): number {
-  const js = d.getDay();
+  const js = d.getUTCDay();
   return js === 0 ? 6 : js - 1;
 }
 
@@ -103,13 +104,15 @@ async function aggregate(): Promise<void> {
           sessions: summary.totalSessions ?? 0,
         });
       }
-    } catch { /* skip */ }
+    } catch (err) {
+      console.error(`[adminAnalytics] Error reading summary for ${userDoc.id}:`, err);
+    }
 
     // Daily logs (2 weeks window)
     try {
       for (let offset = 0; offset < 14; offset++) {
         const d = new Date(lastWeekStart);
-        d.setDate(d.getDate() + offset);
+        d.setUTCDate(d.getUTCDate() + offset);
         const dateKey = d.toISOString().split('T')[0];
         const daySnap = await db
           .doc(`users/${userDoc.id}/progress/daily/entries/${dateKey}`)
@@ -135,7 +138,9 @@ async function aggregate(): Promise<void> {
         else if (tod === 'afternoon') afternoonCount++;
         else nightCount++;
       }
-    } catch { /* skip */ }
+    } catch (err) {
+      console.error(`[adminAnalytics] Error reading daily logs for ${userDoc.id}:`, err);
+    }
 
     // Weekly accuracy metrics
     try {
@@ -168,7 +173,9 @@ async function aggregate(): Promise<void> {
         totalVocab += vocabRet;
         usersWithMetrics++;
       }
-    } catch { /* skip */ }
+    } catch (err) {
+      console.error(`[adminAnalytics] Error reading weekly metrics for ${userDoc.id}:`, err);
+    }
   }
 
   // ── Derived values ──
@@ -176,7 +183,7 @@ async function aggregate(): Promise<void> {
   let growthPct = 0;
   try {
     const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
+    yesterday.setUTCDate(yesterday.getUTCDate() - 1);
     const prevSnap = await db
       .doc(`admin_analytics/global_stats/daily_snapshots/${yesterday.toISOString().split('T')[0]}`)
       .get();
@@ -188,7 +195,9 @@ async function aggregate(): Promise<void> {
         );
       }
     }
-  } catch { /* first run */ }
+  } catch (err) {
+    console.error('[adminAnalytics] Error computing growth:', err);
+  }
 
   const actTotal = morningCount + afternoonCount + nightCount || 1;
   const practiceActivity = {
@@ -231,7 +240,7 @@ async function aggregate(): Promise<void> {
       : 0;
 
   const weekEnd = new Date(thisWeekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
   const usageDateRange = formatDateRange(thisWeekStart, weekEnd);
 
   // ── Write results ──
@@ -268,24 +277,26 @@ async function aggregate(): Promise<void> {
 
 // ─── Scheduled Function (every 6 hours) ───
 export const scheduledAdminAggregation = onSchedule(
-  { schedule: 'every 6 hours', timeZone: 'UTC' },
+  { schedule: 'every 6 hours', timeZone: 'UTC', region: REGION, timeoutSeconds: 300, memory: '512MiB' },
   async () => {
     await aggregate();
   },
 );
 
 // ─── Callable – Manual Trigger ───
-export const runAdminAggregation = onCall(async (request) => {
-  // Only allow admin users
-  if (!request.auth) {
-    throw new Error('Authentication required.');
-  }
+export const runAdminAggregation = onCall(
+  { region: REGION, timeoutSeconds: 300, memory: '512MiB' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
 
-  const userDoc = await db.doc(`users/${request.auth.uid}`).get();
-  if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
-    throw new Error('Admin access required.');
-  }
+    const userDoc = await db.doc(`users/${request.auth.uid}`).get();
+    if (!userDoc.exists || userDoc.data()?.role !== 'admin') {
+      throw new HttpsError('permission-denied', 'Admin access required.');
+    }
 
-  await aggregate();
-  return { success: true };
-});
+    await aggregate();
+    return { success: true };
+  },
+);

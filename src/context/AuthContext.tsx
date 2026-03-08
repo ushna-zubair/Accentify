@@ -39,22 +39,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * Uses the Web Crypto API (available in RN Hermes & web).
  */
 async function hashPin(pin: string): Promise<string> {
-  try {
-    const Crypto = await import('expo-crypto');
-    return await Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      pin,
-    );
-  } catch {
-    // Fallback: basic hash for environments without expo-crypto
-    let hash = 0;
-    for (let i = 0; i < pin.length; i++) {
-      const char = pin.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
-    }
-    return `sha256_fallback_${Math.abs(hash).toString(16)}`;
-  }
+  const Crypto = await import('expo-crypto');
+  return await Crypto.digestStringAsync(
+    Crypto.CryptoDigestAlgorithm.SHA256,
+    pin,
+  );
 }
 
 /** Generate a 5-digit numeric short ID. */
@@ -93,27 +82,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
-    try {
-      // Only create the Firebase Auth account here
-      // The full Firestore document is written at the end of onboarding via completeOnboarding()
-      await createUserWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-      throw error;
-    }
+    // Only create the Firebase Auth account here
+    // The full Firestore document is written at the end of onboarding via completeOnboarding()
+    await createUserWithEmailAndPassword(auth, email, password);
   }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<UserRole | null> => {
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      // Update lastLoginAt on the Firestore doc
-      updateDoc(doc(db, 'users', result.user.uid), {
-        lastLoginAt: new Date().toISOString(),
-      }).catch(() => {}); // non-blocking
-      const role = await fetchUserRole(result.user.uid);
-      return role;
-    } catch (error) {
-      throw error;
-    }
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    // Update lastLoginAt on the Firestore doc
+    updateDoc(doc(db, 'users', result.user.uid), {
+      lastLoginAt: new Date().toISOString(),
+    }).catch(() => {}); // non-blocking
+    const role = await fetchUserRole(result.user.uid);
+    return role;
   }, [fetchUserRole]);
 
   // Called at the END of the multi-step onboarding to write the complete Firestore document
@@ -216,7 +197,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Web client ID from Firebase Console → Authentication → Sign-in method → Google
-    const clientId = '104124924088-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com';
+    // Loaded from app config (app.json extra) so it's not hardcoded in source
+    const Constants = (await import('expo-constants')).default;
+    const clientId: string | undefined =
+      Constants.expoConfig?.extra?.googleWebClientId
+      ?? Constants.manifest?.extra?.googleWebClientId;
+    if (!clientId) {
+      throw new Error('googleWebClientId is missing from app.json extra config');
+    }
 
     const authRequest = new AuthSession.AuthRequest({
       clientId,
@@ -276,8 +264,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw new Error('Apple Sign-In packages not available');
     }
 
-    // Generate a nonce for security
-    const rawNonce = Math.random().toString(36).substring(2, 10);
+    // Generate a cryptographically secure nonce
+    const nonceBytes = Crypto.getRandomBytes(16);
+    const rawNonce = Array.from(nonceBytes)
+      .map((b: number) => b.toString(16).padStart(2, '0'))
+      .join('');
     const hashedNonce = await Crypto.digestStringAsync(
       Crypto.CryptoDigestAlgorithm.SHA256,
       rawNonce
@@ -317,13 +308,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [fetchUserRole]);
 
   const signOut = useCallback(async () => {
-    try {
-      await firebaseSignOut(auth);
-      setUserRole(null);
-      setUserProfile(null);
-    } catch (error) {
-      throw error;
-    }
+    await firebaseSignOut(auth);
+    setUserRole(null);
+    setUserProfile(null);
   }, []);
 
   useEffect(() => {

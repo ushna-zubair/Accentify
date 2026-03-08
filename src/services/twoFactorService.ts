@@ -10,7 +10,7 @@
  * Also provides local helpers to read 2FA status from Firestore.
  */
 import { getFunctions, httpsCallable } from 'firebase/functions';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import app, { db } from '../config/firebase';
 
 const functions = getFunctions(app);
@@ -72,17 +72,4 @@ export async function verify2FACode(
   >(functions, 'verify2FACode');
   const result = await fn({ code, action });
   return result.data;
-}
-
-// ─── Local toggle (optimistic) ───
-
-export async function setLocal2FAStatus(
-  uid: string,
-  enabled: boolean,
-  method: TwoFactorMethod = 'email',
-): Promise<void> {
-  await updateDoc(doc(db, 'users', uid), {
-    'security.twoFactorEnabled': enabled,
-    'security.twoFactorMethod': enabled ? method : 'none',
-  });
 }

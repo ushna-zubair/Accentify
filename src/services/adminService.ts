@@ -81,6 +81,11 @@ function timeOfDay(hour: number): 'morning' | 'afternoon' | 'night' {
  *
  * This is designed to be called from a Cloud Function on a schedule,
  * or manually from an admin action (pull-to-refresh).
+ *
+ * @deprecated Prefer the server-side `runAdminAggregation` Cloud Function
+ * (functions/src/adminAnalytics.ts) once the project is on the Blaze plan.
+ * This client-side version reads every user's progress subcollections which
+ * is slow and expensive at scale.
  */
 export async function aggregateGlobalStats(): Promise<DashboardData> {
   const now = new Date();

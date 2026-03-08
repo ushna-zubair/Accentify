@@ -1,4 +1,5 @@
 import * as admin from 'firebase-admin';
+import * as crypto from 'crypto';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 import * as nodemailer from 'nodemailer';
@@ -16,6 +17,9 @@ export {
   runAdminAggregation,
 } from './adminAnalytics';
 
+// Re-export notification fan-out function
+export { sendNotificationFanout } from './notifications';
+
 // ─── Secrets (set via `firebase functions:secrets:set <NAME>`) ───
 const SMTP_HOST = defineSecret('SMTP_HOST');
 const SMTP_PORT = defineSecret('SMTP_PORT');
@@ -28,11 +32,101 @@ const TWILIO_PHONE = defineSecret('TWILIO_PHONE');
 admin.initializeApp();
 const db = admin.firestore();
 
+const REGION = 'us-central1';
+
 // ─── Helpers ───
 
-/** Generate a random 4-digit code. */
+/** Generate a cryptographically secure 6-digit OTP. */
 function generateOTP(): string {
-  return Math.floor(1000 + Math.random() * 9000).toString();
+  return crypto.randomInt(100_000, 1_000_000).toString();
+}
+
+/** Generate a cryptographically secure random token. */
+function secureToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+/** Cached nodemailer transporter singleton. */
+let _transporter: nodemailer.Transporter | null = null;
+function getTransporter(): nodemailer.Transporter {
+  if (!_transporter) {
+    _transporter = nodemailer.createTransport({
+      host: SMTP_HOST.value(),
+      port: parseInt(SMTP_PORT.value(), 10),
+      secure: parseInt(SMTP_PORT.value(), 10) === 465,
+      auth: {
+        user: SMTP_USER.value(),
+        pass: SMTP_PASS.value(),
+      },
+    });
+  }
+  return _transporter;
+}
+
+/** Send an email, wrapping errors as HttpsError. */
+async function sendEmail(to: string, subject: string, html: string): Promise<void> {
+  try {
+    await getTransporter().sendMail({
+      from: `"Accentify" <${SMTP_USER.value()}>`,
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error('Email send failed:', err);
+    throw new HttpsError('internal', 'Failed to send email. Please try again later.');
+  }
+}
+
+/** Build standard OTP email HTML. */
+function otpEmailHtml(title: string, bodyText: string, code: string, footer: string): string {
+  return `
+    <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
+      <h2 style="color: #6C63FF;">${title}</h2>
+      <p>${bodyText}</p>
+      <h1 style="letter-spacing: 12px; font-size: 36px; color: #333;">${code}</h1>
+      <p style="color: #888;">${footer}</p>
+    </div>
+  `;
+}
+
+/**
+ * Shared OTP verification logic.
+ * Reads the OTP doc, checks expiry + attempts + code match, then deletes it.
+ * Returns the verified document data on success.
+ */
+async function verifyOTPDocument(
+  collection: string,
+  docId: string,
+  code: string,
+): Promise<FirebaseFirestore.DocumentData> {
+  const ref = db.collection(collection).doc(docId);
+  const snap = await ref.get();
+
+  if (!snap.exists) {
+    throw new HttpsError('not-found', 'No pending code. Please request a new one.');
+  }
+
+  const data = snap.data()!;
+
+  if (data.expiresAt.toDate() < new Date()) {
+    await ref.delete();
+    throw new HttpsError('deadline-exceeded', 'Code has expired. Please request a new one.');
+  }
+
+  if (data.attempts >= 5) {
+    await ref.delete();
+    throw new HttpsError('resource-exhausted', 'Too many attempts. Please request a new code.');
+  }
+
+  await ref.update({ attempts: admin.firestore.FieldValue.increment(1) });
+
+  if (data.code !== code) {
+    throw new HttpsError('permission-denied', 'Incorrect code. Please try again.');
+  }
+
+  await ref.delete();
+  return data;
 }
 
 /** Mask an email: "user@example.com" → "u***r@example.com" */
@@ -66,51 +160,64 @@ async function enforceRateLimit(
   windowMs = 15 * 60 * 1000,
 ): Promise<void> {
   const rateLimitRef = db.collection('rate_limits').doc(`${collection}_${identifier}`);
-  const snap = await rateLimitRef.get();
-  const now = Date.now();
 
-  if (snap.exists) {
-    const data = snap.data()!;
-    const windowStart = data.windowStart?.toDate?.() ? data.windowStart.toDate().getTime() : data.windowStart;
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(rateLimitRef);
+    const now = Date.now();
 
-    // If still inside the current window
-    if (now - windowStart < windowMs) {
-      if (data.count >= maxRequests) {
-        const retryAfterSec = Math.ceil((windowMs - (now - windowStart)) / 1000);
-        throw new HttpsError(
-          'resource-exhausted',
-          `Too many requests. Please try again in ${Math.ceil(retryAfterSec / 60)} minute(s).`,
-        );
+    if (snap.exists) {
+      const data = snap.data()!;
+      const windowStart = data.windowStart?.toDate?.()
+        ? data.windowStart.toDate().getTime()
+        : data.windowStart;
+
+      if (now - windowStart < windowMs) {
+        if (data.count >= maxRequests) {
+          const retryAfterSec = Math.ceil((windowMs - (now - windowStart)) / 1000);
+          throw new HttpsError(
+            'resource-exhausted',
+            `Too many requests. Please try again in ${Math.ceil(retryAfterSec / 60)} minute(s).`,
+          );
+        }
+        tx.update(rateLimitRef, { count: data.count + 1 });
+        return;
       }
-      // Increment counter
-      await rateLimitRef.update({ count: admin.firestore.FieldValue.increment(1) });
-      return;
     }
-  }
 
-  // Reset / create window
-  await rateLimitRef.set({
-    count: 1,
-    windowStart: admin.firestore.Timestamp.fromDate(new Date(now)),
+    tx.set(rateLimitRef, {
+      count: 1,
+      windowStart: admin.firestore.Timestamp.fromDate(new Date(now)),
+    });
   });
 }
 
 // ─── 1. Look Up User ───
 // Accepts an email, returns masked email + phone (if available) so the
 // ForgotPasswordScreen can show real user data instead of hardcoded strings.
-export const lookupUser = onCall(async (request) => {
+export const lookupUser = onCall({ region: REGION }, async (request) => {
   const email: string | undefined = request.data?.email;
   if (!email || typeof email !== 'string') {
     throw new HttpsError('invalid-argument', 'Email is required.');
   }
 
+  const normalised = email.trim().toLowerCase();
+
+  // Rate limit by email to prevent enumeration
+  await enforceRateLimit(normalised, 'lookup_user', 10, 15 * 60 * 1000);
+
   // Find user in Firebase Auth
   let userRecord: admin.auth.UserRecord;
   try {
-    userRecord = await admin.auth().getUserByEmail(email.trim().toLowerCase());
+    userRecord = await admin.auth().getUserByEmail(normalised);
   } catch {
-    // Don't reveal whether the account exists
-    throw new HttpsError('not-found', 'If an account exists, you will receive a reset code.');
+    // Return plausible-looking data so the caller cannot tell
+    // whether the account actually exists.
+    return {
+      uid: null,
+      maskedEmail: maskEmail(normalised),
+      maskedPhone: null,
+      hasPhone: false,
+    };
   }
 
   // Read Firestore profile for phone
@@ -119,7 +226,7 @@ export const lookupUser = onCall(async (request) => {
 
   return {
     uid: userRecord.uid,
-    maskedEmail: maskEmail(email),
+    maskedEmail: maskEmail(normalised),
     maskedPhone: phone ? maskPhone(phone) : null,
     hasPhone: !!phone,
   };
@@ -127,12 +234,15 @@ export const lookupUser = onCall(async (request) => {
 
 // ─── 2. Send OTP ───
 export const sendOTP = onCall(
-  { secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, TWILIO_SID, TWILIO_TOKEN, TWILIO_PHONE] },
+  { region: REGION, secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, TWILIO_SID, TWILIO_TOKEN, TWILIO_PHONE] },
   async (request) => {
-    const { uid, method } = request.data as { uid?: string; method?: 'email' | 'sms' };
+    const { uid, method } = request.data as { uid?: string; method?: string };
 
     if (!uid || !method) {
       throw new HttpsError('invalid-argument', 'uid and method are required.');
+    }
+    if (method !== 'email' && method !== 'sms') {
+      throw new HttpsError('invalid-argument', 'method must be "email" or "sms".');
     }
 
     // Rate limit: max 5 OTP requests per 15 minutes per user
@@ -163,34 +273,18 @@ export const sendOTP = onCall(
     });
 
     if (method === 'email') {
-      const transporter = nodemailer.createTransport({
-        host: SMTP_HOST.value(),
-        port: parseInt(SMTP_PORT.value(), 10),
-        secure: parseInt(SMTP_PORT.value(), 10) === 465,
-        auth: {
-          user: SMTP_USER.value(),
-          pass: SMTP_PASS.value(),
-        },
-      });
-
-      await transporter.sendMail({
-        from: `"Accentify" <${SMTP_USER.value()}>`,
-        to: userRecord.email!,
-        subject: 'Your Accentify Password Reset Code',
-        html: `
-          <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
-            <h2 style="color: #6C63FF;">Accentify Password Reset</h2>
-            <p>Your verification code is:</p>
-            <h1 style="letter-spacing: 12px; font-size: 36px; color: #333;">${code}</h1>
-            <p style="color: #888;">This code expires in 5 minutes. If you didn't request a password reset, please ignore this email.</p>
-          </div>
-        `,
-      });
-    } else if (method === 'sms') {
-      // Dynamic import so the module is only loaded when SMS is used
-      const twilio = await import('twilio');
-      const client = twilio.default(TWILIO_SID.value(), TWILIO_TOKEN.value());
-
+      await sendEmail(
+        userRecord.email!,
+        'Your Accentify Password Reset Code',
+        otpEmailHtml(
+          'Accentify Password Reset',
+          'Your verification code is:',
+          code,
+          'This code expires in 5 minutes. If you didn\'t request a password reset, please ignore this email.',
+        ),
+      );
+    } else {
+      // SMS
       const userDoc = await db.collection('users').doc(uid).get();
       const phone = userDoc.data()?.profile?.phoneNumber;
 
@@ -198,11 +292,18 @@ export const sendOTP = onCall(
         throw new HttpsError('failed-precondition', 'No phone number on file.');
       }
 
-      await client.messages.create({
-        body: `Your Accentify password reset code is: ${code}. It expires in 5 minutes.`,
-        from: TWILIO_PHONE.value(),
-        to: phone,
-      });
+      try {
+        const twilio = await import('twilio');
+        const client = twilio.default(TWILIO_SID.value(), TWILIO_TOKEN.value());
+        await client.messages.create({
+          body: `Your Accentify password reset code is: ${code}. It expires in 5 minutes.`,
+          from: TWILIO_PHONE.value(),
+          to: phone,
+        });
+      } catch (err) {
+        console.error('SMS send failed:', err);
+        throw new HttpsError('internal', 'Failed to send SMS. Please try again later.');
+      }
     }
 
     return { success: true };
@@ -210,48 +311,24 @@ export const sendOTP = onCall(
 );
 
 // ─── 3. Verify OTP ───
-export const verifyOTP = onCall(async (request) => {
+export const verifyOTP = onCall({ region: REGION }, async (request) => {
   const { uid, code } = request.data as { uid?: string; code?: string };
 
   if (!uid || !code) {
     throw new HttpsError('invalid-argument', 'uid and code are required.');
   }
 
-  const otpRef = db.collection('password_reset_otps').doc(uid);
-  const otpSnap = await otpRef.get();
+  // Shared verification: checks expiry, attempts, code match, then deletes
+  await verifyOTPDocument('password_reset_otps', uid, code);
 
-  if (!otpSnap.exists) {
-    throw new HttpsError('not-found', 'No pending reset request. Please request a new code.');
-  }
-
-  const otpData = otpSnap.data()!;
-
-  // Check expiry
-  if (otpData.expiresAt.toDate() < new Date()) {
-    await otpRef.delete();
-    throw new HttpsError('deadline-exceeded', 'Code has expired. Please request a new one.');
-  }
-
-  // Check attempts (max 5)
-  if (otpData.attempts >= 5) {
-    await otpRef.delete();
-    throw new HttpsError('resource-exhausted', 'Too many attempts. Please request a new code.');
-  }
-
-  // Increment attempts
-  await otpRef.update({ attempts: admin.firestore.FieldValue.increment(1) });
-
-  if (otpData.code !== code) {
-    throw new HttpsError('permission-denied', 'Incorrect code. Please try again.');
-  }
-
-  // Mark as verified and issue a short-lived session token
-  const sessionToken = `rst_${uid}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  // Issue a short-lived cryptographic session token for the password reset step
+  const sessionToken = secureToken();
   const sessionExpiry = admin.firestore.Timestamp.fromDate(
     new Date(Date.now() + 10 * 60 * 1000) // 10 minutes to set new password
   );
 
-  await otpRef.update({
+  // Re-create a minimal session doc (the OTP doc was deleted by verifyOTPDocument)
+  await db.collection('password_reset_otps').doc(uid).set({
     verified: true,
     sessionToken,
     sessionExpiry,
@@ -261,7 +338,7 @@ export const verifyOTP = onCall(async (request) => {
 });
 
 // ─── 4. Reset Password ───
-export const resetPassword = onCall(async (request) => {
+export const resetPassword = onCall({ region: REGION }, async (request) => {
   const { uid, sessionToken, newPassword } = request.data as {
     uid?: string;
     sessionToken?: string;
@@ -308,7 +385,7 @@ export const resetPassword = onCall(async (request) => {
 // Sends a 4-digit verification code to the authenticated user's email
 // for enabling or disabling Two-Factor Authentication.
 export const send2FACode = onCall(
-  { secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
+  { region: REGION, secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Authentication required.');
@@ -351,33 +428,18 @@ export const send2FACode = onCall(
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Send via email
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST.value(),
-      port: parseInt(SMTP_PORT.value(), 10),
-      secure: parseInt(SMTP_PORT.value(), 10) === 465,
-      auth: {
-        user: SMTP_USER.value(),
-        pass: SMTP_PASS.value(),
-      },
-    });
-
     const actionLabel = action === 'enable' ? 'enable' : 'disable';
 
-    await transporter.sendMail({
-      from: `"Accentify" <${SMTP_USER.value()}>`,
-      to: userRecord.email,
-      subject: `Your Accentify 2FA Verification Code`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
-          <h2 style="color: #6C63FF;">Accentify Two-Factor Authentication</h2>
-          <p>You requested to <strong>${actionLabel}</strong> two-factor authentication.</p>
-          <p>Your verification code is:</p>
-          <h1 style="letter-spacing: 12px; font-size: 36px; color: #333;">${code}</h1>
-          <p style="color: #888;">This code expires in 5 minutes. If you didn't make this request, please ignore this email and secure your account.</p>
-        </div>
-      `,
-    });
+    await sendEmail(
+      userRecord.email,
+      'Your Accentify 2FA Verification Code',
+      otpEmailHtml(
+        'Accentify Two-Factor Authentication',
+        `You requested to <strong>${actionLabel}</strong> two-factor authentication. Your verification code is:`,
+        code,
+        'This code expires in 5 minutes. If you didn\'t make this request, please ignore this email and secure your account.',
+      ),
+    );
 
     return {
       success: true,
@@ -388,7 +450,7 @@ export const send2FACode = onCall(
 
 // ─── 6. Verify 2FA Code ───
 // Validates the code and toggles the twoFactorEnabled flag on the user doc.
-export const verify2FACode = onCall(async (request) => {
+export const verify2FACode = onCall({ region: REGION }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Authentication required.');
   }
@@ -400,36 +462,10 @@ export const verify2FACode = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'code and action are required.');
   }
 
-  const codeRef = db.collection('two_factor_codes').doc(uid);
-  const codeSnap = await codeRef.get();
-
-  if (!codeSnap.exists) {
-    throw new HttpsError('not-found', 'No pending 2FA code. Please request a new one.');
-  }
-
-  const codeData = codeSnap.data()!;
-
-  // Check expiry
-  if (codeData.expiresAt.toDate() < new Date()) {
-    await codeRef.delete();
-    throw new HttpsError('deadline-exceeded', 'Code has expired. Please request a new one.');
-  }
-
-  // Check attempts (max 5)
-  if (codeData.attempts >= 5) {
-    await codeRef.delete();
-    throw new HttpsError('resource-exhausted', 'Too many attempts. Please request a new code.');
-  }
-
-  // Increment attempts
-  await codeRef.update({ attempts: admin.firestore.FieldValue.increment(1) });
-
-  if (codeData.code !== code) {
-    throw new HttpsError('permission-denied', 'Incorrect code. Please try again.');
-  }
+  const data = await verifyOTPDocument('two_factor_codes', uid, code);
 
   // Check action matches
-  if (codeData.action !== action) {
+  if (data.action !== action) {
     throw new HttpsError('permission-denied', 'Action mismatch.');
   }
 
@@ -441,9 +477,6 @@ export const verify2FACode = onCall(async (request) => {
     'security.twoFactorMethod': newEnabled ? 'email' : 'none',
   });
 
-  // Cleanup
-  await codeRef.delete();
-
   return {
     success: true,
     enabled: newEnabled,
@@ -454,7 +487,7 @@ export const verify2FACode = onCall(async (request) => {
 // Sends a 4-digit code to the newly registered user's email so they can
 // prove ownership before continuing to the profile-creation screens.
 export const sendSignUpOTP = onCall(
-  { secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
+  { region: REGION, secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
   async (request) => {
     // The user is authenticated (createUserWithEmailAndPassword already ran)
     if (!request.auth) {
@@ -492,30 +525,16 @@ export const sendSignUpOTP = onCall(
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    // Send the email
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST.value(),
-      port: parseInt(SMTP_PORT.value(), 10),
-      secure: parseInt(SMTP_PORT.value(), 10) === 465,
-      auth: {
-        user: SMTP_USER.value(),
-        pass: SMTP_PASS.value(),
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Accentify" <${SMTP_USER.value()}>`,
-      to: userRecord.email,
-      subject: 'Verify Your Accentify Account',
-      html: `
-        <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
-          <h2 style="color: #6C63FF;">Welcome to Accentify!</h2>
-          <p>Thanks for signing up. Please verify your email with the code below:</p>
-          <h1 style="letter-spacing: 12px; font-size: 36px; color: #333;">${code}</h1>
-          <p style="color: #888;">This code expires in 5 minutes. If you didn't create an account, you can safely ignore this email.</p>
-        </div>
-      `,
-    });
+    await sendEmail(
+      userRecord.email,
+      'Verify Your Accentify Account',
+      otpEmailHtml(
+        'Welcome to Accentify!',
+        'Thanks for signing up. Please verify your email with the code below:',
+        code,
+        'This code expires in 5 minutes. If you didn\'t create an account, you can safely ignore this email.',
+      ),
+    );
 
     return {
       success: true,
@@ -526,7 +545,7 @@ export const sendSignUpOTP = onCall(
 
 // ─── 8. Verify Sign-Up OTP ───
 // Validates the code the user entered after signing up.
-export const verifySignUpOTP = onCall(async (request) => {
+export const verifySignUpOTP = onCall({ region: REGION }, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'Authentication required.');
   }
@@ -538,39 +557,10 @@ export const verifySignUpOTP = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'code is required.');
   }
 
-  const codeRef = db.collection('signup_verification_otps').doc(uid);
-  const codeSnap = await codeRef.get();
-
-  if (!codeSnap.exists) {
-    throw new HttpsError('not-found', 'No pending verification. Please request a new code.');
-  }
-
-  const codeData = codeSnap.data()!;
-
-  // Check expiry
-  if (codeData.expiresAt.toDate() < new Date()) {
-    await codeRef.delete();
-    throw new HttpsError('deadline-exceeded', 'Code has expired. Please request a new one.');
-  }
-
-  // Check attempts (max 5)
-  if (codeData.attempts >= 5) {
-    await codeRef.delete();
-    throw new HttpsError('resource-exhausted', 'Too many attempts. Please request a new code.');
-  }
-
-  // Increment attempts
-  await codeRef.update({ attempts: admin.firestore.FieldValue.increment(1) });
-
-  if (codeData.code !== code) {
-    throw new HttpsError('permission-denied', 'Incorrect code. Please try again.');
-  }
+  await verifyOTPDocument('signup_verification_otps', uid, code);
 
   // Mark the Firebase Auth user's email as verified
   await admin.auth().updateUser(uid, { emailVerified: true });
-
-  // Cleanup
-  await codeRef.delete();
 
   return { success: true };
 });
@@ -582,7 +572,7 @@ export const verifySignUpOTP = onCall(async (request) => {
 // with a link to set their own password. The plaintext password is NEVER
 // stored in Firestore.
 export const adminResetPassword = onCall(
-  { secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
+  { region: REGION, secrets: [SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS] },
   async (request) => {
     // Only authenticated admins may call this
     if (!request.auth) {
@@ -612,46 +602,33 @@ export const adminResetPassword = onCall(
       throw new HttpsError('failed-precondition', 'Target user has no email.');
     }
 
-    // Generate a secure temporary password (16 chars with mixed case, digits, symbols)
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
-    let tempPassword = '';
-    for (let i = 0; i < 16; i++) {
-      tempPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    // Generate a secure password reset link instead of a plaintext temp password.
+    // The user clicks the link to set their own new password — the temporary
+    // password never travels through email or Firestore.
+    const resetLink = await admin.auth().generatePasswordResetLink(targetUser.email);
 
-    // Update password in Firebase Auth — Firebase automatically hashes with scrypt
-    await admin.auth().updateUser(targetUid, { password: tempPassword });
-
-    // Record the reset event (NOT the password) in Firestore
+    // Record the reset event in Firestore
     await db.collection('users').doc(targetUid).update({
       'security.passwordChangedAt': new Date().toISOString(),
       'security.passwordResetByAdmin': true,
     });
 
-    // Send notification email with the temp password
-    const transporter = nodemailer.createTransport({
-      host: SMTP_HOST.value(),
-      port: parseInt(SMTP_PORT.value(), 10),
-      secure: parseInt(SMTP_PORT.value(), 10) === 465,
-      auth: {
-        user: SMTP_USER.value(),
-        pass: SMTP_PASS.value(),
-      },
-    });
-
-    await transporter.sendMail({
-      from: `"Accentify" <${SMTP_USER.value()}>`,
-      to: targetUser.email,
-      subject: 'Your Accentify Password Has Been Reset',
-      html: `
+    // Send notification email with reset link
+    await sendEmail(
+      targetUser.email,
+      'Your Accentify Password Has Been Reset',
+      `
         <div style="font-family: sans-serif; max-width: 480px; margin: auto; padding: 32px;">
           <h2 style="color: #6C63FF;">Accentify Password Reset</h2>
-          <p>An administrator has reset your password. Your temporary password is:</p>
-          <h1 style="letter-spacing: 4px; font-size: 24px; color: #333; background: #f5f5f5; padding: 16px; border-radius: 8px; text-align: center;">${tempPassword}</h1>
-          <p style="color: #888;">Please sign in with this temporary password and change it immediately in your account settings. This password should not be shared with anyone.</p>
+          <p>An administrator has initiated a password reset for your account.</p>
+          <p>Please click the button below to set a new password:</p>
+          <a href="${resetLink}" style="display: inline-block; background: #6C63FF; color: #fff; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 16px 0;">Reset My Password</a>
+          <p style="color: #888;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="color: #888; word-break: break-all;">${resetLink}</p>
+          <p style="color: #888;">If you didn't expect this, please contact support immediately.</p>
         </div>
       `,
-    });
+    );
 
     return {
       success: true,

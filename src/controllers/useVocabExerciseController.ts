@@ -438,7 +438,7 @@ export const useVocabExerciseController = (lessonId: string) => {
   const playPronunciation = useCallback(
     async (word: string) => {
       // Placeholder — integrate with TTS (e.g., expo-speech or Google TTS)
-      console.log('[VocabExercise] Play pronunciation for:', word);
+      if (__DEV__) console.log('[VocabExercise] Play pronunciation for:', word);
       // import * as Speech from 'expo-speech';
       // Speech.speak(word, { language: 'en-US', rate: 0.8 });
     },

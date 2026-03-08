@@ -28,8 +28,8 @@ const firebaseConfig = {
   measurementId: extra.FIREBASE_MEASUREMENT_ID ?? '',
 };
 
-// Debug: verify config loaded (remove in production)
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+// Debug: verify config loaded (only in development)
+if (__DEV__ && (!firebaseConfig.apiKey || !firebaseConfig.projectId)) {
   console.warn('[Firebase] Config missing! apiKey:', !!firebaseConfig.apiKey, 'projectId:', !!firebaseConfig.projectId,
     'expoConfig:', !!Constants.expoConfig, 'extra keys:', Object.keys(extra));
 }

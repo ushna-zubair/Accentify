@@ -6,15 +6,6 @@
  */
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
 import { useAuth } from '../context/AuthContext';
 import type {
   AdminLesson,
@@ -44,25 +35,19 @@ import {
 } from '../services/lessonService';
 
 /**
- * Send a notification to all non-admin users about a new lesson.
+ * Send a notification to all non-admin users about a new lesson
+ * via the server-side sendNotificationFanout Cloud Function.
  */
-async function notifyUsersAboutLesson(title: string, lessonId: string): Promise<void> {
+async function notifyUsersAboutLesson(title: string, _lessonId: string): Promise<void> {
   try {
-    const usersRef = collection(db, 'users');
-    const usersQ = query(usersRef, where('role', '!=', 'admin'));
-    const usersSnap = await getDocs(usersQ);
-
-    const promises = usersSnap.docs.map((userDoc) =>
-      addDoc(collection(db, 'users', userDoc.id, 'notifications'), {
-        text: `📚 New lesson available: ${title}`,
-        tab: 'Direct',
-        unread: true,
-        type: 'new_lesson',
-        lessonId,
-        createdAt: serverTimestamp(),
-      }),
-    );
-    await Promise.all(promises);
+    const { getFunctions, httpsCallable } = await import('firebase/functions');
+    const functions = getFunctions(undefined, 'us-central1');
+    const fanout = httpsCallable(functions, 'sendNotificationFanout');
+    await fanout({
+      title: `📚 New lesson available: ${title}`,
+      body: `A new lesson "${title}" has been published.`,
+      type: 'new_lesson',
+    });
   } catch (err) {
     console.warn('[ManageLessons] Failed to send lesson notifications:', err);
   }

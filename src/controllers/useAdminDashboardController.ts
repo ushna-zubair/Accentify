@@ -213,23 +213,12 @@ export const useAdminMobileDashboardController = () => {
           createdAt: serverTimestamp(),
         });
 
-        // ── Deliver notification to all non-admin users ──
+        // ── Deliver notification to all non-admin users via Cloud Function ──
         try {
-          const usersRef = collection(db, 'users');
-          const usersQ = query(usersRef, where('role', '!=', 'admin'));
-          const usersSnap = await getDocs(usersQ);
-
-          const promises = usersSnap.docs.map((userDoc) =>
-            addDoc(collection(db, 'users', userDoc.id, 'notifications'), {
-              text: body,
-              tab: 'Overall',
-              unread: true,
-              type: 'announcement',
-              announcementId: docRef.id,
-              createdAt: serverTimestamp(),
-            }),
-          );
-          await Promise.all(promises);
+          const { getFunctions, httpsCallable } = await import('firebase/functions');
+          const functions = getFunctions(undefined, 'us-central1');
+          const fanout = httpsCallable(functions, 'sendNotificationFanout');
+          await fanout({ title, body, type: 'announcement' });
         } catch (notifErr) {
           console.warn('[Dashboard] failed to deliver notifications:', notifErr);
         }

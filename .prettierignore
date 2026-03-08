@@ -1,0 +1,6 @@
+node_modules/
+functions/lib/
+dist/
+.expo/
+web-build/
+*.lock

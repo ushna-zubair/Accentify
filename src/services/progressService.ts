@@ -40,6 +40,17 @@ import {
   arrayUnion,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
+import {
+  getWeekNumber,
+  getWeekYear,
+  getWeekStart,
+  toDateKey,
+  formatDate,
+  weekDocId,
+  parseDate,
+  isSameDay,
+  isYesterday,
+} from '../utils/dateUtils';
 import type {
   PronunciationMetrics,
   ConversationMetrics,
@@ -50,76 +61,15 @@ import type {
 } from '../models';
 import type { PronunciationScore, ConversationMetricsResult } from '../models';
 
-// ═══════════════════════════════════════════════
-//  DATE HELPERS
-// ═══════════════════════════════════════════════
-
-/** ISO-8601 week number (Monday-based). */
-export const getWeekNumber = (d: Date): number => {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-};
-
-/** ISO week-year (the year the Thursday of the ISO week falls in). */
-export const getWeekYear = (d: Date): number => {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7));
-  return date.getUTCFullYear();
-};
-
-/** Monday of the week containing `d`. */
-export const getWeekStart = (d: Date): Date => {
-  const date = new Date(d);
-  const day = date.getDay();
-  const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-  date.setDate(diff);
-  date.setHours(0, 0, 0, 0);
-  return date;
-};
-
-/** Format a Date as YYYY-MM-DD. */
-export const toDateKey = (d: Date): string =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-/** Format a Date as "MMM-DD-YYYY". */
-export const formatDate = (d: Date): string => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[d.getMonth()]}-${String(d.getDate()).padStart(2, '0')}-${d.getFullYear()}`;
-};
-
-/** Weekly document ID: "week-2026-09". */
-const weekDocId = (d: Date) => {
-  const wn = getWeekNumber(d);
-  const yr = getWeekYear(d);
-  return `week-${yr}-${String(wn).padStart(2, '0')}`;
-};
-
-/** Parse YYYY-MM-DD → Date (local midnight). Handles Timestamps and edge cases. */
-const parseDate = (s: any): Date => {
-  if (!s) return new Date(0);
-  // Firestore Timestamp
-  if (typeof s === 'object' && typeof s.toDate === 'function') return s.toDate();
-  if (typeof s !== 'string') return new Date(0);
-  const parts = s.split('-').map(Number);
-  if (parts.length < 3 || parts.some(isNaN)) return new Date(0);
-  const [y, m, d] = parts;
-  return new Date(y, m - 1, d);
-};
-
-/** Check if two dates are the same calendar day. */
-const isSameDay = (a: Date, b: Date) =>
-  a.getFullYear() === b.getFullYear() &&
-  a.getMonth() === b.getMonth() &&
-  a.getDate() === b.getDate();
-
-/** Check if `a` is exactly one calendar day before `b`. */
-const isYesterday = (a: Date, b: Date) => {
-  const prev = new Date(b);
-  prev.setDate(prev.getDate() - 1);
-  return isSameDay(a, prev);
-};
+// Re-export date helpers for backward compatibility with consumers
+// that were importing them from progressService
+export {
+  getWeekNumber,
+  getWeekYear,
+  getWeekStart,
+  toDateKey,
+  formatDate,
+} from '../utils/dateUtils';
 
 // ═══════════════════════════════════════════════
 //  STREAK MANAGEMENT
@@ -280,19 +230,20 @@ export const aggregateWeek = async (
   const yr = getWeekYear(weekStart);
   const wId = weekDocId(weekStart);
 
-  // Collect daily docs for this week (Mon–Sun)
+  // Collect daily docs for this week (Mon–Sun) — read all 7 in parallel
   const allPronScores: PronunciationScore[] = [];
   const allConvMetrics: ConversationMetricsResult[] = [];
   let totalVocab = 0;
   let totalLessons = 0;
 
-  for (let i = 0; i < 7; i++) {
+  const dayRefs = Array.from({ length: 7 }, (_, i) => {
     const day = new Date(weekStart);
     day.setDate(weekStart.getDate() + i);
-    const key = toDateKey(day);
-    const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', key);
-    const snap = await getDoc(ref);
+    return doc(db, 'users', uid, 'progress', 'daily', 'entries', toDateKey(day));
+  });
+  const daySnaps = await Promise.all(dayRefs.map(getDoc));
 
+  for (const snap of daySnaps) {
     if (snap.exists()) {
       const data = snap.data();
       if (Array.isArray(data.pronunciationScores)) {
@@ -374,43 +325,60 @@ export const aggregateWeek = async (
 export const buildLessonDays = async (uid: string): Promise<LessonDay[]> => {
   const today = new Date();
   const weekStart = getWeekStart(today);
-  const days: LessonDay[] = [];
 
-  for (let i = 0; i < 7; i++) {
+  // Build refs for all 7 days and read in parallel
+  const dayInfos = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(weekStart);
     date.setDate(weekStart.getDate() + i);
-    const dayOfWeek = date.getDay();
-    const dateKey = toDateKey(date);
-    const isToday = isSameDay(date, today);
-    const isFuture = date > today && !isToday;
+    return {
+      date,
+      dayOfWeek: date.getDay(),
+      dateKey: toDateKey(date),
+      isToday: isSameDay(date, today),
+      isFuture: date > today && !isSameDay(date, today),
+    };
+  });
 
+  // Only read past/current days (future days have no data)
+  const readableIndexes = dayInfos
+    .map((d, i) => (d.isFuture ? -1 : i))
+    .filter((i) => i >= 0);
+
+  const snapResults = await Promise.all(
+    readableIndexes.map((i) =>
+      getDoc(doc(db, 'users', uid, 'progress', 'daily', 'entries', dayInfos[i].dateKey)),
+    ),
+  );
+
+  // Map snap results back by index
+  const snapByIndex = new Map<number, typeof snapResults[number]>();
+  readableIndexes.forEach((idx, j) => snapByIndex.set(idx, snapResults[j]));
+
+  const days: LessonDay[] = dayInfos.map((info, i) => {
     let status: LessonDay['status'] = 'upcoming';
 
-    if (!isFuture) {
-      // Check if the user had any activity on this day
-      const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', dateKey);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
+    if (!info.isFuture) {
+      const snap = snapByIndex.get(i);
+      if (snap?.exists()) {
         const data = snap.data();
         const completed =
           ((data.lessonsCompleted as number) ?? 0) > 0 ||
           ((data.pronunciationAttempts as number) ?? 0) > 0 ||
           ((data.conversationTurns as number) ?? 0) > 0 ||
           ((data.vocabWordsLearned as number) ?? 0) > 0;
-        status = completed ? 'completed' : isToday ? 'in_progress' : 'upcoming';
+        status = completed ? 'completed' : info.isToday ? 'in_progress' : 'upcoming';
       } else {
-        status = isToday ? 'in_progress' : 'upcoming';
+        status = info.isToday ? 'in_progress' : 'upcoming';
       }
     }
 
-    days.push({
+    return {
       id: `day-${i}`,
-      day: dayOfWeek,
+      day: info.dayOfWeek,
       status,
-      date: formatDate(date),
-    });
-  }
+      date: formatDate(info.date),
+    };
+  });
 
   return days;
 };
@@ -424,20 +392,19 @@ export const buildLessonDays = async (uid: string): Promise<LessonDay[]> => {
  * Returns streak, lesson days, and all weekly entries.
  */
 export const fetchFullProgress = async (uid: string) => {
-  // ── 1. Streak ──
+  // Read streak, lesson days, and weekly entries in parallel
   const streakRef = doc(db, 'users', uid, 'progress', 'streak');
-  const streakSnap = await getDoc(streakRef);
-  let dayStreak = 0;
-  if (streakSnap.exists()) {
-    dayStreak = (streakSnap.data().dayStreak as number) ?? 0;
-  }
-
-  // ── 2. Lesson days for current week ──
-  const lessonDays = await buildLessonDays(uid);
-
-  // ── 3. Weekly entries (sort client-side to avoid composite index) ──
   const weeksRef = collection(db, 'users', uid, 'progress', 'weekly', 'entries');
-  const weeksSnap = await getDocs(weeksRef);
+
+  const [streakSnap, lessonDays, weeksSnap] = await Promise.all([
+    getDoc(streakRef),
+    buildLessonDays(uid),
+    getDocs(weeksRef),
+  ]);
+
+  const dayStreak = streakSnap.exists()
+    ? (streakSnap.data().dayStreak as number) ?? 0
+    : 0;
 
   let weeks: WeeklyProgress[] = [];
   if (!weeksSnap.empty) {
@@ -559,24 +526,20 @@ const getVocabGrowthTrend = async (
   currentWeekStart: Date,
   count: number,
 ): Promise<VocabularyGrowthPoint[]> => {
-  const points: VocabularyGrowthPoint[] = [];
-
-  for (let i = count - 1; i >= 0; i--) {
+  // Build all weekly refs and read in parallel
+  const weekInfos = Array.from({ length: count }, (_, idx) => {
+    const i = count - 1 - idx;
     const ws = new Date(currentWeekStart);
     ws.setDate(ws.getDate() - i * 7);
-    const wId = weekDocId(ws);
+    return { ws, ref: doc(db, 'users', uid, 'progress', 'weekly', 'entries', weekDocId(ws)) };
+  });
+  const weekSnaps = await Promise.all(weekInfos.map((w) => getDoc(w.ref)));
 
-    const ref = doc(db, 'users', uid, 'progress', 'weekly', 'entries', wId);
-    const snap = await getDoc(ref);
-
-    let vocabCount = 0;
-    if (snap.exists()) {
-      vocabCount = (snap.data().totalVocabWords as number) ?? 0;
-    }
-
-    const weekNum = getWeekNumber(ws);
-    points.push({ label: `W${weekNum}`, value: vocabCount });
-  }
+  const points: VocabularyGrowthPoint[] = weekInfos.map((info, idx) => {
+    const snap = weekSnaps[idx];
+    const vocabCount = snap.exists() ? ((snap.data().totalVocabWords as number) ?? 0) : 0;
+    return { label: `W${getWeekNumber(info.ws)}`, value: vocabCount };
+  });
 
   return points;
 };

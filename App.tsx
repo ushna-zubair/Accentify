@@ -16,6 +16,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { AccessibilityProvider } from './src/context/AccessibilityContext';
 import { AppPreferenceProvider, useAppPreference } from './src/context/AppPreferenceContext';
 import AppNavigator from './src/navigation/AppNavigator';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 
 // Keep the native splash screen visible while fonts load.
 // Wrap in catch — on web this can silently fail and should not block the app.
@@ -104,20 +105,22 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <AccessibilityProvider>
-          <AppPreferenceProvider>
-            <NavigationContainer
-              onReady={onLayoutRootView}
-              fallback={<LoadingScreen />}
-            >
-              <AppNavigator />
-              <ThemedStatusBar />
-            </NavigationContainer>
-          </AppPreferenceProvider>
-        </AccessibilityProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <AccessibilityProvider>
+            <AppPreferenceProvider>
+              <NavigationContainer
+                onReady={onLayoutRootView}
+                fallback={<LoadingScreen />}
+              >
+                <AppNavigator />
+                <ThemedStatusBar />
+              </NavigationContainer>
+            </AppPreferenceProvider>
+          </AccessibilityProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

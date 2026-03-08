@@ -22,9 +22,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
-      // Users can update their own doc; admins can update any user
-      // But nobody can write the 'role' field from the client (role changes require Cloud Functions)
-      allow update: if isOwner(userId) || isAdmin();
+      // Users can update their own doc (but NOT the role field); admins can update any user
+      allow update: if (isOwner(userId) && !('role' in request.resource.data && request.resource.data.role != resource.data.role)) || isAdmin();
       allow delete: if isAdmin();
 
       // ─── User sub-collections ───

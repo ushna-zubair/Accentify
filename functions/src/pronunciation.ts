@@ -5,6 +5,8 @@ import { defineSecret } from 'firebase-functions/params';
 const GOOGLE_STT_KEY = defineSecret('GOOGLE_STT_API_KEY');
 
 const db = admin.firestore();
+const REGION = 'us-central1';
+const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // 10 MB base64 limit
 
 // ─── Types ───
 
@@ -84,8 +86,10 @@ const evaluatePronunciation = (
 
   const ratio = targetWords.length > 0 ? matched / targetWords.length : 0;
   const accuracy = Math.round(ratio * 100);
-  const clarity = Math.round(Math.min(100, accuracy + (Math.random() * 10 - 5)));
-  const fluency = Math.round(Math.min(100, accuracy + (Math.random() * 15 - 7)));
+  const clarity = Math.round(Math.min(100, accuracy * 1.05));
+  const fluency = Math.round(
+    Math.min(100, transcriptWords.length >= targetWords.length ? accuracy * 1.02 : accuracy * 0.9),
+  );
   const overall = Math.round((clarity + accuracy + fluency) / 3);
   const score: PronunciationScore = { clarity, accuracy, fluency, overall };
 
@@ -108,7 +112,12 @@ const evaluatePronunciation = (
  * Fetches pronunciation sentences from Firestore.
  * Falls back to default sentences if the collection is empty.
  */
-export const getPronunciationSentences = onCall(async (request) => {
+export const getPronunciationSentences = onCall(
+  { region: REGION, maxInstances: 20 },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'You must be signed in.');
+    }
   const { difficulty, limit: reqLimit } = (request.data ?? {}) as {
     difficulty?: string;
     limit?: number;
@@ -156,7 +165,8 @@ export const getPronunciationSentences = onCall(async (request) => {
   }));
 
   return { sentences };
-});
+  },
+);
 
 // ═══════════════════════════════════════════════
 //  2. TRANSCRIBE & EVALUATE PRONUNCIATION
@@ -171,7 +181,7 @@ export const getPronunciationSentences = onCall(async (request) => {
  * `users/{uid}/pronunciation_attempts/{docId}`.
  */
 export const transcribeAndEvaluate = onCall(
-  { secrets: [GOOGLE_STT_KEY], timeoutSeconds: 60, memory: '512MiB' },
+  { region: REGION, secrets: [GOOGLE_STT_KEY], timeoutSeconds: 60, memory: '512MiB', maxInstances: 30 },
   async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {
@@ -194,11 +204,19 @@ export const transcribeAndEvaluate = onCall(
       );
     }
 
+    // Validate audio size to prevent abuse
+    if (audioBase64.length > MAX_AUDIO_BYTES) {
+      throw new HttpsError(
+        'invalid-argument',
+        `Audio payload too large (max ${MAX_AUDIO_BYTES / 1024 / 1024} MB).`,
+      );
+    }
+
     // ── Transcribe with Google Cloud Speech-to-Text REST API ──
     let transcript = '';
     try {
       const apiKey = GOOGLE_STT_KEY.value();
-      const sttUrl = `https://speech.googleapis.com/v1/speech:recognize?key=${apiKey}`;
+      const sttUrl = 'https://speech.googleapis.com/v1/speech:recognize';
 
       const sttBody = {
         config: {
@@ -216,7 +234,10 @@ export const transcribeAndEvaluate = onCall(
 
       const response = await fetch(sttUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': apiKey,
+        },
         body: JSON.stringify(sttBody),
       });
 
@@ -229,7 +250,7 @@ export const transcribeAndEvaluate = onCall(
       const sttResult = await response.json();
       transcript =
         sttResult.results
-          ?.map((r: any) => r.alternatives?.[0]?.transcript ?? '')
+          ?.map((r: { alternatives?: { transcript?: string }[] }) => r.alternatives?.[0]?.transcript ?? '')
           .join(' ')
           .trim() ?? '';
     } catch (err: any) {
@@ -306,7 +327,9 @@ export const transcribeAndEvaluate = onCall(
  * Seeds the `pronunciation_sentences` collection with default data.
  * Only callable by authenticated admin users.
  */
-export const seedPronunciationSentences = onCall(async (request) => {
+export const seedPronunciationSentences = onCall(
+  { region: REGION },
+  async (request) => {
   const uid = request.auth?.uid;
   if (!uid) {
     throw new HttpsError('unauthenticated', 'Must be signed in.');
@@ -374,4 +397,5 @@ export const seedPronunciationSentences = onCall(async (request) => {
   await batch.commit();
 
   return { success: true, count: sentences.length };
-});
+  },
+);
