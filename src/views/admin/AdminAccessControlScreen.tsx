@@ -110,20 +110,26 @@ const StatusIndicator: React.FC<{ status: string; tc: ThemeColors }> = ({ status
 };
 
 // ─── Avatar ───
-const AdminAvatar: React.FC<{ name: string; size?: number; tc: ThemeColors }> = ({ name, size = 36, tc }) => {
+const AdminAvatar: React.FC<{ name: string; size?: number; tc: ThemeColors }> = ({ name, size = 38, tc }) => {
   const initials = name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+  // Deterministic color from name
+  const hue = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+  const bg = `hsl(${hue}, 55%, 92%)`;
+  const fg = `hsl(${hue}, 55%, 40%)`;
   return (
     <View
       style={{
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: tc.accent + '20',
+        backgroundColor: bg,
         justifyContent: 'center',
         alignItems: 'center',
+        borderWidth: 2,
+        borderColor: fg + '25',
       }}
     >
-      <Text style={{ fontFamily: fonts.bold, fontSize: size * 0.36, color: tc.accent }}>
+      <Text style={{ fontFamily: fonts.bold, fontSize: size * 0.36, color: fg }}>
         {initials}
       </Text>
     </View>
@@ -192,24 +198,33 @@ const ActionButton: React.FC<{
   color: string;
   bgColor: string;
   onPress: () => void;
+  label?: string;
   tooltip?: string;
   disabled?: boolean;
-}> = ({ icon, color, bgColor, onPress, disabled }) => (
+}> = ({ icon, color, bgColor, onPress, label, disabled }) => (
   <TouchableOpacity
     style={{
-      width: 32,
-      height: 32,
+      height: 34,
       borderRadius: 8,
       backgroundColor: bgColor,
       justifyContent: 'center',
       alignItems: 'center',
-      opacity: disabled ? 0.4 : 1,
+      opacity: disabled ? 0.35 : 1,
+      flexDirection: 'row',
+      gap: 5,
+      paddingHorizontal: label ? 12 : 0,
+      width: label ? undefined : 34,
+      borderWidth: 1,
+      borderColor: color + '18',
     }}
     onPress={onPress}
     activeOpacity={0.7}
     disabled={disabled}
   >
-    <Ionicons name={icon as any} size={16} color={color} />
+    <Ionicons name={icon as any} size={15} color={color} />
+    {label && (
+      <Text style={{ fontFamily: fonts.medium, fontSize: 12, color }}>{label}</Text>
+    )}
   </TouchableOpacity>
 );
 
@@ -262,7 +277,7 @@ const MembersTab: React.FC<{
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
       {/* Stats Row */}
-      <View style={{ flexDirection: 'row', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      <View style={{ flexDirection: 'row', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
         {[
           { label: 'Total Admins', value: members.length, icon: 'people', color: tc.accent },
           { label: 'Active', value: members.filter((m) => m.status === 'active').length, icon: 'checkmark-circle', color: tc.success },
@@ -275,21 +290,24 @@ const MembersTab: React.FC<{
               flex: isWide ? 1 : undefined,
               width: isWide ? undefined : '47%' as any,
               backgroundColor: tc.white,
-              borderRadius: 12,
-              padding: 16,
+              borderRadius: 14,
+              padding: 18,
               borderWidth: 1,
               borderColor: tc.cardBorder,
               flexDirection: 'row',
               alignItems: 'center',
-              gap: 12,
+              gap: 14,
+              ...(Platform.OS === 'web'
+                ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6 }
+                : {}),
             }}
           >
             <View
               style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                backgroundColor: stat.color + '15',
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                backgroundColor: stat.color + '12',
                 justifyContent: 'center',
                 alignItems: 'center',
               }}
@@ -297,10 +315,10 @@ const MembersTab: React.FC<{
               <Ionicons name={stat.icon as any} size={20} color={stat.color} />
             </View>
             <View>
-              <Text style={{ fontFamily: fonts.bold, fontSize: 20, color: tc.text }}>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: tc.text, letterSpacing: -0.5 }}>
                 {stat.value}
               </Text>
-              <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>
+              <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted, marginTop: 1 }}>
                 {stat.label}
               </Text>
             </View>
@@ -312,46 +330,49 @@ const MembersTab: React.FC<{
       <View
         style={{
           backgroundColor: tc.white,
-          borderRadius: 14,
+          borderRadius: 16,
           borderWidth: 1,
           borderColor: tc.cardBorder,
           overflow: 'hidden',
+          ...(Platform.OS === 'web'
+            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+            : {}),
         }}
       >
         {/* Table Header */}
         <View
           style={{
             flexDirection: 'row',
-            paddingVertical: 12,
-            paddingHorizontal: 16,
+            paddingVertical: 14,
+            paddingHorizontal: 20,
             borderBottomWidth: 1,
             borderBottomColor: tc.divider,
             backgroundColor: tc.surfaceAlt,
           }}
         >
-          <Text style={{ flex: 2.5, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted }}>
-            MEMBER
+          <Text style={{ flex: 2.5, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+            Member
           </Text>
           {isWide && (
-            <Text style={{ flex: 1.5, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted }}>
-              ROLE
+            <Text style={{ flex: 1.5, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+              Role
             </Text>
           )}
-          <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted }}>
-            STATUS
+          <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+            Status
           </Text>
           {isWide && (
-            <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted }}>
-              LAST SEEN
+            <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+              Last Seen
             </Text>
           )}
           {isWide && (
-            <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted }}>
+            <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
               2FA
             </Text>
           )}
-          <Text style={{ width: 120, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted, textAlign: 'right' }}>
-            ACTIONS
+          <Text style={{ width: 140, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any, textAlign: 'right' }}>
+            Actions
           </Text>
         </View>
 
@@ -364,10 +385,11 @@ const MembersTab: React.FC<{
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',
-                paddingVertical: 14,
-                paddingHorizontal: 16,
+                paddingVertical: 16,
+                paddingHorizontal: 20,
                 borderBottomWidth: 1,
                 borderBottomColor: tc.divider,
+                ...(Platform.OS === 'web' ? { cursor: 'default' as any } : {}),
               }}
             >
               {/* Name + Email */}
@@ -448,17 +470,18 @@ const MembersTab: React.FC<{
               )}
 
               {/* Actions */}
-              <View style={{ width: 120, flexDirection: 'row', justifyContent: 'flex-end', gap: 6 }}>
+              <View style={{ width: 140, flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
                 <ActionButton
                   icon="create-outline"
                   color={tc.accent}
-                  bgColor={tc.accent + '12'}
+                  bgColor={tc.accent + '08'}
+                  label="Edit"
                   onPress={() => onEdit(member)}
                 />
                 <ActionButton
                   icon={member.status === 'active' ? 'pause' : 'play'}
                   color={member.status === 'active' ? tc.warning : tc.success}
-                  bgColor={(member.status === 'active' ? tc.warning : tc.success) + '12'}
+                  bgColor={(member.status === 'active' ? tc.warning : tc.success) + '08'}
                   onPress={() =>
                     webConfirm(
                       member.status === 'active' ? 'Suspend Admin' : 'Reactivate Admin',
@@ -474,10 +497,15 @@ const MembersTab: React.FC<{
         })}
 
         {members.length === 0 && (
-          <View style={{ padding: 40, alignItems: 'center' }}>
-            <Ionicons name="people-outline" size={48} color={tc.disabled} />
-            <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: tc.textMuted, marginTop: 12 }}>
+          <View style={{ padding: 50, alignItems: 'center' }}>
+            <View style={{ width: 64, height: 64, borderRadius: 18, backgroundColor: tc.accent + '10', justifyContent: 'center', alignItems: 'center', marginBottom: 14 }}>
+              <Ionicons name="people-outline" size={30} color={tc.accent} />
+            </View>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 15, color: tc.text, marginBottom: 4 }}>
               No admin members found
+            </Text>
+            <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, textAlign: 'center', maxWidth: 260 }}>
+              Invite team members to collaborate on managing the platform
             </Text>
           </View>
         )}
@@ -485,17 +513,30 @@ const MembersTab: React.FC<{
 
       {/* Pending Invitations */}
       {pendingInvites.length > 0 && (
-        <View style={{ marginTop: 24 }}>
-          <Text style={{ fontFamily: fonts.bold, fontSize: 16, color: tc.text, marginBottom: 12 }}>
-            Pending Invitations
-          </Text>
+        <View style={{ marginTop: 28 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: '#8B5CF6' + '12', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="mail-outline" size={16} color="#8B5CF6" />
+            </View>
+            <View>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 16, color: tc.text }}>
+                Pending Invitations
+              </Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>
+                {pendingInvites.length} invitation{pendingInvites.length !== 1 ? 's' : ''} awaiting response
+              </Text>
+            </View>
+          </View>
           <View
             style={{
               backgroundColor: tc.white,
-              borderRadius: 14,
+              borderRadius: 16,
               borderWidth: 1,
               borderColor: tc.cardBorder,
               overflow: 'hidden',
+              ...(Platform.OS === 'web'
+                ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+                : {}),
             }}
           >
             {pendingInvites.map((invite) => (
@@ -504,12 +545,15 @@ const MembersTab: React.FC<{
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  paddingVertical: 12,
-                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  paddingHorizontal: 20,
                   borderBottomWidth: 1,
                   borderBottomColor: tc.divider,
                 }}
               >
+                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#8B5CF6' + '12', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                  <Ionicons name="person-outline" size={16} color="#8B5CF6" />
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }}>
                     {invite.fullName}
@@ -519,13 +563,13 @@ const MembersTab: React.FC<{
                   </Text>
                 </View>
                 <RoleBadge role={invite.adminRole} tc={tc} />
-                <View style={{ marginLeft: 12 }}>
+                <View style={{ marginLeft: 14 }}>
                   <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>
-                    {formatDate(invite.createdAt)}
+                    Sent {formatDate(invite.createdAt)}
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={{ marginLeft: 12 }}
+                  style={{ marginLeft: 14, width: 32, height: 32, borderRadius: 8, backgroundColor: tc.error + '08', borderWidth: 1, borderColor: tc.error + '18', justifyContent: 'center', alignItems: 'center' }}
                   onPress={() =>
                     webConfirm('Revoke Invitation', `Revoke invitation for ${invite.email}?`, () =>
                       onRevokeInvite(invite.id),
@@ -534,7 +578,7 @@ const MembersTab: React.FC<{
                   disabled={submitting}
                   activeOpacity={0.7}
                 >
-                  <Ionicons name="close-circle" size={22} color={tc.error} />
+                  <Ionicons name="close" size={16} color={tc.error} />
                 </TouchableOpacity>
               </View>
             ))}
@@ -561,10 +605,13 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
       <View
         style={{
           backgroundColor: tc.white,
-          borderRadius: 14,
+          borderRadius: 16,
           borderWidth: 1,
           borderColor: tc.cardBorder,
           overflow: 'hidden',
+          ...(Platform.OS === 'web'
+            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+            : {}),
         }}
       >
         {/* Header */}
@@ -572,14 +619,14 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
           style={{
             flexDirection: 'row',
             paddingVertical: 14,
-            paddingHorizontal: 16,
+            paddingHorizontal: 20,
             borderBottomWidth: 1,
             borderBottomColor: tc.divider,
             backgroundColor: tc.surfaceAlt,
           }}
         >
-          <Text style={{ flex: 2, fontFamily: fonts.semiBold, fontSize: 12, color: tc.textMuted }}>
-            PERMISSION
+          <Text style={{ flex: 2, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+            Permission
           </Text>
           {ALL_ROLES.map((role) => (
             <Text
@@ -587,9 +634,10 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
               style={{
                 flex: 1,
                 fontFamily: fonts.semiBold,
-                fontSize: isWide ? 12 : 10,
+                fontSize: isWide ? 11 : 10,
                 color: tc.textMuted,
                 textAlign: 'center',
+                letterSpacing: 0.3,
               }}
             >
               {ADMIN_ROLE_LABELS[role]}
@@ -605,10 +653,10 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
               flexDirection: 'row',
               alignItems: 'center',
               paddingVertical: 14,
-              paddingHorizontal: 16,
+              paddingHorizontal: 20,
               borderBottomWidth: idx < PERMISSION_KEYS.length - 1 ? 1 : 0,
               borderBottomColor: tc.divider,
-              backgroundColor: idx % 2 === 0 ? 'transparent' : tc.surfaceAlt + '50',
+              backgroundColor: idx % 2 === 0 ? 'transparent' : tc.surfaceAlt + '40',
             }}
           >
             <Text style={{ flex: 2, fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>
@@ -631,10 +679,15 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
       </View>
 
       {/* Role Descriptions */}
-      <Text style={{ fontFamily: fonts.bold, fontSize: 16, color: tc.text, marginTop: 28, marginBottom: 14 }}>
-        Role Descriptions
-      </Text>
-      <View style={{ flexDirection: isWide ? 'row' : 'column', gap: 12 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 32, marginBottom: 16 }}>
+        <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: tc.accent + '12', justifyContent: 'center', alignItems: 'center' }}>
+          <Ionicons name="information-circle-outline" size={16} color={tc.accent} />
+        </View>
+        <Text style={{ fontFamily: fonts.bold, fontSize: 16, color: tc.text }}>
+          Role Descriptions
+        </Text>
+      </View>
+      <View style={{ flexDirection: isWide ? 'row' : 'column', gap: 14 }}>
         {[
           {
             role: 'super_admin' as AdminRole,
@@ -669,7 +722,10 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
               borderRadius: 14,
               borderWidth: 1,
               borderColor: tc.cardBorder,
-              padding: 18,
+              padding: 20,
+              ...(Platform.OS === 'web'
+                ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6 }
+                : {}),
             }}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
@@ -709,13 +765,15 @@ const ActivityTab: React.FC<{
 }> = ({ logs, tc, width }) => {
   if (logs.length === 0) {
     return (
-      <View style={{ alignItems: 'center', paddingVertical: 60 }}>
-        <Ionicons name="document-text-outline" size={56} color={tc.disabled} />
-        <Text style={{ fontFamily: fonts.medium, fontSize: 16, color: tc.textMuted, marginTop: 14 }}>
+      <View style={{ alignItems: 'center', paddingVertical: 60, backgroundColor: tc.white, borderRadius: 16, borderWidth: 1, borderColor: tc.cardBorder }}>
+        <View style={{ width: 64, height: 64, borderRadius: 18, backgroundColor: tc.accent + '10', justifyContent: 'center', alignItems: 'center', marginBottom: 14 }}>
+          <Ionicons name="time-outline" size={30} color={tc.accent} />
+        </View>
+        <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: tc.text, marginBottom: 4 }}>
           No activity logs yet
         </Text>
-        <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 4 }}>
-          Actions performed by admins will appear here
+        <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, textAlign: 'center', maxWidth: 280, lineHeight: 19 }}>
+          Actions performed by admins will be recorded and shown here
         </Text>
       </View>
     );
@@ -726,10 +784,13 @@ const ActivityTab: React.FC<{
       <View
         style={{
           backgroundColor: tc.white,
-          borderRadius: 14,
+          borderRadius: 16,
           borderWidth: 1,
           borderColor: tc.cardBorder,
           overflow: 'hidden',
+          ...(Platform.OS === 'web'
+            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+            : {}),
         }}
       >
         {logs.map((log, idx) => {
@@ -740,7 +801,7 @@ const ActivityTab: React.FC<{
               style={{
                 flexDirection: 'row',
                 alignItems: 'flex-start',
-                padding: 16,
+                padding: 18,
                 borderBottomWidth: idx < logs.length - 1 ? 1 : 0,
                 borderBottomColor: tc.divider,
                 gap: 14,
@@ -1246,14 +1307,19 @@ const AdminAccessControlScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Page Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
-          <View>
-            <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: tc.text }}>
-              Admin Access Control
-            </Text>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: tc.textMuted, marginTop: 4 }}>
-              Manage admin roles, permissions, and team access
-            </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: tc.accent + '12', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="shield-checkmark" size={22} color={tc.accent} />
+            </View>
+            <View>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 26, color: tc.text }}>
+                Admin Access Control
+              </Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 2 }}>
+                Manage admin roles, permissions, and team access
+              </Text>
+            </View>
           </View>
           <TouchableOpacity
             style={{
@@ -1307,8 +1373,11 @@ const AdminAccessControlScreen: React.FC = () => {
             padding: 4,
             borderWidth: 1,
             borderColor: tc.cardBorder,
-            marginBottom: 20,
+            marginBottom: 22,
             alignSelf: 'flex-start' as const,
+            ...(Platform.OS === 'web'
+              ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4 }
+              : {}),
           }}
         >
           <TabButton
@@ -1366,6 +1435,11 @@ const AdminAccessControlScreen: React.FC = () => {
               value={ctrl.searchQuery}
               onChangeText={ctrl.setSearchQuery}
             />
+            {ctrl.searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => ctrl.setSearchQuery('')} style={{ padding: 4 }}>
+                <Ionicons name="close-circle" size={18} color={tc.textMuted} />
+              </TouchableOpacity>
+            )}
           </View>
         )}
 

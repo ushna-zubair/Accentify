@@ -25,6 +25,7 @@ expo-env.d.ts
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+firebase-debug.log
 
 # macOS
 .DS_Store
@@ -44,3 +45,9 @@ key.pub
 # generated native folders
 /ios
 /android
+
+# Cloud Functions compiled output
+functions/lib/
+
+# Zip archives
+*.zip

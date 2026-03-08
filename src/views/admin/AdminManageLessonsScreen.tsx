@@ -187,15 +187,18 @@ const StatsBar: React.FC<{ stats: any; tc: ThemeColors; isWide: boolean }> = ({ 
           style={{
             flex: isWide ? 1 : undefined,
             width: isWide ? undefined : '31%' as any,
-            minWidth: 130,
+            minWidth: 140,
             backgroundColor: tc.white,
-            borderRadius: 12,
-            padding: 14,
+            borderRadius: 14,
+            padding: 16,
             borderWidth: 1,
             borderColor: tc.cardBorder,
             flexDirection: 'row',
             alignItems: 'center',
-            gap: 10,
+            gap: 12,
+            ...(Platform.OS === 'web'
+              ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6 }
+              : {}),
           }}
         >
           <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: c.color + '15', justifyContent: 'center', alignItems: 'center' }}>
@@ -234,11 +237,14 @@ const LessonCard: React.FC<{
         borderRadius: 14,
         borderWidth: 1,
         borderColor: tc.cardBorder,
-        overflow: 'hidden',
+        ...(showActions ? { zIndex: 999 } : {}),
+        ...(Platform.OS === 'web'
+          ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 10 }
+          : {}),
       }}
     >
       {/* Category color bar */}
-      <View style={{ height: 4, backgroundColor: catColor.text }} />
+      <View style={{ height: 4, backgroundColor: catColor.text, borderTopLeftRadius: 13, borderTopRightRadius: 13 }} />
 
       <View style={{ padding: 16 }}>
         {/* Top: badges */}
@@ -249,28 +255,35 @@ const LessonCard: React.FC<{
             <StatusBadge status={lesson.status} tc={tc} />
           </View>
           {/* Actions dropdown */}
-          <View style={{ position: 'relative' as any }}>
+          <View style={{ position: 'relative' as any, zIndex: showActions ? 50 : undefined }}>
             <TouchableOpacity
               onPress={() => setShowActions(!showActions)}
-              style={{ width: 30, height: 30, borderRadius: 8, backgroundColor: tc.surfaceAlt, justifyContent: 'center', alignItems: 'center' }}
+              style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: showActions ? tc.accent + '12' : tc.surfaceAlt, justifyContent: 'center', alignItems: 'center' }}
               activeOpacity={0.7}
             >
-              <Ionicons name="ellipsis-vertical" size={16} color={tc.textLight} />
+              <Ionicons name="ellipsis-vertical" size={16} color={showActions ? tc.accent : tc.textLight} />
             </TouchableOpacity>
+            {showActions && (
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => setShowActions(false)}
+                style={{ position: 'absolute' as any, top: -200, left: -500, width: 5000, height: 5000, zIndex: 99 }}
+              />
+            )}
             {showActions && (
               <View
                 style={{
                   position: 'absolute' as any,
-                  top: 34,
+                  top: 36,
                   right: 0,
                   backgroundColor: tc.white,
-                  borderRadius: 10,
+                  borderRadius: 12,
                   borderWidth: 1,
                   borderColor: tc.cardBorder,
                   zIndex: 100,
-                  minWidth: 160,
+                  minWidth: 170,
                   ...(Platform.OS === 'web'
-                    ? { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 }
+                    ? { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24 }
                     : {}),
                 }}
               >
@@ -1456,14 +1469,19 @@ const AdminManageLessonsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
-          <View>
-            <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: tc.text }}>
-              Manage Lessons
-            </Text>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: tc.textMuted, marginTop: 4 }}>
-              Create, edit, and organize your curriculum
-            </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: tc.accent + '12', justifyContent: 'center', alignItems: 'center' }}>
+              <Ionicons name="library" size={22} color={tc.accent} />
+            </View>
+            <View>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 26, color: tc.text }}>
+                Manage Lessons
+              </Text>
+              <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 2 }}>
+                Create, edit, and organize your curriculum
+              </Text>
+            </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 10 }}>
             <TouchableOpacity
@@ -1511,7 +1529,10 @@ const AdminManageLessonsScreen: React.FC = () => {
         <View
           style={{
             flexDirection: 'row', backgroundColor: tc.white, borderRadius: 12, padding: 4,
-            borderWidth: 1, borderColor: tc.cardBorder, marginBottom: 16, alignSelf: 'flex-start' as const,
+            borderWidth: 1, borderColor: tc.cardBorder, marginBottom: 18, alignSelf: 'flex-start' as const,
+            ...(Platform.OS === 'web'
+              ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4 }
+              : {}),
           }}
         >
           {TABS.map((tab) => {
@@ -1544,7 +1565,7 @@ const AdminManageLessonsScreen: React.FC = () => {
         </View>
 
         {/* ── Filters ── */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18, flexWrap: 'wrap' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20, flexWrap: 'wrap', zIndex: 10, position: 'relative' as any }}>
           {/* Search */}
           <View
             style={{
@@ -1567,7 +1588,7 @@ const AdminManageLessonsScreen: React.FC = () => {
           </View>
 
           {/* Category dropdown */}
-          <View style={{ position: 'relative' as any }}>
+          <View style={{ position: 'relative' as any, zIndex: showCategoryFilter ? 20 : undefined }}>
             <TouchableOpacity
               style={{
                 flexDirection: 'row', alignItems: 'center', gap: 6,
@@ -1583,14 +1604,21 @@ const AdminManageLessonsScreen: React.FC = () => {
               <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: ctrl.categoryFilter !== 'all' ? tc.accent : tc.textLight }}>
                 {ctrl.categoryFilter === 'all' ? 'Category' : LESSON_CATEGORY_LABELS[ctrl.categoryFilter]}
               </Text>
-              <Ionicons name="chevron-down" size={14} color={tc.textMuted} />
+              <Ionicons name={showCategoryFilter ? 'chevron-up' : 'chevron-down'} size={14} color={tc.textMuted} />
             </TouchableOpacity>
+            {showCategoryFilter && (
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={() => setShowCategoryFilter(false)}
+                style={{ position: 'absolute' as any, top: -200, left: -500, width: 5000, height: 5000, zIndex: 99 }}
+              />
+            )}
             {showCategoryFilter && (
               <View
                 style={{
                   position: 'absolute' as any, top: 44, left: 0, backgroundColor: tc.white,
-                  borderRadius: 10, borderWidth: 1, borderColor: tc.cardBorder, zIndex: 100, minWidth: 180,
-                  ...(Platform.OS === 'web' ? { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 } : {}),
+                  borderRadius: 12, borderWidth: 1, borderColor: tc.cardBorder, zIndex: 100, minWidth: 200,
+                  ...(Platform.OS === 'web' ? { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 24 } : {}),
                 }}
               >
                 <TouchableOpacity
@@ -1639,9 +1667,9 @@ const AdminManageLessonsScreen: React.FC = () => {
 
         {/* ── Lesson Grid ── */}
         {rows.map((row, rowIdx) => (
-          <View key={rowIdx} style={{ flexDirection: 'row', gap: 14, marginBottom: 14 }}>
+          <View key={rowIdx} style={{ flexDirection: 'row', gap: 16, marginBottom: 16, zIndex: rows.length - rowIdx }}>
             {row.map((lesson) => (
-              <View key={lesson.id} style={{ flex: 1 }}>
+              <View key={lesson.id} style={{ flex: 1, zIndex: 1 }}>
                 <LessonCard
                   lesson={lesson}
                   onEdit={() => ctrl.openEditForm(lesson)}
@@ -1662,14 +1690,16 @@ const AdminManageLessonsScreen: React.FC = () => {
         ))}
 
         {ctrl.lessons.length === 0 && (
-          <View style={{ alignItems: 'center', paddingVertical: 60 }}>
-            <Ionicons name="book-outline" size={56} color={tc.disabled} />
-            <Text style={{ fontFamily: fonts.medium, fontSize: 16, color: tc.textMuted, marginTop: 14 }}>
+          <View style={{ alignItems: 'center', paddingVertical: 60, backgroundColor: tc.white, borderRadius: 16, borderWidth: 1, borderColor: tc.cardBorder, marginTop: 4 }}>
+            <View style={{ width: 72, height: 72, borderRadius: 20, backgroundColor: tc.accent + '10', justifyContent: 'center', alignItems: 'center', marginBottom: 14 }}>
+              <Ionicons name="book-outline" size={34} color={tc.accent} />
+            </View>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 17, color: tc.text }}>
               No lessons found
             </Text>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 4 }}>
+            <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 6, textAlign: 'center', maxWidth: 280, lineHeight: 19 }}>
               {ctrl.searchQuery || ctrl.categoryFilter !== 'all'
-                ? 'Try adjusting your filters or search'
+                ? 'Try adjusting your filters or search query'
                 : 'Create your first lesson to get started'}
             </Text>
             {!ctrl.searchQuery && ctrl.categoryFilter === 'all' && (
@@ -1691,9 +1721,12 @@ const AdminManageLessonsScreen: React.FC = () => {
 
         {/* Result count */}
         {ctrl.lessons.length > 0 && (
-          <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted, marginTop: 4 }}>
-            Showing {ctrl.lessons.length} of {ctrl.allLessons.length} lessons
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8, paddingTop: 14, borderTopWidth: 1, borderTopColor: tc.divider }}>
+            <Ionicons name="information-circle-outline" size={14} color={tc.textMuted} style={{ marginRight: 6 }} />
+            <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textMuted }}>
+              Showing {ctrl.lessons.length} of {ctrl.allLessons.length} lessons
+            </Text>
+          </View>
         )}
       </ScrollView>
 
