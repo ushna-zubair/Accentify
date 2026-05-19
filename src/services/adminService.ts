@@ -1,30 +1,13 @@
-/**
- * adminService.ts
- *
- * Service for admin-related Firestore operations.
- * Aggregates per-user progress data into the pre-computed
- * `admin_analytics/global_stats` document that the admin
- * dashboard reads via `useDashboardAnalytics`.
- *
- * ── Firestore Layout ──
- *
- * admin_analytics/global_stats
- *   { activeUsers, growthPct, usageDateRange,
- *     weeklyBarData[], practiceActivity, pronunciationAccuracy,
- *     fluencyAccuracy, vocabularyRetention, topLearners[],
- *     totalSessions, sessionsGrowth, sessionsThisWeek[], sessionsLastWeek[],
- *     lastAggregatedAt }
- *
- * admin_analytics/global_stats/daily_snapshots/{YYYY-MM-DD}
- *   { activeUsers, totalSessions, date }   ← lightweight daily snapshot
- *     for computing growth percentages
- */
+
 
 import {
   doc,
   getDoc,
   setDoc,
+  addDoc,
+  collection,
   increment,
+  serverTimestamp,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebase';
@@ -94,4 +77,24 @@ export async function seedGlobalStats(
       lastAggregatedAt: Timestamp.now(),
     });
   }
+}
+
+/**
+ * Create an announcement document in Firestore.
+ * The home screen fetches the latest 3 announcements on mount/refresh,
+ * so after calling this the user will see it on the next pull-to-refresh.
+ */
+export async function createAnnouncementDoc(
+  title: string,
+  body: string,
+  createdBy: string,
+): Promise<string> {
+  const ref = collection(db, 'announcements');
+  const docRef = await addDoc(ref, {
+    title,
+    body,
+    createdBy,
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
 }

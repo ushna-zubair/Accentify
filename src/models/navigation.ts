@@ -20,11 +20,9 @@ export type AuthStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   SignUp: undefined;
-  EmailVerification: { maskedEmail: string };
+  ForgotPassword: { email?: string };
+  VerifyEmail: { email: string };
   CreateProfile: undefined;
-  ForgotPassword: { email: string };
-  OTPVerification: { uid: string; method: 'email' | 'sms'; maskedContact: string };
-  CreateNewPassword: { uid: string; sessionToken: string };
   LearningGoals: { profile: ProfileData };
   NativeLanguage: { profile: ProfileData; learningGoals: string[] };
   EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };

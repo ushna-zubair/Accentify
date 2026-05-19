@@ -9,6 +9,7 @@ import {
   Easing,
   ScrollView,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -289,6 +290,13 @@ const VocabExerciseScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* ── Header ── */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>{exercise.title}</Text>
         <View style={[styles.progressBadge, { borderColor: progressColor }]}>
           <Text style={[styles.progressText, { color: progressColor }]}>
@@ -735,7 +743,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   micArea: {
     alignItems: 'center',
     paddingTop: 6,
-    paddingBottom: 10,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 110,
   },
   micBtnOuter: {
     borderRadius: 20,

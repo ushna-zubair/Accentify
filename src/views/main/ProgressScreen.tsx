@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -204,12 +205,10 @@ interface HBarChartProps {
 }
 
 const HBarChart: React.FC<HBarChartProps> = ({ data, r, tc }) => {
-  const maxVal = Math.max(...data.map((d) => d.value), 1);
-
   return (
     <View style={hbarStyles.container}>
       {data.map((item) => {
-        const pct = Math.round((item.value / maxVal) * 100);
+        const pct = Math.min(100, Math.max(0, item.value));
         return (
           <View key={item.label} style={hbarStyles.row}>
             <Text style={[hbarStyles.label, { fontSize: r.ms(10, 0.3), width: r.ms(64, 0.3), color: tc.textLight }]} numberOfLines={1}>
@@ -528,6 +527,12 @@ const ProgressScreen: React.FC = () => {
     await fetchProgress();
     setRefreshing(false);
   }, [fetchProgress]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProgress();
+    }, [fetchProgress]),
+  );
 
   // Responsive layout helpers
   const hPad = r.s(20);

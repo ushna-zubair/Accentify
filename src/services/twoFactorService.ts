@@ -1,75 +1,71 @@
-/**
- * twoFactorService.ts
- *
- * Frontend service for the 2FA settings flow (email-based OTP).
- *
- * Calls two Cloud Functions:
- *   1. send2FACode   – sends a 4-digit code to the user's email
- *   2. verify2FACode – validates the code and toggles 2FA on/off
- *
- * Also provides local helpers to read 2FA status from Firestore.
- */
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { doc, getDoc } from 'firebase/firestore';
-import app, { db } from '../config/firebase';
 
-const functions = getFunctions(app);
 
-// ─── Types ───
+import { sendEmailVerification, reload } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
-export type TwoFactorMethod = 'email' | 'authenticator' | 'none';
-
-export interface TwoFactorStatus {
-  enabled: boolean;
-  method: TwoFactorMethod;
+export interface TwoFAStatus {
+    enabled: boolean;
 }
 
-export interface Send2FACodeResult {
-  success: boolean;
-  maskedEmail: string;
+export interface SendLinkResult {
+    maskedEmail: string;
 }
 
-export interface Verify2FACodeResult {
-  success: boolean;
-  enabled: boolean;
+export interface VerifyResult {
+    enabled: boolean;
+}
+function maskEmail(email: string): string {
+    const [local, domain] = email.split('@');
+    if (!local || !domain) return email;
+    const visible = local.slice(0, 1);
+    const masked = '*'.repeat(Math.max(local.length - 1, 3));
+    return `${visible}${masked}@${domain}`;
 }
 
-// ─── Read current 2FA status ───
 
-export async function get2FAStatus(uid: string): Promise<TwoFactorStatus> {
-  const snap = await getDoc(doc(db, 'users', uid));
-  if (!snap.exists()) return { enabled: false, method: 'none' };
-
-  const data = snap.data();
-  return {
-    enabled: data.security?.twoFactorEnabled ?? false,
-    method: data.security?.twoFactorMethod ?? 'none',
-  };
+export async function get2FAStatus(uid: string): Promise<TwoFAStatus> {
+    try {
+        const userDoc = await getDoc(doc(db, 'users', uid));
+        const enabled = userDoc.data()?.twoFactor?.enabled === true;
+        return { enabled };
+    } catch {
+        return { enabled: false };
+    }
 }
-
-// ─── Send verification code ───
 
 export async function send2FACode(
-  action: 'enable' | 'disable',
-): Promise<Send2FACodeResult> {
-  const fn = httpsCallable<{ action: string }, Send2FACodeResult>(
-    functions,
-    'send2FACode',
-  );
-  const result = await fn({ action });
-  return result.data;
+    _action: 'enable' | 'disable',
+): Promise<SendLinkResult> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('You must be signed in to change 2FA settings.');
+    if (!user.email) throw new Error('No email address associated with this account.');
+
+    await sendEmailVerification(user);
+    return { maskedEmail: maskEmail(user.email) };
 }
 
-// ─── Verify code & toggle 2FA ───
-
 export async function verify2FACode(
-  code: string,
-  action: 'enable' | 'disable',
-): Promise<Verify2FACodeResult> {
-  const fn = httpsCallable<
-    { code: string; action: string },
-    Verify2FACodeResult
-  >(functions, 'verify2FACode');
-  const result = await fn({ code, action });
-  return result.data;
+    _code: string,
+    action: 'enable' | 'disable',
+): Promise<VerifyResult> {
+    const user = auth.currentUser;
+    if (!user) throw new Error('You must be signed in.');
+
+    // Refresh the user's token to get the latest emailVerified state
+    await reload(user);
+
+    if (!auth.currentUser?.emailVerified) {
+        throw new Error('Email not yet verified. Please click the link in your email first.');
+    }
+
+    // Toggle the 2FA flag in Firestore
+    const newEnabled = action === 'enable';
+    await setDoc(
+        doc(db, 'users', user.uid),
+        { twoFactor: { enabled: newEnabled, updatedAt: new Date().toISOString() } },
+        { merge: true },
+    );
+
+    return { enabled: newEnabled };
 }

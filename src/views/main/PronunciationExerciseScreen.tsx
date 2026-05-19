@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Circle, Path } from 'react-native-svg';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import {
@@ -60,12 +61,12 @@ const formatTimer = (secs: number): string => {
 //  AI MASCOT (tappable)
 // ═══════════════════════════════════════════════
 
-const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => {
+const AiMascot: React.FC<{ onPress: () => void; bottomOffset?: number }> = ({ onPress, bottomOffset }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   return (
   <TouchableOpacity
-    style={styles.mascotWrap}
+    style={[styles.mascotWrap, bottomOffset !== undefined && { bottom: bottomOffset }]}
     onPress={onPress}
     activeOpacity={0.7}
   >
@@ -398,15 +399,119 @@ const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
 };
 
 // ═══════════════════════════════════════════════
+//  BOTTOM NAV BAR (mirrors CustomTabBar from AppNavigator)
+// ═══════════════════════════════════════════════
+
+const PRON_TABS = [
+  { name: 'Home',     label: 'Home',     active: 'home' as const,      inactive: 'home-outline' as const },
+  { name: 'Tutor',   label: 'Tutor',    active: 'bar-chart' as const,  inactive: 'bar-chart-outline' as const },
+  { name: 'Progress',label: 'Progress', active: 'star' as const,       inactive: 'star-outline' as const },
+  { name: 'Settings',label: 'Profile',  active: 'person' as const,     inactive: 'person-outline' as const },
+];
+
+const PronunciationTabBar: React.FC<{ navigation: ExerciseNav }> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
+  const { colors: tc, isDark } = useAppTheme();
+  const bottomPad = Math.max(insets.bottom, 6);
+  const tabBg = isDark ? tc.surfaceAlt : tc.accentDark;
+
+  const handlePress = (name: string) => {
+    if (name === 'Tutor') {
+      navigation.navigate('TutorMain');
+    } else {
+      (navigation.getParent() as any)?.navigate(name);
+    }
+  };
+
+  return (
+    <View style={[pronNavStyles.wrapper, { paddingBottom: bottomPad }]}>
+      <View style={[pronNavStyles.bar, { backgroundColor: tabBg }]}>
+        {PRON_TABS.map((tab) => {
+          const isActive = tab.name === 'Tutor';
+          return (
+            <TouchableOpacity
+              key={tab.name}
+              onPress={() => handlePress(tab.name)}
+              activeOpacity={0.7}
+              style={pronNavStyles.tab}
+            >
+              <View style={[pronNavStyles.iconWrap, isActive && [pronNavStyles.iconWrapActive, { backgroundColor: tc.accent }]]}>
+                <Ionicons
+                  name={isActive ? tab.active : tab.inactive}
+                  size={18}
+                  color={isActive ? '#FFFFFF' : (isDark ? tc.textMuted : 'rgba(255,255,255,0.50)')}
+                />
+              </View>
+              <Text style={[pronNavStyles.label, { color: isActive ? (isDark ? tc.text : '#FFFFFF') : (isDark ? tc.textMuted : 'rgba(255,255,255,0.50)') }]}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
+const pronNavStyles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    backgroundColor: 'transparent',
+  },
+  bar: {
+    flexDirection: 'row',
+    borderRadius: 24,
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 2,
+  },
+  iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrapActive: {
+    borderRadius: 17,
+  },
+  label: {
+    fontFamily: fonts.semiBold,
+    fontSize: 10,
+    marginTop: 1,
+  },
+});
+
+// ═══════════════════════════════════════════════
 //  MAIN SCREEN
 // ═══════════════════════════════════════════════
 
 const PronunciationExerciseScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
+  const insets = useSafeAreaInsets();
   const route = useRoute<ExerciseRoute>();
   const navigation = useNavigation<ExerciseNav>();
   const { lessonId } = route.params;
+
+  // Height of the bottom nav bar (matches CustomTabBar formula)
+  const navBarH = 56 + Math.max(insets.bottom, 6) + 12;
 
   const {
     sentence,
@@ -472,6 +577,13 @@ const PronunciationExerciseScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* ═══════ HEADER ═══════ */}
       <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Ionicons name="arrow-back" size={24} color={tc.text} />
+        </TouchableOpacity>
         <Text style={styles.headerTitle}>English Pronunciation</Text>
         <View style={styles.badgesCol}>
           <View style={[styles.badge, { backgroundColor: progressColor }]}>
@@ -572,7 +684,7 @@ const PronunciationExerciseScreen: React.FC = () => {
       </ScrollView>
 
       {/* ═══════ BOTTOM AREA ═══════ */}
-      <View style={styles.bottomArea}>
+      <View style={[styles.bottomArea, { paddingBottom: navBarH + 16 }]}>
         <WaveformBar active={isIdle || isRecording} />
 
         <TouchableOpacity
@@ -604,7 +716,7 @@ const PronunciationExerciseScreen: React.FC = () => {
       </View>
 
       {/* ═══════ AI MASCOT ═══════ */}
-      <AiMascot onPress={() => setChatVisible(true)} />
+      <AiMascot onPress={() => setChatVisible(true)} bottomOffset={navBarH + 8} />
 
       {/* ═══════ WAVY CHATBOX ═══════ */}
       <WavyChatOverlay
@@ -626,6 +738,9 @@ const PronunciationExerciseScreen: React.FC = () => {
           <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
+
+      {/* ═══════ BOTTOM NAV BAR ═══════ */}
+      <PronunciationTabBar navigation={navigation} />
     </SafeAreaView>
   );
 };
@@ -646,7 +761,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     paddingHorizontal: CARD_H,
     paddingTop: Platform.OS === 'android' ? 40 : 12,
     paddingBottom: 4,
@@ -655,7 +770,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontFamily: fonts.bold,
     fontSize: 22,
     color: tc.text,
-    maxWidth: SCREEN_W * 0.6,
+    maxWidth: SCREEN_W * 0.5,
   },
   badgesCol: {
     alignItems: 'flex-end',
@@ -784,10 +899,9 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     color: tc.white,
   },
 
-  // ── Bottom ──
+  // ── Bottom ── (paddingBottom set dynamically via inline style using navBarH)
   bottomArea: {
     alignItems: 'center',
-    paddingBottom: Platform.OS === 'ios' ? 8 : 12,
     paddingHorizontal: CARD_H,
   },
 
@@ -855,7 +969,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   // ── Mascot ──
   mascotWrap: {
     position: 'absolute',
-    bottom: Platform.OS === 'ios' ? 14 : 18,
+    bottom: Platform.OS === 'ios' ? 90 : 100,
     left: 16,
     flexDirection: 'row',
     alignItems: 'flex-end',

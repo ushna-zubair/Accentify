@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import {
+  UserCredential,
   User,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -8,10 +9,14 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithCredential,
+  sendEmailVerification,
+  reload,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Platform, Alert } from 'react-native';
-import { auth, db } from '../config/firebase';
+import { auth, db, firebaseConfig } from '../config/firebase';
+import app from '../config/firebase';
 import { UserRole, UserProfile, OnboardingPayload, AccountStatus } from '../models';
 import { recordDeviceSession } from '../services/deviceService';
 import { generateShortId } from '../utils/idUtils';
@@ -24,13 +29,15 @@ interface AuthContextType {
   userRole: UserRole | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<UserCredential>;
   signIn: (email: string, password: string) => Promise<UserRole | null>;
   signOut: () => Promise<void>;
   fetchUserRole: (uid: string) => Promise<UserRole | null>;
   completeOnboarding: (data: OnboardingPayload) => Promise<void>;
   signInWithGoogle: () => Promise<{ isNewUser: boolean }>;
   signInWithApple: () => Promise<{ isNewUser: boolean }>;
+  sendVerificationEmail: (user?: User) => Promise<void>;
+  reloadUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,10 +88,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string): Promise<UserCredential> => {
     // Only create the Firebase Auth account here
     // The full Firestore document is written at the end of onboarding via completeOnboarding()
-    await createUserWithEmailAndPassword(auth, email, password);
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result;
   }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<UserRole | null> => {
@@ -92,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Update lastLoginAt on the Firestore doc
     updateDoc(doc(db, 'users', result.user.uid), {
       lastLoginAt: new Date().toISOString(),
-    }).catch(() => {}); // non-blocking
+    }).catch(() => { }); // non-blocking
     const role = await fetchUserRole(result.user.uid);
     return role;
   }, [fetchUserRole]);
@@ -157,11 +165,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchUserRole(currentUser.uid);
   }, [currentUser, fetchUserRole]);
 
-  /**
-   * Google Sign-In using expo-auth-session (works in Expo Go).
-   * Opens a browser-based OAuth flow, then exchanges the ID token with Firebase.
-   * Returns { isNewUser: true } when no Firestore doc exists yet (→ onboarding).
-   */
   const signInWithGoogle = useCallback(async (): Promise<{ isNewUser: boolean }> => {
     let AuthSession: typeof import('expo-auth-session');
     let WebBrowser: typeof import('expo-web-browser');
@@ -234,7 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (userSnap.exists()) {
       // Update lastLoginAt
-      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => {});
+      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => { });
       await fetchUserRole(result.user.uid);
       return { isNewUser: false };
     }
@@ -313,13 +316,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserProfile(null);
   }, []);
 
+  const sendVerificationEmail = useCallback(async (user?: User) => {
+    const target = user || auth.currentUser;
+    if (!target) {
+      console.warn('[Auth] sendVerificationEmail: no user available – skipping');
+      return;
+    }
+
+    // Use native Firebase SDK for email verification (no SMTP setup required)
+    try {
+      const actionCodeSettings = {
+        url: `https://${firebaseConfig.authDomain || 'accentify-capstone.firebaseapp.com'}`,
+        handleCodeInApp: false,
+      };
+      await sendEmailVerification(target, actionCodeSettings);
+      console.log('[Auth] Native verification email sent to', target.email);
+    } catch (error: any) {
+      console.error('[Auth] Native verification failure:', error.code, error.message);
+      // Re-throw so the UI can show the actual error (e.g. auth/too-many-requests)
+      throw error;
+    }
+  }, []);
+
+  const reloadUser = useCallback(async () => {
+    if (auth.currentUser) {
+      await reload(auth.currentUser);
+      setCurrentUser({ ...auth.currentUser }); // Force state update
+    }
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
         await fetchUserRole(user.uid);
         // Record this device in the user's device sessions
-        recordDeviceSession(user.uid).catch(() => {});
+        recordDeviceSession(user.uid).catch(() => { });
       } else {
         setUserRole(null);
         setUserProfile(null);
@@ -342,7 +374,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     completeOnboarding,
     signInWithGoogle,
     signInWithApple,
-  }), [currentUser, userRole, userProfile, loading, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple]);
+    sendVerificationEmail,
+    reloadUser,
+  }), [currentUser, userRole, userProfile, loading, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

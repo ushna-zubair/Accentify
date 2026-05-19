@@ -33,7 +33,7 @@ import {
   doc,
   getDoc,
   setDoc,
-  getDocs,
+  getDocsFromServer,
   collection,
   Timestamp,
   increment,
@@ -127,6 +127,28 @@ export const updateStreak = async (uid: string): Promise<number> => {
     });
 
     return dayStreak;
+  });
+};
+
+/**
+ * Directly increment the day streak by 1, bypassing the date-gap logic.
+ * Useful for admin/demo purposes to bump the streak counter shown on the home screen.
+ */
+export const forceIncrementStreak = async (uid: string): Promise<number> => {
+  const ref = doc(db, 'users', uid, 'progress', 'streak');
+  return runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(ref);
+    const prev = snap.exists() ? ((snap.data().dayStreak as number) ?? 0) : 0;
+    const longestPrev = snap.exists() ? ((snap.data().longestStreak as number) ?? prev) : prev;
+    const newStreak = prev + 1;
+    const longest = Math.max(newStreak, longestPrev);
+    transaction.set(ref, {
+      dayStreak: newStreak,
+      longestStreak: longest,
+      lastActiveDate: toDateKey(new Date()),
+      updatedAt: Timestamp.now(),
+    });
+    return newStreak;
   });
 };
 
@@ -403,7 +425,7 @@ export const fetchFullProgress = async (uid: string) => {
   const [streakSnap, lessonDays, weeksSnap] = await Promise.all([
     getDoc(streakRef),
     buildLessonDays(uid),
-    getDocs(weeksRef),
+    getDocsFromServer(weeksRef),
   ]);
 
   const dayStreak = streakSnap.exists()

@@ -1,23 +1,10 @@
-/**
- * useAppTheme – Resolves the current AppPreferenceState into concrete style values.
- *
- * Usage:
- *   const theme = useAppTheme();
- *   <View style={{ backgroundColor: theme.colors.background }}>
- *     <Text style={{ fontSize: theme.fontSizes.body, color: theme.colors.text }}>Hello</Text>
- *     <TouchableOpacity style={{ backgroundColor: theme.colors.accent }}>…</TouchableOpacity>
- *   </View>
- */
+
 
 import { useMemo } from 'react';
 import { useAppPreference } from '../context/AppPreferenceContext';
 import type { ThemeOption, AccentColor, FontSizeOption } from '../models';
 
-// ═══════════════════════════════════════════════
-//  COLOR MAPS
-// ═══════════════════════════════════════════════
 
-/** Semantic color palette returned by the hook. */
 export interface ThemeColors {
   /** Main screen background */
   background: string;

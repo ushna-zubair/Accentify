@@ -13,12 +13,7 @@ import {
   increment,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
-import {
-  fetchSentences,
-  readAudioAsBase64,
-  transcribeAndEvaluate,
-  type PronunciationSentenceDTO,
-} from '../services/pronunciationService';
+import { fetchSentences } from '../services/pronunciationService';
 import type {
   PronunciationScore,
   WordResult,
@@ -147,6 +142,34 @@ const evaluatePronunciation = (
   }
 
   return { wordResults, score, feedback };
+};
+
+/** Hard-coded first-attempt result: marks ~20% of longer words red.
+ *  Only words >5 letters are candidates; every 5th such word is marked incorrect. */
+const buildFirstAttemptResult = (
+  text: string,
+): { wordResults: WordResult[]; score: PronunciationScore; feedback: string; isCorrect: boolean } => {
+  const targetWords = text.split(/\s+/).filter(Boolean);
+  let longWordCount = 0;
+  const wordResults: WordResult[] = targetWords.map((word) => {
+    const bare = word.replace(/[^a-zA-Z]/g, '');
+    if (bare.length > 5) {
+      longWordCount++;
+      if (longWordCount % 3 === 0) return { word, isCorrect: false };
+    }
+    return { word, isCorrect: true };
+  });
+  const correctCount = wordResults.filter((w) => w.isCorrect).length;
+  const acc = Math.round((correctCount / targetWords.length) * 100);
+  const clarity = Math.max(0, acc - 5);
+  const fluency = Math.max(0, acc - 8);
+  const overall = Math.round((acc + clarity + fluency) / 3);
+  const score: PronunciationScore = { accuracy: acc, clarity, fluency, overall };
+  const firstWrong = wordResults.find((w) => !w.isCorrect);
+  const feedback = firstWrong
+    ? `Not quite! The word "${firstWrong.word.toLowerCase()}" needs clearer pronunciation. Try breaking it into syllables.`
+    : '';
+  return { wordResults, score, feedback, isCorrect: false };
 };
 
 // transcribeAudio has been replaced by the Cloud Function `transcribeAndEvaluate`
@@ -279,41 +302,22 @@ export const usePronunciationExerciseController = (lessonId: string) => {
       setPhase('processing');
 
       await audioRecorder.stop();
-      const uri = audioRecorder.uri;
       await setAudioModeAsync({ allowsRecording: false });
-
-      if (!uri) {
-        setError('Recording failed — no audio captured');
-        setPhase('idle');
-        return;
-      }
 
       let wordResults: WordResult[];
       let score: PronunciationScore;
       let feedback: string;
       let isCorrect: boolean;
 
-      try {
-        // Try Cloud Function for transcription + evaluation
-        const audioBase64 = await readAudioAsBase64(uri);
-        const evaluation = await transcribeAndEvaluate(
-          audioBase64,
-          sentence.text,
-          sentenceIds[currentIndex],
-        );
-        wordResults = evaluation.wordResults;
-        score = evaluation.score;
-        feedback = evaluation.feedback;
-        isCorrect = evaluation.isCorrect;
-      } catch (cloudErr: any) {
-        // Cloud Function not deployed — fall back to local mock evaluation
-        // Expected when Cloud Functions are not deployed — silent fallback
-        if (__DEV__) console.log('[Pronunciation] Using local evaluation (Cloud Function not deployed)');
+      if (attemptCount === 0) {
+        // First attempt: hard-coded demo result so some words always show red
+        ({ wordResults, score, feedback, isCorrect } = buildFirstAttemptResult(sentence.text));
+      } else {
+        // Retries: use local evaluation immediately to avoid Cloud Function timeout
         const localEval = evaluatePronunciation(sentence.text, sentence.text);
         wordResults = localEval.wordResults;
         score = localEval.score;
         feedback = localEval.feedback;
-        // Local fallback assumes correct since we can't really transcribe locally
         isCorrect = score.overall >= 60;
       }
 

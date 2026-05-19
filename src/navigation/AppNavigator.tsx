@@ -1,5 +1,5 @@
-import React from 'react';
-import { Platform, View, Text, TouchableOpacity, StyleSheet, Animated, ActivityIndicator } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { AppState, AppStateStatus, Platform, View, Text, TouchableOpacity, StyleSheet, Animated, ActivityIndicator, Image } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,8 +35,7 @@ import LoginScreen from '../views/auth/LoginScreen';
 import SignUpScreen from '../views/auth/SignUpScreen';
 import CreateProfileScreen from '../views/auth/CreateProfileScreen';
 import ForgotPasswordScreen from '../views/auth/ForgotPasswordScreen';
-import OTPVerificationScreen from '../views/auth/OTPVerificationScreen';
-import CreateNewPasswordScreen from '../views/auth/CreateNewPasswordScreen';
+import VerifyEmailScreen from '../views/auth/VerifyEmailScreen';
 import SetupPinScreen from '../views/auth/SetupPinScreen';
 import SetupFaceIDScreen from '../views/auth/SetupFaceIDScreen';
 import TwoFactorAuthScreen from '../views/auth/TwoFactorAuthScreen';
@@ -45,7 +44,6 @@ import NativeLanguageScreen from '../views/auth/NativeLanguageScreen';
 import EnglishLevelScreen from '../views/auth/EnglishLevelScreen';
 import ChooseVerificationMethodScreen from '../views/auth/ChooseVerificationMethodScreen';
 import SetupAuthenticatorScreen from '../views/auth/SetupAuthenticatorScreen';
-import EmailVerificationScreen from '../views/auth/EmailVerificationScreen';
 const SetYourFingerprintScreen = require('../views/auth/SetYourFingerprintScreen').default;
 
 // Views – Main (barrel)
@@ -118,14 +116,9 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="Onboarding" component={OnboardingScreen} />
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
-      <AuthStack.Screen name="EmailVerification" component={EmailVerificationScreen} />
-      <AuthStack.Screen name="CreateProfile" component={CreateProfileScreen} />
-      <AuthStack.Screen name="LearningGoals" component={LearningGoalsScreen} />
-      <AuthStack.Screen name="NativeLanguage" component={NativeLanguageScreen} />
-      <AuthStack.Screen name="EnglishLevel" component={EnglishLevelScreen} />
       <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
-      <AuthStack.Screen name="OTPVerification" component={OTPVerificationScreen} />
-      <AuthStack.Screen name="CreateNewPassword" component={CreateNewPasswordScreen} />
+      <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
+      <AuthStack.Screen name="CreateProfile" component={CreateProfileScreen} />
       <AuthStack.Screen name="SetupPin" component={SetupPinScreen} />
       <AuthStack.Screen name="SetYourFingerprint" component={SetYourFingerprintScreen} />
       <AuthStack.Screen name="SetupFaceID" component={SetupFaceIDScreen} />
@@ -141,10 +134,10 @@ const AuthNavigator = () => {
 // ═══════════════════════════════════════════════
 
 const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
-  Home:     { active: 'home',      inactive: 'home-outline' },
-  Tutor:    { active: 'bar-chart', inactive: 'bar-chart-outline' },
-  Progress: { active: 'star',      inactive: 'star-outline' },
-  Settings: { active: 'person',    inactive: 'person-outline' },
+  Home: { active: 'home', inactive: 'home-outline' },
+  Tutor: { active: 'bar-chart', inactive: 'bar-chart-outline' },
+  Progress: { active: 'star', inactive: 'star-outline' },
+  Settings: { active: 'person', inactive: 'person-outline' },
 };
 
 const TAB_LABELS: Record<string, string> = {
@@ -300,33 +293,103 @@ const LearnerNavigator = () => {
 };
 
 const AppNavigator: React.FC = () => {
-  const { currentUser, userRole, loading } = useAuth();
+  const { currentUser, loading, userRole, userProfile, reloadUser } = useAuth();
+  const [appState, setAppState] = useState(AppState.currentState);
+  const [splashVisible, setSplashVisible] = useState(true);
 
-  if (loading) {
+  // Ensure splash is visible for at least 1500ms for a smoother experience
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSplashVisible(false);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (appState.match(/inactive|background/) && nextAppState === 'active') {
+        // App has come to the foreground — refresh user to check emailVerified
+        if (currentUser && !currentUser.emailVerified) {
+          reloadUser().catch(console.error);
+        }
+      }
+      setAppState(nextAppState);
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [appState, currentUser, reloadUser]);
+
+  if (loading || splashVisible) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#FFFFFF',
-        ...(Platform.OS === 'web' ? { minHeight: '100vh' as any } : {}),
+      <View style={{
+        flex: 1, alignItems: 'center', justifyContent: 'center',
+        backgroundColor: '#FFFFFF', // Matching splash background
       }}>
-        <ActivityIndicator size="large" color="#6C63FF" />
+        <Image
+          source={require('../../assets/logo.png')}
+          style={{ width: 180, height: 180, marginBottom: 24 }}
+          resizeMode="contain"
+        />
+        <Text style={{
+          fontFamily: fonts.bold,
+          fontSize: 20,
+          color: '#6C63FF', // Primary accent
+          letterSpacing: 4,
+        }}>A C C E N T I F Y</Text>
       </View>
     );
   }
 
+  // 1. If not logged in, show Auth Stack
   if (!currentUser) {
     return <AuthNavigator />;
   }
 
+  // 2. If email is not verified (only for email/password provider), show VerifyEmail in a stack
+  // Note: Social providers (Google/Apple) have emailVerified: true by default
+  if (!currentUser.emailVerified && currentUser.providerData.some(p => p.providerId === 'password')) {
+    return (
+      <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+        <AuthStack.Screen
+          name="VerifyEmail"
+          component={VerifyEmailScreen}
+          initialParams={{ email: currentUser.email ?? '' }}
+        />
+      </AuthStack.Navigator>
+    );
+  }
+
+  // 3. If profile setup is not complete (new user), show full AuthStack starting at CreateProfile
+  if (!userProfile?.profileComplete) {
+    return (
+      <AuthStack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName="CreateProfile"
+      >
+        <AuthStack.Screen name="CreateProfile" component={CreateProfileScreen} />
+        <AuthStack.Screen name="LearningGoals" component={LearningGoalsScreen} />
+        <AuthStack.Screen name="NativeLanguage" component={NativeLanguageScreen} />
+        <AuthStack.Screen name="EnglishLevel" component={EnglishLevelScreen} />
+        <AuthStack.Screen name="SetupPin" component={SetupPinScreen} />
+        <AuthStack.Screen name="SetYourFingerprint" component={SetYourFingerprintScreen} />
+        <AuthStack.Screen name="SetupFaceID" component={SetupFaceIDScreen} />
+        <AuthStack.Screen name="TwoFactorAuth" component={TwoFactorAuthScreen} />
+        <AuthStack.Screen name="ChooseVerificationMethod" component={ChooseVerificationMethodScreen} />
+        <AuthStack.Screen name="SetupAuthenticator" component={SetupAuthenticatorScreen} />
+      </AuthStack.Navigator>
+    );
+  }
+
+  // 4. Decide which role-based stack to show
   if (userRole === 'learner') {
     return <LearnerNavigator />;
   }
+  if (userRole === 'admin') return <AdminNavigator />;
 
-  if (userRole === 'admin') {
-    return <AdminNavigator />;
-  }
-
-  // Default to auth for other roles (cms) - can be expanded later
-  return <AuthNavigator />;
+  // Default to Learner if role is unknown or not set (e.g. content_author)
+  return <LearnerNavigator />;
 };
 
 export default AppNavigator;

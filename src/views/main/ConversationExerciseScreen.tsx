@@ -8,6 +8,7 @@ import {
   Animated,
   Dimensions,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -234,7 +235,7 @@ const AiMascot: React.FC<{ visible: boolean }> = ({ visible }) => {
 const mascotStyles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 0,
+    bottom: Platform.OS === 'ios' ? 90 : 100,
     left: 16,
     alignItems: 'center',
     zIndex: 20,
@@ -813,7 +814,7 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
 
   // ── Bottom Area ──
   bottomArea: {
-    paddingBottom: 24,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 110,
     paddingTop: 8,
     alignItems: 'center',
   },
