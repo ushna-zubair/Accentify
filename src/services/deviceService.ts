@@ -1,10 +1,3 @@
-/**
- * deviceService – Lightweight helper to record the current device session.
- *
- * Used by AuthContext on each auth-state change so the device is upserted
- * automatically without needing to mount the full useLoginDevicesController hook.
- */
-
 import { Platform } from 'react-native';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Constants from 'expo-constants';
@@ -12,11 +5,7 @@ import * as Application from 'expo-application';
 import { db } from '../config/firebase';
 import type { DevicePlatform } from '../models';
 
-/**
- * Module-level cache for the installation ID.
- * Populated asynchronously via `initDeviceId()`, falls back to
- * expo-constants for sync callers.
- */
+
 let _installId: string | null = null;
 
 /** Call once at app startup to populate the async installation ID. */

@@ -1,24 +1,4 @@
-/**
- * adminService.ts
- *
- * Service for admin-related Firestore operations.
- * Aggregates per-user progress data into the pre-computed
- * `admin_analytics/global_stats` document that the admin
- * dashboard reads via `useDashboardAnalytics`.
- *
- * ── Firestore Layout ──
- *
- * admin_analytics/global_stats
- *   { activeUsers, growthPct, usageDateRange,
- *     weeklyBarData[], practiceActivity, pronunciationAccuracy,
- *     fluencyAccuracy, vocabularyRetention, topLearners[],
- *     totalSessions, sessionsGrowth, sessionsThisWeek[], sessionsLastWeek[],
- *     lastAggregatedAt }
- *
- * admin_analytics/global_stats/daily_snapshots/{YYYY-MM-DD}
- *   { activeUsers, totalSessions, date }   ← lightweight daily snapshot
- *     for computing growth percentages
- */
+
 
 import {
   doc,

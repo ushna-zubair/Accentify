@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import {
+  UserCredential,
   User,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
@@ -8,10 +9,14 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   signInWithCredential,
+  sendEmailVerification,
+  reload,
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Platform, Alert } from 'react-native';
-import { auth, db } from '../config/firebase';
+import { auth, db, firebaseConfig } from '../config/firebase';
+import app from '../config/firebase';
 import { UserRole, UserProfile, OnboardingPayload, AccountStatus } from '../models';
 import { recordDeviceSession } from '../services/deviceService';
 import { generateShortId } from '../utils/idUtils';
@@ -24,13 +29,19 @@ interface AuthContextType {
   userRole: UserRole | null;
   userProfile: UserProfile | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<void>;
+  /** True when the user has authenticated but still owes a TOTP code. */
+  pendingTotpChallenge: boolean;
+  signUp: (email: string, password: string) => Promise<UserCredential>;
   signIn: (email: string, password: string) => Promise<UserRole | null>;
   signOut: () => Promise<void>;
   fetchUserRole: (uid: string) => Promise<UserRole | null>;
   completeOnboarding: (data: OnboardingPayload) => Promise<void>;
   signInWithGoogle: () => Promise<{ isNewUser: boolean }>;
   signInWithApple: () => Promise<{ isNewUser: boolean }>;
+  sendVerificationEmail: (user?: User) => Promise<void>;
+  reloadUser: () => Promise<void>;
+  /** Called by TwoFactorChallengeScreen once the code has been verified. */
+  clearTotpChallenge: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -52,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingTotpChallenge, setPendingTotpChallenge] = useState(false);
 
   const fetchUserRole = useCallback(async (uid: string): Promise<UserRole | null> => {
     try {
@@ -81,10 +93,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const signUp = useCallback(async (email: string, password: string) => {
+  const signUp = useCallback(async (email: string, password: string): Promise<UserCredential> => {
     // Only create the Firebase Auth account here
     // The full Firestore document is written at the end of onboarding via completeOnboarding()
-    await createUserWithEmailAndPassword(auth, email, password);
+    const result = await createUserWithEmailAndPassword(auth, email, password);
+    return result;
   }, []);
 
   const signIn = useCallback(async (email: string, password: string): Promise<UserRole | null> => {
@@ -92,7 +105,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Update lastLoginAt on the Firestore doc
     updateDoc(doc(db, 'users', result.user.uid), {
       lastLoginAt: new Date().toISOString(),
-    }).catch(() => {}); // non-blocking
+    }).catch(() => { }); // non-blocking
+
+    // Check if this user has TOTP 2FA enabled — if so, gate access behind the
+    // TOTP challenge screen. We still load the role so the post-challenge route
+    // is ready, but pendingTotpChallenge keeps AppNavigator on the challenge.
+    try {
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      const data = userDoc.data();
+      const twoFAOn = data?.twoFactor?.enabled === true || data?.security?.twoFactorEnabled === true;
+      if (twoFAOn) {
+        setPendingTotpChallenge(true);
+      }
+    } catch {
+      // If the lookup fails, fall through — better to let them in than lock them out.
+    }
+
     const role = await fetchUserRole(result.user.uid);
     return role;
   }, [fetchUserRole]);
@@ -101,10 +129,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const completeOnboarding = useCallback(async (data: OnboardingPayload) => {
     if (!currentUser) throw new Error('No authenticated user found');
 
-    // Hash the PIN before storing — NEVER store plaintext PINs
-    let appPinHash: string | null = null;
+    // PIN stays on this device only — hashed and stored in expo-secure-store.
+    // Never sent to Firestore.
     if (data.security.appPin) {
-      appPinHash = await hashPin(data.security.appPin);
+      try {
+        const SecureStore = await import('expo-secure-store');
+        const pinHash = await hashPin(data.security.appPin);
+        await SecureStore.setItemAsync(`appPin:${currentUser.uid}`, pinHash);
+      } catch (err) {
+        console.warn('[Auth] Failed to persist PIN to SecureStore:', err);
+      }
     }
 
     const shortId = generateShortId();
@@ -133,7 +167,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
       },
       security: {
-        appPinHash,
+        // PIN is stored only on-device in expo-secure-store; presence flag here is purely informational.
+        appPinSet: !!data.security.appPin,
         biometricsEnabled: data.security.biometricsEnabled,
         twoFactorEnabled: data.security.twoFactorEnabled,
         twoFactorMethod: data.security.twoFactorEnabled ? 'email' : 'none',
@@ -157,11 +192,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchUserRole(currentUser.uid);
   }, [currentUser, fetchUserRole]);
 
-  /**
-   * Google Sign-In using expo-auth-session (works in Expo Go).
-   * Opens a browser-based OAuth flow, then exchanges the ID token with Firebase.
-   * Returns { isNewUser: true } when no Firestore doc exists yet (→ onboarding).
-   */
   const signInWithGoogle = useCallback(async (): Promise<{ isNewUser: boolean }> => {
     let AuthSession: typeof import('expo-auth-session');
     let WebBrowser: typeof import('expo-web-browser');
@@ -234,7 +264,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (userSnap.exists()) {
       // Update lastLoginAt
-      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => {});
+      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => { });
       await fetchUserRole(result.user.uid);
       return { isNewUser: false };
     }
@@ -311,6 +341,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await firebaseSignOut(auth);
     setUserRole(null);
     setUserProfile(null);
+    setPendingTotpChallenge(false);
+  }, []);
+
+  const clearTotpChallenge = useCallback(async () => {
+    setPendingTotpChallenge(false);
+  }, []);
+
+  const sendVerificationEmail = useCallback(async (user?: User) => {
+    const target = user || auth.currentUser;
+    if (!target) {
+      console.warn('[Auth] sendVerificationEmail: no user available – skipping');
+      return;
+    }
+
+    // Use native Firebase SDK for email verification (no SMTP setup required)
+    try {
+      const actionCodeSettings = {
+        url: `https://${firebaseConfig.authDomain || 'accentify-capstone.firebaseapp.com'}`,
+        handleCodeInApp: false,
+      };
+      await sendEmailVerification(target, actionCodeSettings);
+      console.log('[Auth] Native verification email sent to', target.email);
+    } catch (error: any) {
+      console.error('[Auth] Native verification failure:', error.code, error.message);
+      // Re-throw so the UI can show the actual error (e.g. auth/too-many-requests)
+      throw error;
+    }
+  }, []);
+
+  const reloadUser = useCallback(async () => {
+    if (auth.currentUser) {
+      await reload(auth.currentUser);
+      setCurrentUser({ ...auth.currentUser }); // Force state update
+    }
   }, []);
 
   useEffect(() => {
@@ -319,7 +383,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         await fetchUserRole(user.uid);
         // Record this device in the user's device sessions
-        recordDeviceSession(user.uid).catch(() => {});
+        recordDeviceSession(user.uid).catch(() => { });
       } else {
         setUserRole(null);
         setUserProfile(null);
@@ -328,13 +392,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return unsubscribe;
-  }, []);
+  }, [fetchUserRole]);
 
   const value = useMemo<AuthContextType>(() => ({
     currentUser,
     userRole,
     userProfile,
     loading,
+    pendingTotpChallenge,
     signUp,
     signIn,
     signOut,
@@ -342,7 +407,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     completeOnboarding,
     signInWithGoogle,
     signInWithApple,
-  }), [currentUser, userRole, userProfile, loading, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple]);
+    sendVerificationEmail,
+    reloadUser,
+    clearTotpChallenge,
+  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

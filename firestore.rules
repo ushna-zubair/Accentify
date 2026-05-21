@@ -17,14 +17,31 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // Role hierarchy: super_admin > admin > moderator > viewer.
+    // Sensitive operations (deleting other admins, changing roles) require super_admin.
+    function isSuperAdmin() {
+      return isAuthenticated() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.adminRole == 'super_admin';
+    }
+
     // ─── User documents ───
     // Users can read/write their own document; admins can read/update any user
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId);
-      // Users can update their own doc (but NOT the role field); admins can update any user
-      allow update: if (isOwner(userId) && !('role' in request.resource.data && request.resource.data.role != resource.data.role)) || isAdmin();
-      allow delete: if isAdmin();
+      // Users can update their own doc (but NOT the role field); admins can update any user.
+      // Only super_admin can change the `role` or `adminRole` field on any user document.
+      allow update: if (
+        isOwner(userId)
+          && !('role' in request.resource.data && request.resource.data.role != resource.data.role)
+          && !('adminRole' in request.resource.data && request.resource.data.adminRole != resource.data.adminRole)
+        ) || (isAdmin()
+          && !('role' in request.resource.data && request.resource.data.role != resource.data.role && !isSuperAdmin())
+          && !('adminRole' in request.resource.data && request.resource.data.adminRole != resource.data.adminRole && !isSuperAdmin())
+        );
+      // Only super_admin can delete admin/super_admin users; other admin tiers cannot.
+      allow delete: if isSuperAdmin()
+        || (isAdmin() && resource.data.role != 'admin');
 
       // ─── User sub-collections ───
 
@@ -76,6 +93,14 @@ service cloud.firestore {
       // Login devices
       match /devices/{deviceId} {
         allow read, write: if isOwner(userId);
+      }
+
+      // Security: TOTP secret + rate-limit counters.
+      // The encrypted TOTP secret must NEVER be readable by clients — only
+      // Cloud Functions (running with admin privileges, which bypass these rules)
+      // may read or write the doc. Same for the rate-limit counters.
+      match /security/{docId} {
+        allow read, write: if false;
       }
     }
 

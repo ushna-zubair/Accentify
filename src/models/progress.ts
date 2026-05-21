@@ -50,6 +50,33 @@ export interface ProgressData {
   weeks: WeeklyProgress[];
 }
 
+// ─── Per-attempt history ───
+export type PronunciationItemType = 'word' | 'sentence';
+
+export interface PronunciationAttempt {
+  itemType: PronunciationItemType;
+  reference: string;
+  overallPct: number;
+  clarityPct: number;
+  accuracyPct: number;
+  fluencyPct: number;
+  completed: boolean;
+  durationSec: number;
+  createdAt: string;
+}
+
+export interface DailyEntry {
+  date: string;
+  practiceItems: number;
+  completedItems: number;
+  practiceSeconds: number;
+  pronunciationAttempts: number;
+  vocabWordsLearned: number;
+  conversationTurns: number;
+  lessonsCompleted: number;
+  attempts: PronunciationAttempt[];
+}
+
 // ─── Insights Models ───
 export type EnglishLevel = 'A1 Beginner' | 'A2 Elementary' | 'B1 Intermediate' | 'B2 Upper Intermediate' | 'C1 Fluent' | 'C2 Proficient';
 

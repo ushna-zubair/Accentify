@@ -1,23 +1,11 @@
-/**
- * useAppTheme – Resolves the current AppPreferenceState into concrete style values.
- *
- * Usage:
- *   const theme = useAppTheme();
- *   <View style={{ backgroundColor: theme.colors.background }}>
- *     <Text style={{ fontSize: theme.fontSizes.body, color: theme.colors.text }}>Hello</Text>
- *     <TouchableOpacity style={{ backgroundColor: theme.colors.accent }}>…</TouchableOpacity>
- *   </View>
- */
+
 
 import { useMemo } from 'react';
 import { useAppPreference } from '../context/AppPreferenceContext';
-import type { ThemeOption, AccentColor, FontSizeOption } from '../models';
+import { useAccessibility } from '../context/AccessibilityContext';
+import type { ThemeOption, AccentColor, FontSizeOption, ColorBlindMode } from '../models';
 
-// ═══════════════════════════════════════════════
-//  COLOR MAPS
-// ═══════════════════════════════════════════════
 
-/** Semantic color palette returned by the hook. */
 export interface ThemeColors {
   /** Main screen background */
   background: string;
@@ -223,10 +211,33 @@ const ACCENT_MAP: Record<AccentColor, { light: AccentScale; dark: AccentScale }>
   },
 };
 
+// ─── Color-blind safe overrides ───────────────────────────────────────────────
+// Red/green pairs are confusable for Deuteranope & Protanope users — use blue/
+// orange instead. Tritanope users confuse blue/yellow — use teal/magenta.
+const COLOR_BLIND_OVERRIDES: Record<ColorBlindMode, Partial<ThemeColors>> = {
+  None: {},
+  Deuteranope: {
+    success: '#0072B2',
+    error: '#D55E00',
+    warning: '#E69F00',
+  },
+  Protanope: {
+    success: '#0072B2',
+    error: '#D55E00',
+    warning: '#E69F00',
+  },
+  Tritanope: {
+    success: '#009E73',
+    error: '#CC79A7',
+    warning: '#F0E442',
+  },
+};
+
 function resolveColors(
   theme: ThemeOption,
   accentColor: AccentColor,
   highContrast: boolean,
+  colorBlindMode: ColorBlindMode,
 ): ThemeColors {
   const isDark = theme === 'Dark';
   const base = isDark ? { ...DARK_BASE } : { ...LIGHT_BASE };
@@ -238,8 +249,9 @@ function resolveColors(
   const accent = isDark
     ? ACCENT_MAP[accentColor].dark
     : ACCENT_MAP[accentColor].light;
+  const cbOverrides = COLOR_BLIND_OVERRIDES[colorBlindMode] ?? {};
 
-  return { ...base, ...hcOverrides, ...accent };
+  return { ...base, ...hcOverrides, ...accent, ...cbOverrides };
 }
 
 // ═══════════════════════════════════════════════
@@ -294,7 +306,22 @@ export interface AppTheme {
   fontSizes: ThemeFontSizes;
   /** Whether the active theme is dark */
   isDark: boolean;
+  /**
+   * Multiply a base font size by the user's chosen font scale.
+   * Use in stylesheets so the "Small/Medium/Large" preference applies
+   * even on screens that haven't been migrated to `fontSizes` tokens.
+   *
+   *   const { scale } = useAppTheme();
+   *   styles = StyleSheet.create({ title: { fontSize: scale(20) } });
+   */
+  scale: (baseSize: number) => number;
 }
+
+const FONT_SCALE_MAP: Record<FontSizeOption, number> = {
+  Small: 0.9,
+  Medium: 1,
+  Large: 1.18,
+};
 
 /**
  * Reads the current `AppPreferenceState` from context and returns
@@ -302,13 +329,15 @@ export interface AppTheme {
  */
 export function useAppTheme(): AppTheme {
   const { theme, accentColor, fontSize, highContrastMode } = useAppPreference();
+  const { colorBlindMode } = useAccessibility();
 
-  return useMemo<AppTheme>(
-    () => ({
-      colors: resolveColors(theme, accentColor, highContrastMode),
+  return useMemo<AppTheme>(() => {
+    const fontScale = FONT_SCALE_MAP[fontSize] ?? 1;
+    return {
+      colors: resolveColors(theme, accentColor, highContrastMode, colorBlindMode),
       fontSizes: FONT_SIZE_MAP[fontSize],
       isDark: theme === 'Dark',
-    }),
-    [theme, accentColor, fontSize, highContrastMode],
-  );
+      scale: (n: number) => Math.round(n * fontScale),
+    };
+  }, [theme, accentColor, fontSize, highContrastMode, colorBlindMode]);
 }

@@ -20,6 +20,7 @@ import {
   ConversationPhase,
 } from '../../controllers/useConversationExerciseController';
 import type { TutorStackParamList, ConversationTurn } from '../../models';
+import { useHideTabBar } from '../../context/TabBarVisibilityContext';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -409,6 +410,7 @@ const ConversationExerciseScreen: React.FC = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
   const { lessonId } = route.params;
+  useHideTabBar();
 
   const {
     partnerName,
