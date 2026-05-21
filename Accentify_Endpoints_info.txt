@@ -1,0 +1,40 @@
+   Accentify Audio Evaluator
+   /prompt_word
+{"word":"HAUK","reference":"HH AO K","level":2}
+
+   /evaluate_word
+{"reference_arpabet":["HH","AO","K"],"detected_native":["h","ɔ","k"],"detected_arpabet":["HH","AO","K"],"phoneme_details":[{"phoneme_native":"h","phoneme_arpabet":"HH","confidence":0.10034161061048508},{"phoneme_native":"ɔ","phoneme_arp
+abet":"AO","confidence":0.0965414047241211},{"phoneme_native":"k","phoneme_arpabet":"K","confidence":0.133949413895607}],"ref_phones":["h","ɔ","k"],"comparison":[{"ref_arp":"HH","detected_arp":"HH","match":true,"conf":1.0},{"ref_arp":"A
+O","detected_arp":"AO","match":true,"conf":1.0},{"ref_arp":"K","detected_arp":"K","match":true,"conf":1.0}],"score":1.0,"missing_phones":[],"word":"HAUK","reference":"HH AO k"}
+
+
+
+   /prompt_sentence
+{"id":1191,"level":"A1","sentences":[{"sentence":"He was talking on the phone.","sapi":["hh iy","w aa z","t ao k ih ng","aa n","dh ah","f ow n"]},{"sentence":"The phone was on the table in the dining room.","sapi":["dh ah","f ow n","w a
+a z","aa n","dh ah","t ey b ah l","ih n","dh ah","d ay n ih ng","r uw m"]}]}
+
+   /evaluate_sentence
+{"reference_text":"The fox was brown.","word_correctness":{"ref_words":["the","fox","was","brown"],"matched":3,"substituted":1,"missing":0,"extra_spoken":0,"extra_tokens":[],"word_score":0.75,"word_score_pct":75.0},"words":[{"index":0,"ref":"the","op":"M","asr":"the","start":0.0,"end":0.71,"pronunciation_score":1.0,"evaluation":{"reference_arpabet":["DH","AH"],"detected_native":["ð","ə"],"detected_arpabet":["DH","AH"],"phoneme_details":[{"phoneme_native":"ð","phoneme_arpabet":"DH","confidence":0.0010336352279409766},{"phoneme_native":"ə","phoneme_arpabet":"AH","confidence":0.0007586710271425545}],"ref_phones":["ð","ə"],"comparison":[{"ref_arp":"DH","detected_arp":"DH","match":true,"conf":1.0},{"ref_arp":"AH","detected_arp":"AH","match":true,"conf":1.0}],"score":1.0,"missing_phones":[]}},{"index":1,"ref":"fox","op":"M","asr":"fox","start":0.81,"end":2.47,"pronunciation_score":1.0,"evaluation":{"reference_arpabet":["F","AA","K","S"],"detected_native":["f","ɑ","k","s"],"detected_arpabet":["F","AA","K","S"],"phoneme_details":[{"phoneme_native":"f","phoneme_arpabet":"F","confidence":0.0006704356637783349},{"phoneme_native":"ɑ","phoneme_arpabet":"AA","confidence":0.0021500044967979193},{"phoneme_native":"k","phoneme_arpabet":"K","confidence":0.0054817795753479},{"phoneme_native":"s","phoneme_arpabet":"S","confidence":0.0023383949883282185}],"ref_phones":["f","ɑ","k","s"],"comparison":[{"ref_arp":"F","detected_arp":"F","match":true,"conf":1.0},{"ref_arp":"AA","detected_arp":"AA","match":true,"conf":1.0},{"ref_arp":"K","detected_arp":"K","match":true,"conf":1.0},{"ref_arp":"S","detected_arp":"S","match":true,"conf":1.0}],"score":1.0,"missing_phones":[]}},{"index":2,"ref":"was","op":"M","asr":"was","start":2.57,"end":3.91,"pronunciation_score":0.5714285714285714,"evaluation":{"reference_arpabet":["W","AA","Z"],"detected_native":["w","ʌ","z"],"detected_arpabet":["W","AH","Z"],"phoneme_details":[{"phoneme_native":"w","phoneme_arpabet":"W","confidence":0.0029376919846981764},{"phoneme_native":"ʌ","phoneme_arpabet":"AH","confidence":2.266486808366608e-05},{"phoneme_native":"z","phoneme_arpabet":"Z","confidence":0.001955309184268117}],"ref_phones":["w","ʌ","z"],"comparison":[{"ref_arp":"W","detected_arp":"W","match":true,"conf":1.0},{"ref_arp":"AA","detected_arp":"-","match":false,"conf":0.0},{"ref_arp":"Z","detected_arp":"Z","match":true,"conf":1.0}],"score":0.5714285714285714,"missing_phones":[]}},{"index":3,"ref":"brown","op":"S","asr":"bound","start":4.01,"end":5.52,"pronunciation_score":0.6666666666666666,"evaluation":{"reference_arpabet":["B","R","AW","N"],"detected_native":["b","ɹ","a","ʊ","n"],"detected_arpabet":["B","R","AA","UH","N"],"phoneme_details":[{"phoneme_native":"b","phoneme_arpabet":"B","confidence":0.055764760822057724},{"phoneme_native":"ɹ","phoneme_arpabet":"R","confidence":0.018657535314559937},{"phoneme_native":"a","phoneme_arpabet":"AA","confidence":0.704177737236023},{"phoneme_native":"ʊ","phoneme_arpabet":"UH","confidence":0.00971192866563797},{"phoneme_native":"n","phoneme_arpabet":"N","confidence":0.0007351843523792922}],"ref_phones":["b","ɹ","a","ʊ","n"],"comparison":[{"ref_arp":"B","detected_arp":"B","match":true,"conf":1.0},{"ref_arp":"R","detected_arp":"R","match":true,"conf":1.0},{"ref_arp":"AW","detected_arp":"-","match":false,"conf":0.0},{"ref_arp":"N","detected_arp":"N","match":true,"conf":1.0}],"score":0.6666666666666666,"missing_phones":[]}}],"overall":{"pronunciation_score":0.8095,"weighted_overall_score":0.6071,"scored_words":4,"skipped_words":0}}
+
+
+
+   Legend
+op is word alignment (M match, S substitution, D deletion);
+asr is the ASR word token aligned to the reference.
+phoneme_arpabet is each detected phoneme mapped to ARPAbet, confidence is the mean model probability for that phoneme span, and score is the phoneme-match score for the word.
+
+
+pronunciation_score is the average of the per-word score values for scored words,
+how well words produced overall.
+
+weighted_overall_score = pronunciation_score * word_correctness.word_score (sentence alignment quality), so sentence alignment quality lowers the final score. It drops if user misses/substitued some words. It tell how overall sentence was pronounced + match the prompt.
+
+   Accentify Feedback
+
+   Feedback_Sentence
+{"reference_text":"The fox was brown.","feedback":"To improve your pronunciation, focus on slowing down slightly and pausing naturally between words to allow for clearer enunciation. Specifically, pay attention to correctly pronouncing
+\"was\" with a short \"a\" sound and replace \"brown\" with the correct pronunciation, using the \"r\" sound."}
+
+   Feedback_Word
+{"word":"CANCELLED","feedback":"To correct the error, place your tongue behind your top teeth and add a gentle \"d\" sound by allowing air to flow through your teeth, creating a soft \"d\" sound after the \"C\" sound. Then, pronounce th
+e word as \"kan-sel-ded\" with a slight pause between \"d\" and \"ed\"."}

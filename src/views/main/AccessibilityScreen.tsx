@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useAccessibility } from '../../context/AccessibilityContext';
+import { useAppPreference } from '../../context/AppPreferenceContext';
 import { ColorBlindMode, FontStyleOption, SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -101,9 +102,9 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
     setTranscript,
     reduceAnimation,
     setReduceAnimation,
-    highContrastMode,
-    setHighContrastMode,
   } = useAccessibility();
+  // High-contrast lives in AppPreferenceContext so useAppTheme reads a single source of truth.
+  const { highContrastMode, setHighContrastMode } = useAppPreference();
   const { colors: tc } = useAppTheme();
   const { width } = useWindowDimensions();
   const isWide = isWeb && width >= 700;

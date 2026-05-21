@@ -15,11 +15,7 @@ interface UseCodeInputReturn {
   value: string;
 }
 
-/**
- * Reusable hook for fixed-length numeric code input (OTP, PIN, authenticator).
- *
- * @param length - Number of digits expected (e.g. 4 for PIN, 6 for authenticator)
- */
+
 export function useCodeInput(length: number): UseCodeInputReturn {
   const [code, setCode] = useState<string[]>(Array(length).fill(''));
 

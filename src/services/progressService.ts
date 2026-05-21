@@ -39,7 +39,10 @@ import {
   increment,
   arrayUnion,
   runTransaction,
+  addDoc,
 } from 'firebase/firestore';
+import { STREAK_THRESHOLD_PCT, COMPLETE_THRESHOLD_PCT } from '../config/scoring';
+import type { PronunciationAttempt, PronunciationItemType } from '../models/progress';
 import { db } from '../config/firebase';
 import {
   getWeekNumber,
@@ -155,6 +158,99 @@ export const recordPronunciationActivity = async (
     },
     { merge: true },
   );
+};
+
+/**
+ * Per-attempt record for a single word or sentence evaluation. Counts as one
+ * "practice item" for any score above zero, as "completed" when overall ≥
+ * COMPLETE_THRESHOLD_PCT, and fires the streak when overall ≥
+ * STREAK_THRESHOLD_PCT.
+ */
+export const recordPronunciationAttempt = async (
+  uid: string,
+  input: {
+    itemType: PronunciationItemType;
+    reference: string;
+    score: PronunciationScore;
+    durationSec: number;
+  },
+): Promise<{ completed: boolean; streakUpdated: boolean }> => {
+  const overall = input.score.overall;
+  const completed = overall >= COMPLETE_THRESHOLD_PCT;
+  const streakWorthy = overall >= STREAK_THRESHOLD_PCT;
+  const todayKey = toDateKey(new Date());
+
+  const attempt: PronunciationAttempt = {
+    itemType: input.itemType,
+    reference: input.reference,
+    overallPct: overall,
+    clarityPct: input.score.clarity,
+    accuracyPct: input.score.accuracy,
+    fluencyPct: input.score.fluency,
+    completed,
+    durationSec: Math.max(0, Math.round(input.durationSec)),
+    createdAt: new Date().toISOString(),
+  };
+
+  const dailyRef = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
+  await setDoc(
+    dailyRef,
+    {
+      date: todayKey,
+      practiceItems: increment(1),
+      completedItems: increment(completed ? 1 : 0),
+      practiceSeconds: increment(attempt.durationSec),
+      pronunciationAttempts: increment(1),
+      pronunciationScores: arrayUnion(input.score),
+      attempts: arrayUnion(attempt),
+      updatedAt: Timestamp.now(),
+    },
+    { merge: true },
+  );
+
+  try {
+    const attemptsCol = collection(db, 'users', uid, 'progress', 'attempts', 'entries');
+    await addDoc(attemptsCol, { ...attempt, dateKey: todayKey });
+  } catch (e) {
+    console.warn('[progressService] attempts history write failed:', e);
+  }
+
+  try {
+    const itemKey = `${input.itemType}:${input.reference.trim().toLowerCase()}`
+      .replace(/[/.#$\[\]]/g, '_')
+      .slice(0, 1000);
+    const itemRef = doc(db, 'users', uid, 'progress', 'items', 'entries', itemKey);
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(itemRef);
+      const prevBest = snap.exists() ? ((snap.data().bestScore as number) ?? 0) : 0;
+      tx.set(
+        itemRef,
+        {
+          itemType: input.itemType,
+          reference: input.reference,
+          bestScore: Math.max(prevBest, overall),
+          attempts: increment(1),
+          lastAttempt: attempt.createdAt,
+          updatedAt: Timestamp.now(),
+        },
+        { merge: true },
+      );
+    });
+  } catch (e) {
+    console.warn('[progressService] item best-score write failed:', e);
+  }
+
+  let streakUpdated = false;
+  if (streakWorthy) {
+    try {
+      await updateStreak(uid);
+      streakUpdated = true;
+    } catch (e) {
+      console.warn('[progressService] streak update failed:', e);
+    }
+  }
+
+  return { completed, streakUpdated };
 };
 
 /**
@@ -461,30 +557,27 @@ export const onExerciseComplete = async (
   },
 ): Promise<void> => {
   try {
-    // 1. Update streak
-    await updateStreak(uid);
-
-    // 2. Record daily activity
-    switch (type) {
-      case 'pronunciation':
-        if (payload.score) await recordPronunciationActivity(uid, payload.score);
-        break;
-      case 'conversation':
-        if (payload.metrics) await recordConversationActivity(uid, payload.metrics);
-        break;
-      case 'vocab':
-        await recordVocabActivity(uid, payload.wordsLearned ?? 1);
-        break;
+    // Pronunciation streak is fired per-attempt via recordPronunciationAttempt
+    // when overall ≥ STREAK_THRESHOLD_PCT. For conversation/vocab we fall back
+    // to the legacy per-completion streak bump, gated on a passable metric.
+    if (type === 'conversation' && payload.metrics) {
+      await recordConversationActivity(uid, payload.metrics);
+      if ((payload.metrics.overall ?? 0) >= STREAK_THRESHOLD_PCT) {
+        await updateStreak(uid);
+      }
+    } else if (type === 'vocab') {
+      await recordVocabActivity(uid, payload.wordsLearned ?? 1);
+      if ((payload.wordsLearned ?? 0) > 0) {
+        await updateStreak(uid);
+      }
     }
+    // Pronunciation: attempts already wrote daily counters + streak.
 
-    // 3. Record lesson completion
     await recordLessonCompletion(uid);
 
-    // 4. Re-aggregate current week
     const weekStart = getWeekStart(new Date());
     await aggregateWeek(uid, weekStart);
 
-    // 5. Increment admin analytics session counter
     try {
       const { incrementSessionCounter, recordPracticeTime } = await import('./adminService');
       await incrementSessionCounter();

@@ -23,7 +23,6 @@ import {
   getDocs,
   getDoc,
   doc,
-  where,
 } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
@@ -31,6 +30,7 @@ import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import type { HomeStackParamList, Announcement } from '../../models';
+import { DEFAULT_DAILY_GOAL } from '../../config/scoring';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomeMain'>;
 
@@ -47,35 +47,23 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loadingAnnouncements, setLoadingAnnouncements] = useState(true);
 
-  // ── Recent lessons state ──
-  interface RecentLesson {
-    id: string;
-    title: string;
-    description: string;
-    category: string;
-    difficulty: string;
-    order: number;
-  }
-  const [recentLessons, setRecentLessons] = useState<RecentLesson[]>([]);
-  const [loadingLessons, setLoadingLessons] = useState(true);
-
-  // ── Unread notification count ──
-  const [unreadCount, setUnreadCount] = useState(0);
-
   // ── Dynamic stats ──
   const [dayStreak, setDayStreak] = useState(0);
   const [completedToday, setCompletedToday] = useState(0);
   const [practiceMinutes, setPracticeMinutes] = useState(0);
+  const [practiceItemsToday, setPracticeItemsToday] = useState(0);
+  const dailyGoal =
+    (userProfile as any)?.studyPlan?.dailyGoal ?? DEFAULT_DAILY_GOAL;
 
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchHomeData = useCallback(async () => {
     const uid = auth.currentUser?.uid;
 
-    // Fetch latest announcements (top 3)
+    // Fetch only the latest announcement (shown as a single banner)
     try {
       const annRef = collection(db, 'announcements');
-      const annQ = query(annRef, orderBy('createdAt', 'desc'), limit(3));
+      const annQ = query(annRef, orderBy('createdAt', 'desc'), limit(1));
       const annSnap = await getDocs(annQ);
       const items: Announcement[] = annSnap.docs.map((d) => {
         const data = d.data();
@@ -93,34 +81,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
       setLoadingAnnouncements(false);
     }
 
-    // Fetch latest published lessons (top 5) — sort client-side to avoid composite index
-    try {
-      const lessonsRef = collection(db, 'lessons');
-      const lessonsQ = query(lessonsRef, where('status', '==', 'published'));
-      const lessonsSnap = await getDocs(lessonsQ);
-      const items: RecentLesson[] = lessonsSnap.docs
-        .map((d) => {
-          const data = d.data();
-          return { id: d.id, title: data.title ?? '', description: data.description ?? '', category: data.category ?? 'conversation', difficulty: data.difficulty ?? 'Easy', order: data.order ?? 0 };
-        })
-        .sort((a, b) => a.order - b.order)
-        .slice(0, 5);
-      setRecentLessons(items);
-    } catch (e: unknown) {
-      console.warn('[Home] lessons fetch:', e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoadingLessons(false);
-    }
-
-    // Fetch unread notification count
     if (uid) {
-      try {
-        const notifRef = collection(db, 'users', uid, 'notifications');
-        const notifQ = query(notifRef, where('unread', '==', true));
-        const notifSnap = await getDocs(notifQ);
-        setUnreadCount(notifSnap.size);
-      } catch { /* ignore */ }
-
       // Fetch day streak
       try {
         const streakSnap = await getDoc(doc(db, 'users', uid, 'progress', 'streak'));
@@ -134,13 +95,27 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         const todayKey = new Date().toISOString().split('T')[0];
         const dailySnap = await getDoc(doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey));
         if (dailySnap.exists()) {
-          const d = dailySnap.data();
-          const lessons = (d.lessonsCompleted ?? 0);
-          const pron = (d.pronunciationAttempts ?? 0);
-          const conv = (d.conversationTurns ?? 0);
-          const vocab = (d.vocabWordsLearned ?? 0);
-          setCompletedToday(lessons + pron + conv + vocab);
-          setPracticeMinutes(d.practiceMinutes ?? Math.round((pron + conv + vocab) * 2));
+          const d = dailySnap.data() as any;
+          const completed =
+            (d.completedItems as number) ??
+            (d.lessonsCompleted ?? 0) + (d.pronunciationAttempts ?? 0);
+          const practiceItems =
+            (d.practiceItems as number) ??
+            (d.pronunciationAttempts ?? 0) +
+              (d.conversationTurns ?? 0) +
+              (d.vocabWordsLearned ?? 0);
+          const seconds =
+            (d.practiceSeconds as number) ??
+            (d.practiceMinutes != null
+              ? (d.practiceMinutes as number) * 60
+              : practiceItems * 30);
+          setCompletedToday(completed);
+          setPracticeItemsToday(practiceItems);
+          setPracticeMinutes(Math.round(seconds / 60));
+        } else {
+          setCompletedToday(0);
+          setPracticeItemsToday(0);
+          setPracticeMinutes(0);
         }
       } catch { /* ignore */ }
     }
@@ -170,9 +145,6 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
     } catch { return ''; }
   };
 
-  const CATEGORY_COLORS: Record<string, string> = { conversation: '#9FB2FD', pronunciation: '#FEC79C', vocabulary: '#9DE09D' };
-  const CATEGORY_ICONS: Record<string, string> = { conversation: 'chatbubbles', pronunciation: 'mic', vocabulary: 'book' };
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView
@@ -188,9 +160,18 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={styles.greeting}>Hello, {firstName} 👋</Text>
             <Text style={styles.subGreeting}>Ready to practice today?</Text>
           </View>
-          <View style={styles.avatarCircle}>
+          <TouchableOpacity
+            style={styles.avatarCircle}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            onPress={() =>
+              (navigation as any).navigate('Settings', { screen: 'ProfileSettings' })
+            }
+            accessibilityRole="button"
+            accessibilityLabel="Open profile settings"
+          >
             <Ionicons name="person" size={22} color={tc.accent} />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* ── Announcements Banner ── */}
@@ -202,7 +183,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
                 <Text style={styles.sectionTitle}>Announcements</Text>
               </View>
             </View>
-            {announcements.map((ann) => (
+            {announcements.slice(0, 1).map((ann) => (
               <View key={ann.id} style={styles.announcementCard}>
                 <View style={styles.announcementIconWrap}>
                   <Ionicons name="megaphone-outline" size={18} color={tc.accent} />
@@ -242,11 +223,26 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Progress bar */}
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: '33%' }]} />
-          </View>
-          <Text style={styles.progressLabel}>3 sentences • ~5 min</Text>
+          {/* Progress bar — reflects today's completion vs daily goal */}
+          {(() => {
+            const pct = dailyGoal > 0
+              ? Math.min(100, Math.round((completedToday / dailyGoal) * 100))
+              : 0;
+            const remaining = Math.max(0, dailyGoal - completedToday);
+            const label = remaining > 0
+              ? `${completedToday}/${dailyGoal} done today • ${practiceMinutes}m practiced`
+              : `Daily goal complete • ${practiceMinutes}m practiced`;
+            return (
+              <>
+                <View style={styles.progressBarBg}>
+                  <View
+                    style={[styles.progressBarFill, { width: `${pct}%` }]}
+                  />
+                </View>
+                <Text style={styles.progressLabel}>{label}</Text>
+              </>
+            );
+          })()}
         </TouchableOpacity>
 
         {/* ── Chat with Wavy Card ── */}
@@ -317,14 +313,33 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.exerciseCard}
           activeOpacity={0.8}
-          onPress={() => navigation.navigate('HomePronunciation', {})}
+          onPress={() => navigation.navigate('HomeWordPronunciation', {})}
         >
           <View style={[styles.exerciseIcon, { backgroundColor: tc.accentMuted }]}>
-            <Ionicons name="mic-outline" size={24} color={tc.accent} />
+            <Ionicons name="mic-circle-outline" size={24} color={tc.accent} />
           </View>
           <View style={styles.exerciseInfo}>
-            <Text style={styles.exerciseTitle}>Pronunciation Practice</Text>
-            <Text style={styles.exerciseDesc}>Read aloud and get AI feedback</Text>
+            <Text style={styles.exerciseTitle}>Word Pronunciation Practice</Text>
+            <Text style={styles.exerciseDesc}>
+              Practice individual words with phoneme-level scoring
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.exerciseCard}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('HomePronunciation', {})}
+        >
+          <View style={[styles.exerciseIcon, { backgroundColor: tc.warningBg }]}>
+            <Ionicons name="chatbubbles-outline" size={24} color={tc.warning} />
+          </View>
+          <View style={styles.exerciseInfo}>
+            <Text style={styles.exerciseTitle}>Sentence Pronunciation Practice</Text>
+            <Text style={styles.exerciseDesc}>
+              Read sentences aloud and get AI feedback
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>
@@ -339,58 +354,6 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.exerciseCard, { opacity: 0.5 }]} activeOpacity={1}>
-          <View style={[styles.exerciseIcon, { backgroundColor: tc.warningBg }]}>
-            <Ionicons name="chatbubbles-outline" size={24} color={tc.warning} />
-          </View>
-          <View style={styles.exerciseInfo}>
-            <Text style={styles.exerciseTitle}>Conversation Practice</Text>
-            <Text style={styles.exerciseDesc}>Coming soon</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
-        </TouchableOpacity>
-
-        {/* ── Available Lessons from Firestore ── */}
-        {!loadingLessons && recentLessons.length > 0 && (
-          <>
-            <View style={[styles.sectionHeader, { marginTop: 12 }]}>
-              <View style={styles.sectionHeaderLeft}>
-                <Ionicons name="library" size={18} color={tc.accent} />
-                <Text style={styles.sectionTitle}>Available Lessons</Text>
-              </View>
-            </View>
-            {recentLessons.map((lesson) => {
-              const catColor = CATEGORY_COLORS[lesson.category] ?? tc.accentLight;
-              const catIcon = CATEGORY_ICONS[lesson.category] ?? 'book';
-              return (
-                <TouchableOpacity
-                  key={lesson.id}
-                  style={styles.exerciseCard}
-                  activeOpacity={0.8}
-                  onPress={() => {
-                    // Navigate to Tutor tab → LessonDetail
-                    (navigation as any).navigate('Tutor', {
-                      screen: 'LessonDetail',
-                      params: { lessonId: lesson.id },
-                    });
-                  }}
-                >
-                  <View style={[styles.exerciseIcon, { backgroundColor: `${catColor}30` }]}>
-                    <Ionicons name={catIcon as any} size={24} color={catColor} />
-                  </View>
-                  <View style={styles.exerciseInfo}>
-                    <Text style={styles.exerciseTitle}>{lesson.title}</Text>
-                    <Text style={styles.exerciseDesc} numberOfLines={1}>{lesson.description}</Text>
-                  </View>
-                  <View style={[styles.difficultyPill, { backgroundColor: `${catColor}18` }]}>
-                    <Text style={[styles.difficultyText, { color: catColor }]}>{lesson.difficulty}</Text>
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
-          </>
-        )}
 
         {/* Bottom spacer for tab bar */}
         <View style={{ height: 100 }} />

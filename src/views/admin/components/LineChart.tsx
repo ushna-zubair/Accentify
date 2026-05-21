@@ -25,27 +25,46 @@ const LineChart: React.FC<LineChartProps> = ({
     thisWeek: tc.accent,
     lastWeek: tc.disabled,
   };
-  const maxVal = Math.max(...thisWeek, ...lastWeek, 1);
+  const hasData = (thisWeek?.length ?? 0) > 0 || (lastWeek?.length ?? 0) > 0;
+  const maxVal = Math.max(...(thisWeek ?? []), ...(lastWeek ?? []), 1);
   const padding = 20;
   const usableWidth = width - padding * 2;
   const usableHeight = height - padding * 2;
 
-  const toPoints = (data: number[]) =>
-    data
+  // Divisor guard — `length - 1` is zero for single-point series and -1 for empty.
+  const xStep = (data: number[]) =>
+    data.length > 1 ? usableWidth / (data.length - 1) : 0;
+
+  const toPoints = (data: number[]) => {
+    if (!data?.length) return '';
+    const step = xStep(data);
+    return data
       .map((v, i) => {
-        const x = padding + (i / (data.length - 1)) * usableWidth;
+        const x = padding + i * step;
         const y = padding + usableHeight - (v / maxVal) * usableHeight;
         return `${x},${y}`;
       })
       .join(' ');
+  };
 
-  const toCoords = (data: number[]) =>
-    data.map((v, i) => ({
-      x: padding + (i / (data.length - 1)) * usableWidth,
+  const toCoords = (data: number[]) => {
+    if (!data?.length) return [];
+    const step = xStep(data);
+    return data.map((v, i) => ({
+      x: padding + i * step,
       y: padding + usableHeight - (v / maxVal) * usableHeight,
     }));
+  };
 
   const thisWeekCoords = toCoords(thisWeek);
+
+  if (!hasData) {
+    return (
+      <View style={[styles.emptyWrap, { width, height }]}>
+        <Text style={styles.emptyText}>No data yet</Text>
+      </View>
+    );
+  }
 
   return (
     <View>
@@ -116,6 +135,15 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   label: {
     fontFamily: fonts.regular,
     fontSize: 10,
+    color: tc.textMuted,
+  },
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
     color: tc.textMuted,
   },
 });

@@ -1,11 +1,4 @@
-/**
- * useProfileData – Fetches the authenticated user's Firestore document.
- *
- * Returns:
- *   • userDoc   – The typed `UserDocument` or `null` while loading / on error.
- *   • isLoading – `true` while the initial fetch is in-flight.
- *   • error     – A human-readable error string, or `null`.
- */
+
 
 import { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';

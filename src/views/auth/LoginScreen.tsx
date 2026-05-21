@@ -26,7 +26,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const { width } = useWindowDimensions();
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, signInWithApple } = useAuth();
   const isWeb = Platform.OS === 'web';
   const isWideWeb = isWeb && width >= 600;
   const [email, setEmail] = useState('');
@@ -50,17 +50,12 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
     setLoading(true);
     try {
-      // Use AuthContext.signIn — it calls Firebase Auth + fetches user role.
-      // AppNavigator will automatically switch to LearnerNavigator/AdminNavigator
-      // once the role is set in context state.
-      const role = await signIn(email, password);
-
-      if (!role) {
-        // User exists in Firebase Auth but has no Firestore doc
-        // (incomplete onboarding) — send them to complete their profile.
-        navigation.navigate('CreateProfile');
-      }
-      // If role is set, AppNavigator handles navigation automatically — no manual nav needed.
+      // AppNavigator is the single source of truth for post-login routing:
+      // it shows CreateProfile when userProfile.profileComplete is false and
+      // the role-based stack otherwise. We must NOT manually navigate here —
+      // doing so sent returning users into onboarding whenever the Firestore
+      // lookup was transient-null.
+      await signIn(email, password);
     } catch (error: any) {
       let message = 'Sign in failed. Please try again.';
       if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
@@ -79,16 +74,31 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
-      const { isNewUser } = await signInWithGoogle();
-      if (isNewUser) {
-        navigation.navigate('CreateProfile');
-      }
-      // If not a new user, AppNavigator handles routing automatically
+      // AppNavigator routes new users (profileComplete === false) to the
+      // CreateProfile stack automatically — no manual navigation needed.
+      await signInWithGoogle();
     } catch (error: any) {
       if (error?.message?.includes('CANCELLED') || error?.message?.includes('cancelled')) {
         return;
       }
       showAlert('Error', error.message || 'Google Sign-In failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    try {
+      setLoading(true);
+      // AppNavigator routes new users to CreateProfile automatically.
+      await signInWithApple();
+    } catch (error: any) {
+      // Apple's SDK throws ERR_REQUEST_CANCELED when the user dismisses the sheet
+      const msg = String(error?.code || error?.message || '');
+      if (msg.includes('ERR_REQUEST_CANCELED') || msg.includes('CANCELLED') || msg.includes('cancelled')) {
+        return;
+      }
+      showAlert('Error', error?.message || 'Apple Sign-In failed');
     } finally {
       setLoading(false);
     }
@@ -105,111 +115,120 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={isWideWeb ? styles.webCard : undefined}>
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require('../../../assets/logo.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
+          {/* Logo */}
+          <View style={styles.logoContainer}>
+            <Image
+              source={require('../../../assets/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
 
-        {/* Title & Subtitle */}
-        <Text style={styles.title}>Welcome Back</Text>
-        <Text style={styles.subtitle}>Login to Your Account to Continue Your Journey</Text>
+          {/* Title & Subtitle */}
+          <Text style={styles.title}>Welcome Back</Text>
+          <Text style={styles.subtitle}>Login to Your Account to Continue Your Journey</Text>
 
-        {/* Email & Password Inputs */}
-        <View style={styles.inputsContainer}>
-          <CustomInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
-          />
-          <CustomInput
-            placeholder="Password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-            leftIcon={<FontAwesome5 name="lock" size={16} color={tc.textMuted} />}
-          />
-        </View>
+          {/* Email & Password Inputs */}
+          <View style={styles.inputsContainer}>
+            <CustomInput
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
+            />
+            <CustomInput
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              leftIcon={<FontAwesome5 name="lock" size={16} color={tc.textMuted} />}
+            />
+          </View>
 
-        {/* Remember Me & Forgot Password Row */}
-        <View style={styles.optionsRow}>
-          <TouchableOpacity
-            style={styles.rememberRow}
-            onPress={() => setRememberMe(!rememberMe)}
-            activeOpacity={0.7}
-          >
-            <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-              {rememberMe && <FontAwesome5 name="check" size={10} color={tc.white} />}
-            </View>
-            <Text style={styles.rememberText}>Remember Me</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword', { email: email.trim() })}>
-            <Text style={styles.forgotText}>Forgot Password?</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Sign In Button */}
-        <TouchableOpacity
-          style={styles.signInButton}
-          onPress={handleSignInWithAccount}
-          activeOpacity={0.8}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={tc.white} />
-          ) : (
-            <>
-              <Text style={styles.signInButtonText}>Sign In</Text>
-              <View style={styles.arrowCircle}>
-                <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
+          {/* Remember Me & Forgot Password Row */}
+          <View style={styles.optionsRow}>
+            <TouchableOpacity
+              style={styles.rememberRow}
+              onPress={() => setRememberMe(!rememberMe)}
+              activeOpacity={0.7}
+            >
+              <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
+                {rememberMe && <FontAwesome5 name="check" size={10} color={tc.white} />}
               </View>
-            </>
-          )}
-        </TouchableOpacity>
+              <Text style={styles.rememberText}>Remember Me</Text>
+            </TouchableOpacity>
 
-        {/* Or Continue With Divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>Or Continue With</Text>
-          <View style={styles.dividerLine} />
-        </View>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword', { email })}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.forgotText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
 
-        {/* Social Login Buttons */}
-        <View style={styles.socialRow}>
+          {/* Sign In Button */}
           <TouchableOpacity
-            style={styles.socialButton}
-            onPress={handleGoogleSignIn}
+            style={styles.signInButton}
+            onPress={handleSignInWithAccount}
+            activeOpacity={0.8}
             disabled={loading}
-            activeOpacity={0.7}
           >
             {loading ? (
-              <ActivityIndicator color={tc.accent} size="small" />
+              <ActivityIndicator color={tc.white} />
             ) : (
-              <FontAwesome5 name="google" size={22} color={'#4285F4'} />
+              <>
+                <Text style={styles.signInButtonText}>Sign In</Text>
+                <View style={styles.arrowCircle}>
+                  <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
+                </View>
+              </>
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.socialButton}
-            activeOpacity={0.7}
-          >
-            <FontAwesome5 name="apple" size={22} color={'#000000'} />
-          </TouchableOpacity>
-        </View>
+          {/* Or Continue With Divider */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>Or Continue With</Text>
+            <View style={styles.dividerLine} />
+          </View>
 
-        {/* Sign Up Link */}
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Don't have an Account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.signUpLink}>SIGN UP</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Social Login Buttons */}
+          <View style={styles.socialRow}>
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={handleGoogleSignIn}
+              disabled={loading}
+              activeOpacity={0.7}
+            >
+              {loading ? (
+                <ActivityIndicator color={tc.accent} size="small" />
+              ) : (
+                <FontAwesome5 name="google" size={22} color={'#4285F4'} />
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.socialButton}
+              onPress={handleAppleSignIn}
+              disabled={loading || Platform.OS !== 'ios'}
+              activeOpacity={0.7}
+            >
+              <FontAwesome5
+                name="apple"
+                size={22}
+                color={Platform.OS === 'ios' ? '#000000' : tc.textMuted}
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Sign Up Link */}
+          <View style={styles.signUpContainer}>
+            <Text style={styles.signUpText}>Don't have an Account? </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+              <Text style={styles.signUpLink}>SIGN UP</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -245,11 +264,11 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     paddingVertical: 36,
     ...(Platform.OS === 'web'
       ? {
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.08,
-          shadowRadius: 24,
-        }
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 24,
+      }
       : {}),
   },
   /* ── Logo ── */
@@ -380,6 +399,24 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  /* ── OTP Login ── */
+  otpButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 10,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: tc.accent,
+    borderRadius: 12,
+    borderStyle: 'dashed',
+  },
+  otpButtonText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
+    color: tc.accent,
   },
   /* ── Sign Up ── */
   signUpContainer: {

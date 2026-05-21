@@ -16,6 +16,15 @@ const BarChart: React.FC<BarChartProps> = ({ data, height = 180 }) => {
     thisWeek: tc.accent,
     lastWeek: tc.accentMuted,
   };
+
+  if (!data || data.length === 0) {
+    return (
+      <View style={[styles.emptyWrap, { height: height + 30 }]}>
+        <Text style={styles.emptyText}>No data yet</Text>
+      </View>
+    );
+  }
+
   const maxVal = Math.max(...data.flatMap((d) => [d.thisWeek, d.lastWeek]), 1);
   const barWidth = 14;
   const gap = 6;
@@ -83,6 +92,15 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     color: tc.textMuted,
     textAlign: 'center',
     position: 'absolute',
+  },
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: tc.textMuted,
   },
 });
 

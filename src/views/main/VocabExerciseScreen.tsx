@@ -18,6 +18,7 @@ import Svg, { Rect, Path, Circle } from 'react-native-svg';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useVocabExerciseController } from '../../controllers';
+import { useHideTabBar } from '../../context/TabBarVisibilityContext';
 import type { TutorStackParamList } from '../../models';
 
 type ExerciseRoute = RouteProp<TutorStackParamList, 'VocabExercise'>;
@@ -221,6 +222,7 @@ const VocabExerciseScreen: React.FC = () => {
   const navigation = useNavigation<ExerciseNav>();
   const route = useRoute<ExerciseRoute>();
   const { lessonId } = route.params;
+  useHideTabBar();
 
   const {
     exercise,
@@ -289,7 +291,14 @@ const VocabExerciseScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* ── Header ── */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>{exercise.title}</Text>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backButton}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
+          <Ionicons name="chevron-back" size={24} color={tc.text} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle} numberOfLines={1}>{exercise.title}</Text>
         <View style={[styles.progressBadge, { borderColor: progressColor }]}>
           <Text style={[styles.progressText, { color: progressColor }]}>
             {exercise.currentIndex + 1}/{exercise.totalPairs}
@@ -519,10 +528,18 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 6,
+    gap: 12,
+  },
+  backButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
+    flex: 1,
     fontFamily: fonts.bold,
-    fontSize: 22,
+    fontSize: 18,
     color: tc.text,
   },
   progressBadge: {

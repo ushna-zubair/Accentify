@@ -1,11 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   useAudioRecorder,
-  RecordingPresets,
   AudioModule,
   setAudioModeAsync,
-  type AudioRecorder,
 } from 'expo-audio';
+import { WAV2VEC2_RECORDING_OPTIONS } from '../utils/audioRecording';
 import {
   doc,
   setDoc,
@@ -15,17 +14,24 @@ import {
 import { db, auth } from '../config/firebase';
 import {
   fetchSentences,
-  readAudioAsBase64,
   transcribeAndEvaluate,
-  type PronunciationSentenceDTO,
+  detectAudioEncoding,
+  type TranscribeResult,
 } from '../services/pronunciationService';
+import {
+  health as warmupAccentify,
+  AccentifyApiError,
+  feedbackSentence,
+} from '../services/accentifyApi';
+import { ensureWavUri } from '../services/audioConvert';
 import type {
   PronunciationScore,
   WordResult,
   PronunciationAttemptResult,
   PronunciationSentence,
 } from '../models';
-import { onExerciseComplete } from '../services/progressService';
+import { onExerciseComplete, recordPronunciationAttempt } from '../services/progressService';
+import { COMPLETE_THRESHOLD_PCT, PRACTICE_THRESHOLD_PCT } from '../config/scoring';
 import { levenshtein, normalize } from '../utils/stringUtils';
 
 // ═══════════════════════════════════════════════
@@ -158,10 +164,14 @@ const evaluatePronunciation = (
 
 export type PronunciationPhase = 'idle' | 'recording' | 'processing' | 'result';
 
-export const usePronunciationExerciseController = (lessonId: string) => {
+export const usePronunciationExerciseController = (
+  lessonId: string,
+  englishLevel?: string,
+) => {
   // ── State ──
   const [sentences, setSentences] = useState<PronunciationSentence[]>(DEFAULT_SENTENCES);
   const [sentenceIds, setSentenceIds] = useState<(string | undefined)[]>([]);
+  const [sentenceSapi, setSentenceSapi] = useState<(string[] | undefined)[]>([]);
   const [sentencesLoading, setSentencesLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<PronunciationPhase>('idle');
@@ -171,30 +181,42 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   const [attemptCount, setAttemptCount] = useState(0);
   const [allScores, setAllScores] = useState<PronunciationScore[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [completing, setCompleting] = useState(false);
 
   // ── Audio recorder (expo-audio) ──
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const audioRecorder = useAudioRecorder(WAV2VEC2_RECORDING_OPTIONS);
+  // Mirror the recorder in a ref so the unmount cleanup below stops the
+  // CURRENT recorder instance — `useAudioRecorder` may return a new instance
+  // on re-renders, and the cleanup closure would otherwise hold the original
+  // (now-released) recorder, leaving the microphone locked on iOS.
+  const recorderRef = useRef(audioRecorder);
+  recorderRef.current = audioRecorder;
 
   // ── Refs ──
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingDurationRef = useRef(0);
 
   // ── Derived ──
   const sentence = sentences[currentIndex];
   const totalSentences = sentences.length;
   const isLastSentence = currentIndex >= totalSentences - 1;
 
-  // ── Load sentences from Firestore via Cloud Function ──
+  // ── Load sentences from the Accentify service (warm up the Space in parallel) ──
   useEffect(() => {
     let cancelled = false;
+    // Fire-and-forget warm-up so the first evaluation isn't slowed by a
+    // Hugging Face Space cold start. Failure is non-fatal.
+    warmupAccentify().catch(() => {});
     (async () => {
       try {
-        const data = await fetchSentences(undefined, 3);
+        const data = await fetchSentences(undefined, 3, englishLevel);
         if (!cancelled && data.length > 0) {
           setSentences(
             data.map((s) => ({ text: s.text, difficulty: s.difficulty })),
           );
           setSentenceIds(data.map((s) => s.id));
+          setSentenceSapi(data.map((s) => s.sapi));
         }
       } catch {
         // Fall back to DEFAULT_SENTENCES already in state
@@ -203,7 +225,7 @@ export const usePronunciationExerciseController = (lessonId: string) => {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [englishLevel]);
 
   // ── Countdown timer ──
   useEffect(() => {
@@ -226,8 +248,9 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   useEffect(() => {
     return () => {
       try {
-        if (audioRecorder.isRecording) {
-          audioRecorder.stop().catch(() => {});
+        const r = recorderRef.current;
+        if (r?.isRecording) {
+          r.stop().catch(() => {});
         }
       } catch {
         // AudioRecorder native object may already be released
@@ -257,9 +280,11 @@ export const usePronunciationExerciseController = (lessonId: string) => {
       audioRecorder.record();
       setPhase('recording');
       setRecordingDuration(0);
+      recordingDurationRef.current = 0;
 
       durationTimerRef.current = setInterval(() => {
-        setRecordingDuration((p) => p + 100);
+        recordingDurationRef.current += 100;
+        setRecordingDuration(recordingDurationRef.current);
       }, 100);
     } catch (e: unknown) {
       console.error('[Pronunciation] startRecording:', e);
@@ -288,33 +313,86 @@ export const usePronunciationExerciseController = (lessonId: string) => {
         return;
       }
 
+      // Reject obvious silence/mic-failure before we hit the API at all.
+      if (recordingDurationRef.current < 800) {
+        setError('That recording was too short — hold the button and read the whole sentence.');
+        setPhase('idle');
+        return;
+      }
+
       let wordResults: WordResult[];
       let score: PronunciationScore;
       let feedback: string;
       let isCorrect: boolean;
+      let evaluation: TranscribeResult;
 
       try {
-        // Try Cloud Function for transcription + evaluation
-        const audioBase64 = await readAudioAsBase64(uri);
-        const evaluation = await transcribeAndEvaluate(
-          audioBase64,
+        // The HF backend's libsndfile decoder only handles WAV/FLAC/OGG, so
+        // anything other than iOS LinearPCM (m4a from Android, webm from web)
+        // is converted to WAV via the convertAudioToWav Cloud Function first.
+        // After conversion we treat the upload as 'wav' for the rest of the
+        // pipeline.
+        const sourceEncoding = detectAudioEncoding(uri);
+        const wavUri = await ensureWavUri(uri, sourceEncoding);
+        const encoding = 'wav' as const;
+        evaluation = await transcribeAndEvaluate(
+          wavUri,
           sentence.text,
           sentenceIds[currentIndex],
+          encoding,
+          sentenceSapi[currentIndex],
         );
+
+        // If every reference word was deleted (op='D'), the model heard
+        // nothing recognizable — don't render that as a score.
+        const heardCount = evaluation.rawWords?.filter((w) => w.op !== 'D').length ?? 0;
+        if (heardCount === 0 && (evaluation.rawWords?.length ?? 0) > 0) {
+          setError(
+            "We couldn't hear your voice clearly — try again somewhere quieter or speak a little louder.",
+          );
+          setPhase('idle');
+          return;
+        }
+
         wordResults = evaluation.wordResults;
         score = evaluation.score;
         feedback = evaluation.feedback;
         isCorrect = evaluation.isCorrect;
-      } catch (cloudErr: any) {
-        // Cloud Function not deployed — fall back to local mock evaluation
-        // Expected when Cloud Functions are not deployed — silent fallback
-        if (__DEV__) console.log('[Pronunciation] Using local evaluation (Cloud Function not deployed)');
-        const localEval = evaluatePronunciation(sentence.text, sentence.text);
-        wordResults = localEval.wordResults;
-        score = localEval.score;
-        feedback = localEval.feedback;
-        // Local fallback assumes correct since we can't really transcribe locally
-        isCorrect = score.overall >= 60;
+
+        // Enrich wordResults with raw API per-word data
+        wordResults = evaluation.rawWords
+          ? evaluation.rawWords.map((rw) => ({
+              word: rw.ref,
+              isCorrect: rw.op === 'M' && rw.pronunciation_score >= 0.6,
+              asr: rw.asr,
+              op: rw.op,
+              pronunciationScore: rw.pronunciation_score,
+            }))
+          : evaluation.wordResults;
+
+        // Ask the model for natural-language coaching feedback. Empty string
+        // from the helper means the endpoint isn't deployed — keep the local
+        // rule-based feedback we already have.
+        if (!isCorrect) {
+          const remote = await feedbackSentence({
+            reference_text: sentence.text,
+            audioUri: wavUri,
+            encoding,
+            sapi: sentenceSapi[currentIndex],
+          }).catch(() => '');
+          if (remote) feedback = remote;
+        }
+      } catch (apiErr: unknown) {
+        console.error('[Pronunciation] evaluation failed:', apiErr);
+        const friendly =
+          apiErr instanceof AccentifyApiError
+            ? apiErr.userMessage
+            : apiErr instanceof Error
+              ? apiErr.message
+              : 'Could not evaluate your recording. Please try again.';
+        setError(friendly);
+        setPhase('idle');
+        return;
       }
 
       const attemptResult: PronunciationAttemptResult = {
@@ -323,6 +401,9 @@ export const usePronunciationExerciseController = (lessonId: string) => {
         feedback: isCorrect ? '' : feedback,
         successMessage: isCorrect ? pickRandom(SUCCESS_MESSAGES) : '',
         score,
+        transcript: evaluation.transcript,
+        rawWordCorrectness: evaluation.rawWordCorrectness,
+        rawOverall: evaluation.rawOverall,
       };
 
       setResult(attemptResult);
@@ -347,12 +428,33 @@ export const usePronunciationExerciseController = (lessonId: string) => {
           // Non-critical — attempt already stored by Cloud Function
         }
       }
+
+      if (uid && attemptResult.score.overall >= PRACTICE_THRESHOLD_PCT) {
+        try {
+          await recordPronunciationAttempt(uid, {
+            itemType: 'sentence',
+            reference: sentence.text,
+            score: attemptResult.score,
+            durationSec: Math.round(recordingDurationRef.current / 1000),
+          });
+        } catch (e) {
+          console.warn('[Pronunciation] attempt record failed:', e);
+        }
+      }
     } catch (e: unknown) {
       console.error('[Pronunciation] stopRecording:', e);
       setError(e instanceof Error ? e.message : 'Failed to process recording');
       setPhase('idle');
     }
-  }, [sentence, currentIndex, attemptCount, lessonId, sentenceIds]);
+  }, [
+    audioRecorder,
+    sentence,
+    currentIndex,
+    attemptCount,
+    lessonId,
+    sentenceIds,
+    sentenceSapi,
+  ]);
 
   // ── Try Again ──
   const tryAgain = useCallback(() => {
@@ -373,26 +475,40 @@ export const usePronunciationExerciseController = (lessonId: string) => {
   }, [currentIndex, totalSentences]);
 
   // ── Complete exercise (mark finished in Firestore + update progress) ──
-  const completeExercise = useCallback(async () => {
+  const completeExercise = useCallback(async (): Promise<{
+    avgScore: PronunciationScore;
+    completedCount: number;
+    totalAttempts: number;
+  } | null> => {
     const uid = auth.currentUser?.uid;
-    if (uid) {
-      try {
-        const avgScore = computeAverage(allScores);
-        await setDoc(
-          doc(db, 'users', uid, 'lessons', lessonId),
-          {
-            status: 'completed',
-            completedAt: Timestamp.now(),
-            lastScore: avgScore,
-          },
-          { merge: true },
-        );
-
-        // Update progress: streak, daily activity, weekly aggregation
-        await onExerciseComplete(uid, 'pronunciation', { score: avgScore });
-      } catch {
-        // Non-critical
-      }
+    if (!uid) return null;
+    setCompleting(true);
+    try {
+      const avgScore = computeAverage(allScores);
+      const completedCount = allScores.filter(
+        (s) => s.overall >= COMPLETE_THRESHOLD_PCT,
+      ).length;
+      await setDoc(
+        doc(db, 'users', uid, 'lessons', lessonId),
+        {
+          status: 'completed',
+          completedAt: Timestamp.now(),
+          lastScore: avgScore,
+        },
+        { merge: true },
+      );
+      await onExerciseComplete(uid, 'pronunciation', { score: avgScore });
+      return { avgScore, completedCount, totalAttempts: allScores.length };
+    } catch (e: unknown) {
+      console.error('[Pronunciation] completeExercise failed:', e);
+      setError(
+        e instanceof Error
+          ? e.message
+          : 'Could not save your results. Your progress may be missing — please try again.',
+      );
+      return null;
+    } finally {
+      setCompleting(false);
     }
   }, [allScores, lessonId]);
 
@@ -406,8 +522,10 @@ export const usePronunciationExerciseController = (lessonId: string) => {
     result,
     timer,
     recordingDuration,
+    allScores,
     error,
     sentencesLoading,
+    completing,
     // Actions
     startRecording,
     stopRecording,

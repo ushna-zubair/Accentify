@@ -8,17 +8,9 @@ import {
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-/**
- * Firebase configuration loaded from environment variables via app.json / eas.json.
- * In local development, values fall back to the `extra` block in app.json.
- *
- * To set up:
- *   1. Add your keys to app.json -> expo.extra (or use expo-dotenv / EAS secrets).
- *   2. Never commit raw API keys to version control.
- */
 const extra = Constants.expoConfig?.extra ?? {};
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: extra.FIREBASE_API_KEY ?? '',
   authDomain: extra.FIREBASE_AUTH_DOMAIN ?? '',
   projectId: extra.FIREBASE_PROJECT_ID ?? '',
@@ -35,9 +27,6 @@ if (__DEV__ && (!firebaseConfig.apiKey || !firebaseConfig.projectId)) {
 }
 
 const app = initializeApp(firebaseConfig);
-
-// Platform-aware auth initialization:
-// Web → browserLocalPersistence  |  Native → AsyncStorage-backed persistence
 import { initializeAuth, browserLocalPersistence } from 'firebase/auth';
 
 let auth: ReturnType<typeof initializeAuth>;
@@ -54,9 +43,7 @@ if (Platform.OS === 'web') {
 
 export { auth };
 
-// ─── Firestore with offline persistence ───
-// Web → IndexedDB multi-tab persistent cache
-// Native → Firestore SDK enables offline persistence by default
+
 let db: ReturnType<typeof getFirestore>;
 if (Platform.OS === 'web') {
   try {
@@ -66,7 +53,6 @@ if (Platform.OS === 'web') {
       }),
     });
   } catch {
-    // Firestore may already be initialized (e.g., hot reload)
     db = getFirestore(app);
   }
 } else {
