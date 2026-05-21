@@ -543,12 +543,11 @@ const ProgressScreen: React.FC = () => {
   const pronunciationBars = useMemo(() => {
     if (!currentWeek) return [];
     const p = currentWeek.pronunciation;
-    // Only show metrics the pronunciation API actually returns.
-    // Smoothness/Rhythm were synthetic — removed until the model exposes them.
     return [
-      { label: 'Overall', value: p.rhythmAndTone, color: CHART.green },
-      { label: 'Word Accuracy', value: p.soundAccuracy, color: CHART.orange },
       { label: 'Clarity', value: p.clarity, color: CHART.red },
+      { label: 'Sound Acc.', value: p.soundAccuracy, color: CHART.orange },
+      { label: 'Smoothness', value: p.smoothness, color: CHART.yellow },
+      { label: 'Rhythm', value: p.rhythmAndTone, color: CHART.green },
     ];
   }, [currentWeek]);
 

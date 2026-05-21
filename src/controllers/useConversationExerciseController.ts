@@ -350,10 +350,6 @@ export const useConversationExerciseController = (lessonId: string) => {
 
   // ── Audio recorder (expo-audio) ──
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-  // Mirror the recorder so the unmount cleanup stops the CURRENT instance
-  // (see usePronunciationExerciseController for the iOS mic-lock rationale).
-  const recorderRef = useRef(audioRecorder);
-  recorderRef.current = audioRecorder;
 
   // ── Refs ──
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -386,9 +382,8 @@ export const useConversationExerciseController = (lessonId: string) => {
   // ── Cleanup ──
   useEffect(() => {
     return () => {
-      const r = recorderRef.current;
-      if (r?.isRecording) {
-        r.stop().catch(() => {});
+      if (audioRecorder.isRecording) {
+        audioRecorder.stop().catch(() => {});
       }
       if (playProgressRef.current) clearInterval(playProgressRef.current);
       if (recordProgressRef.current) clearInterval(recordProgressRef.current);
@@ -431,9 +426,7 @@ export const useConversationExerciseController = (lessonId: string) => {
             setPhase('partner_speaking');
           }
         } else {
-          // Partner turn didn't change metrics; pass current array + the
-          // incremented turn count so finishConversation doesn't undercount.
-          finishConversation(metrics, completedTurns + 1);
+          finishConversation();
         }
       }
     }, interval);
@@ -511,13 +504,7 @@ export const useConversationExerciseController = (lessonId: string) => {
       // Transcribe & evaluate
       const transcript = await transcribeAudio(uri, currentTurn.text);
       const turnMetrics = evaluateResponse(currentTurn.text, transcript);
-      // Compute the post-update arrays/counts locally so finishConversation
-      // can be called synchronously below with the LATEST values. Reading
-      // `metrics` / `completedTurns` from the closure here would write the
-      // pre-update versions to Firestore (zero scores on the last turn).
-      const updatedMetrics = [...metrics, turnMetrics];
-      const updatedCompletedTurns = completedTurns + 1;
-      setMetrics(updatedMetrics);
+      setMetrics((prev) => [...prev, turnMetrics]);
 
       // Mark learner turn complete
       setTurns((prev) =>
@@ -527,7 +514,7 @@ export const useConversationExerciseController = (lessonId: string) => {
             : t,
         ),
       );
-      setCompletedTurns(updatedCompletedTurns);
+      setCompletedTurns((c) => c + 1);
 
       // Save turn to Firestore
       const uid = auth.currentUser?.uid;
@@ -558,43 +545,22 @@ export const useConversationExerciseController = (lessonId: string) => {
           setPhase('waiting_for_learner');
         }
       } else {
-        finishConversation(updatedMetrics, updatedCompletedTurns);
+        finishConversation();
       }
     } catch (e: unknown) {
       console.error('[Conversation] stopRecording:', e);
       setError('Failed to process recording');
       setPhase('waiting_for_learner');
     }
-  // NOTE: `finishConversation` is referenced via closure but intentionally
-  // omitted from the dep array — it's declared after this hook and listing it
-  // would land in the TDZ. Its own deps are limited to lessonId so the closure
-  // captured here always sees the latest fields it actually uses.
-  }, [
-    audioRecorder,
-    currentTurn,
-    currentTurnIndex,
-    totalTurns,
-    turns,
-    lessonId,
-    metrics,
-    completedTurns,
-  ]);
+  }, [currentTurn, currentTurnIndex, totalTurns, turns, lessonId]);
 
   // ── Finish conversation ──
-  // IMPORTANT: callers MUST pass the latest metrics/completedTurns explicitly.
-  // This is called from inside async paths (stopRecording, the partner-turn
-  // interval) that have just queued `setMetrics`/`setCompletedTurns` updates.
-  // Reading those values from the closure would write the pre-update values
-  // (zero scores, undercounted turn total) to Firestore.
-  const finishConversation = useCallback(async (
-    finalMetrics: ConversationMetricsResult[],
-    finalCompletedTurns: number,
-  ) => {
+  const finishConversation = useCallback(async () => {
     setPhase('completed');
     if (countdownRef.current) clearInterval(countdownRef.current);
 
     // Generate feedback from metrics
-    const avg = computeAverageMetrics(finalMetrics);
+    const avg = computeAverageMetrics(metrics);
     const fb = generateFeedback(avg);
     setConversationFeedback(fb);
 
@@ -610,7 +576,7 @@ export const useConversationExerciseController = (lessonId: string) => {
           conversationMetrics: avg,
           feedback: fb.feedback,
           tip: fb.tip,
-          totalTurns: finalCompletedTurns,
+          totalTurns: completedTurns,
         },
         { merge: true },
       );
@@ -630,7 +596,7 @@ export const useConversationExerciseController = (lessonId: string) => {
     } catch {
       // Non-critical
     }
-  }, [lessonId]);
+  }, [metrics, completedTurns, lessonId]);
 
   // ── Format timer ──
   const formatTimer = useCallback((secs: number): string => {

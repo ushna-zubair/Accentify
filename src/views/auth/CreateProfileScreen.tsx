@@ -23,7 +23,6 @@ import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
-import { useAuth } from '../../context/AuthContext';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'CreateProfile'>;
 
@@ -61,38 +60,52 @@ const getFlagEmoji = (countryCode: string) => {
 
 const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc } = useAppTheme();
-  const { currentUser } = useAuth();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const [fullName, setFullName] = useState('');
   const [nickName, setNickName] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [selectedGender, setSelectedGender] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGenderModal, setShowGenderModal] = useState(false);
-  const [showYearPicker, setShowYearPicker] = useState(false);
   const [loading, setLoading] = useState(false);
   const [countryModalVisible, setCountryModalVisible] = useState(false);
   const [countries, setCountries] = useState<CountryItem[]>([]);
   const [countryQuery, setCountryQuery] = useState('');
   const [countryLoading, setCountryLoading] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<CountryItem | null>(null);
+  const [dateInputValue, setDateInputValue] = useState('');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [imageModalVisible, setImageModalVisible] = useState(false);
   const [calendarMonth, setCalendarMonth] = useState(new Date().getMonth());
-  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear() - 18);
+  const [calendarYear, setCalendarYear] = useState(new Date().getFullYear());
 
-  const currentYear = new Date().getFullYear();
-  const years = useMemo(
-    () => Array.from({ length: 100 }, (_, i) => currentYear - i),
-    [currentYear],
-  );
+  const validateEmail = (emailText: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (emailText && !emailRegex.test(emailText)) {
+      setEmailError('Please enter a valid email address');
+    } else {
+      setEmailError('');
+    }
+  };
+
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (text) validateEmail(text);
+  };
 
   const handleDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false);
     if (date) {
       setDateOfBirth(date);
     }
+  };
+
+  const formatDateInput = (date: Date | null) => {
+    if (!date) return '';
+    return date.toISOString().split('T')[0];
   };
 
   const getDaysInMonth = (year: number, month: number) => {
@@ -110,11 +123,12 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (showDatePicker && Platform.OS === 'web') {
-      const baseDate = dateOfBirth || new Date(currentYear - 18, 0, 1);
+      const baseDate = dateOfBirth || new Date();
       setCalendarMonth(baseDate.getMonth());
       setCalendarYear(baseDate.getFullYear());
+      setDateInputValue(formatDateInput(dateOfBirth));
     }
-  }, [showDatePicker, dateOfBirth, currentYear]);
+  }, [showDatePicker, dateOfBirth]);
 
   useEffect(() => {
     let isMounted = true;
@@ -178,7 +192,6 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
     // Convert avatar to base64 data URI if one was picked
     let profilePictureUrl = '';
     if (avatarUri) {
-      setLoading(true);
       try {
         const response = await fetch(avatarUri);
         const blob = await response.blob();
@@ -189,27 +202,8 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           reader.readAsDataURL(blob);
         });
       } catch {
-        setLoading(false);
-        Alert.alert(
-          'Profile photo failed',
-          'We couldn\'t save your photo. You can continue without it or try again.',
-          [
-            { text: 'Try again', style: 'cancel' },
-            { text: 'Continue without photo', onPress: () => navigation.navigate('LearningGoals', {
-              profile: {
-                fullName,
-                nickName,
-                dateOfBirth: formattedDOB,
-                phoneNumber: fullPhoneNumber,
-                gender: selectedGender,
-                profilePictureUrl: '',
-              },
-            }) },
-          ],
-        );
-        return;
+        // If conversion fails, proceed without profile picture
       }
-      setLoading(false);
     }
 
     // Pass collected profile data to the next screen (LearningGoals)
@@ -342,12 +336,11 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
         {showDatePicker && Platform.OS !== 'web' && (
           <View style={styles.datePickerWrap}>
             <DateTimePicker
-              value={dateOfBirth || new Date(currentYear - 18, 0, 1)}
+              value={dateOfBirth || new Date()}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display="calendar"
               onChange={handleDateChange}
               maximumDate={new Date()}
-              minimumDate={new Date(currentYear - 100, 0, 1)}
             />
           </View>
         )}
@@ -376,11 +369,9 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                 >
                   <FontAwesome5 name="chevron-left" size={14} color={tc.text} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => setShowYearPicker(true)}>
-                  <Text style={styles.calendarTitle}>
-                    {monthNames[calendarMonth]} {calendarYear} ▾
-                  </Text>
-                </TouchableOpacity>
+                <Text style={styles.calendarTitle}>
+                  {monthNames[calendarMonth]} {calendarYear}
+                </Text>
                 <TouchableOpacity
                   style={styles.calendarNav}
                   onPress={() => {
@@ -442,15 +433,14 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </Modal>
 
-        {currentUser?.email ? (
-          <View style={styles.emailDisplay}>
-            <FontAwesome5 name="envelope" size={16} color={tc.textMuted} />
-            <Text style={styles.emailDisplayText} numberOfLines={1}>
-              {currentUser.email}
-            </Text>
-            <FontAwesome5 name="lock" size={12} color={tc.textMuted} />
-          </View>
-        ) : null}
+        <CustomInput
+          placeholder="Email"
+          value={email}
+          onChangeText={handleEmailChange}
+          keyboardType="email-address"
+          leftIcon={<FontAwesome5 name="envelope" size={18} color={tc.accent} />}
+          error={emailError}
+        />
 
         <TouchableOpacity
           style={styles.countryContainer}
@@ -613,45 +603,6 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-        </Modal>
-
-        <Modal
-          visible={showYearPicker}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowYearPicker(false)}
-        >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setShowYearPicker(false)}
-          >
-            <View style={styles.yearModalContent}>
-              <Text style={styles.modalTitle}>Select Year</Text>
-              <FlatList
-                data={years}
-                keyExtractor={(item) => String(item)}
-                initialScrollIndex={Math.max(0, years.indexOf(calendarYear))}
-                getItemLayout={(_, index) => ({ length: 44, offset: 44 * index, index })}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.yearOption}
-                    onPress={() => {
-                      setCalendarYear(item);
-                      setShowYearPicker(false);
-                    }}
-                  >
-                    <Text style={[styles.yearOptionText, item === calendarYear && styles.yearOptionTextActive]}>
-                      {item}
-                    </Text>
-                    {item === calendarYear && (
-                      <FontAwesome5 name="check" size={14} color={tc.accent} />
-                    )}
-                  </TouchableOpacity>
-                )}
-              />
-            </View>
-          </TouchableOpacity>
         </Modal>
 
         <View style={styles.continueButtonContainer}>
@@ -1002,50 +953,6 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   },
   continueButtonContainer: {
     marginTop: 20,
-  },
-  emailDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: tc.inputBg,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    borderRadius: 14,
-    height: 56,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    opacity: 0.7,
-  },
-  emailDisplayText: {
-    flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.textMuted,
-  },
-  yearModalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: '70%',
-    maxHeight: 360,
-    padding: 16,
-  },
-  yearOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 44,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: tc.inputBorder,
-  },
-  yearOptionText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  yearOptionTextActive: {
-    fontFamily: fonts.bold,
-    color: tc.accent,
   },
 });
 

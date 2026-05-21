@@ -259,6 +259,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
           <Text style={styles.privacyLabel}>Login Devices</Text>
           <Ionicons name="chevron-forward" size={20} color={tc.textLight} />
         </TouchableOpacity>
+        <View style={styles.divider} />
         <TouchableOpacity
           style={styles.privacyRow}
           activeOpacity={0.7}

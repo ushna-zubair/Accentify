@@ -196,15 +196,8 @@ export const useAccessControlController = () => {
 
   // ── Invite Admin ──
   const handleInviteAdmin = useCallback(async () => {
-    const email = inviteEmail.trim();
-    const fullName = inviteFullName.trim();
-    if (!email || !fullName) {
+    if (!inviteEmail.trim() || !inviteFullName.trim()) {
       setError('Please fill in all fields');
-      return;
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError('Please enter a valid email address');
       return;
     }
 
@@ -213,8 +206,8 @@ export const useAccessControlController = () => {
       setError(null);
 
       const payload: InviteAdminPayload = {
-        email,
-        fullName,
+        email: inviteEmail.trim(),
+        fullName: inviteFullName.trim(),
         adminRole: inviteRole,
         permissions: DEFAULT_ROLE_PERMISSIONS[inviteRole],
       };

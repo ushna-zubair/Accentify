@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -22,23 +21,11 @@ const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
   const { profile, learningGoals, nativeLanguage, englishLevel } = route.params;
   const { code: pin, handleKeyPress, isComplete, value: pinValue } = useCodeInput(4);
 
-  const goNext = (appPin: string | null) =>
-    navigation.navigate('SetupFaceID', {
-      profile,
-      learningGoals,
-      nativeLanguage,
-      englishLevel,
-      appPin,
-    });
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Set an App PIN (Optional)</Text>
-        <Text style={styles.subtitle}>
-          Use a 4-digit PIN to unlock the app quickly when biometrics aren&apos;t available.
-          Your PIN stays on this device — it is never sent to our servers.
-        </Text>
+        <Text style={styles.title}>Set Your PIN</Text>
+        <Text style={styles.subtitle}>Enter a 4-digit pin for extra security.</Text>
 
         <View style={styles.pinRow}>
           {pin.map((digit, index) => (
@@ -53,12 +40,15 @@ const SetupPinScreen: React.FC<Props> = ({ navigation, route }) => {
         <View style={styles.buttonContainer}>
           <CustomButton
             title="Continue"
-            onPress={() => goNext(pinValue)}
+            onPress={() => navigation.navigate('SetupFaceID', {
+              profile,
+              learningGoals,
+              nativeLanguage,
+              englishLevel,
+              appPin: pinValue,
+            })}
             disabled={!isComplete}
           />
-          <TouchableOpacity onPress={() => goNext(null)} style={styles.skipButton}>
-            <Text style={styles.skipText}>Skip for now</Text>
-          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -111,16 +101,6 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   },
   buttonContainer: {
     width: '100%',
-  },
-  skipButton: {
-    marginTop: 12,
-    alignSelf: 'center',
-    paddingVertical: 8,
-  },
-  skipText: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.textMuted,
   },
 });
 

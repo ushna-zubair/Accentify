@@ -27,9 +27,6 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Svg, { Circle, Path } from 'react-native-svg';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
-import { useHideTabBar } from '../../context/TabBarVisibilityContext';
-import { RecordingControl } from '../../components/RecordingControl';
-import { SpeakerButton } from '../../components/SpeakerButton';
 import {
   usePronunciationExerciseController,
 } from '../../controllers/usePronunciationExerciseController';
@@ -38,12 +35,6 @@ import {
   type WavyChatMessage,
 } from '../../controllers/useWavyChatController';
 import type { HomeStackParamList } from '../../models';
-import { useAuth } from '../../context/AuthContext';
-import {
-  COMPLETE_THRESHOLD_PCT,
-  tierForScore,
-  tierLabel,
-} from '../../config/scoring';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomePronunciation'>;
 
@@ -315,11 +306,6 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const lessonId = route.params?.lessonId ?? 'daily_practice';
-  const { userProfile } = useAuth();
-  const englishLevel = (userProfile as any)?.studyPlan?.englishLevel as
-    | string
-    | undefined;
-  useHideTabBar();
 
   const {
     sentence,
@@ -331,18 +317,15 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
     timer,
     error,
     sentencesLoading,
-    completing,
-    allScores,
     startRecording,
     stopRecording,
     tryAgain,
     next,
     completeExercise,
-  } = usePronunciationExerciseController(lessonId, englishLevel);
+  } = usePronunciationExerciseController(lessonId);
 
   const [chatVisible, setChatVisible] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
 
   const renderSentenceText = () => {
     if (phase === 'result' && result) {
@@ -363,14 +346,8 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const handleComplete = async () => {
-    const summary = await completeExercise();
-    if (!summary) return;
-    navigation.navigate('CourseCompletion', {
-      lessonId,
-      courseTitle: 'English Pronunciation',
-      completedCount: summary.completedCount,
-      totalWeekly: summary.totalAttempts,
-    });
+    await completeExercise();
+    navigation.goBack();
   };
 
   if (sentencesLoading) {
@@ -385,6 +362,8 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   const progressColor = getProgressColor(currentIndex, totalSentences, tc);
+  const isIdle = phase === 'idle';
+  const isRecording = phase === 'recording';
   const isProcessing = phase === 'processing';
   const isResult = phase === 'result';
   const micDisabled = isProcessing || isResult;
@@ -409,10 +388,29 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Pronunciation Card */}
         <View style={[styles.card, isResult && styles.cardResult]}>
           <View style={styles.cardTopRow}>
-            <SpeakerButton text={sentence?.text ?? ''} />
+            <TouchableOpacity style={styles.speakerBtn} activeOpacity={0.6} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+              <Ionicons name="volume-high" size={20} color={tc.textLight} />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.cardTextWrap}>{renderSentenceText()}</View>
+
+          {isResult && result && (
+            <View style={styles.resultSection}>
+              <ResultIcon isCorrect={result.isCorrect} />
+              {result.isCorrect ? (
+                <Text style={styles.successMsg}>{result.successMessage}</Text>
+              ) : (
+                <View style={styles.feedbackSection}>
+                  <View style={styles.feedbackLabelRow}>
+                    <Text style={styles.feedbackLabel}>Feedback:</Text>
+                    <Ionicons name="volume-high-outline" size={16} color={tc.textLight} />
+                  </View>
+                  <Text style={styles.feedbackText}>{result.feedback}</Text>
+                </View>
+              )}
+            </View>
+          )}
 
           {isProcessing && (
             <View style={styles.processingWrap}>
@@ -422,307 +420,45 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
           )}
         </View>
 
-        {/* Result sub-cards */}
+        {/* Action button */}
         {isResult && result && (
-          <>
-            {(() => {
-              const passed = result.score.overall >= COMPLETE_THRESHOLD_PCT;
-              const tier = tierForScore(result.score.overall);
-              const wc = result.rawWordCorrectness;
-              const refLen = wc?.ref_words?.length ?? result.wordResults.length;
-              const matched = wc?.matched ?? result.wordResults.filter((w) => w.isCorrect).length;
-              const summary = passed
-                ? `${matched} of ${refLen} words sounded clear.`
-                : wc && wc.missing > 0
-                  ? `${matched}/${refLen} matched, ${wc.missing} missed.`
-                  : wc && wc.substituted > 0
-                    ? `${matched}/${refLen} matched, ${wc.substituted} swapped.`
-                    : 'Slow down and try the words you stumbled on.';
-              return (
-                <View style={styles.scoreCard}>
-                  <ResultIcon isCorrect={passed} />
-                  <Text style={styles.scoreBig}>{result.score.overall}%</Text>
-                  <Text style={styles.scoreCaption}>{tierLabel(tier)}</Text>
-                  <Text
-                    style={{
-                      fontFamily: fonts.regular,
-                      fontSize: 14,
-                      color: tc.text,
-                      textAlign: 'center',
-                      marginTop: 6,
-                      marginBottom: 4,
-                      paddingHorizontal: 8,
-                      lineHeight: 20,
-                    }}
-                  >
-                    {summary}
-                  </Text>
-                  <View style={styles.scoreRow}>
-                    <View style={styles.scorePill}>
-                      <Text style={styles.scorePillLabel}>Clarity</Text>
-                      <Text style={styles.scorePillValue}>{result.score.clarity}%</Text>
-                    </View>
-                    <View style={styles.scorePill}>
-                      <Text style={styles.scorePillLabel}>Words</Text>
-                      <Text style={styles.scorePillValue}>{result.score.accuracy}%</Text>
-                    </View>
-                    <View style={styles.scorePill}>
-                      <Text style={styles.scorePillLabel}>Flow</Text>
-                      <Text style={styles.scorePillValue}>{result.score.fluency}%</Text>
-                    </View>
-                  </View>
-                </View>
-              );
-            })()}
-
-            {/* Show details toggle gates raw API + word-correctness + per-word for power users */}
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-                marginTop: 14,
-                paddingVertical: 8,
-              }}
-              onPress={() => setShowDetails((v) => !v)}
-              activeOpacity={0.7}
-            >
-              <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.accent }}>
-                {showDetails ? 'Hide phoneme details' : 'Show phoneme details'}
-              </Text>
-              <Ionicons
-                name={showDetails ? 'chevron-up' : 'chevron-down'}
-                size={18}
-                color={tc.accent}
-              />
-            </TouchableOpacity>
-
-            {/* Raw API scores */}
-            {showDetails && result.rawOverall && (
-              <View style={styles.rawScoresCard}>
-                <View style={styles.feedbackLabelRow}>
-                  <Ionicons name="analytics-outline" size={18} color={tc.accent} />
-                  <Text style={styles.feedbackLabel}>API Scores</Text>
-                </View>
-                <View style={styles.rawScoresRow}>
-                  <View style={styles.rawScorePill}>
-                    <Text style={styles.rawScoreValue}>
-                      {(result.rawOverall.pronunciation_score * 100).toFixed(1)}%
-                    </Text>
-                    <Text style={styles.rawScoreLabel}>Pronunciation</Text>
-                  </View>
-                  <View style={styles.rawScorePill}>
-                    <Text style={styles.rawScoreValue}>
-                      {(result.rawOverall.weighted_overall_score * 100).toFixed(1)}%
-                    </Text>
-                    <Text style={styles.rawScoreLabel}>Weighted Overall</Text>
-                  </View>
-                </View>
-                <View style={styles.rawScoresRow}>
-                  <View style={styles.rawScorePill}>
-                    <Text style={styles.rawScoreValue}>{result.rawOverall.scored_words}</Text>
-                    <Text style={styles.rawScoreLabel}>Scored Words</Text>
-                  </View>
-                  <View style={styles.rawScorePill}>
-                    <Text style={styles.rawScoreValue}>{result.rawOverall.skipped_words}</Text>
-                    <Text style={styles.rawScoreLabel}>Skipped Words</Text>
-                  </View>
-                </View>
-              </View>
-            )}
-
-            {/* What you said (transcript) */}
-            {result.transcript ? (
-              <View style={styles.transcriptCard}>
-                <View style={styles.feedbackLabelRow}>
-                  <Ionicons name="ear-outline" size={18} color={tc.accent} />
-                  <Text style={styles.feedbackLabel}>What we heard</Text>
-                </View>
-                <Text style={styles.transcriptText}>"{result.transcript}"</Text>
-              </View>
-            ) : null}
-
-            {/* Word correctness stats */}
-            {showDetails && result.rawWordCorrectness && (
-              <View style={styles.wordCorrectnessCard}>
-                <View style={styles.feedbackLabelRow}>
-                  <Ionicons name="checkmark-done-outline" size={18} color={tc.accent} />
-                  <Text style={styles.feedbackLabel}>Word Alignment</Text>
-                </View>
-                <View style={styles.wordCorrectnessRow}>
-                  <View style={[styles.wordCorrectnessChip, { backgroundColor: tc.successBg }]}>
-                    <Text style={[styles.wordCorrectnessValue, { color: tc.success }]}>
-                      {result.rawWordCorrectness.matched}
-                    </Text>
-                    <Text style={[styles.wordCorrectnessLabel, { color: tc.success }]}>Matched</Text>
-                  </View>
-                  <View style={[styles.wordCorrectnessChip, { backgroundColor: tc.errorBg }]}>
-                    <Text style={[styles.wordCorrectnessValue, { color: tc.error }]}>
-                      {result.rawWordCorrectness.substituted}
-                    </Text>
-                    <Text style={[styles.wordCorrectnessLabel, { color: tc.error }]}>Substituted</Text>
-                  </View>
-                  <View style={[styles.wordCorrectnessChip, { backgroundColor: tc.errorBg }]}>
-                    <Text style={[styles.wordCorrectnessValue, { color: tc.error }]}>
-                      {result.rawWordCorrectness.missing}
-                    </Text>
-                    <Text style={[styles.wordCorrectnessLabel, { color: tc.error }]}>Missing</Text>
-                  </View>
-                </View>
-                <Text style={styles.wordCorrectnessScoreText}>
-                  Word Score: {result.rawWordCorrectness.word_score_pct.toFixed(1)}%
-                </Text>
-              </View>
-            )}
-
-            {/* Per-word breakdown */}
-            {showDetails && result.wordResults.some((wr) => wr.op !== undefined) && (
-              <View style={styles.wordBreakdownCard}>
-                <View style={styles.feedbackLabelRow}>
-                  <Ionicons name="list-outline" size={18} color={tc.accent} />
-                  <Text style={styles.feedbackLabel}>Per-word Breakdown</Text>
-                </View>
-                {result.wordResults.map((wr, i) => (
-                  <View key={i} style={styles.wordBreakdownRow}>
-                    <View style={styles.wordBreakdownLeft}>
-                      <Text style={[
-                        styles.wordBreakdownRef,
-                        { color: wr.isCorrect ? tc.success : tc.error },
-                      ]}>
-                        {wr.word}
-                      </Text>
-                      {wr.asr && wr.asr !== wr.word.toLowerCase() ? (
-                        <Text style={styles.wordBreakdownAsr}>→ "{wr.asr}"</Text>
-                      ) : null}
-                    </View>
-                    <View style={styles.wordBreakdownRight}>
-                      {wr.op && (
-                        <View style={[
-                          styles.opBadge,
-                          {
-                            backgroundColor: wr.op === 'M' ? tc.successBg
-                              : wr.op === 'S' ? '#FFF3E0'
-                              : tc.errorBg,
-                          },
-                        ]}>
-                          <Text style={[
-                            styles.opBadgeText,
-                            {
-                              color: wr.op === 'M' ? tc.success
-                                : wr.op === 'S' ? '#E65100'
-                                : tc.error,
-                            },
-                          ]}>
-                            {wr.op === 'M' ? 'Match' : wr.op === 'S' ? 'Sub' : 'Del'}
-                          </Text>
-                        </View>
-                      )}
-                      {wr.pronunciationScore !== undefined && (
-                        <Text style={[
-                          styles.wordScoreText,
-                          {
-                            color: wr.pronunciationScore >= 0.8 ? tc.success
-                              : wr.pronunciationScore >= 0.6 ? '#FD8E39'
-                              : tc.error,
-                          },
-                        ]}>
-                          {(wr.pronunciationScore * 100).toFixed(0)}%
-                        </Text>
-                      )}
-                    </View>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {result.feedback ? (
-              <View style={styles.feedbackCard}>
-                <View style={styles.feedbackLabelRow}>
-                  <Ionicons name="bulb-outline" size={18} color={tc.accent} />
-                  <Text style={styles.feedbackLabel}>Feedback</Text>
-                </View>
-                <Text style={styles.feedbackText}>{result.feedback}</Text>
-              </View>
-            ) : null}
-
-            {(() => {
-              const passed = result.score.overall >= COMPLETE_THRESHOLD_PCT;
-              const primaryLabel = isLastSentence
-                ? 'Finish'
-                : passed
-                  ? 'Continue'
-                  : 'Skip & continue';
-              return (
-                <>
-                  <TouchableOpacity
-                    style={[styles.actionBtn, completing && { opacity: 0.6 }]}
-                    activeOpacity={0.8}
-                    disabled={completing}
-                    onPress={() => {
-                      if (isLastSentence) handleComplete();
-                      else next();
-                    }}
-                  >
-                    {completing ? (
-                      <ActivityIndicator color={tc.white} />
-                    ) : (
-                      <Text style={styles.actionBtnText}>{primaryLabel}</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={{
-                      alignSelf: 'center',
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 6,
-                      marginTop: 12,
-                      paddingVertical: 8,
-                      paddingHorizontal: 16,
-                    }}
-                    activeOpacity={0.7}
-                    disabled={completing}
-                    onPress={tryAgain}
-                  >
-                    <Ionicons name="refresh-outline" size={16} color={tc.accent} />
-                    <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: tc.accent }}>
-                      Try this sentence again
-                    </Text>
-                  </TouchableOpacity>
-
-                  {currentIndex >= 1 && !isLastSentence && (
-                    <TouchableOpacity
-                      style={{
-                        alignSelf: 'center',
-                        marginTop: 6,
-                        paddingVertical: 6,
-                        paddingHorizontal: 12,
-                      }}
-                      activeOpacity={0.7}
-                      disabled={completing}
-                      onPress={handleComplete}
-                    >
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted }}>
-                        Finish session now
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                </>
-              );
-            })()}
-          </>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            activeOpacity={0.8}
+            onPress={() => {
+              if (result.isCorrect) {
+                if (isLastSentence) handleComplete();
+                else next();
+              } else {
+                tryAgain();
+              }
+            }}
+          >
+            <Text style={styles.actionBtnText}>{result.isCorrect ? 'Continue' : 'Try Again'}</Text>
+          </TouchableOpacity>
         )}
       </ScrollView>
 
       {/* ═══════ BOTTOM AREA ═══════ */}
       <View style={styles.bottomArea}>
-        <RecordingControl
-          phase={phase}
+        <WaveformBar active={isIdle || isRecording} />
+
+        <TouchableOpacity
+          style={[styles.micBtn, isRecording && styles.micBtnRecording, micDisabled && styles.micBtnDimmed]}
+          onPress={isRecording ? stopRecording : startRecording}
           disabled={micDisabled}
-          onStart={startRecording}
-          onStop={stopRecording}
-        />
+          activeOpacity={0.7}
+        >
+          {isProcessing ? (
+            <ActivityIndicator size="small" color={tc.white} />
+          ) : (
+            <Ionicons name={isRecording ? 'stop' : 'mic'} size={28} color={tc.white} />
+          )}
+        </TouchableOpacity>
+
+        {(isIdle || isRecording) && (
+          <Text style={styles.speakNowText}>{isRecording ? 'Recording…' : 'Speak Now'}</Text>
+        )}
       </View>
 
       {/* ═══════ AI MASCOT ═══════ */}
@@ -791,28 +527,11 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
   resultIconWrap: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
   successMsg: { fontFamily: fonts.bold, fontSize: 22, color: tc.text, textAlign: 'center', lineHeight: 30 },
 
-  // Score sub-card
-  scoreCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 18, paddingHorizontal: 18,
-    marginTop: 14, alignItems: 'center', borderWidth: 1, borderColor: tc.divider,
-  },
-  scoreBig: { fontFamily: fonts.bold, fontSize: 32, color: tc.text, marginTop: 8 },
-  scoreCaption: { fontFamily: fonts.medium, fontSize: 14, color: tc.textLight, marginBottom: 12 },
-  scoreRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', gap: 8 },
-  scorePill: {
-    flex: 1, backgroundColor: tc.accentMuted, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  scorePillLabel: { fontFamily: fonts.medium, fontSize: 11, color: tc.textLight },
-  scorePillValue: { fontFamily: fonts.bold, fontSize: 16, color: tc.accent, marginTop: 2 },
-
-  // Feedback sub-card
-  feedbackCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
+  // Feedback
+  feedbackSection: { alignItems: 'center', paddingHorizontal: 4 },
   feedbackLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   feedbackLabel: { fontFamily: fonts.bold, fontSize: 15, color: tc.text },
-  feedbackText: { fontFamily: fonts.regular, fontSize: 14, color: tc.text, lineHeight: 22 },
+  feedbackText: { fontFamily: fonts.regular, fontSize: 14, color: tc.text, lineHeight: 22, textAlign: 'center' },
 
   // Processing
   processingWrap: { alignItems: 'center', marginTop: 30, gap: 10 },
@@ -850,59 +569,6 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 8, backgroundColor: tc.errorBg,
   },
   errorText: { fontFamily: fonts.regular, fontSize: 13, color: tc.error },
-
-  // Raw API scores
-  rawScoresCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  rawScoresRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 8 },
-  rawScorePill: {
-    flex: 1, backgroundColor: tc.accentMuted, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  rawScoreValue: { fontFamily: fonts.bold, fontSize: 16, color: tc.accent },
-  rawScoreLabel: { fontFamily: fonts.medium, fontSize: 10, color: tc.textLight, marginTop: 2 },
-
-  // Transcript
-  transcriptCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  transcriptText: {
-    fontFamily: fonts.medium, fontSize: 15, color: tc.text, fontStyle: 'italic', lineHeight: 24,
-  },
-
-  // Word correctness
-  wordCorrectnessCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  wordCorrectnessRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 6 },
-  wordCorrectnessChip: {
-    flex: 1, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  wordCorrectnessValue: { fontFamily: fonts.bold, fontSize: 18 },
-  wordCorrectnessLabel: { fontFamily: fonts.medium, fontSize: 10, marginTop: 2 },
-  wordCorrectnessScoreText: {
-    fontFamily: fonts.semiBold, fontSize: 13, color: tc.textLight, textAlign: 'center', marginTop: 10,
-  },
-
-  // Per-word breakdown
-  wordBreakdownCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  wordBreakdownRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: tc.divider,
-  },
-  wordBreakdownLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  wordBreakdownRef: { fontFamily: fonts.semiBold, fontSize: 14 },
-  wordBreakdownAsr: { fontFamily: fonts.regular, fontSize: 12, color: tc.textLight },
-  wordBreakdownRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  opBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  opBadgeText: { fontFamily: fonts.bold, fontSize: 10 },
-  wordScoreText: { fontFamily: fonts.bold, fontSize: 13 },
 });
 
 const mascotStyles = StyleSheet.create({

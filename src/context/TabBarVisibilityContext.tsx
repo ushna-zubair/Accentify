@@ -9,7 +9,7 @@
  *   <ScrollView onScroll={handleScroll} scrollEventThrottle={16} … />
  */
 
-import React, { createContext, useContext, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useRef, useCallback, useMemo } from 'react';
 import { Animated, type NativeSyntheticEvent, type NativeScrollEvent } from 'react-native';
 
 interface TabBarVisibilityContextValue {
@@ -17,8 +17,6 @@ interface TabBarVisibilityContextValue {
   translateY: Animated.Value;
   /** Pass as onScroll to any ScrollView / FlatList */
   handleScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
-  /** Force-hide the tab bar regardless of scroll position (e.g. modal-ish full-screen exercises) */
-  setForceHidden: (hidden: boolean) => void;
 }
 
 const TabBarVisibilityContext = createContext<TabBarVisibilityContextValue | null>(null);
@@ -27,10 +25,8 @@ export const TabBarVisibilityProvider: React.FC<{ children: React.ReactNode }> =
   const translateY = useRef(new Animated.Value(0)).current;
   const lastOffsetY = useRef(0);
   const isHidden = useRef(false);
-  const forceHidden = useRef(false);
 
   const show = useCallback(() => {
-    if (forceHidden.current) return;
     if (!isHidden.current) return;
     isHidden.current = false;
     Animated.spring(translateY, {
@@ -52,23 +48,8 @@ export const TabBarVisibilityProvider: React.FC<{ children: React.ReactNode }> =
     }).start();
   }, [translateY]);
 
-  const setForceHidden = useCallback(
-    (hidden: boolean) => {
-      forceHidden.current = hidden;
-      if (hidden) {
-        hide();
-      } else {
-        // Restore visibility when the override clears
-        isHidden.current = true; // trick `show()` into running the animation
-        show();
-      }
-    },
-    [hide, show],
-  );
-
   const handleScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      if (forceHidden.current) return;
       const currentY = e.nativeEvent.contentOffset.y;
       const diff = currentY - lastOffsetY.current;
 
@@ -91,8 +72,8 @@ export const TabBarVisibilityProvider: React.FC<{ children: React.ReactNode }> =
   );
 
   const value = useMemo(
-    () => ({ translateY, handleScroll, setForceHidden }),
-    [translateY, handleScroll, setForceHidden],
+    () => ({ translateY, handleScroll }),
+    [translateY, handleScroll],
   );
 
   return (
@@ -117,17 +98,4 @@ export const useTabBarScroll = () => {
     return { handleScroll: () => {} };
   }
   return { handleScroll: ctx.handleScroll };
-};
-
-/**
- * Hide the tab bar while the calling screen is mounted (and restore on unmount).
- * Use on full-screen exercise / detail flows where the tab bar shouldn't be visible.
- */
-export const useHideTabBar = () => {
-  const ctx = useContext(TabBarVisibilityContext);
-  useEffect(() => {
-    if (!ctx) return;
-    ctx.setForceHidden(true);
-    return () => ctx.setForceHidden(false);
-  }, [ctx]);
 };

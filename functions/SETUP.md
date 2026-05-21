@@ -48,8 +48,7 @@ firebase use <your-project-id>  # set active project
 Accentify/
 ├── functions/                  # Cloud Functions (Node 20 / TypeScript)
 │   ├── src/
-│   │   ├── index.ts            # Auth, 2FA, admin analytics
-│   │   ├── emailVerification.ts # Branded HTML verification emails
+│   │   ├── index.ts            # Auth, OTP, 2FA, admin password reset
 │   │   ├── pronunciation.ts    # Speech-to-text evaluation & sentence seeding
 │   │   └── adminAnalytics.ts   # Scheduled aggregation for admin dashboard
 │   ├── lib/                    # Compiled JS output (auto-generated)
@@ -69,8 +68,19 @@ Accentify/
 
 All functions use **Firebase Functions v2** (2nd-gen) with `onCall` or `onSchedule`.
 
-| `adminDeleteUser`     | `onCall`   | —                                    | Soft-delete user & disable Auth account                       |
-| `sendVerificationEmail`| `onCall`  | SMTP_*                               | Sends branded HTML verification link (2nd Gen)                 |
+### `index.ts` — Authentication & OTP
+
+| Function               | Type       | Secrets Required                     | Description                                                    |
+| ---------------------- | ---------- | ------------------------------------ | -------------------------------------------------------------- |
+| `lookupUser`           | `onCall`   | —                                    | Finds user by email; returns masked email & phone              |
+| `sendOTP`              | `onCall`   | SMTP_*, TWILIO_*                     | Generates 4-digit code, stores in Firestore, sends via email or SMS |
+| `verifyOTP`            | `onCall`   | —                                    | Validates OTP, issues a short-lived session token              |
+| `resetPassword`        | `onCall`   | —                                    | Resets password using session token from `verifyOTP`           |
+| `send2FACode`          | `onCall`   | SMTP_*                               | Sends 2FA enable/disable verification code via email           |
+| `verify2FACode`        | `onCall`   | —                                    | Validates 2FA code, toggles `twoFactorEnabled` on user doc     |
+| `sendSignUpOTP`        | `onCall`   | SMTP_*                               | Sends email verification code during sign-up                   |
+| `verifySignUpOTP`      | `onCall`   | —                                    | Validates sign-up OTP, marks email as verified                 |
+| `adminResetPassword`   | `onCall`   | SMTP_*                               | Admin-triggered password reset; generates temp password & emails user |
 
 ### `pronunciation.ts` — Speech Evaluation
 
@@ -105,9 +115,16 @@ firebase functions:secrets:set SMTP_USER      # e.g. noreply@yourdomain.com
 firebase functions:secrets:set SMTP_PASS      # App password or API key
 ```
 
-### Twilio (Optional)
+### Twilio (SMS Delivery)
 
-Used only if SMS features are re-enabled in the future.
+Required only if you support SMS-based OTP password reset. Sign up at
+https://www.twilio.com and get your Account SID, Auth Token, and a phone number.
+
+```bash
+firebase functions:secrets:set TWILIO_SID     # Twilio Account SID
+firebase functions:secrets:set TWILIO_TOKEN   # Twilio Auth Token
+firebase functions:secrets:set TWILIO_PHONE   # Twilio phone number (e.g. +1234567890)
+```
 
 ### Google Speech-to-Text (Pronunciation)
 
@@ -149,6 +166,9 @@ firebase functions:secrets:access SMTP_HOST   # check a secret exists
 | `feedback/*`              | Authenticated (read/create) / Admin (full) | User feedback & bug reports |
 | `feedback_activity/*`     | Admin only              | Feedback response activity                   |
 | `admin_invitations/*`     | Admin only              | Admin role invitations                       |
+| `password_reset_otps/*`   | **None** (Admin SDK only) | OTP codes for password reset               |
+| `signup_verification_otps/*` | **None** (Admin SDK only) | OTP codes for sign-up verification      |
+| `two_factor_codes/*`      | **None** (Admin SDK only) | 2FA verification codes                    |
 
 ### Deploy Rules
 
@@ -201,8 +221,16 @@ firebase deploy --only functions
 ### Deploy a Single Function
 
 ```bash
-firebase deploy --only functions:sendVerificationEmail
+firebase deploy --only functions:sendOTP
 firebase deploy --only functions:transcribeAndEvaluate
+```
+
+### View Logs
+
+```bash
+firebase functions:log
+# or with filters:
+firebase functions:log --only sendOTP
 ```
 
 ---
@@ -279,11 +307,11 @@ npm run serve
 - Run `cd functions && npm install && npm run build` and fix any TypeScript errors
 - Check that all secrets are set: `firebase functions:secrets:access SMTP_HOST`
 
-### Verification emails not sending
+### OTP emails not sending
 
 - Verify SMTP secrets are correct: `firebase functions:secrets:access SMTP_USER`
 - If using Gmail, make sure you are using an **App Password** (not your account password)
-- Check function logs: `firebase functions:log --only sendVerificationEmail`
+- Check function logs: `firebase functions:log --only sendOTP`
 
 ### Pronunciation evaluation returning errors
 

@@ -10,6 +10,7 @@ export interface AccessibilityState {
   fontStyle: FontStyleOption;
   transcript: boolean;
   reduceAnimation: boolean;
+  highContrastMode: boolean;
 }
 
 // ─── App Preference Models ───

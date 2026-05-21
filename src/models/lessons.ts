@@ -113,30 +113,6 @@ export interface PronunciationScore {
 export interface WordResult {
   word: string;
   isCorrect: boolean;
-  /** ASR-recognised token aligned to this reference word (from API). */
-  asr?: string;
-  /** Alignment operation: M = match, S = substitution, D = deletion. */
-  op?: 'M' | 'S' | 'D';
-  /** Per-word pronunciation score (0–1) from /evaluate_sentence. */
-  pronunciationScore?: number;
-}
-
-export interface SentenceRawWordCorrectness {
-  ref_words: string[];
-  matched: number;
-  substituted: number;
-  missing: number;
-  extra_spoken: number;
-  extra_tokens: string[];
-  word_score: number;
-  word_score_pct: number;
-}
-
-export interface SentenceRawOverall {
-  pronunciation_score: number;
-  weighted_overall_score: number;
-  scored_words: number;
-  skipped_words: number;
 }
 
 export interface PronunciationAttemptResult {
@@ -145,12 +121,6 @@ export interface PronunciationAttemptResult {
   feedback: string;
   successMessage: string;
   score: PronunciationScore;
-  /** What the ASR actually heard (full transcript). */
-  transcript?: string;
-  /** Raw word_correctness block from /evaluate_sentence. */
-  rawWordCorrectness?: SentenceRawWordCorrectness;
-  /** Raw overall block from /evaluate_sentence. */
-  rawOverall?: SentenceRawOverall;
 }
 
 export interface PronunciationSentence {

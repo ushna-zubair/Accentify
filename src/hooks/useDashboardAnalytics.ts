@@ -1,3 +1,19 @@
+/**
+ * useDashboardAnalytics – Fetches the pre-aggregated admin analytics document.
+ *
+ * Reads from: `admin_analytics/global_stats`
+ *
+ * If the document doesn't exist yet it seeds it with sensible defaults
+ * and triggers a client-side aggregation so the dashboard is never blank.
+ *
+ * Returns:
+ *   • data      – The `DashboardData` object, or `null` while loading / on error.
+ *   • isLoading – `true` while the initial fetch is in flight.
+ *   • error     – A human-readable error string, or `null`.
+ *   • refetch   – Call to re-fetch manually (e.g. pull-to-refresh).
+ *   • runAggregation – Trigger a full re-aggregation from user data.
+ */
+
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';

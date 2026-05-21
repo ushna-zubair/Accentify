@@ -11,6 +11,7 @@ interface AccessibilityContextType extends AccessibilityState {
   setFontStyle: (style: FontStyleOption) => void;
   setTranscript: (value: boolean) => void;
   setReduceAnimation: (value: boolean) => void;
+  setHighContrastMode: (value: boolean) => void;
 }
 
 const STORAGE_KEY = '@accessibility_settings';
@@ -21,6 +22,7 @@ const defaultState: AccessibilityState = {
   fontStyle: 'Standard',
   transcript: true,
   reduceAnimation: true,
+  highContrastMode: true,
 };
 
 const AccessibilityContext = createContext<AccessibilityContextType | undefined>(undefined);
@@ -68,6 +70,7 @@ export const AccessibilityProvider: React.FC<{ children: ReactNode }> = ({ child
     setFontStyle: (v: FontStyleOption) => update({ fontStyle: v }),
     setTranscript: (v: boolean) => update({ transcript: v }),
     setReduceAnimation: (v: boolean) => update({ reduceAnimation: v }),
+    setHighContrastMode: (v: boolean) => update({ highContrastMode: v }),
   }), [state, update]);
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -6,158 +6,182 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  ScrollView,
-  Platform,
-  useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../../config/firebase';
 import { AuthStackParamList } from '../../models';
+import { lookupUser, sendOTP, LookupUserResult } from '../../services/passwordResetService';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
-import CustomInput from '../../components/CustomInput';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
 const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === 'web';
-  const isWideWeb = isWeb && width >= 600;
+  const { email } = route.params;
 
-  // Get email from route params (if passed from Login)
-  const initialEmail = route.params?.email ?? '';
-
-  const [email, setEmail] = useState(initialEmail);
+  const [method, setMethod] = useState<'email' | 'sms'>('email');
+  const [lookupData, setLookupData] = useState<LookupUserResult | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [error, setError] = useState('');
 
-  const showAlert = (title: string, message: string) => {
-    if (Platform.OS === 'web') {
-      window.alert(`${title}\n${message}`);
-    } else {
-      Alert.alert(title, message);
+  // Look up user on mount to get masked contacts
+  useEffect(() => {
+    if (!email) {
+      setError('Please go back and enter your email address.');
+      setIsLoading(false);
+      return;
     }
-  };
 
-  const handleResetPassword = async () => {
-    if (!email || !email.includes('@')) {
-      showAlert('Error', 'Please enter a valid email address.');
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await lookupUser(email);
+        if (!cancelled) setLookupData(data);
+      } catch (err: any) {
+        if (!cancelled) setError(err.message ?? 'Unable to look up account.');
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [email]);
+
+  const handleContinue = async () => {
+    if (!lookupData) return;
+
+    if (method === 'sms' && !lookupData.hasPhone) {
+      Alert.alert('No Phone Number', 'There is no phone number on file for this account. Please use email instead.');
       return;
     }
 
     setIsSending(true);
     try {
-      await sendPasswordResetEmail(auth, email);
-      setIsSuccess(true);
-    } catch (error: any) {
-      let message = 'Failed to send reset link. Please try again.';
-      if (error.code === 'auth/user-not-found') {
-        message = 'No account found with this email address.';
-      } else if (error.code === 'auth/too-many-requests') {
-        message = 'Too many requests. Please try again later.';
-      }
-      showAlert('Error', message);
+      await sendOTP(lookupData.uid, method);
+      const maskedContact =
+        method === 'email' ? lookupData.maskedEmail : lookupData.maskedPhone ?? '';
+      navigation.navigate('OTPVerification', {
+        uid: lookupData.uid,
+        method,
+        maskedContact,
+      });
+    } catch (err: any) {
+      Alert.alert('Error', err.message ?? 'Failed to send code. Please try again.');
     } finally {
       setIsSending(false);
     }
   };
 
-  if (isSuccess) {
-    return (
-      <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
-        <View style={styles.centeredContent}>
-          <View style={isWideWeb ? styles.webCard : styles.innerContent}>
-            <View style={styles.successIconWrapper}>
-              <FontAwesome5 name="paper-plane" size={40} color={tc.accent} />
-            </View>
-            <Text style={styles.title}>Check Your Email</Text>
-            <Text style={styles.subtitle}>
-              We've sent a password reset link to {'\n'}
-              <Text style={styles.emailText}>{email}</Text>
-            </Text>
-            <TouchableOpacity
-              style={styles.backToLoginButton}
-              onPress={() => navigation.navigate('Login')}
-            >
-              <Text style={styles.backToLoginText}>Back to Login</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   return (
-    <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
-      <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWideWeb && styles.webScrollContent,
-        ]}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={isWideWeb ? styles.webCard : styles.innerContent}>
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-              <FontAwesome5 name="arrow-left" size={18} color={tc.text} />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Reset Password</Text>
-            <View style={{ width: 32 }} />
-          </View>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        {/* Header with back arrow and title */}
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <FontAwesome5 name="arrow-left" size={18} color={tc.text} />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Forgot Password</Text>
+          <View style={{ width: 32 }} />
+        </View>
 
-          {/* Illustration Icon */}
-          <View style={styles.illustrationContainer}>
-            <View style={styles.iconCircle}>
-              <FontAwesome5 name="lock" size={32} color={tc.accent} />
+        {/* Illustration */}
+        <View style={styles.illustrationContainer}>
+          <View style={styles.illustrationBg}>
+            {/* Phone body */}
+            <View style={styles.phoneBody}>
+              <View style={styles.phoneScreen}>
+                <FontAwesome5 name="lock" size={22} color={tc.white} />
+              </View>
+            </View>
+            {/* Chat bubble */}
+            <View style={styles.chatBubble}>
+              <FontAwesome5 name="comment-dots" size={16} color={tc.white} />
             </View>
           </View>
-
-          <Text style={styles.title}>Forgot Password?</Text>
-          <Text style={styles.subtitle}>
-            Enter the email address associated with your account and we'll send you a link to reset your password.
-          </Text>
-
-          {/* Email Input */}
-          <View style={styles.inputWrapper}>
-            <CustomInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
-            />
-          </View>
-
-          {/* Continue button */}
-          <View style={styles.bottomContainer}>
-            <TouchableOpacity
-              style={[styles.continueButton, isSending && { opacity: 0.7 }]}
-              onPress={handleResetPassword}
-              activeOpacity={0.8}
-              disabled={isSending}
-            >
-              {isSending ? (
-                <ActivityIndicator size="small" color={tc.white} />
-              ) : (
-                <>
-                  <Text style={styles.continueButtonText}>Send Reset Link</Text>
-                  <View style={styles.arrowCircle}>
-                    <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
-                  </View>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
         </View>
-      </ScrollView>
+
+        {/* Loading / Error */}
+        {isLoading && (
+          <View style={styles.centeredMessage}>
+            <ActivityIndicator size="large" color={tc.accent} />
+            <Text style={styles.subtitle}>Looking up your account…</Text>
+          </View>
+        )}
+
+        {!isLoading && !!error && (
+          <View style={styles.centeredMessage}>
+            <FontAwesome5 name="exclamation-circle" size={32} color={tc.error} />
+            <Text style={[styles.subtitle, { color: tc.error, marginTop: 12 }]}>{error}</Text>
+          </View>
+        )}
+
+        {!isLoading && !error && lookupData && (
+          <>
+            {/* Subtitle */}
+            <Text style={styles.subtitle}>Choose a way to reset your password</Text>
+
+            {/* Via Email card */}
+            <TouchableOpacity
+              style={[styles.methodCard, method === 'email' && styles.methodCardSelected]}
+              onPress={() => setMethod('email')}
+              activeOpacity={0.7}
+            >
+              <View style={styles.methodIconWrapper}>
+                <FontAwesome5 name="envelope" size={18} color={tc.accent} />
+              </View>
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodLabel}>Via Email</Text>
+                <Text style={styles.methodValue}>{lookupData.maskedEmail}</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Via SMS card */}
+            <TouchableOpacity
+              style={[
+                styles.methodCard,
+                method === 'sms' && styles.methodCardSelected,
+                !lookupData.hasPhone && styles.methodCardDisabled,
+              ]}
+              onPress={() => lookupData.hasPhone && setMethod('sms')}
+              activeOpacity={lookupData.hasPhone ? 0.7 : 1}
+            >
+              <View style={styles.methodIconWrapper}>
+                <FontAwesome5 name="comment-alt" size={18} color={lookupData.hasPhone ? tc.accent : tc.textMuted} />
+              </View>
+              <View style={styles.methodInfo}>
+                <Text style={styles.methodLabel}>Via SMS</Text>
+                <Text style={styles.methodValue}>
+                  {lookupData.hasPhone ? lookupData.maskedPhone : 'No phone on file'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Continue button */}
+            <View style={styles.bottomContainer}>
+              <TouchableOpacity
+                style={[styles.continueButton, isSending && { opacity: 0.7 }]}
+                onPress={handleContinue}
+                activeOpacity={0.8}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <ActivityIndicator size="small" color={tc.white} />
+                ) : (
+                  <>
+                    <Text style={styles.continueButtonText}>Continue</Text>
+                    <View style={styles.arrowCircle}>
+                      <FontAwesome5 name="arrow-right" size={14} color={tc.accent} />
+                    </View>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -165,53 +189,18 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
 const createStyles = (tc: ThemeColors) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: tc.white,
+    backgroundColor: tc.background,
   },
-  webContainer: {
-    backgroundColor: '#F5F6FA',
-  },
-  centeredContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  webScrollContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-  },
-  webCard: {
-    width: '100%',
-    maxWidth: 480,
-    backgroundColor: tc.white,
-    borderRadius: 24,
-    paddingHorizontal: 36,
-    paddingVertical: 48,
-    alignItems: 'center',
-    ...(Platform.OS === 'web'
-      ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.08,
-        shadowRadius: 32,
-      }
-      : {}),
-  },
-  innerContent: {
+  content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingTop: 12,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
   backButton: {
     width: 32,
@@ -224,66 +213,127 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontSize: 18,
     color: tc.text,
   },
-  /* ── Illustration ── */
   illustrationContainer: {
     alignItems: 'center',
-    marginBottom: 32,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: tc.accent + '15',
-    alignItems: 'center',
     justifyContent: 'center',
-  },
-  successIconWrapper: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: tc.accent + '10',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: 16,
     marginBottom: 24,
   },
-  /* ── Typography ── */
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: tc.text,
-    textAlign: 'center',
-    marginBottom: 16,
+  illustrationBg: {
+    width: 180,
+    height: 180,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  phoneBody: {
+    width: 90,
+    height: 130,
+    backgroundColor: '#FFBFCE',
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  phoneScreen: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: tc.accentMuted,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatBubble: {
+    position: 'absolute',
+    top: 20,
+    right: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: tc.successBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   subtitle: {
     fontFamily: fonts.regular,
     fontSize: 15,
     color: tc.textLight,
     textAlign: 'center',
+    marginBottom: 24,
     lineHeight: 22,
-    marginBottom: 32,
   },
-  emailText: {
-    fontFamily: fonts.bold,
+  methodCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: tc.white,
+    borderWidth: 1.5,
+    borderColor: tc.inputBorder,
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 16,
+    width: '100%',
+    marginBottom: 14,
+  },
+  methodCardSelected: {
+    borderColor: tc.accent,
+    backgroundColor: tc.accentMuted,
+  },
+  methodCardDisabled: {
+    opacity: 0.5,
+  },
+  centeredMessage: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  methodIconWrapper: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: tc.inputBg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 14,
+  },
+  methodInfo: {
+    flex: 1,
+  },
+  methodLabel: {
+    fontFamily: fonts.medium,
+    fontSize: 12,
+    color: tc.textMuted,
+    marginBottom: 3,
+  },
+  methodValue: {
+    fontFamily: fonts.semiBold,
+    fontSize: 14,
     color: tc.text,
   },
-  inputWrapper: {
-    width: '100%',
-    marginBottom: 24,
-  },
-  /* ── Buttons ── */
   bottomContainer: {
-    marginTop: 16,
+    marginTop: 'auto',
+    paddingBottom: 32,
+    paddingTop: 20,
     alignItems: 'center',
   },
   continueButton: {
-    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: tc.accent,
-    borderRadius: 16,
-    paddingVertical: 18,
+    borderRadius: 999,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
     gap: 12,
+    minWidth: 180,
     shadowColor: tc.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
@@ -296,22 +346,12 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     color: tc.white,
   },
   arrowCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: tc.white,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  backToLoginButton: {
-    marginTop: 16,
-    paddingVertical: 12,
-  },
-  backToLoginText: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: tc.accent,
-    textDecorationLine: 'underline',
   },
 });
 

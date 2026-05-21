@@ -20,9 +20,11 @@ export type AuthStackParamList = {
   Onboarding: undefined;
   Login: undefined;
   SignUp: undefined;
-  ForgotPassword: { email?: string };
-  VerifyEmail: { email: string };
+  EmailVerification: { maskedEmail: string };
   CreateProfile: undefined;
+  ForgotPassword: { email: string };
+  OTPVerification: { uid: string; method: 'email' | 'sms'; maskedContact: string };
+  CreateNewPassword: { uid: string; sessionToken: string };
   LearningGoals: { profile: ProfileData };
   NativeLanguage: { profile: ProfileData; learningGoals: string[] };
   EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
@@ -31,6 +33,7 @@ export type AuthStackParamList = {
   TwoFactorAuth: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
   ChooseVerificationMethod: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
   SetupAuthenticator: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
+  SetYourFingerprint: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -46,9 +49,7 @@ export type SettingsStackParamList = {
 export type HomeStackParamList = {
   HomeMain: undefined;
   HomePronunciation: { lessonId?: string };
-  HomeWordPronunciation: { lessonId?: string };
   WavyChat: undefined;
-  CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
 };
 
 export type LearnerTabParamList = {
@@ -63,7 +64,6 @@ export type TutorStackParamList = {
   LessonDetail: { lessonId: string };
   VocabExercise: { lessonId: string };
   PronunciationExercise: { lessonId: string };
-  WordPronunciationExercise: { lessonId: string };
   ConversationExercise: { lessonId: string };
   CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
 };

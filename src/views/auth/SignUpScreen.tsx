@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState , useMemo} from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { AuthStackParamList } from '../../models';
+import { sendSignUpOTP } from '../../services/signUpVerificationService';
 import { useAuth } from '../../context/AuthContext';
 import CustomInput from '../../components/CustomInput';
 import CustomButton from '../../components/CustomButton';
@@ -29,24 +30,12 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web';
   const isWideWeb = isWeb && width >= 600;
-  const { signUp, signInWithGoogle, signInWithApple, sendVerificationEmail } = useAuth();
+  const { signUp, signInWithGoogle, signInWithApple } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
-  const [cooldown, setCooldown] = useState(0);
-
-  // Cooldown timer logic
-  React.useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (cooldown > 0) {
-      timer = setInterval(() => {
-        setCooldown((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [cooldown]);
 
   const showAlert = (title: string, message: string) => {
     if (Platform.OS === 'web') {
@@ -67,22 +56,22 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
 
-    if (cooldown > 0) {
-      showAlert('Please Wait', `Please wait ${cooldown} seconds before trying again.`);
-      return;
-    }
-
     setLoading(true);
     try {
       // Step 1: Create the Firebase Auth account via AuthContext.
-      const result = await signUp(email, password);
+      // The full Firestore document is written at END of onboarding (TwoFactorAuth screen).
+      await signUp(email, password);
 
-      // Step 2: Send native Firebase email verification using the returned user
-      // (avoids race condition with auth.currentUser)
-      await sendVerificationEmail(result.user);
-
-      // Step 3: Navigate to the "Check Your Email" screen
-      navigation.navigate('VerifyEmail', { email });
+      // Step 2: Try to send email verification OTP.
+      // If the Cloud Function isn't deployed, skip verification and go straight to profile setup.
+      try {
+        const { maskedEmail } = await sendSignUpOTP();
+        navigation.navigate('EmailVerification', { maskedEmail });
+      } catch (otpError: any) {
+        console.warn('[SignUp] OTP send failed (skipping email verification):', otpError?.code, otpError?.message);
+        // Cloud Function not deployed or unavailable — skip email verification
+        navigation.navigate('CreateProfile');
+      }
     } catch (error: any) {
       console.error('[SignUp] error:', error?.code, error?.message, error);
       // Handle specific Firebase Auth error codes
@@ -95,9 +84,6 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         message = 'Password should be at least 6 characters.';
       } else if (error.code === 'auth/operation-not-allowed') {
         message = 'Email/password sign-up is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
-      } else if (error.code === 'auth/too-many-requests') {
-        message = 'Too many requests. Please wait a few minutes before trying again.';
-        setCooldown(60); // Set cooldown on rate limit
       } else if (error.code === 'auth/network-request-failed') {
         message = 'Network error. Please check your internet connection and try again.';
       } else if (error.message) {
@@ -162,98 +148,97 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         keyboardShouldPersistTaps="handled"
       >
         <View style={isWideWeb ? styles.webCard : undefined}>
-          {/* Logo */}
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../../assets/logo.png')}
-              style={styles.logo}
-              resizeMode="contain"
-            />
+        {/* Logo */}
+        <View style={styles.logoContainer}>
+          <Image
+            source={require('../../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        <Text style={styles.title}>Create your Accentify Account</Text>
+
+        <View style={styles.inputsContainer}>
+          <CustomInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
+          />
+
+          <CustomInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            leftIcon={<FontAwesome5 name="lock" size={16} color={tc.textMuted} />}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => setAgreeToTerms(!agreeToTerms)}
+        >
+          <View style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}>
+            {agreeToTerms && <FontAwesome5 name="check" size={10} color={tc.white} />}
           </View>
+          <Text style={styles.checkboxText}>Agree to Terms and Conditions</Text>
+        </TouchableOpacity>
 
-          <Text style={styles.title}>Create your Accentify Account</Text>
+        <View style={styles.signUpButtonContainer}>
+          <CustomButton
+            title="Sign Up"
+            onPress={handleSignUp}
+            loading={loading}
+            variant="primary"
+          />
+        </View>
 
-          <View style={styles.inputsContainer}>
-            <CustomInput
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              leftIcon={<FontAwesome5 name="envelope" size={16} color={tc.textMuted} />}
-            />
+        {/* Or Continue With Divider */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Or Continue With</Text>
+          <View style={styles.dividerLine} />
+        </View>
 
-            <CustomInput
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              leftIcon={<FontAwesome5 name="lock" size={16} color={tc.textMuted} />}
-            />
-          </View>
-
+        {/* Social Login Buttons */}
+        <View style={styles.socialRow}>
           <TouchableOpacity
-            style={styles.checkboxContainer}
-            onPress={() => setAgreeToTerms(!agreeToTerms)}
+            style={styles.socialButton}
+            onPress={handleGoogleSignUp}
+            disabled={loading || socialLoading !== null}
+            activeOpacity={0.7}
           >
-            <View style={[styles.checkbox, agreeToTerms && styles.checkboxChecked]}>
-              {agreeToTerms && <FontAwesome5 name="check" size={10} color={tc.white} />}
-            </View>
-            <Text style={styles.checkboxText}>Agree to Terms and Conditions</Text>
+            {socialLoading === 'google' ? (
+              <ActivityIndicator color={tc.accent} size="small" />
+            ) : (
+              <FontAwesome5 name="google" size={22} color={'#4285F4'} />
+            )}
           </TouchableOpacity>
 
-          <View style={styles.signUpButtonContainer}>
-            <CustomButton
-              title={cooldown > 0 ? `Try again in ${cooldown}s` : "Sign Up"}
-              onPress={handleSignUp}
-              loading={loading}
-              variant="primary"
-              disabled={cooldown > 0}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.socialButton}
+            onPress={handleAppleSignUp}
+            disabled={loading || socialLoading !== null}
+            activeOpacity={0.7}
+          >
+            {socialLoading === 'apple' ? (
+              <ActivityIndicator color={tc.text} size="small" />
+            ) : (
+              <FontAwesome5 name="apple" size={22} color={'#000000'} />
+            )}
+          </TouchableOpacity>
+        </View>
 
-          {/* Or Continue With Divider */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or Continue With</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Social Login Buttons */}
-          <View style={styles.socialRow}>
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={handleGoogleSignUp}
-              disabled={loading || socialLoading !== null}
-              activeOpacity={0.7}
-            >
-              {socialLoading === 'google' ? (
-                <ActivityIndicator color={tc.accent} size="small" />
-              ) : (
-                <FontAwesome5 name="google" size={22} color={'#4285F4'} />
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.socialButton}
-              onPress={handleAppleSignUp}
-              disabled={loading || socialLoading !== null}
-              activeOpacity={0.7}
-            >
-              {socialLoading === 'apple' ? (
-                <ActivityIndicator color={tc.text} size="small" />
-              ) : (
-                <FontAwesome5 name="apple" size={22} color={'#000000'} />
-              )}
-            </TouchableOpacity>
-          </View>
-
-          {/* Sign In Link */}
-          <View style={styles.signInContainer}>
-            <Text style={styles.signInText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.signInLink}>SIGN IN</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Sign In Link */}
+        <View style={styles.signInContainer}>
+          <Text style={styles.signInText}>Already have an account? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.signInLink}>SIGN IN</Text>
+          </TouchableOpacity>
+        </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -289,11 +274,11 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     paddingVertical: 36,
     ...(Platform.OS === 'web'
       ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-      }
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 24,
+        }
       : {}),
   },
   /* ── Logo ── */

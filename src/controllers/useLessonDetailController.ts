@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { LessonDetailData, LessonDifficulty, LessonStatus } from '../models';
+import { updateStreak } from '../services/progressService';
 
 // ═══════════════════════════════════════════════
 //  SAMPLE LESSON DETAIL DATA
@@ -215,9 +216,9 @@ export const useLessonDetailController = (lessonId: string) => {
             lastActiveAt: new Date().toISOString(),
           });
         }
-        // Streak is fired per-attempt when a learner clears the 75% threshold,
-        // not on lesson start. (Starting a lesson alone doesn't represent
-        // practice.)
+
+        // Update streak when starting a lesson
+        await updateStreak(uid);
       } catch {
         // Non-critical, ignore
       }

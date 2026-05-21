@@ -1,3 +1,10 @@
+/**
+ * lessonService.ts
+ *
+ * Firestore CRUD for the admin Manage Lessons feature.
+ * Operates on the top-level `lessons` collection.
+ */
+
 import {
   collection,
   doc,

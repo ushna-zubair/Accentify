@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   doc,
   setDoc,
@@ -7,21 +7,6 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
-import { feedbackWord, feedbackSentence } from '../services/accentifyApi';
-import { friendlySound } from '../services/arpabetFriendly';
-
-export interface WavyChatLastResult {
-  /** Pretty word or sentence the learner just attempted. */
-  reference: string;
-  /** 0–100. */
-  overallPct: number;
-  /** ARPAbet phonemes the model wants the learner to revisit (word flow). */
-  missedPhones?: string[];
-  /** Words the model didn't hear as a 'M' match (sentence flow). */
-  weakWords?: string[];
-  /** 'word' | 'sentence' — drives which feedback endpoint Wavy calls. */
-  itemType?: 'word' | 'sentence';
-}
 
 // ═══════════════════════════════════════════════
 //  TYPES
@@ -103,41 +88,137 @@ const breakIntoSyllables = (word: string): string => {
   return result;
 };
 
-const HELP_INTENT_KEYWORDS = [
-  'help', 'stuck', 'tip', 'tips', 'how', 'cant', "can't", 'hard',
-  'difficult', 'hint', 'advice', 'pronounce', 'pronunciation',
-];
+type ConversationState =
+  | 'greeting'
+  | 'awaiting_issue'
+  | 'awaiting_word'
+  | 'helping'
+  | 'general';
 
-const isHelpIntent = (lower: string): boolean =>
-  HELP_INTENT_KEYWORDS.some((k) => lower.includes(k));
+/**
+ * Generate Wavy's response based on user input and conversation state,
+ * using the current sentence context for intelligent help.
+ */
+const generateWavyResponse = (
+  userText: string,
+  state: ConversationState,
+  _currentSentence: string,
+): { reply: string; nextState: ConversationState } => {
+  const lower = userText.toLowerCase().trim();
 
-/** Build a contextual greeting that anchors Wavy on what the learner is doing. */
-const buildGreeting = (
-  currentSentence: string,
-  lastResult: WavyChatLastResult | null | undefined,
-): string => {
-  const target = currentSentence?.trim();
-  if (!target) {
-    return "Hi! I'm Wavy — your pronunciation coach. Tap the mic when you're ready, or ask me how to say any word.";
-  }
-  if (lastResult && lastResult.reference === target) {
-    if (lastResult.overallPct >= 75) {
-      return `Nice work on "${target}" — you scored ${lastResult.overallPct}%. Want a tip to push it higher, or move on?`;
+  // Greeting / initial state
+  if (state === 'greeting') {
+    if (
+      lower.includes('stuck') ||
+      lower.includes('help') ||
+      lower.includes('can\'t') ||
+      lower.includes('cant') ||
+      lower.includes('difficult') ||
+      lower.includes('hard')
+    ) {
+      return {
+        reply: 'Which word do you need help with specifically?',
+        nextState: 'awaiting_word',
+      };
     }
-    const hint = lastResult.missedPhones?.length
-      ? ` Focus on the ${friendlySound(lastResult.missedPhones[0])} sound.`
-      : lastResult.weakWords?.length
-        ? ` "${lastResult.weakWords[0]}" tripped the model — try emphasising it.`
-        : '';
-    return `You're at ${lastResult.overallPct}% on "${target}".${hint} Want me to break it down?`;
+    if (lower.includes('pronounce') || lower.includes('pronunciation')) {
+      return {
+        reply: 'Which word do you need help with specifically?',
+        nextState: 'awaiting_word',
+      };
+    }
+    return {
+      reply:
+        "I can help you with pronunciation! Tell me which word you're struggling with, or say \"I'm stuck\" if you need guidance.",
+      nextState: 'awaiting_issue',
+    };
   }
-  return `Hi! Need help with "${target}"? Ask me "how do I say this?" or "what's the hardest part?"`;
-};
 
-/** Word-level fallback when the API isn't available. */
-const offlineWordTip = (word: string): string => {
-  const phonetic = breakIntoSyllables(word);
-  return `Try breaking "${word}" into syllables: ${phonetic}.\nSlow it down, then speed up.`;
+  // Awaiting what the issue is
+  if (state === 'awaiting_issue') {
+    if (
+      lower.includes('stuck') ||
+      lower.includes('help') ||
+      lower.includes('can\'t') ||
+      lower.includes('cant') ||
+      lower.includes('word')
+    ) {
+      return {
+        reply: 'Which word do you need help with specifically?',
+        nextState: 'awaiting_word',
+      };
+    }
+    // If they type a single word, treat it as the word they need help with
+    if (lower.split(/\s+/).length <= 2) {
+      const phonetic = breakIntoSyllables(lower.split(/\s+/)[0]);
+      return {
+        reply: `Try breaking down the word like this:\n${phonetic}`,
+        nextState: 'helping',
+      };
+    }
+    return {
+      reply: 'Which word do you need help with specifically?',
+      nextState: 'awaiting_word',
+    };
+  }
+
+  // Awaiting the specific word
+  if (state === 'awaiting_word') {
+    const words = lower.split(/\s+/).filter(Boolean);
+    const targetWord = words[words.length - 1]; // Take last word
+    const phonetic = breakIntoSyllables(targetWord);
+    return {
+      reply: `Try breaking down the word like this:\n${phonetic}`,
+      nextState: 'helping',
+    };
+  }
+
+  // Already helped — can help with another word or give tips
+  if (state === 'helping') {
+    if (
+      lower.includes('another') ||
+      lower.includes('more') ||
+      lower.includes('next')
+    ) {
+      return {
+        reply: 'Sure! Which word would you like help with?',
+        nextState: 'awaiting_word',
+      };
+    }
+    if (lower.includes('thank') || lower.includes('thanks')) {
+      return {
+        reply: "You're welcome! Good luck with the pronunciation. You got this! 💪",
+        nextState: 'general',
+      };
+    }
+    // If they type a single word, treat as another word request
+    if (lower.split(/\s+/).length <= 2) {
+      const phonetic = breakIntoSyllables(normalize(lower.split(/\s+/)[0]));
+      return {
+        reply: `Try breaking down the word like this:\n${phonetic}`,
+        nextState: 'helping',
+      };
+    }
+    return {
+      reply:
+        'Need help with another word? Just type it and I\'ll break it down for you!',
+      nextState: 'helping',
+    };
+  }
+
+  // General / fallback
+  if (lower.split(/\s+/).length <= 2) {
+    const phonetic = breakIntoSyllables(normalize(lower.split(/\s+/)[0]));
+    return {
+      reply: `Try breaking down the word like this:\n${phonetic}`,
+      nextState: 'helping',
+    };
+  }
+  return {
+    reply:
+      'I\'m here to help with pronunciation! Tell me which word you\'d like to practice.',
+    nextState: 'awaiting_issue',
+  };
 };
 
 const createId = (): string =>
@@ -150,117 +231,25 @@ const createId = (): string =>
 export const useWavyChatController = (
   lessonId: string,
   currentSentence: string,
-  lastResult?: WavyChatLastResult | null,
 ) => {
-  // Build a fresh greeting whenever the current word/sentence or last result
-  // changes — otherwise Wavy stays anchored on the first thing the learner
-  // opened the overlay with.
-  const greetingRef = useRef<string>('');
   const [messages, setMessages] = useState<WavyChatMessage[]>([
     {
       id: createId(),
       role: 'wavy',
-      text: buildGreeting(currentSentence, lastResult),
+      text: 'Hello how can i assist you?',
       timestamp: new Date().toISOString(),
     },
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-
-  useEffect(() => {
-    const greeting = buildGreeting(currentSentence, lastResult);
-    if (greeting === greetingRef.current) return;
-    greetingRef.current = greeting;
-    setMessages((prev) => {
-      // Only swap the greeting bubble if the user hasn't said anything yet —
-      // otherwise we'd erase the conversation when the next word loads.
-      if (prev.length <= 1) {
-        return [
-          {
-            id: createId(),
-            role: 'wavy',
-            text: greeting,
-            timestamp: new Date().toISOString(),
-          },
-        ];
-      }
-      return prev;
-    });
-  }, [currentSentence, lastResult]);
-
-  /** Decide what Wavy should say next based on context + user intent. */
-  const generateReply = useCallback(
-    async (userText: string): Promise<string> => {
-      const lower = userText.toLowerCase().trim();
-      const target = currentSentence?.trim() ?? '';
-      const itemType: 'word' | 'sentence' =
-        lastResult?.itemType ?? (target.includes(' ') ? 'sentence' : 'word');
-
-      if (lower.includes('thank')) {
-        return "You're welcome! Keep going — small reps add up. 💪";
-      }
-
-      const isAboutResult =
-        lower.includes('score') ||
-        lower.includes('wrong') ||
-        lower.includes('right') ||
-        lower.includes('miss');
-      if (isAboutResult && lastResult) {
-        const tier = lastResult.overallPct >= 75 ? 'a passing' : 'not quite a passing';
-        const detail = lastResult.missedPhones?.length
-          ? ` The model flagged the ${friendlySound(lastResult.missedPhones[0])} sound — practice that in isolation first.`
-          : lastResult.weakWords?.length
-            ? ` "${lastResult.weakWords[0]}" was the weakest word — read it on its own a few times.`
-            : '';
-        return `Your last attempt scored ${lastResult.overallPct}%, ${tier} score.${detail}`;
-      }
-
-      // "Help" / "how do I say this" / similar → real API tip, anchored on the
-      // current word/sentence. Falls back to local phonetic breakdown.
-      if (isHelpIntent(lower) || lower.length < 3) {
-        if (target) {
-          try {
-            const remote =
-              itemType === 'sentence'
-                ? await feedbackSentence({ reference_text: target })
-                : await feedbackWord({ word: target, reference: target });
-            if (remote && remote.trim()) return remote.trim();
-          } catch {
-            // Fall through to offline tip
-          }
-          if (itemType === 'word') return offlineWordTip(target);
-          return `Read "${target}" out loud once, then break it into chunks. Focus on stress: pause briefly after each comma or strong word.`;
-        }
-        return "Tap the mic and try the prompt above — I'll give you a real tip after you record.";
-      }
-
-      // Single word the learner is asking about → quick syllable breakdown.
-      const tokens = lower.split(/\s+/).filter(Boolean);
-      if (tokens.length <= 2) {
-        const word = normalize(tokens[tokens.length - 1] ?? '');
-        if (word) {
-          try {
-            const remote = await feedbackWord({ word, reference: word });
-            if (remote && remote.trim()) return remote.trim();
-          } catch {
-            // Use local fallback
-          }
-          return offlineWordTip(word);
-        }
-      }
-
-      return target
-        ? `Try saying "${target}" out loud once, then ask me about any word that tripped you up.`
-        : "I'm here to help with pronunciation — tell me which word you'd like to practice.";
-    },
-    [currentSentence, lastResult],
-  );
+  const stateRef = useRef<ConversationState>('greeting');
 
   const sendMessage = useCallback(
     async (text?: string) => {
       const msg = (text ?? inputText).trim();
       if (!msg) return;
 
+      // Add user message
       const userMsg: WavyChatMessage = {
         id: createId(),
         role: 'user',
@@ -270,9 +259,17 @@ export const useWavyChatController = (
       setMessages((prev) => [...prev, userMsg]);
       setInputText('');
 
+      // Simulate typing delay
       setIsTyping(true);
-      const reply = await generateReply(msg);
-      setIsTyping(false);
+      await new Promise((r) => setTimeout(r, 800 + Math.random() * 600));
+
+      // Generate response
+      const { reply, nextState } = generateWavyResponse(
+        msg,
+        stateRef.current,
+        currentSentence,
+      );
+      stateRef.current = nextState;
 
       const aiMsg: WavyChatMessage = {
         id: createId(),
@@ -281,7 +278,9 @@ export const useWavyChatController = (
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMsg]);
+      setIsTyping(false);
 
+      // ── Save to Firestore ──
       const uid = auth.currentUser?.uid;
       if (uid) {
         try {
@@ -301,6 +300,8 @@ export const useWavyChatController = (
               createdAt: Timestamp.now(),
             },
           );
+
+          // Update chat interaction count
           await setDoc(
             doc(db, 'users', uid, 'lessons', lessonId),
             {
@@ -314,7 +315,7 @@ export const useWavyChatController = (
         }
       }
     },
-    [inputText, currentSentence, lessonId, generateReply],
+    [inputText, currentSentence, lessonId],
   );
 
   return {

@@ -1,3 +1,12 @@
+/**
+ * feedbackService.ts
+ *
+ * Firestore CRUD operations for the Feedback & Reports system.
+ * Collections:
+ *   - feedback/{id}           — individual feedback items
+ *   - feedback_activity/{id}  — admin action log for feedback
+ */
+
 import {
   collection,
   doc,
