@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { doc, getDoc, collection, query, getDocs, where } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type {
@@ -115,9 +116,12 @@ export const useTutorController = () => {
       // 2. Tutor stats from progress
       const progressSnap = await getDoc(doc(db, 'users', uid, 'progress', 'summary'));
       const progressData = progressSnap.exists() ? progressSnap.data() : {};
+      const totalSeconds = (progressData?.totalPracticeSeconds as number) ?? 0;
+      const totalHours =
+        progressData?.totalHours ?? Math.round((totalSeconds / 3600) * 10) / 10;
       const stats: TutorStats = {
         completedLessons: progressData?.completedLessons ?? 0,
-        totalHours: progressData?.totalHours ?? 0,
+        totalHours,
       };
 
       // 3. Lessons from Firestore
@@ -204,11 +208,13 @@ export const useTutorController = () => {
     setLoading(false);
   };
 
-  useEffect(() => {
-    let ignore = false;
-    fetchTutorData();
-    return () => { ignore = true; };
-  }, [fetchTutorData]);
+  // Refetch whenever the screen comes into focus so progress made in
+  // exercises is reflected without a manual pull-to-refresh.
+  useFocusEffect(
+    useCallback(() => {
+      fetchTutorData();
+    }, [fetchTutorData]),
+  );
 
   return {
     data,

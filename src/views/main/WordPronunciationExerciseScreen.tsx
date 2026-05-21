@@ -73,7 +73,6 @@ export const WordPronunciationExerciseScreen: React.FC<
     error,
     wordsLoading,
     completing,
-    allScores,
     startRecording,
     stopRecording,
     tryAgain,
@@ -114,7 +113,12 @@ export const WordPronunciationExerciseScreen: React.FC<
   const progressColor = getProgressColor(currentIndex, totalWords, tc);
   const isProcessing = phase === 'processing';
   const isResult = phase === 'result';
-  const micDisabled = isProcessing || isResult || wordsLoading;
+  const micDisabled = isProcessing || wordsLoading;
+
+  const handleRetryRecording = async () => {
+    tryAgain();
+    await startRecording();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -135,36 +139,6 @@ export const WordPronunciationExerciseScreen: React.FC<
             {currentIndex + 1}/{totalWords}
           </Text>
         </View>
-      </View>
-
-      {/* Segmented session progress — one bar per word, coloured by score */}
-      <View style={styles.segBarRow}>
-        {Array.from({ length: totalWords }).map((_, i) => {
-          const s = allScores[i];
-          const isCurrent = i === currentIndex;
-          const segColor =
-            s == null
-              ? tc.divider
-              : s.overall >= 75
-                ? tc.success
-                : s.overall >= 1
-                  ? '#FD8E39'
-                  : tc.error;
-          return (
-            <View
-              key={i}
-              style={[
-                styles.segBar,
-                {
-                  backgroundColor: segColor,
-                  opacity: s == null && !isCurrent ? 0.4 : 1,
-                  borderWidth: isCurrent ? 1 : 0,
-                  borderColor: tc.accent,
-                },
-              ]}
-            />
-          );
-        })}
       </View>
 
       {error && (
@@ -248,20 +222,6 @@ export const WordPronunciationExerciseScreen: React.FC<
                     <Text style={styles.scoreBig}>{result.score.overall}%</Text>
                     <Text style={styles.scoreCaption}>{tierLabel(tier)}</Text>
                     <Text style={styles.summaryText}>{summary}</Text>
-                    <View style={styles.scoreRow}>
-                      <View style={styles.scorePill}>
-                        <Text style={styles.scorePillLabel}>Clarity</Text>
-                        <Text style={styles.scorePillValue}>
-                          {result.score.clarity}%
-                        </Text>
-                      </View>
-                      <View style={styles.scorePill}>
-                        <Text style={styles.scorePillLabel}>Accuracy</Text>
-                        <Text style={styles.scorePillValue}>
-                          {result.score.accuracy}%
-                        </Text>
-                      </View>
-                    </View>
                   </View>
 
                   {/* Friendly sound chips — one per reference phoneme, no ARPAbet on the face */}
@@ -489,16 +449,6 @@ export const WordPronunciationExerciseScreen: React.FC<
                     )}
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.secondaryBtn}
-                    activeOpacity={0.7}
-                    disabled={completing}
-                    onPress={tryAgain}
-                  >
-                    <Ionicons name="refresh-outline" size={16} color={tc.accent} />
-                    <Text style={styles.secondaryBtnText}>Try this word again</Text>
-                  </TouchableOpacity>
-
                   {currentIndex >= 1 && !isLastWord && (
                     <TouchableOpacity
                       style={styles.ghostBtn}
@@ -522,6 +472,7 @@ export const WordPronunciationExerciseScreen: React.FC<
           disabled={micDisabled}
           onStart={startRecording}
           onStop={stopRecording}
+          onRetry={handleRetryRecording}
         />
       </View>
 
@@ -734,17 +685,6 @@ const createStyles = (tc: ThemeColors) =>
     actionBtnDisabled: { opacity: 0.6 },
     actionBtnText: { fontFamily: fonts.bold, fontSize: 16, color: tc.white },
 
-    secondaryBtn: {
-      alignSelf: 'center',
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 12,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-    },
-    secondaryBtnText: { fontFamily: fonts.medium, fontSize: 14, color: tc.accent },
-
     ghostBtn: {
       alignSelf: 'center',
       marginTop: 6,
@@ -787,19 +727,6 @@ const createStyles = (tc: ThemeColors) =>
     soundChipText: { fontFamily: fonts.medium, fontSize: 13 },
     soundChipSub: { fontFamily: fonts.regular, fontSize: 10, marginTop: 1 },
 
-    segBarRow: {
-      flexDirection: 'row',
-      gap: 4,
-      paddingHorizontal: CARD_H,
-      paddingTop: 4,
-      paddingBottom: 4,
-    },
-    segBar: {
-      flex: 1,
-      height: 5,
-      borderRadius: 3,
-    },
-
     errorBanner: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -832,7 +759,7 @@ const createStyles = (tc: ThemeColors) =>
     },
     errorText: { fontFamily: fonts.regular, fontSize: 13, color: tc.error },
 
-    // Raw API score
+    // Raw model score
     rawScoreRow: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 8 },
     rawScorePill: {
       flex: 1,

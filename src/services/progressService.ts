@@ -209,6 +209,22 @@ export const recordPronunciationAttempt = async (
   );
 
   try {
+    const summaryRef = doc(db, 'users', uid, 'progress', 'summary');
+    await setDoc(
+      summaryRef,
+      {
+        totalPronunciationAttempts: increment(1),
+        totalCompletedItems: increment(completed ? 1 : 0),
+        totalPracticeSeconds: increment(attempt.durationSec),
+        lastActiveAt: Timestamp.now(),
+      },
+      { merge: true },
+    );
+  } catch (e) {
+    console.warn('[progressService] summary update failed:', e);
+  }
+
+  try {
     const attemptsCol = collection(db, 'users', uid, 'progress', 'attempts', 'entries');
     await addDoc(attemptsCol, { ...attempt, dateKey: todayKey });
   } catch (e) {

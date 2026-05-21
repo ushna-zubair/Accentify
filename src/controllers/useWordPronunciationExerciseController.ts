@@ -113,33 +113,33 @@ const dedupeWords = (words: PromptWordResponse[]): PromptWordResponse[] => {
 };
 
 /**
- * Per-phoneme confidence below this is treated as "not actually heard,"
- * regardless of what the aligner returns. Silence still aligns "perfectly"
- * (the model places each reference phoneme into the audio), so trusting
- * `comparison[i].match` alone reports 100% for silence or wrong-word audio.
- * Cross-checking against `phoneme_details[i].confidence` fixes that.
+ * Forced-aligner sanity check. The /evaluate_word model occasionally returns
+ * score=1.0 even when the speaker said nothing or a completely different word
+ * — it aligns the reference phonemes into whatever audio it gets. The reliable
+ * cross-signal is `phoneme_details[].confidence`: when the model genuinely
+ * heard the word, mean confidence is well above this floor. When the mean is
+ * below it, the model wasn't really listening, so we reject the recording
+ * instead of trusting the score.
+ *
+ * 0.25 catches SIVY-style "100% on silence" (mean ~0.17) while still letting
+ * legitimate partial attempts through (mean 0.29–0.33 maps to model scores of
+ * 62–70%, which we want to surface honestly).
  */
-const PHONEME_CONF_FLOOR = 0.3;
+const MIN_MEAN_CONFIDENCE = 0.25;
 
-/**
- * Minimum mean phoneme confidence required for a recording to be scored at
- * all. Below this we treat the input as silence / mic-failure and ask the
- * learner to record again instead of returning a misleading score.
- */
-const MIN_MEAN_CONFIDENCE = 0.05;
+const detectUnreliableScore = (evalRes: EvaluateWordResponse): string | null => {
+  const confidences = (evalRes.phoneme_details ?? []).map((p) => p.confidence ?? 0);
+  if (confidences.length === 0) return null;
+  const meanConf = confidences.reduce((a, b) => a + b, 0) / confidences.length;
+  if (meanConf < MIN_MEAN_CONFIDENCE) {
+    return "We couldn't hear all the sounds clearly — try again somewhere quieter or speak the whole word.";
+  }
+  return null;
+};
 
 /** Build local rule-based feedback when the model didn't return any. */
-const buildLocalWordFeedback = (
-  evalRes: EvaluateWordResponse,
-  effectiveCmp: PhonemeComparison[],
-): string => {
-  const missedFromCmp = effectiveCmp
-    .filter((c) => !c.match)
-    .map((c) => c.ref_arp);
-  const missing = [
-    ...(evalRes.missing_phones ?? []),
-    ...missedFromCmp,
-  ].filter(Boolean);
+const buildLocalWordFeedback = (evalRes: EvaluateWordResponse): string => {
+  const missing = evalRes.missing_phones ?? [];
   if (missing.length > 0) {
     const uniq = Array.from(new Set(missing));
     return `Focus on the ${uniq.slice(0, 3).join(', ')} sound${uniq.length > 1 ? 's' : ''} in "${evalRes.word}".`;
@@ -152,59 +152,27 @@ const adaptWordResponse = (
   remoteFeedback: string,
 ): WordAttemptResult => {
   const phDetails = evalRes.phoneme_details ?? [];
-  const rawCmp = evalRes.comparison ?? [];
-  const total = Math.max(phDetails.length, rawCmp.length);
+  const comparison = evalRes.comparison ?? [];
 
-  // Cross-check the aligner's match flag against the actual per-phoneme
-  // confidence. The aligner returns match=true even for silence; requiring
-  // confidence >= floor turns the chips red when nothing was really spoken.
-  const effectiveCmp: PhonemeComparison[] = rawCmp.map((c, i) => {
-    const phConf = phDetails[i]?.confidence ?? c.conf ?? 0;
-    return { ...c, match: c.match && phConf >= PHONEME_CONF_FLOOR };
-  });
-
-  // Overall = confidence-weighted match ratio. A phoneme contributes its own
-  // detection confidence only if it effectively matched; otherwise zero.
-  // Silence → all confs ~0 → overall ~0. Wrong word → most don't match → low.
-  // Correct word with high confidence → near 100.
-  const weightedSum = effectiveCmp.reduce((s, c, i) => {
-    const phConf = phDetails[i]?.confidence ?? c.conf ?? 0;
-    return s + (c.match ? phConf : 0);
-  }, 0);
-  const overall = total > 0 ? Math.round((weightedSum / total) * 100) : 0;
-
-  const matchedCount = effectiveCmp.filter((c) => c.match).length;
-  const accuracy = total > 0 ? Math.round((matchedCount / total) * 100) : 0;
-
-  const confidences = phDetails.map((p) => p.confidence ?? 0);
-  const meanConf = confidences.length
-    ? confidences.reduce((a, b) => a + b, 0) / confidences.length
-    : 0;
-  const clarity = Math.max(0, Math.min(100, Math.round(meanConf * 100)));
-
-  // Fluency for a single word is essentially "did the model recognize this
-  // smoothly" — average the alignment score and mean confidence.
-  const fluency = Math.max(
-    0,
-    Math.min(100, Math.round(((evalRes.score ?? 0) + meanConf) * 50)),
-  );
-
-  const score: PronunciationScore = { clarity, accuracy, fluency, overall };
+  // The model's score is the verdict. Keep PronunciationScore shape for
+  // storage compatibility, but every field mirrors `overall` — we don't
+  // invent clarity/fluency the model didn't return.
+  const overall = Math.round((evalRes.score ?? 0) * 100);
+  const score: PronunciationScore = {
+    clarity: overall,
+    accuracy: overall,
+    fluency: overall,
+    overall,
+  };
 
   const isCorrect = overall >= COMPLETE_THRESHOLD_PCT;
   const wordResults: WordResult[] = [{ word: evalRes.word, isCorrect }];
 
-  // Merge API-reported missing phones with the ones we downgraded.
-  const missingPhones = Array.from(
-    new Set([
-      ...(evalRes.missing_phones ?? []),
-      ...effectiveCmp.filter((c) => !c.match).map((c) => c.ref_arp),
-    ]),
-  ).filter(Boolean);
+  const missingPhones = (evalRes.missing_phones ?? []).filter(Boolean);
 
   const feedback = isCorrect
     ? ''
-    : remoteFeedback || buildLocalWordFeedback(evalRes, effectiveCmp);
+    : remoteFeedback || buildLocalWordFeedback(evalRes);
 
   return {
     isCorrect,
@@ -212,7 +180,7 @@ const adaptWordResponse = (
     feedback,
     successMessage: isCorrect ? pickRandom(SUCCESS_MESSAGES) : '',
     score,
-    phonemeComparison: effectiveCmp,
+    phonemeComparison: comparison,
     missingPhones,
     referenceArpabet: evalRes.reference ?? '',
     referenceArpabetTokens: evalRes.reference_arpabet ?? [],
@@ -221,26 +189,6 @@ const adaptWordResponse = (
     phonemeDetails: phDetails,
     rawScore: evalRes.score ?? 0,
   };
-};
-
-/**
- * Returns a user-facing error if the recording looks like silence/mic-failure,
- * else null. Used to short-circuit scoring before we render a false 100%.
- */
-const detectSilentRecording = (
-  evalRes: EvaluateWordResponse,
-  recordedMs: number,
-): string | null => {
-  if (recordedMs < 600) {
-    return 'That recording was too short — hold the button a bit longer and speak the whole word.';
-  }
-  const confidences = (evalRes.phoneme_details ?? []).map((p) => p.confidence ?? 0);
-  if (confidences.length === 0) return null;
-  const meanConf = confidences.reduce((a, b) => a + b, 0) / confidences.length;
-  if (meanConf < MIN_MEAN_CONFIDENCE) {
-    return "We couldn't hear your voice clearly — try again somewhere quieter or speak a little louder.";
-  }
-  return null;
 };
 
 export const useWordPronunciationExerciseController = (
@@ -396,21 +344,16 @@ export const useWordPronunciationExerciseController = (
           encoding,
         });
 
-        // Reject silent / mic-failure recordings before they become a fake
-        // "100% Excellent!" — the aligner reports a perfect score even when
-        // the model heard nothing.
-        const silenceMsg = detectSilentRecording(
-          evaluation,
-          recordingDurationRef.current,
-        );
-        if (silenceMsg) {
-          setError(silenceMsg);
+        // Reject recordings where mean phoneme confidence is below the floor
+        // — the aligner sometimes returns score=1.0 for silence/wrong words.
+        const unreliable = detectUnreliableScore(evaluation);
+        if (unreliable) {
+          setError(unreliable);
           setPhase('idle');
           return;
         }
 
-        // Compute the real overall first (cheap) — only ask for AI coaching
-        // feedback when the learner actually needs it.
+        // Trust the model's score; only fetch coaching feedback when needed.
         const preliminary = adaptWordResponse(evaluation, '');
         let remoteFeedback = '';
         if (preliminary.score.overall < COMPLETE_THRESHOLD_PCT) {

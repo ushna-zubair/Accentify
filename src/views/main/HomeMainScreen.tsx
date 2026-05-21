@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Circle, Path } from 'react-native-svg';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   collection,
   query,
@@ -121,7 +122,14 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, []);
 
-  useEffect(() => { fetchHomeData(); }, [fetchHomeData]);
+  // Refetch every time the screen comes into focus so today's streak,
+  // completed count, and practice minutes stay in sync with attempts the
+  // learner just made on the exercise screens.
+  useFocusEffect(
+    useCallback(() => {
+      fetchHomeData();
+    }, [fetchHomeData]),
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

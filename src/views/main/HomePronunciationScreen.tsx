@@ -61,12 +61,6 @@ const getProgressColor = (idx: number, total: number, tc: ThemeColors): string =
   return tc.error;
 };
 
-const formatTimer = (secs: number): string => {
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
-};
-
 // ═══════════════════════════════════════════════
 //  AI MASCOT
 // ═══════════════════════════════════════════════
@@ -328,7 +322,6 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
     isLastSentence,
     phase,
     result,
-    timer,
     error,
     sentencesLoading,
     completing,
@@ -394,13 +387,8 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* ═══════ HEADER ═══════ */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>English Pronunciation</Text>
-        <View style={styles.badgesCol}>
-          <View style={[styles.badge, { backgroundColor: progressColor }]}>
-            <Text style={styles.badgeText}>{currentIndex + 1}/{totalSentences}</Text>
-          </View>
-          <View style={[styles.badge, { backgroundColor: '#FD8E39' }]}>
-            <Text style={styles.badgeText}>{formatTimer(timer)}</Text>
-          </View>
+        <View style={[styles.badge, { backgroundColor: progressColor }]}>
+          <Text style={styles.badgeText}>{currentIndex + 1}/{totalSentences}</Text>
         </View>
       </View>
 
@@ -498,12 +486,12 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
               />
             </TouchableOpacity>
 
-            {/* Raw API scores */}
+            {/* Raw model scores */}
             {showDetails && result.rawOverall && (
               <View style={styles.rawScoresCard}>
                 <View style={styles.feedbackLabelRow}>
                   <Ionicons name="analytics-outline" size={18} color={tc.accent} />
-                  <Text style={styles.feedbackLabel}>API Scores</Text>
+                  <Text style={styles.feedbackLabel}>Model Scores</Text>
                 </View>
                 <View style={styles.rawScoresRow}>
                   <View style={styles.rawScorePill}>
@@ -768,7 +756,6 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     paddingHorizontal: CARD_H, paddingTop: Platform.OS === 'android' ? 40 : 12, paddingBottom: 4,
   },
   headerTitle: { fontFamily: fonts.bold, fontSize: 22, color: tc.text, maxWidth: SCREEN_W * 0.6 },
-  badgesCol: { alignItems: 'flex-end', gap: 4 },
   badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
   badgeText: { fontFamily: fonts.bold, fontSize: 12, color: tc.white },
 

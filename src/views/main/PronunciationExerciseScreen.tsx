@@ -492,7 +492,12 @@ const PronunciationExerciseScreen: React.FC = () => {
   const progressColor = getProgressColor(currentIndex, totalSentences, tc);
   const isProcessing = phase === 'processing';
   const isResult = phase === 'result';
-  const micDisabled = isProcessing || isResult || sentencesLoading;
+  const micDisabled = isProcessing || sentencesLoading;
+
+  const handleRetryRecording = async () => {
+    tryAgain();
+    await startRecording();
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -857,16 +862,6 @@ const PronunciationExerciseScreen: React.FC = () => {
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.secondaryBtn}
-                activeOpacity={0.7}
-                disabled={completing}
-                onPress={tryAgain}
-              >
-                <Ionicons name="refresh-outline" size={16} color={tc.accent} />
-                <Text style={styles.secondaryBtnText}>Try this sentence again</Text>
-              </TouchableOpacity>
-
               {currentIndex >= 1 && !isLastSentence && (
                 <TouchableOpacity
                   style={styles.ghostBtn}
@@ -886,9 +881,10 @@ const PronunciationExerciseScreen: React.FC = () => {
       <View style={styles.bottomArea}>
         <RecordingControl
           phase={phase}
-          disabled={micDisabled || sentencesLoading}
+          disabled={micDisabled}
           onStart={startRecording}
           onStop={stopRecording}
+          onRetry={handleRetryRecording}
         />
         {sentencesLoading && (
           <Text style={styles.loadingHint}>Loading sentences…</Text>
@@ -1153,17 +1149,6 @@ const createStyles = (tc: ThemeColors) => StyleSheet.create({
     fontSize: 16,
     color: tc.white,
   },
-
-  secondaryBtn: {
-    alignSelf: 'center',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  secondaryBtnText: { fontFamily: fonts.medium, fontSize: 14, color: tc.accent },
 
   ghostBtn: {
     alignSelf: 'center',

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import {
   Animated,
   Easing,
@@ -19,30 +19,29 @@ interface RecordingControlProps {
   disabled?: boolean;
   onStart: () => void;
   onStop: () => void;
+  /**
+   * Called when the user taps the button in the result phase. Lets the parent
+   * decide what "retry" means (typically: reset state + immediately re-record).
+   * If omitted, result-phase taps fall back to onStart.
+   */
+  onRetry?: () => void;
 }
-
-const formatMmSs = (totalSeconds: number) => {
-  const m = Math.floor(totalSeconds / 60);
-  const s = Math.floor(totalSeconds % 60);
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-};
 
 /**
  * Single combined mic-with-waveform control used across all pronunciation
- * exercises. Replaces the previously disconnected waveform-bar + mic-button
- * pair. Maintains its own duration timer internally so the parent screen
- * isn't re-rendered every 100ms while recording.
+ * exercises. The same circular button drives start / stop / retry depending
+ * on phase so we don't need a separate text "try again" link.
  */
 export const RecordingControl: React.FC<RecordingControlProps> = ({
   phase,
   disabled,
   onStart,
   onStop,
+  onRetry,
 }) => {
   const { colors: tc } = useAppTheme();
   const ringScale = useRef(new Animated.Value(1)).current;
   const ringOpacity = useRef(new Animated.Value(0.6)).current;
-  const [elapsed, setElapsed] = useState(0);
 
   const isRecording = phase === 'recording';
   const isProcessing = phase === 'processing';
@@ -89,29 +88,19 @@ export const RecordingControl: React.FC<RecordingControlProps> = ({
     return () => loop.stop();
   }, [isRecording, ringScale, ringOpacity]);
 
-  useEffect(() => {
-    if (!isRecording) {
-      setElapsed(0);
-      return;
-    }
-    const startedAt = Date.now();
-    const id = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startedAt) / 1000));
-    }, 250);
-    return () => clearInterval(id);
-  }, [isRecording]);
-
   const label = useMemo(() => {
     if (isProcessing) return 'Analyzing…';
     if (isResult) return 'Tap to try again';
-    if (isRecording) return `Listening — tap to stop · ${formatMmSs(elapsed)}`;
+    if (isRecording) return 'Listening — tap to stop';
     return 'Tap the mic to speak';
-  }, [isProcessing, isResult, isRecording, elapsed]);
+  }, [isProcessing, isResult, isRecording]);
 
   const onPress = () => {
     if (disabled || isProcessing) return;
     if (isRecording) {
       onStop();
+    } else if (isResult) {
+      (onRetry ?? onStart)();
     } else {
       onStart();
     }

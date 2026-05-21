@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import {
   fetchFullProgress,
@@ -133,12 +134,12 @@ export const useProgressController = () => {
 
   const weekDateLabel = currentWeek?.weekStartDate ?? '';
 
-  // ── Auto-fetch on mount ──
-  useEffect(() => {
-    let ignore = false;
-    fetchProgress();
-    return () => { ignore = true; };
-  }, [fetchProgress]);
+  // Refetch on focus so progress reflects the most recent attempts.
+  useFocusEffect(
+    useCallback(() => {
+      fetchProgress();
+    }, [fetchProgress]),
+  );
 
   return {
     progressData,
