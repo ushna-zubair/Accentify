@@ -18,6 +18,7 @@ import {
   Keyboard,
   Animated,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,6 +31,7 @@ import {
   useWavyChatController,
   type WavyChatMessage,
 } from '../../controllers/useWavyChatController';
+import { convoHealth } from '../../services/conversationApi';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
@@ -118,7 +120,31 @@ const WavyChatScreen: React.FC = () => {
     setInputText,
     isTyping,
     sendMessage,
+    clearChat,
   } = useWavyChatController('general', '');
+
+  const handleClearChat = useCallback(() => {
+    Alert.alert(
+      'Clear chat?',
+      'This will remove your conversation with Wavy on this device.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            clearChat().catch(() => {});
+          },
+        },
+      ],
+    );
+  }, [clearChat]);
+
+  // Wake the HF Space on screen mount so the first message doesn't pay
+  // the ~10s cold-start penalty. Fire-and-forget.
+  useEffect(() => {
+    convoHealth().catch(() => {});
+  }, []);
 
   // Auto-scroll on new messages
   useEffect(() => {
@@ -169,36 +195,44 @@ const WavyChatScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* spacer for symmetry */}
-        <View style={{ width: 40 }} />
+        <TouchableOpacity
+          style={dynStyles(tc).backBtn}
+          onPress={handleClearChat}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          accessibilityLabel="Clear chat"
+        >
+          <Ionicons name="trash-outline" size={20} color="#FFFFFF" />
+        </TouchableOpacity>
       </View>
 
-      {/* ── Messages ── */}
-      <ScrollView
-        ref={chatScrollRef}
-        style={styles.messagesArea}
-        contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-      >
-        {messages.map((msg) => (
-          <ChatBubble key={msg.id} message={msg} tc={tc} />
-        ))}
-        {isTyping && (
-          <View style={styles.typingRow}>
-            <Text style={styles.typingLabel}>Wavy</Text>
-            <View style={styles.typingBubble}>
-              <Text style={styles.typingDots}>...</Text>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* ── Input ── */}
+      {/* ── Messages + Input (both wrapped so the keyboard pushes the
+              input row above itself, instead of hiding it). ── */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        style={{ flex: 1 }}
+        behavior="padding"
+        keyboardVerticalOffset={0}
       >
+        <ScrollView
+          ref={chatScrollRef}
+          style={styles.messagesArea}
+          contentContainerStyle={styles.messagesContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {messages.map((msg) => (
+            <ChatBubble key={msg.id} message={msg} tc={tc} />
+          ))}
+          {isTyping && (
+            <View style={styles.typingRow}>
+              <Text style={styles.typingLabel}>Wavy</Text>
+              <View style={styles.typingBubble}>
+                <Text style={styles.typingDots}>...</Text>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+
         <View
           style={[
             dynStyles(tc).inputRow,

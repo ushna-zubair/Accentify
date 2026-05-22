@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { TabBarVisibilityProvider, useTabBarVisibility } from '../context/TabBarVisibilityContext';
+import { convoHealth } from '../services/conversationApi';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
@@ -303,6 +304,14 @@ const tabStyles = StyleSheet.create({
 // ═══════════════════════════════════════════════
 
 const LearnerNavigator = () => {
+  // Fire the conversation Space's /health endpoint as soon as the learner
+  // lands in the app — by the time they tap Wavy Chat or Tutor, the HF
+  // container is usually past its cold-start. Best-effort: failures are
+  // swallowed, the per-screen warmup pings still kick in too.
+  useEffect(() => {
+    convoHealth().catch(() => {});
+  }, []);
+
   return (
     <TabBarVisibilityProvider>
       <LearnerTab.Navigator
@@ -321,9 +330,10 @@ const LearnerNavigator = () => {
 };
 
 const AppNavigator: React.FC = () => {
-  const { currentUser, loading, userRole, userProfile, reloadUser, pendingTotpChallenge } = useAuth();
+  const { currentUser, loading, userRole, userProfile, reloadUser, pendingTotpChallenge, profileFetchError, fetchUserRole } = useAuth();
   const [appState, setAppState] = useState(AppState.currentState);
   const [splashVisible, setSplashVisible] = useState(true);
+  const [retrying, setRetrying] = useState(false);
 
   // Ensure splash is visible for at least 1500ms for a smoother experience
   useEffect(() => {
@@ -382,6 +392,47 @@ const AppNavigator: React.FC = () => {
     return <TwoFactorChallengeScreen />;
   }
 
+  // 1.6. The user is authenticated but the Firestore profile read failed
+  // AND we have no cached profile yet. Don't shove them into CreateProfile —
+  // show a retry screen so they don't end up re-doing onboarding because
+  // the network was flaky on launch.
+  if (profileFetchError && !userProfile) {
+    const onRetry = async () => {
+      if (retrying) return;
+      setRetrying(true);
+      try {
+        await fetchUserRole(currentUser.uid);
+      } finally {
+        setRetrying(false);
+      }
+    };
+    return (
+      <View style={offlineStyles.container}>
+        <Image
+          source={require('../../assets/logo.png')}
+          style={offlineStyles.logo}
+          resizeMode="contain"
+        />
+        <Text style={offlineStyles.title}>Can't reach the server</Text>
+        <Text style={offlineStyles.subtitle}>
+          Check your internet connection and try again.
+        </Text>
+        <TouchableOpacity
+          style={offlineStyles.button}
+          onPress={onRetry}
+          disabled={retrying}
+          activeOpacity={0.85}
+        >
+          {retrying ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={offlineStyles.buttonText}>Retry</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   // 2. If email is not verified (only for email/password provider), show VerifyEmail in a stack
   // Note: Social providers (Google/Apple) have emailVerified: true by default
   if (!currentUser.emailVerified && currentUser.providerData.some(p => p.providerId === 'password')) {
@@ -425,5 +476,48 @@ const AppNavigator: React.FC = () => {
   // Default to Learner if role is unknown or not set (e.g. content_author)
   return <LearnerNavigator />;
 };
+
+const offlineStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 32,
+  },
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 16,
+  },
+  title: {
+    fontFamily: fonts.bold,
+    fontSize: 20,
+    color: '#1A1A1A',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 32,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  button: {
+    backgroundColor: '#6C63FF',
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    borderRadius: 12,
+    minWidth: 160,
+    alignItems: 'center',
+  },
+  buttonText: {
+    fontFamily: fonts.semiBold,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+});
 
 export default AppNavigator;

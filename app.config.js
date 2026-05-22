@@ -46,6 +46,15 @@ export default {
             // Override per-environment via `EXPO_PUBLIC_ACCENTIFY_API_URL`.
             ACCENTIFY_API_URL: process.env.EXPO_PUBLIC_ACCENTIFY_API_URL || process.env.ACCENTIFY_API_URL,
             ACCENTIFY_API_TOKEN: process.env.EXPO_PUBLIC_ACCENTIFY_API_TOKEN || process.env.ACCENTIFY_API_TOKEN,
+            // Accentify conversation service (separate HF Space — different model + different token).
+            // Hosts /conversation/text (Wavy Chat) and /conversation/audio (Tutor voice chat).
+            ACCENTIFY_CONVO_API_URL:
+                process.env.EXPO_PUBLIC_ACCENTIFY_CONVO_API_URL ||
+                process.env.ACCENTIFY_CONVO_API_URL ||
+                "https://ahmad7080-accentify-audio-conversation.hf.space",
+            ACCENTIFY_CONVO_API_TOKEN:
+                process.env.EXPO_PUBLIC_ACCENTIFY_CONVO_API_TOKEN ||
+                process.env.ACCENTIFY_CONVO_API_TOKEN,
             // Google Sign-In: get this from Firebase Console → Authentication → Sign-in method → Google → Web client ID
             googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.GOOGLE_WEB_CLIENT_ID,
             eas: {

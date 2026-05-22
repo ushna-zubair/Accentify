@@ -8,6 +8,15 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { feedbackWord, feedbackSentence } from '../services/accentifyApi';
+import {
+  conversationText,
+  ConversationApiError,
+} from '../services/conversationApi';
+import {
+  loadWavyHistory,
+  saveWavyHistory,
+  clearWavyHistory,
+} from '../services/chatStorage';
 import { friendlySound } from '../services/arpabetFriendly';
 
 export interface WavyChatLastResult {
@@ -152,6 +161,11 @@ export const useWavyChatController = (
   currentSentence: string,
   lastResult?: WavyChatLastResult | null,
 ) => {
+  // Persistence is enabled ONLY for the standalone Wavy Chat tab/screen
+  // (lessonId='general', no current sentence). The in-exercise overlay is
+  // ephemeral by design — it's tied to the word/sentence being practiced.
+  const isStandalone = lessonId === 'general' && !currentSentence;
+
   // Build a fresh greeting whenever the current word/sentence or last result
   // changes — otherwise Wavy stays anchored on the first thing the learner
   // opened the overlay with.
@@ -166,8 +180,38 @@ export const useWavyChatController = (
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(!isStandalone);
+
+  // ── Load persisted history on mount (standalone only) ──
+  useEffect(() => {
+    if (!isStandalone) return;
+    let cancelled = false;
+    (async () => {
+      const uid = auth.currentUser?.uid ?? null;
+      const stored = await loadWavyHistory(uid);
+      if (!cancelled && stored.length > 0) {
+        setMessages(stored);
+      }
+      if (!cancelled) setHistoryLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isStandalone]);
+
+  // ── Persist on change (standalone only, and only after the initial load
+  //    finished so we don't clobber the saved history with the [greeting]
+  //    placeholder we render before load completes) ──
+  useEffect(() => {
+    if (!isStandalone || !historyLoaded) return;
+    const uid = auth.currentUser?.uid ?? null;
+    saveWavyHistory(uid, messages).catch(() => {});
+  }, [messages, isStandalone, historyLoaded]);
 
   useEffect(() => {
+    // Suppress greeting rebuilds in the standalone flow — the greeting only
+    // belongs there once, the rest of the chat is real history.
+    if (isStandalone) return;
     const greeting = buildGreeting(currentSentence, lastResult);
     if (greeting === greetingRef.current) return;
     greetingRef.current = greeting;
@@ -186,7 +230,24 @@ export const useWavyChatController = (
       }
       return prev;
     });
-  }, [currentSentence, lastResult]);
+  }, [currentSentence, lastResult, isStandalone]);
+
+  /** Reset chat back to a single fresh greeting bubble and clear storage. */
+  const clearChat = useCallback(async () => {
+    const greeting = buildGreeting(currentSentence, lastResult);
+    setMessages([
+      {
+        id: createId(),
+        role: 'wavy',
+        text: greeting,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    if (isStandalone) {
+      const uid = auth.currentUser?.uid ?? null;
+      await clearWavyHistory(uid).catch(() => {});
+    }
+  }, [currentSentence, lastResult, isStandalone]);
 
   /** Decide what Wavy should say next based on context + user intent. */
   const generateReply = useCallback(
@@ -195,6 +256,23 @@ export const useWavyChatController = (
       const target = currentSentence?.trim() ?? '';
       const itemType: 'word' | 'sentence' =
         lastResult?.itemType ?? (target.includes(' ') ? 'sentence' : 'word');
+
+      // Standalone Wavy Chat (no exercise context) → route through the
+      // /conversation/text endpoint so the user gets a real LLM-backed reply
+      // instead of canned pronunciation tips. The in-exercise overlay (target
+      // present) keeps its existing pronunciation-feedback path below.
+      if (!target) {
+        try {
+          const res = await conversationText(userText);
+          const reply = res?.response_text?.trim();
+          if (reply) return reply;
+        } catch (e) {
+          if (e instanceof ConversationApiError) {
+            return e.userMessage;
+          }
+          // Fall through to the offline fallback at the bottom.
+        }
+      }
 
       if (lower.includes('thank')) {
         return "You're welcome! Keep going — small reps add up. 💪";
@@ -323,5 +401,6 @@ export const useWavyChatController = (
     setInputText,
     isTyping,
     sendMessage,
+    clearChat,
   };
 };

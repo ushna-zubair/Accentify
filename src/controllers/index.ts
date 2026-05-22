@@ -7,6 +7,8 @@ export { useUserManagementController } from './useUserManagementController';
 export { useUserDetailController } from './useUserDetailController';
 export { useAnnouncementsController } from './useAnnouncementsController';
 export { useTutorController, CATEGORY_COLORS } from './useTutorController';
+export { useTutorChatController } from './useTutorChatController';
+export type { TutorMessage, TutorPhase } from './useTutorChatController';
 export { useLessonDetailController } from './useLessonDetailController';
 export { useVocabExerciseController } from './useVocabExerciseController';
 export { usePronunciationExerciseController } from './usePronunciationExerciseController';
