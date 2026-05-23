@@ -31,6 +31,7 @@ import {
   convoHealth,
   type ConversationAudioResponse,
 } from '../services/conversationApi';
+import { useAuth } from '../context/AuthContext';
 import {
   loadTutorHistory,
   saveTutorHistory,
@@ -74,6 +75,14 @@ const greetingMessage = (): TutorMessage => ({
 });
 
 export const useTutorChatController = () => {
+  // Pull the learner's CEFR level so Tutor replies adapt in complexity.
+  // The studyPlan field lives on the full Firestore user doc — same `as any`
+  // cast other screens use to read it from the lightweight UserProfile type.
+  const { userProfile } = useAuth();
+  const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as
+    | string
+    | undefined;
+
   const [messages, setMessages] = useState<TutorMessage[]>(() => [greetingMessage()]);
   const [phase, setPhaseState] = useState<TutorPhase>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -313,7 +322,7 @@ export const useTutorChatController = () => {
       // and skip the convertAudioToWav Cloud Function round trip the
       // pronunciation pipeline needs.
       const encoding = detectAudioEncoding(uri);
-      response = await conversationAudio({ audioUri: uri, encoding });
+      response = await conversationAudio({ audioUri: uri, encoding, cefrLevel });
     } catch (e) {
       const msg =
         e instanceof ConversationApiError
@@ -361,7 +370,7 @@ export const useTutorChatController = () => {
     } else {
       setPhase('idle');
     }
-  }, [playTutorAudio, setPhase, writeAudioToCache]);
+  }, [playTutorAudio, setPhase, writeAudioToCache, cefrLevel]);
 
   /**
    * Single press handler — reads `phaseRef` (not the captured `phase`) so a

@@ -135,20 +135,19 @@ function cleanText(s: string): string {
 
 /**
  * Pick which CEFR levels to ask the HF Space for, anchored on the learner's
- * own level. Walks up/down a small window so we hit the user's level first
- * but still get a result if the Space has no prompts at that exact level.
+ * own level. Clamped to the user's band (level ± 1) so an A1 learner can't
+ * accidentally be served a C2 sentence when the target level has no result.
  */
 function levelsForCefr(cefr: string | undefined): string[] {
   const target = (cefr ?? '').toUpperCase();
   const ordered = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
   const idx = ordered.indexOf(target);
-  if (idx === -1) return ['A1', 'A2', 'B1'];
-  // Try the target level first, then walk outward.
+  if (idx === -1) return ['A1', 'A2'];
+  // Target first, then exactly ± 1 — no further. Stretch (+1) before review (-1)
+  // so the session ends harder than it starts when the target bucket is empty.
   const out: string[] = [target];
-  for (let off = 1; off < ordered.length; off++) {
-    if (idx - off >= 0) out.push(ordered[idx - off]);
-    if (idx + off < ordered.length) out.push(ordered[idx + off]);
-  }
+  if (idx + 1 < ordered.length) out.push(ordered[idx + 1]);
+  if (idx - 1 >= 0) out.push(ordered[idx - 1]);
   return out;
 }
 

@@ -192,15 +192,47 @@ export function convoHealth(): Promise<unknown> {
 }
 
 /**
+ * Build a one-line system hint that nudges the conversation model toward the
+ * learner's CEFR band. Prepended to the user message because the API has no
+ * dedicated system-prompt slot. Also surfaced as an `X-User-CEFR` header so
+ * a future backend update can read it without parsing the user's text.
+ */
+function cefrHint(level?: string): string {
+  const upper = (level ?? '').toUpperCase();
+  switch (upper) {
+    case 'A1':
+    case 'A2':
+      return '[System: learner is CEFR ' + upper + '. Reply in 6-12 word sentences, simple present tense, common 2000-word vocabulary, gently recast errors.]';
+    case 'B1':
+    case 'B2':
+      return '[System: learner is CEFR ' + upper + '. Reply in 10-20 word sentences, mix tenses, mild idioms okay, correct only major errors.]';
+    case 'C1':
+    case 'C2':
+      return '[System: learner is CEFR ' + upper + '. Use natural idiomatic register, debate-style follow-ups, do not simplify.]';
+    default:
+      return '';
+  }
+}
+
+/**
  * POST /conversation/text — send a typed message, get back a tutor reply.
  * Wired into the standalone Wavy Chat screen.
+ *
+ * `cefrLevel` is the learner's CEFR (A1..C2). Used to shape reply complexity.
  */
-export function conversationText(text: string): Promise<ConversationTextResponse> {
+export function conversationText(
+  text: string,
+  cefrLevel?: string,
+): Promise<ConversationTextResponse> {
+  const hint = cefrHint(cefrLevel);
+  const wrapped = hint ? `${hint}\n${text}` : text;
+  const extraHeaders: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (cefrLevel) extraHeaders['X-User-CEFR'] = String(cefrLevel).toUpperCase();
   return callConvo<ConversationTextResponse>({
     method: 'POST',
     path: '/conversation/text',
-    extraHeaders: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
+    extraHeaders,
+    body: JSON.stringify({ text: wrapped }),
   });
 }
 
@@ -222,16 +254,26 @@ function convoAudioFilePart(uri: string, encoding: 'wav' | 'm4a' | 'mp3' | 'webm
  * Returns transcription + AI reply text + AI reply audio (WAV base64).
  *
  * IMPORTANT: do NOT set Content-Type — fetch sets the multipart boundary itself.
+ *
+ * `cefrLevel` is surfaced both as a multipart field and an `X-User-CEFR`
+ * header so the backend can shape reply complexity without parsing audio.
  */
 export function conversationAudio(input: {
   audioUri: string;
   encoding: 'wav' | 'm4a' | 'mp3' | 'webm';
+  cefrLevel?: string;
 }): Promise<ConversationAudioResponse> {
   const form = new FormData();
   form.append('file', convoAudioFilePart(input.audioUri, input.encoding));
+  if (input.cefrLevel) {
+    form.append('cefr_level', String(input.cefrLevel).toUpperCase());
+  }
+  const extraHeaders: Record<string, string> = {};
+  if (input.cefrLevel) extraHeaders['X-User-CEFR'] = String(input.cefrLevel).toUpperCase();
   return callConvo<ConversationAudioResponse>({
     method: 'POST',
     path: '/conversation/audio',
     body: form,
+    extraHeaders,
   });
 }

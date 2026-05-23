@@ -8,6 +8,11 @@ import {
   getWeekStart,
   formatDate,
 } from '../services/progressService';
+import {
+  fetchLevelSnapshot,
+  evaluateLevelUp,
+  type LevelUpProgress,
+} from '../services/levelService';
 import type { ProgressData, WeeklyProgress, LessonDay } from '../models';
 
 // ─── Fallback Data (shown while loading / no user) ───
@@ -48,8 +53,9 @@ const EMPTY_PROGRESS: ProgressData = {
 // ─── Controller Hook ───
 
 export const useProgressController = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, refreshProfile } = useAuth();
   const [progressData, setProgressData] = useState<ProgressData>(EMPTY_PROGRESS);
+  const [levelProgress, setLevelProgress] = useState<LevelUpProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
@@ -80,6 +86,30 @@ export const useProgressController = () => {
 
       setProgressData(result);
       setSelectedWeekIndex(data.currentWeekIndex);
+
+      // Read (or compute) the CEFR level-up snapshot — drives the new
+      // "Your level" + "Next level progress" cards on the Progress screen.
+      try {
+        const cached = await fetchLevelSnapshot(currentUser.uid);
+        let snap = cached;
+        if (!snap) {
+          snap = await evaluateLevelUp(currentUser.uid);
+        }
+        setLevelProgress(snap);
+
+        // If the snapshot says we just promoted, the in-memory userProfile
+        // still holds the old englishLevel until we refetch. Triggering
+        // refreshProfile here means the next exercise picks the band based
+        // on the NEW level without forcing a sign-out / sign-in.
+        if (snap?.promoted) {
+          await refreshProfile().catch((e) =>
+            console.warn('[Progress] refreshProfile after promotion failed:', e),
+          );
+        }
+      } catch (levelErr) {
+        console.warn('[Progress] level snapshot load failed:', levelErr);
+        setLevelProgress(null);
+      }
     } catch (e: any) {
       if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
         console.warn('[Progress] Firestore permission denied, using fallback');
@@ -91,7 +121,7 @@ export const useProgressController = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentUser]);
+  }, [currentUser, refreshProfile]);
 
   // ── Refresh current week (call after an exercise finishes) ──
   const refreshCurrentWeek = useCallback(async () => {
@@ -143,6 +173,7 @@ export const useProgressController = () => {
 
   return {
     progressData,
+    levelProgress,
     loading,
     error,
     selectedWeekIndex,

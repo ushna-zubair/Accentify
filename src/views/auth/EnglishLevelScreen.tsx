@@ -41,7 +41,16 @@ const EnglishLevelScreen: React.FC<Props> = ({ navigation, route }) => {
       Alert.alert('Select Level', 'Please select your English level.');
       return;
     }
-    // Navigate to SetupPin, passing all collected onboarding data
+    // "unsure" → route to placement quiz; quiz writes a concrete CEFR and
+    // navigates onward itself. Everything else proceeds straight to SetupPin.
+    if (selectedLevel === 'unsure') {
+      navigation.navigate('PlacementQuiz', {
+        profile,
+        learningGoals,
+        nativeLanguage,
+      });
+      return;
+    }
     navigation.navigate('SetupPin', {
       profile,
       learningGoals,

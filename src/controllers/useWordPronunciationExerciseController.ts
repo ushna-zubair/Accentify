@@ -100,6 +100,31 @@ const cefrToWordLevel = (level?: string): number => {
 
 const WORDS_PER_SESSION = 5;
 
+/**
+ * Pick per-card word levels for the session. Composition matches the vocab
+ * weighted band: 20% review (level - 1), 60% target, 20% stretch (level + 1).
+ * Levels are clamped to the API's 1-9 integer range — never wider than the
+ * user's own band.
+ */
+const sessionWordLevels = (cefr?: string): number[] => {
+  const target = cefrToWordLevel(cefr);
+  const review = Math.max(1, target - 1);
+  const stretch = Math.min(9, target + 1);
+  const slots: number[] = [];
+  for (let i = 0; i < WORDS_PER_SESSION; i++) {
+    const ratio = i / WORDS_PER_SESSION;
+    if (ratio < 0.2) slots.push(review);
+    else if (ratio >= 0.8) slots.push(stretch);
+    else slots.push(target);
+  }
+  // Shuffle so the order isn't always review→target→stretch.
+  for (let i = slots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [slots[i], slots[j]] = [slots[j], slots[i]];
+  }
+  return slots;
+};
+
 const dedupeWords = (words: PromptWordResponse[]): PromptWordResponse[] => {
   const seen = new Set<string>();
   const out: PromptWordResponse[] = [];
@@ -224,10 +249,12 @@ export const useWordPronunciationExerciseController = (
     let cancelled = false;
     warmupAccentify().catch(() => undefined);
     (async () => {
-      const level = cefrToWordLevel(englishLevel);
+      const slots = sessionWordLevels(englishLevel);
       try {
+        // Mix review/target/stretch by issuing one /prompt_word call per slot
+        // at the slot's specific level (instead of all 5 at one level).
         const results = await Promise.allSettled(
-          Array.from({ length: WORDS_PER_SESSION }, () => promptWord(level)),
+          slots.map((lvl) => promptWord(lvl)),
         );
         const fulfilled: PromptWordResponse[] = [];
         for (const r of results) {
@@ -235,7 +262,22 @@ export const useWordPronunciationExerciseController = (
             fulfilled.push(r.value);
           }
         }
-        const unique = dedupeWords(fulfilled);
+        let unique = dedupeWords(fulfilled);
+
+        // Band fallback: if the API returned nothing usable, retry at the
+        // target level only — last-ditch attempt before falling back to
+        // DEFAULT_WORDS already in state.
+        if (unique.length === 0) {
+          const retryLevel = cefrToWordLevel(englishLevel);
+          const retry = await Promise.allSettled(
+            Array.from({ length: WORDS_PER_SESSION }, () => promptWord(retryLevel)),
+          );
+          for (const r of retry) {
+            if (r.status === 'fulfilled' && r.value?.word) fulfilled.push(r.value);
+          }
+          unique = dedupeWords(fulfilled);
+        }
+
         if (!cancelled && unique.length > 0) {
           setWords(unique);
         }

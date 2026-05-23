@@ -47,6 +47,7 @@ import TwoFactorChallengeScreen from '../views/auth/TwoFactorChallengeScreen';
 import LearningGoalsScreen from '../views/auth/LearningGoalsScreen';
 import NativeLanguageScreen from '../views/auth/NativeLanguageScreen';
 import EnglishLevelScreen from '../views/auth/EnglishLevelScreen';
+import PlacementQuizScreen from '../views/auth/PlacementQuizScreen';
 import ChooseVerificationMethodScreen from '../views/auth/ChooseVerificationMethodScreen';
 import SetupAuthenticatorScreen from '../views/auth/SetupAuthenticatorScreen';
 
@@ -463,6 +464,7 @@ const AppNavigator: React.FC = () => {
         <AuthStack.Screen name="LearningGoals" component={LearningGoalsScreen} />
         <AuthStack.Screen name="NativeLanguage" component={NativeLanguageScreen} />
         <AuthStack.Screen name="EnglishLevel" component={EnglishLevelScreen} />
+        <AuthStack.Screen name="PlacementQuiz" component={PlacementQuizScreen} />
         <AuthStack.Screen name="SetupPin" component={SetupPinScreen} />
         <AuthStack.Screen name="SetupFaceID" component={SetupFaceIDScreen} />
         <AuthStack.Screen name="TwoFactorAuth" component={TwoFactorAuthScreen} />

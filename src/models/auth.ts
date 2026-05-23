@@ -104,6 +104,16 @@ export interface UserProfile {
     fullName?: string;
     profilePictureUrl?: string;
   };
+  /**
+   * Learning configuration. Surfaced here (instead of staying on the full
+   * Firestore doc) so exercise controllers can shape content by the user's
+   * CEFR level without an extra Firestore read on every session.
+   */
+  studyPlan?: {
+    learningGoals?: string[];
+    nativeLanguage?: string;
+    englishLevel?: string;
+  };
 }
 
 /**

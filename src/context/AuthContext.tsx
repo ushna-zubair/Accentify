@@ -12,7 +12,7 @@ import {
   sendEmailVerification,
   reload,
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import { Platform, Alert } from 'react-native';
 import { auth, db, firebaseConfig } from '../config/firebase';
@@ -39,6 +39,13 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<UserRole | null>;
   signOut: () => Promise<void>;
   fetchUserRole: (uid: string) => Promise<UserRole | null>;
+  /**
+   * Re-read the current user's Firestore doc and reset `userProfile`. Use
+   * after any out-of-band write to `users/{uid}` (e.g. levelService
+   * promoting the CEFR level) so the in-memory profile picks up the change
+   * without forcing the user to sign out and back in.
+   */
+  refreshProfile: () => Promise<void>;
   completeOnboarding: (data: OnboardingPayload) => Promise<void>;
   signInWithGoogle: () => Promise<{ isNewUser: boolean }>;
   signInWithApple: () => Promise<{ isNewUser: boolean }>;
@@ -90,6 +97,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             fullName: data.profile?.fullName,
             profilePictureUrl: data.profile?.profilePictureUrl,
           },
+          // Surface studyPlan so exercise controllers can read the user's CEFR
+          // level directly off `userProfile` — drives vocab band selection,
+          // word/sentence pronunciation level mixing, and Wavy/Tutor reply
+          // shaping. Without this, every (userProfile as any).studyPlan read
+          // would be undefined and the whole CEFR pipeline silently defaults.
+          studyPlan: data.studyPlan
+            ? {
+                learningGoals: data.studyPlan.learningGoals ?? [],
+                nativeLanguage: data.studyPlan.nativeLanguage ?? '',
+                englishLevel: data.studyPlan.englishLevel ?? '',
+              }
+            : undefined,
         });
         return role;
       }
@@ -363,6 +382,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPendingTotpChallenge(false);
   }, []);
 
+  /**
+   * Re-read the Firestore user doc. Useful after services like levelService
+   * mutate `studyPlan.englishLevel` so screens re-render with the new value.
+   */
+  const refreshProfile = useCallback(async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) return;
+    await fetchUserRole(uid);
+  }, [fetchUserRole]);
+
   const sendVerificationEmail = useCallback(async (user?: User) => {
     const target = user || auth.currentUser;
     if (!target) {
@@ -409,6 +438,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsubscribe;
   }, [fetchUserRole]);
 
+  // Real-time subscription to the user's Firestore doc — keeps `userProfile`
+  // in sync when out-of-band writes happen (e.g. levelService promoting
+  // `studyPlan.englishLevel`). Without this, an exercise completed right
+  // after a promotion would still serve content at the OLD level until the
+  // next sign-in.
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsub = onSnapshot(
+      doc(db, 'users', currentUser.uid),
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        setUserProfile((prev) => {
+          // Merge studyPlan/profile into whatever fetchUserRole already set;
+          // don't blow away the role/status that came from the initial fetch.
+          if (!prev) return prev;
+          return {
+            ...prev,
+            email: data.email ?? prev.email,
+            status: (data.status as AccountStatus) ?? prev.status,
+            profileComplete: data.profileComplete ?? prev.profileComplete,
+            fullName: data.profile?.fullName ?? prev.fullName,
+            profile: {
+              fullName: data.profile?.fullName ?? prev.profile?.fullName,
+              profilePictureUrl: data.profile?.profilePictureUrl ?? prev.profile?.profilePictureUrl,
+            },
+            studyPlan: data.studyPlan
+              ? {
+                  learningGoals: data.studyPlan.learningGoals ?? [],
+                  nativeLanguage: data.studyPlan.nativeLanguage ?? '',
+                  englishLevel: data.studyPlan.englishLevel ?? '',
+                }
+              : prev.studyPlan,
+          };
+        });
+      },
+      (err) => {
+        // Snapshot listener errors aren't fatal — fall back to manual
+        // refreshes on focus.
+        console.warn('[Auth] user doc snapshot listener error:', err);
+      },
+    );
+    return unsub;
+  }, [currentUser]);
+
   const value = useMemo<AuthContextType>(() => ({
     currentUser,
     userRole,
@@ -420,13 +494,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signOut,
     fetchUserRole,
+    refreshProfile,
     completeOnboarding,
     signInWithGoogle,
     signInWithApple,
     sendVerificationEmail,
     reloadUser,
     clearTotpChallenge,
-  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, profileFetchError, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
+  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, profileFetchError, signUp, signIn, signOut, fetchUserRole, refreshProfile, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

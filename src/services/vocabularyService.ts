@@ -146,6 +146,47 @@ export const fetchWordsForCefrBand = async (
 };
 
 /**
+ * Weighted CEFR-band sampling for a session of `max` words.
+ *
+ * Composition: 20% review (level-1), 60% target (level), 20% stretch (level+1).
+ * Words at the stretch level are the same ones used by `evaluateLevelUp` —
+ * mastering enough of them gates promotion. The result preserves the bucket
+ * order (review → target → stretch) shuffled within each bucket so the
+ * session ramps up.
+ */
+export const fetchWeightedBandSession = async (
+  userLevel: CefrLevel,
+  max: number,
+  excludeIds: ReadonlySet<string> = new Set(),
+): Promise<VocabularyWord[]> => {
+  const band = targetCefrBand(userLevel);
+  const idx = CEFR_ORDER.indexOf(userLevel);
+
+  const review = band.find((l) => CEFR_ORDER.indexOf(l) === idx - 1);
+  const stretch = band.find((l) => CEFR_ORDER.indexOf(l) === idx + 1);
+
+  // 20 / 60 / 20 of `max` — round target up so the largest bucket isn't
+  // shorted when max doesn't divide cleanly.
+  const reviewCount = review ? Math.max(1, Math.round(max * 0.2)) : 0;
+  const stretchCount = stretch ? Math.max(1, Math.round(max * 0.2)) : 0;
+  const targetCount = Math.max(0, max - reviewCount - stretchCount);
+
+  const pickBucket = async (
+    level: CefrLevel | undefined,
+    n: number,
+  ): Promise<VocabularyWord[]> =>
+    !level || n <= 0 ? [] : fetchWordsForCefrBand([level], n, excludeIds);
+
+  const [reviewWords, targetWords, stretchWords] = await Promise.all([
+    pickBucket(review, reviewCount),
+    pickBucket(userLevel, targetCount),
+    pickBucket(stretch, stretchCount),
+  ]);
+
+  return [...reviewWords, ...targetWords, ...stretchWords];
+};
+
+/**
  * Fetch a single vocabulary word by id, or null if it doesn't exist.
  */
 export const fetchVocabularyWord = async (
@@ -154,6 +195,52 @@ export const fetchVocabularyWord = async (
   const snap = await getDoc(doc(db, VOCAB_COL, wordId));
   if (!snap.exists()) return null;
   return mapWordDoc(snap.id, snap.data());
+};
+
+/**
+ * Fetch up to `max` vocab items the user has seen before but where the
+ * mastery signal is weak (consecutiveCorrect < 2) AND it's been at least
+ * `minDaysSinceSeen` days since the last attempt. Used to prepend a small
+ * spaced-repetition tail to each session.
+ *
+ * Reads `users/{uid}/progress/items/entries` filtered to `itemType == 'vocab'`.
+ * Returns the hydrated `VocabularyWord` objects.
+ */
+export const fetchSpacedRepetitionWords = async (
+  uid: string,
+  max: number,
+  minDaysSinceSeen: number = 2,
+): Promise<VocabularyWord[]> => {
+  if (max <= 0) return [];
+  try {
+    const itemsCol = collection(db, 'users', uid, 'progress', 'items', 'entries');
+    const q = query(itemsCol, where('itemType', '==', 'vocab'), fsLimit(80));
+    const snap = await getDocs(q);
+    if (snap.empty) return [];
+
+    const cutoff = Date.now() - minDaysSinceSeen * 24 * 60 * 60 * 1000;
+    const candidates = snap.docs
+      .map((d) => d.data() as Record<string, any>)
+      .filter((d) => (d.consecutiveCorrect ?? 0) < 2)
+      .filter((d) => {
+        const seen = d.lastSeenAt ? Date.parse(String(d.lastSeenAt)) : 0;
+        return Number.isFinite(seen) && seen > 0 && seen <= cutoff;
+      })
+      .map((d) => String(d.reference ?? ''))
+      .filter((id) => id.length > 0);
+
+    if (candidates.length === 0) return [];
+
+    // Shuffle then trim — avoids always serving the same review tail.
+    for (let i = candidates.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+    return fetchWordsByIds(candidates.slice(0, max));
+  } catch (e) {
+    console.warn('[vocabularyService] spaced-repetition lookup failed:', e);
+    return [];
+  }
 };
 
 // ═══════════════════════════════════════════════

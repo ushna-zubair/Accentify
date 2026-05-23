@@ -13,13 +13,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
 import Svg, {
   Circle as SvgCircle,
-  G,
   Polyline,
   Line,
   Defs,
   LinearGradient as SvgLinearGradient,
   Stop,
-  Text as SvgText,
   Path,
 } from 'react-native-svg';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -30,8 +28,8 @@ import { useResponsive, type ResponsiveValues } from '../../utils/responsive';
 import type {
   LessonDay,
   VocabularyGrowthPoint,
-  OverallPerformance,
 } from '../../models';
+import type { LevelUpProgress } from '../../services/levelService';
 
 // ═══════════════════════════════════════════════
 //  CONSTANTS
@@ -339,110 +337,174 @@ const mlcStyles = StyleSheet.create({
   },
 });
 
-// ─── Donut Chart (Overall Performance) ───
-interface DonutProps {
-  performance: OverallPerformance;
-  size: number;
+// ─── Level Badge ───
+const LevelBadge: React.FC<{
+  progress: LevelUpProgress | null;
   r: ResponsiveValues;
   tc: ThemeColors;
-}
-
-const DonutChart: React.FC<DonutProps> = ({ performance, size, r, tc }) => {
-  const segments = [
-    { label: 'Accuracy', value: performance.speechAccuracy, color: CHART.green },
-    { label: 'Fluency', value: performance.speechFluency, color: CHART.blue },
-    { label: 'Consistency', value: performance.speechConsistency, color: CHART.purple },
-  ];
-
-  const strokeWidth = Math.max(10, size * 0.16);
-  const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const total = segments.reduce((s, seg) => s + seg.value, 0);
-  const avg = Math.round(total / segments.length);
-
-  let accumulated = 0;
-
+}> = ({ progress, r, tc }) => {
+  const current = progress?.currentLevel ?? 'A2';
+  const next = progress?.nextLevel ?? null;
+  const promoted = progress?.promoted ?? false;
   return (
-    <View style={donutStyles.wrapper}>
-      <View style={donutStyles.chartCenter}>
-        <Svg width={size} height={size}>
-          <G rotation="-90" origin={`${size / 2}, ${size / 2}`}>
-            <SvgCircle
-              cx={size / 2}
-              cy={size / 2}
-              r={radius}
-              fill="none"
-              stroke={tc.surfaceAlt}
-              strokeWidth={strokeWidth}
-            />
-            {segments.map((seg) => {
-              const pct = seg.value / total;
-              const dashLen = pct * circumference;
-              const offset = -accumulated * circumference;
-              accumulated += pct;
-              return (
-                <SvgCircle
-                  key={seg.label}
-                  cx={size / 2}
-                  cy={size / 2}
-                  r={radius}
-                  fill="none"
-                  stroke={seg.color}
-                  strokeWidth={strokeWidth}
-                  strokeDasharray={`${dashLen} ${circumference - dashLen}`}
-                  strokeDashoffset={offset}
-                  strokeLinecap="round"
-                />
-              );
-            })}
-          </G>
-          <SvgText
-            x={size / 2}
-            y={size / 2 - 1}
-            textAnchor="middle"
-            fontFamily={fonts.bold}
-            fontSize={Math.max(12, size * 0.16)}
-            fill={tc.text}
-          >
-            {avg}%
-          </SvgText>
-          <SvgText
-            x={size / 2}
-            y={size / 2 + Math.max(8, size * 0.1)}
-            textAnchor="middle"
-            fontFamily={fonts.regular}
-            fontSize={Math.max(6, size * 0.07)}
-            fill={tc.textLight}
-          >
-            avg score
-          </SvgText>
-        </Svg>
+    <View
+      style={[
+        levelStyles.wrapper,
+        {
+          marginHorizontal: r.s(20),
+          marginTop: r.vs(12),
+          borderRadius: r.ms(16),
+          padding: r.ms(14),
+          backgroundColor: tc.surface,
+          borderColor: tc.cardBorder,
+        },
+        cardShadow as any,
+      ]}
+    >
+      <View
+        style={[
+          levelStyles.pill,
+          { backgroundColor: tc.accentMuted, paddingHorizontal: r.s(14), paddingVertical: r.vs(8), borderRadius: r.ms(12) },
+        ]}
+      >
+        <Text style={[levelStyles.pillText, { fontSize: r.ms(22, 0.3), color: tc.accent }]}>
+          {current}
+        </Text>
       </View>
-
-      {/* Legend */}
-      <View style={donutStyles.legend}>
-        {segments.map((seg) => (
-          <View key={seg.label} style={donutStyles.legendRow}>
-            <View style={[donutStyles.dot, { backgroundColor: seg.color, width: r.ms(6), height: r.ms(6), borderRadius: r.ms(3) }]} />
-            <Text style={[donutStyles.legendLabel, { fontSize: r.ms(9, 0.3), color: tc.textLight }]} numberOfLines={1}>
-              {seg.label}
-            </Text>
-            <Text style={[donutStyles.legendVal, { fontSize: r.ms(9, 0.3), color: tc.text }]}>{seg.value}%</Text>
-          </View>
-        ))}
+      <View style={levelStyles.right}>
+        <Text style={[levelStyles.heading, { fontSize: r.ms(13, 0.3), color: tc.textLight }]}>
+          {promoted ? 'Just promoted to' : 'Your level'}
+        </Text>
+        <Text style={[levelStyles.subText, { fontSize: r.ms(13, 0.3), color: tc.text }]}>
+          {next ? `Next: ${next}` : 'Top level reached'}
+        </Text>
       </View>
     </View>
   );
 };
 
-const donutStyles = StyleSheet.create({
-  wrapper: { flexDirection: 'column', alignItems: 'center', gap: 6 },
-  chartCenter: { alignItems: 'center' },
-  legend: { width: '100%', gap: 4 },
-  legendRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  dot: {},
-  legendLabel: { fontFamily: fonts.regular, flex: 1 },
-  legendVal: { fontFamily: fonts.semiBold },
+const levelStyles = StyleSheet.create({
+  wrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1,
+  },
+  pill: { alignItems: 'center', justifyContent: 'center' },
+  pillText: { fontFamily: fonts.bold },
+  right: { flex: 1 },
+  heading: { fontFamily: fonts.medium },
+  subText: { fontFamily: fonts.semiBold, marginTop: 2 },
+});
+
+// ─── Next-Level Progress (per-criterion bars) ───
+interface CriterionRow {
+  label: string;
+  current: number;
+  required: number;
+  unit?: string;
+  /** When true the bar fills as required→current ratio of % (e.g. avg score). */
+  isPercent?: boolean;
+}
+
+const NextLevelProgress: React.FC<{
+  progress: LevelUpProgress;
+  r: ResponsiveValues;
+  tc: ThemeColors;
+}> = ({ progress, r, tc }) => {
+  const rows: CriterionRow[] = [
+    {
+      label: 'Stretch vocab mastered',
+      current: progress.stretchVocabMastered,
+      required: progress.stretchVocabRequired,
+    },
+    {
+      label: 'Word pronunciation avg',
+      current: progress.wordPronAvg,
+      required: progress.wordPronRequired,
+      unit: '%',
+      isPercent: true,
+    },
+    {
+      label: 'Sentence pronunciation avg',
+      current: progress.sentencePronAvg,
+      required: progress.sentencePronRequired,
+      unit: '%',
+      isPercent: true,
+    },
+    {
+      label: 'Active days (last 30)',
+      current: progress.activeDays,
+      required: progress.activeDaysRequired,
+    },
+  ];
+
+  return (
+    <View style={nlpStyles.container}>
+      {rows.map((row) => {
+        const pct =
+          row.required <= 0 ? 0 : Math.min(100, Math.round((row.current / row.required) * 100));
+        const done = row.current >= row.required;
+        const color = done ? CHART.green : CHART.blue;
+        return (
+          <View key={row.label} style={nlpStyles.row}>
+            <View style={nlpStyles.labelRow}>
+              <Text
+                style={[nlpStyles.label, { fontSize: r.ms(11, 0.3), color: tc.textLight }]}
+                numberOfLines={1}
+              >
+                {row.label}
+              </Text>
+              <Text style={[nlpStyles.value, { fontSize: r.ms(11, 0.3), color: tc.text }]}>
+                {row.current}
+                {row.unit ?? ''} / {row.required}
+                {row.unit ?? ''}
+              </Text>
+            </View>
+            <View
+              style={[
+                nlpStyles.track,
+                { height: r.ms(8), borderRadius: r.ms(4), backgroundColor: tc.surfaceAlt },
+              ]}
+            >
+              <View
+                style={[
+                  nlpStyles.fill,
+                  {
+                    backgroundColor: color,
+                    width: `${pct}%` as any,
+                    height: r.ms(8),
+                    borderRadius: r.ms(4),
+                  },
+                ]}
+              />
+            </View>
+          </View>
+        );
+      })}
+      {progress.daysSinceLastChange !== null && progress.daysSinceLastChange < progress.cooldownRequired && (
+        <Text style={[nlpStyles.cooldown, { color: tc.textMuted, fontSize: r.ms(10, 0.3) }]}>
+          Cooldown: {progress.daysSinceLastChange}/{progress.cooldownRequired} days since last change
+        </Text>
+      )}
+      {progress.eligible && progress.promoted && (
+        <Text style={[nlpStyles.cooldown, { color: tc.success, fontSize: r.ms(10, 0.3) }]}>
+          You just leveled up. Keep going!
+        </Text>
+      )}
+    </View>
+  );
+};
+
+const nlpStyles = StyleSheet.create({
+  container: { gap: 10 },
+  row: { gap: 4 },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  label: { fontFamily: fonts.medium, flex: 1 },
+  value: { fontFamily: fonts.semiBold },
+  track: { width: '100%' },
+  fill: {},
+  cooldown: { fontFamily: fonts.regular, marginTop: 4 },
 });
 
 // ─── Week Pill Selector ───
@@ -510,6 +572,7 @@ const wsStyles = StyleSheet.create({
 const ProgressScreen: React.FC = () => {
   const {
     progressData,
+    levelProgress,
     loading,
     currentWeek,
     weekLabel,
@@ -534,10 +597,8 @@ const ProgressScreen: React.FC = () => {
   const fullCardWidth = r.width - hPad * 2;
   const cardInnerPad = r.ms(14);
   const cardInnerWidth = fullCardWidth - cardInnerPad * 2;
-  const halfCardWidth = (r.width - hPad * 2 - r.s(12)) / 2;
-  const halfCardInner = halfCardWidth - cardInnerPad * 2;
   const chartHeight = r.ms(110);
-  const donutSize = r.ms(70, 0.4);
+  const lineChartWidth = cardInnerWidth;
 
   // Memoized chart data
   const pronunciationBars = useMemo(() => {
@@ -549,17 +610,6 @@ const ProgressScreen: React.FC = () => {
       { label: 'Overall', value: p.rhythmAndTone, color: CHART.green },
       { label: 'Word Accuracy', value: p.soundAccuracy, color: CHART.orange },
       { label: 'Clarity', value: p.clarity, color: CHART.red },
-    ];
-  }, [currentWeek]);
-
-  const conversationBars = useMemo(() => {
-    if (!currentWeek) return [];
-    const c = currentWeek.conversation;
-    return [
-      { label: 'Fluency', value: c.fluency, color: CHART.green },
-      { label: 'Vocabulary', value: c.vocabulary, color: CHART.orange },
-      { label: 'Grammar', value: c.grammarUsage, color: CHART.red },
-      { label: 'Turn-Taking', value: c.turnTaking, color: CHART.yellow },
     ];
   }, [currentWeek]);
 
@@ -591,6 +641,9 @@ const ProgressScreen: React.FC = () => {
       >
         {/* ── Streak Banner ── */}
         <DayStreakBanner streak={progressData.dayStreak} r={r} tc={tc} />
+
+        {/* ── Level Badge (drives the new level-up flow) ── */}
+        <LevelBadge progress={levelProgress} r={r} tc={tc} />
 
         {/* ── Lesson Days ── */}
         <SectionHeader icon="calendar-outline" title="This Week" r={r} tc={tc} />
@@ -630,8 +683,31 @@ const ProgressScreen: React.FC = () => {
         {/* ── Cards ── */}
         {currentWeek && (
           <View style={[styles.cardsContainer, { paddingHorizontal: hPad }]}>
+            {/* Progress to next level — driven by levelService snapshot */}
+            {levelProgress && (
+              <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
+                <View style={styles.cardHeader}>
+                  <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8), backgroundColor: tc.accentMuted }]}>
+                    <Ionicons name="trophy-outline" size={r.ms(16)} color={tc.accent} />
+                  </View>
+                  <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>
+                    {levelProgress.nextLevel
+                      ? `Progress to ${levelProgress.nextLevel}`
+                      : 'You are at the top level'}
+                  </Text>
+                </View>
+                {levelProgress.nextLevel ? (
+                  <NextLevelProgress progress={levelProgress} r={r} tc={tc} />
+                ) : (
+                  <Text style={{ color: tc.textLight, fontSize: r.ms(12, 0.3), fontFamily: fonts.regular }}>
+                    Keep practicing to stay sharp — there's no higher CEFR band.
+                  </Text>
+                )}
+              </View>
+            )}
+
             {/* Pronunciation – full width */}
-            <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
+            <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, marginTop: r.vs(12), backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
               <View style={styles.cardHeader}>
                 <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8) }]}>
                   <Ionicons name="mic-outline" size={r.ms(16)} color={CHART.red} />
@@ -641,45 +717,20 @@ const ProgressScreen: React.FC = () => {
               <HBarChart data={pronunciationBars} r={r} tc={tc} />
             </View>
 
-            {/* Conversation – full width */}
+            {/* Vocabulary Growth – full width */}
             <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, marginTop: r.vs(12), backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8), backgroundColor: '#EBF5FF' }]}>
-                  <Ionicons name="chatbubbles-outline" size={r.ms(16)} color={CHART.blue} />
+                <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8), backgroundColor: '#ECFDF5' }]}>
+                  <Ionicons name="trending-up" size={r.ms(16)} color={CHART.teal} />
                 </View>
-                <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>Conversation</Text>
+                <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>Vocab Growth</Text>
               </View>
-              <HBarChart data={conversationBars} r={r} tc={tc} />
-            </View>
-
-            {/* Bottom row: Vocabulary + Overall in 2 cols */}
-            <View style={[styles.halfRow, { marginTop: r.vs(12), gap: r.s(12) }]}>
-              {/* Vocabulary Growth */}
-              <View style={[styles.card, { width: halfCardWidth, borderRadius: r.ms(16), padding: cardInnerPad, backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardIconCircle, { width: r.ms(24), height: r.ms(24), borderRadius: r.ms(6), backgroundColor: '#ECFDF5' }]}>
-                    <Ionicons name="trending-up" size={r.ms(13)} color={CHART.teal} />
-                  </View>
-                  <Text style={[styles.cardTitleSm, { fontSize: r.ms(12, 0.3), color: tc.text }]}>Vocab Growth</Text>
-                </View>
-                <MiniLineChart
-                  data={currentWeek.vocabularyGrowth}
-                  height={chartHeight}
-                  width={halfCardInner}
-                  tc={tc}
-                />
-              </View>
-
-              {/* Overall Performance */}
-              <View style={[styles.card, { width: halfCardWidth, borderRadius: r.ms(16), padding: cardInnerPad, backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
-                <View style={styles.cardHeader}>
-                  <View style={[styles.cardIconCircle, { width: r.ms(24), height: r.ms(24), borderRadius: r.ms(6), backgroundColor: '#F5F3FF' }]}>
-                    <Ionicons name="pie-chart-outline" size={r.ms(13)} color={CHART.purple} />
-                  </View>
-                  <Text style={[styles.cardTitleSm, { fontSize: r.ms(12, 0.3), color: tc.text }]}>Performance</Text>
-                </View>
-                <DonutChart performance={currentWeek.overallPerformance} size={donutSize} r={r} tc={tc} />
-              </View>
+              <MiniLineChart
+                data={currentWeek.vocabularyGrowth}
+                height={chartHeight}
+                width={lineChartWidth}
+                tc={tc}
+              />
             </View>
           </View>
         )}

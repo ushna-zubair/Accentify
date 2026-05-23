@@ -12,6 +12,7 @@ import {
   conversationText,
   ConversationApiError,
 } from '../services/conversationApi';
+import { useAuth } from '../context/AuthContext';
 import {
   loadWavyHistory,
   saveWavyHistory,
@@ -161,6 +162,14 @@ export const useWavyChatController = (
   currentSentence: string,
   lastResult?: WavyChatLastResult | null,
 ) => {
+  // Pull the learner's CEFR level so Wavy's free-chat replies adapt in
+  // complexity. The studyPlan field is on the full Firestore user doc but
+  // not surfaced on the lightweight `UserProfile` type — same `as any` cast
+  // other screens use.
+  const { userProfile } = useAuth();
+  const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as
+    | string
+    | undefined;
   // Persistence is enabled ONLY for the standalone Wavy Chat tab/screen
   // (lessonId='general', no current sentence). The in-exercise overlay is
   // ephemeral by design — it's tied to the word/sentence being practiced.
@@ -263,7 +272,7 @@ export const useWavyChatController = (
       // present) keeps its existing pronunciation-feedback path below.
       if (!target) {
         try {
-          const res = await conversationText(userText);
+          const res = await conversationText(userText, cefrLevel);
           const reply = res?.response_text?.trim();
           if (reply) return reply;
         } catch (e) {
@@ -331,7 +340,7 @@ export const useWavyChatController = (
         ? `Try saying "${target}" out loud once, then ask me about any word that tripped you up.`
         : "I'm here to help with pronunciation — tell me which word you'd like to practice.";
     },
-    [currentSentence, lastResult],
+    [currentSentence, lastResult, cefrLevel],
   );
 
   const sendMessage = useCallback(

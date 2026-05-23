@@ -19,9 +19,9 @@ import { auth } from '../config/firebase';
 import { fetchVocabularyWordIdsForLesson } from '../services/lessonService';
 import {
   fetchWordsByIds,
-  fetchWordsForCefrBand,
+  fetchWeightedBandSession,
+  fetchSpacedRepetitionWords,
   normaliseCefr,
-  targetCefrBand,
 } from '../services/vocabularyService';
 import { recordVocabAttempt } from '../services/progressService';
 import { onExerciseComplete } from '../services/progressService';
@@ -29,6 +29,8 @@ import { checkSynonym } from '../utils/synonymMatch';
 import type { VocabularyWord, VocabAttemptResult, CefrLevel } from '../models/vocabulary';
 
 const SESSION_SIZE = 10;
+/** How many of those 10 cards are reserved for spaced-repetition review. */
+const SPACED_REPETITION_CAP = 3;
 
 export interface VocabSessionStats {
   total: number;
@@ -117,10 +119,22 @@ export const useVocabExerciseController = (
           }
         }
 
-        // 2. CEFR-band fallback.
+        // 2. CEFR-band fallback — weighted band sampling + spaced-repetition
+        //    review tail prepended.
         if (batch.length === 0) {
-          const band = targetCefrBand(cefrLevel);
-          batch = await fetchWordsForCefrBand(band, SESSION_SIZE);
+          const uid = auth.currentUser?.uid;
+          const reviewWords = uid
+            ? await fetchSpacedRepetitionWords(uid, SPACED_REPETITION_CAP)
+            : [];
+
+          const excludeIds = new Set(reviewWords.map((w) => w.id));
+          const fresh = await fetchWeightedBandSession(
+            cefrLevel,
+            SESSION_SIZE - reviewWords.length,
+            excludeIds,
+          );
+
+          batch = [...reviewWords, ...fresh];
         }
 
         if (cancelled) return;

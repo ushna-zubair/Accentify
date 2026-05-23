@@ -730,6 +730,18 @@ export const onExerciseComplete = async (
     const weekStart = getWeekStart(new Date());
     await aggregateWeek(uid, weekStart);
 
+    // Re-evaluate the CEFR level after every pronunciation/vocab session.
+    // Wavy + Tutor (free-use chat) are NOT routed through onExerciseComplete
+    // so they're naturally excluded from the level-up signal.
+    if (type === 'pronunciation' || type === 'vocab') {
+      try {
+        const { evaluateLevelUp } = await import('./levelService');
+        await evaluateLevelUp(uid);
+      } catch (e) {
+        console.warn('[ProgressService] evaluateLevelUp failed:', e);
+      }
+    }
+
     try {
       const { incrementSessionCounter, recordPracticeTime } = await import('./adminService');
       await incrementSessionCounter();

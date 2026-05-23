@@ -26,6 +26,7 @@ export type AuthStackParamList = {
   LearningGoals: { profile: ProfileData };
   NativeLanguage: { profile: ProfileData; learningGoals: string[] };
   EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
+  PlacementQuiz: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
   SetupPin: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string };
   SetupFaceID: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null };
   TwoFactorAuth: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
