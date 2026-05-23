@@ -4,6 +4,7 @@ import {
   setDoc,
   collection,
   addDoc,
+  increment,
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
@@ -397,7 +398,7 @@ export const useWavyChatController = (
           await setDoc(
             doc(db, 'users', uid, 'lessons', lessonId),
             {
-              wavyChatCount: (await import('firebase/firestore')).increment(1),
+              wavyChatCount: increment(1),
               lastWavyChatAt: Timestamp.now(),
             },
             { merge: true },
