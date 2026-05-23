@@ -406,40 +406,41 @@ export const usePronunciationExerciseController = (
         rawOverall: evaluation.rawOverall,
       };
 
+      // Show the result immediately — user doesn't need to wait for Firestore.
       setResult(attemptResult);
       setAttemptCount((c) => c + 1);
       setAllScores((prev) => [...prev, score]);
       setPhase('result');
 
-      // ── Update lesson-level progress in Firestore ──
+      // ── Firestore progress writes — fire-and-forget, never block the result UI ──
       const uid = auth.currentUser?.uid;
-      if (uid && lessonId) {
-        try {
-          await setDoc(
-            doc(db, 'users', uid, 'lessons', lessonId),
-            {
-              totalAttempts: increment(1),
-              lastAttemptAt: Timestamp.now(),
-              status: 'in_progress',
-            },
-            { merge: true },
-          );
-        } catch {
-          // Non-critical — attempt already stored by Cloud Function
-        }
-      }
+      if (uid) {
+        const writes: Promise<unknown>[] = [];
 
-      if (uid && attemptResult.score.overall >= PRACTICE_THRESHOLD_PCT) {
-        try {
-          await recordPronunciationAttempt(uid, {
-            itemType: 'sentence',
-            reference: sentence.text,
-            score: attemptResult.score,
-            durationSec: Math.round(recordingDurationRef.current / 1000),
-          });
-        } catch (e) {
-          console.warn('[Pronunciation] attempt record failed:', e);
+        if (lessonId) {
+          writes.push(
+            setDoc(
+              doc(db, 'users', uid, 'lessons', lessonId),
+              { totalAttempts: increment(1), lastAttemptAt: Timestamp.now(), status: 'in_progress' },
+              { merge: true },
+            ),
+          );
         }
+
+        if (attemptResult.score.overall >= PRACTICE_THRESHOLD_PCT) {
+          writes.push(
+            recordPronunciationAttempt(uid, {
+              itemType: 'sentence',
+              reference: sentence.text,
+              score: attemptResult.score,
+              durationSec: Math.round(recordingDurationRef.current / 1000),
+            }),
+          );
+        }
+
+        Promise.all(writes).catch((e) =>
+          console.warn('[Pronunciation] background progress write failed:', e),
+        );
       }
     } catch (e: unknown) {
       console.error('[Pronunciation] stopRecording:', e);
