@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -53,6 +53,9 @@ export const useProgressController = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedWeekIndex, setSelectedWeekIndex] = useState(0);
+  // Track whether we've completed at least one successful fetch so re-focuses
+  // can refresh silently without replacing visible data with a spinner.
+  const hasLoadedOnceRef = useRef(false);
 
   // ── Fetch all progress data from Firestore ──
   const fetchProgress = useCallback(async () => {
@@ -62,7 +65,12 @@ export const useProgressController = () => {
     }
 
     try {
-      setLoading(true);
+      // Only block the UI with a spinner on the very first load.
+      // Re-focuses silently refresh behind the existing data so the tab switch
+      // feels instant — no spinner flash every time the user switches tabs.
+      if (!hasLoadedOnceRef.current) {
+        setLoading(true);
+      }
       setError(null);
 
       // Update streak (increments if needed, no-op if already active today)
@@ -80,6 +88,7 @@ export const useProgressController = () => {
 
       setProgressData(result);
       setSelectedWeekIndex(data.currentWeekIndex);
+      hasLoadedOnceRef.current = true;
     } catch (e: unknown) {
       if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
         console.warn('[Progress] Firestore permission denied, using fallback');
