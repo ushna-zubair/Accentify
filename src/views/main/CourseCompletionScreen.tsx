@@ -561,17 +561,27 @@ const CourseCompletionScreen: React.FC = () => {
   }, [currentUser, lessonId]);
 
   const handleProceed = useCallback(() => {
-    // Reset the TutorStack back to TutorMain so the user picks the next lesson
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'TutorMain' }],
-      }),
-    );
+    // Pop back to the first screen of whichever stack we're in. Works for
+    // both HomeStack (root = HomeMain) and TutorStack (root = TutorMain)
+    // without hard-coding either name — earlier we dispatched a reset to
+    // TutorMain, which threw "not handled by any navigator" inside HomeStack.
+    if ((navigation as any).popToTop) {
+      (navigation as any).popToTop();
+    } else {
+      navigation.goBack();
+    }
   }, [navigation]);
 
+  const retryRoute = (route?.params as { retryRoute?: string } | undefined)?.retryRoute;
+
   const handleAttemptAgain = useCallback(() => {
-    // Determine exercise type based on courseTitle
+    // Prefer the explicit retry route the caller passed in — it's the only
+    // way to disambiguate Word vs Sentence pronunciation (both course
+    // titles contain "pronunciation") and Home vs Tutor stack screens.
+    if (retryRoute) {
+      (navigation as any).replace(retryRoute, { lessonId });
+      return;
+    }
     const lower = courseTitle.toLowerCase();
     if (lower.includes('pronunciation')) {
       navigation.replace('PronunciationExercise', { lessonId });
@@ -580,7 +590,7 @@ const CourseCompletionScreen: React.FC = () => {
     } else {
       navigation.replace('VocabExercise', { lessonId });
     }
-  }, [navigation, lessonId, courseTitle]);
+  }, [navigation, lessonId, courseTitle, retryRoute]);
 
   return (
     <SafeAreaView style={styles.container}>

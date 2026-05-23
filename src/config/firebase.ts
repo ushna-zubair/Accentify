@@ -56,17 +56,12 @@ if (Platform.OS === 'web') {
     db = getFirestore(app);
   }
 } else {
-  // Native: enable IndexedDB-backed persistent cache so users who have
-  // logged in before can read their `users/{uid}` doc offline. Without
-  // this, a flaky/slow network on launch makes AppNavigator think the
-  // profile is missing and routes them to CreateProfile.
-  try {
-    db = initializeFirestore(app, {
-      localCache: persistentLocalCache({}),
-    });
-  } catch {
-    db = getFirestore(app);
-  }
+  // Native (React Native): the Firebase JS SDK probes IndexedDB whenever
+  // initializeFirestore receives any localCache option — even
+  // memoryLocalCache() — and logs the "missing IndexedDB" warning every
+  // launch. Skip initializeFirestore entirely; getFirestore returns an
+  // in-memory cache by default with no IndexedDB probe at all.
+  db = getFirestore(app);
 }
 export { db };
 

@@ -7,10 +7,10 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
-import { feedbackWord, feedbackSentence } from '../services/accentifyApi';
 import {
   conversationText,
   ConversationApiError,
+  type ConversationHistoryMessage,
 } from '../services/conversationApi';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -170,6 +170,9 @@ export const useWavyChatController = (
   const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as
     | string
     | undefined;
+  // First name is used by Wavy to address the learner. We pass the full
+  // fullName through and let the service extract the first token.
+  const learnerName = userProfile?.fullName;
   // Persistence is enabled ONLY for the standalone Wavy Chat tab/screen
   // (lessonId='general', no current sentence). The in-exercise overlay is
   // ephemeral by design — it's tied to the word/sentence being practiced.
@@ -190,6 +193,14 @@ export const useWavyChatController = (
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(!isStandalone);
+
+  // Mirror `messages` into a ref so generateReply can read the freshest
+  // conversation history without pulling `messages` into its deps (which
+  // would recreate the callback on every keystroke).
+  const messagesRef = useRef<WavyChatMessage[]>(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // ── Load persisted history on mount (standalone only) ──
   useEffect(() => {
@@ -271,8 +282,17 @@ export const useWavyChatController = (
       // instead of canned pronunciation tips. The in-exercise overlay (target
       // present) keeps its existing pronunciation-feedback path below.
       if (!target) {
+        // Build conversation history from prior bubbles (excluding the user
+        // turn currently being sent — that goes in `userText`). The service
+        // trims the array to its own limit, so we send what we have.
+        const history: ConversationHistoryMessage[] = messagesRef.current.map(
+          (m) => ({
+            role: m.role === 'wavy' ? 'assistant' : 'user',
+            content: m.text,
+          }),
+        );
         try {
-          const res = await conversationText(userText, cefrLevel);
+          const res = await conversationText(userText, cefrLevel, learnerName, history);
           const reply = res?.response_text?.trim();
           if (reply) return reply;
         } catch (e) {
@@ -302,19 +322,11 @@ export const useWavyChatController = (
         return `Your last attempt scored ${lastResult.overallPct}%, ${tier} score.${detail}`;
       }
 
-      // "Help" / "how do I say this" / similar → real API tip, anchored on the
-      // current word/sentence. Falls back to local phonetic breakdown.
+      // "Help" / "how do I say this" / similar → local phonetic breakdown.
+      // The /feedback_* endpoints need the ARPAbet alignment from a real
+      // recording, which we don't have for a chat-only query.
       if (isHelpIntent(lower) || lower.length < 3) {
         if (target) {
-          try {
-            const remote =
-              itemType === 'sentence'
-                ? await feedbackSentence({ reference_text: target })
-                : await feedbackWord({ word: target, reference: target });
-            if (remote && remote.trim()) return remote.trim();
-          } catch {
-            // Fall through to offline tip
-          }
           if (itemType === 'word') return offlineWordTip(target);
           return `Read "${target}" out loud once, then break it into chunks. Focus on stress: pause briefly after each comma or strong word.`;
         }
@@ -326,12 +338,6 @@ export const useWavyChatController = (
       if (tokens.length <= 2) {
         const word = normalize(tokens[tokens.length - 1] ?? '');
         if (word) {
-          try {
-            const remote = await feedbackWord({ word, reference: word });
-            if (remote && remote.trim()) return remote.trim();
-          } catch {
-            // Use local fallback
-          }
           return offlineWordTip(word);
         }
       }
@@ -340,7 +346,7 @@ export const useWavyChatController = (
         ? `Try saying "${target}" out loud once, then ask me about any word that tripped you up.`
         : "I'm here to help with pronunciation — tell me which word you'd like to practice.";
     },
-    [currentSentence, lastResult, cefrLevel],
+    [currentSentence, lastResult, cefrLevel, learnerName],
   );
 
   const sendMessage = useCallback(

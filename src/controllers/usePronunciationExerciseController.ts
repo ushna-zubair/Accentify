@@ -20,6 +20,7 @@ import {
 } from '../services/pronunciationService';
 import {
   health as warmupAccentify,
+  feedbackHealth as warmupAccentifyFeedback,
   AccentifyApiError,
   feedbackSentence,
 } from '../services/accentifyApi';
@@ -208,6 +209,7 @@ export const usePronunciationExerciseController = (
     // Fire-and-forget warm-up so the first evaluation isn't slowed by a
     // Hugging Face Space cold start. Failure is non-fatal.
     warmupAccentify().catch(() => {});
+    warmupAccentifyFeedback();
     (async () => {
       try {
         const data = await fetchSentences(undefined, 3, englishLevel);
@@ -370,18 +372,6 @@ export const usePronunciationExerciseController = (
             }))
           : evaluation.wordResults;
 
-        // Ask the model for natural-language coaching feedback. Empty string
-        // from the helper means the endpoint isn't deployed — keep the local
-        // rule-based feedback we already have.
-        if (!isCorrect) {
-          const remote = await feedbackSentence({
-            reference_text: sentence.text,
-            audioUri: wavUri,
-            encoding,
-            sapi: sentenceSapi[currentIndex],
-          }).catch(() => '');
-          if (remote) feedback = remote;
-        }
       } catch (apiErr: unknown) {
         console.error('[Pronunciation] evaluation failed:', apiErr);
         const friendly =
@@ -398,7 +388,7 @@ export const usePronunciationExerciseController = (
       const attemptResult: PronunciationAttemptResult = {
         isCorrect,
         wordResults,
-        feedback: isCorrect ? '' : feedback,
+        feedback,
         successMessage: isCorrect ? pickRandom(SUCCESS_MESSAGES) : '',
         score,
         transcript: evaluation.transcript,
@@ -406,6 +396,33 @@ export const usePronunciationExerciseController = (
         rawOverall: evaluation.rawOverall,
       };
 
+      // Coaching feedback comes from a separate HF Space. Wait for it
+      // before rendering so the score and the Coach tip arrive together —
+      // the feedbackHealth warmup ping above is what keeps the cold-start
+      // cost off the critical path.
+      const remote = await feedbackSentence({
+        reference_text: sentence.text,
+        word_correctness: {
+          matched: evaluation.rawWordCorrectness?.matched ?? 0,
+          substituted: evaluation.rawWordCorrectness?.substituted ?? 0,
+          missing: evaluation.rawWordCorrectness?.missing ?? 0,
+          extra_spoken: evaluation.rawWordCorrectness?.extra_spoken ?? 0,
+          word_score_pct: evaluation.rawWordCorrectness?.word_score_pct ?? 0,
+        },
+        words: (evaluation.rawWords ?? []).map((w) => ({
+          ref: w.ref,
+          asr: w.asr,
+          op: w.op,
+          pronunciation_score: w.pronunciation_score,
+        })),
+        overall: {
+          pronunciation_score: evaluation.rawOverall?.pronunciation_score ?? 0,
+          weighted_overall_score: evaluation.rawOverall?.weighted_overall_score ?? 0,
+        },
+      }).catch(() => '');
+      if (remote) {
+        attemptResult.feedback = remote;
+      }
       setResult(attemptResult);
       setAttemptCount((c) => c + 1);
       setAllScores((prev) => [...prev, score]);

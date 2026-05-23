@@ -363,6 +363,7 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
       courseTitle: 'English Pronunciation',
       completedCount: summary.completedCount,
       totalWeekly: summary.totalAttempts,
+      retryRoute: 'HomePronunciation',
     });
   };
 

@@ -30,6 +30,7 @@ import {
   ConversationApiError,
   convoHealth,
   type ConversationAudioResponse,
+  type ConversationHistoryMessage,
 } from '../services/conversationApi';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -82,6 +83,7 @@ export const useTutorChatController = () => {
   const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as
     | string
     | undefined;
+  const learnerName = userProfile?.fullName;
 
   const [messages, setMessages] = useState<TutorMessage[]>(() => [greetingMessage()]);
   const [phase, setPhaseState] = useState<TutorPhase>('idle');
@@ -97,6 +99,13 @@ export const useTutorChatController = () => {
     phaseRef.current = p;
     setPhaseState(p);
   }, []);
+
+  // Mirror `messages` into a ref so stopAndSend can read the freshest
+  // history without pulling `messages` into its deps.
+  const messagesRef = useRef<TutorMessage[]>(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // ── Recorder ──
   const audioRecorder = useAudioRecorder(WAV2VEC2_RECORDING_OPTIONS);
@@ -183,15 +192,19 @@ export const useTutorChatController = () => {
     playerRef.current = null;
   }, []);
 
-  /** Write the API's base64 WAV to cache and return the local file URI. */
-  const writeAudioToCache = useCallback(async (audioBase64: string): Promise<string> => {
-    const fileName = `tutor_reply_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}.wav`;
-    const wavFile = new File(Paths.cache, fileName);
-    if (wavFile.exists) wavFile.delete();
-    wavFile.create();
-    wavFile.write(audioBase64, { encoding: 'base64' });
-    return wavFile.uri;
-  }, []);
+  /** Write the API's base64 audio to cache and return the local file URI.
+   *  Extension matters on iOS/Android because expo-audio probes format from it. */
+  const writeAudioToCache = useCallback(
+    async (audioBase64: string, format: 'mp3' | 'wav' = 'mp3'): Promise<string> => {
+      const fileName = `tutor_reply_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}.${format}`;
+      const file = new File(Paths.cache, fileName);
+      if (file.exists) file.delete();
+      file.create();
+      file.write(audioBase64, { encoding: 'base64' });
+      return file.uri;
+    },
+    [],
+  );
 
   /** Plays a tutor-reply WAV — marks `messageId` as the currently-playing one. */
   const playTutorAudio = useCallback(
@@ -322,7 +335,19 @@ export const useTutorChatController = () => {
       // and skip the convertAudioToWav Cloud Function round trip the
       // pronunciation pipeline needs.
       const encoding = detectAudioEncoding(uri);
-      response = await conversationAudio({ audioUri: uri, encoding, cefrLevel });
+      const history: ConversationHistoryMessage[] = messagesRef.current.map(
+        (m) => ({
+          role: m.role === 'tutor' ? 'assistant' : 'user',
+          content: m.text,
+        }),
+      );
+      response = await conversationAudio({
+        audioUri: uri,
+        encoding,
+        cefrLevel,
+        learnerName,
+        history,
+      });
     } catch (e) {
       const msg =
         e instanceof ConversationApiError
@@ -340,7 +365,10 @@ export const useTutorChatController = () => {
     let tutorAudioUri: string | undefined;
     try {
       if (response.audio_base64) {
-        tutorAudioUri = await writeAudioToCache(response.audio_base64);
+        tutorAudioUri = await writeAudioToCache(
+          response.audio_base64,
+          response.audio_format ?? 'mp3',
+        );
       }
     } catch (e) {
       console.warn('[Tutor] could not write reply audio:', e);
@@ -370,7 +398,7 @@ export const useTutorChatController = () => {
     } else {
       setPhase('idle');
     }
-  }, [playTutorAudio, setPhase, writeAudioToCache, cefrLevel]);
+  }, [playTutorAudio, setPhase, writeAudioToCache, cefrLevel, learnerName]);
 
   /**
    * Single press handler — reads `phaseRef` (not the captured `phase`) so a

@@ -486,6 +486,7 @@ const PronunciationExerciseScreen: React.FC = () => {
       courseTitle: 'English Pronunciation',
       completedCount: summary.completedCount,
       totalWeekly: summary.totalAttempts,
+      retryRoute: 'PronunciationExercise',
     });
   };
 

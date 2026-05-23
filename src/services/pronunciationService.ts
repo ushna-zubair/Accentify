@@ -233,6 +233,10 @@ function adaptAccentifyResponse(
   const apiPronPct = Math.round((evaluation.overall?.pronunciation_score ?? 0) * 100);
   const fluencyPct = Math.round((apiPronPct + overallPct) / 2);
 
+  // Local rule-based fallback. The controller will replace this with the
+  // model's /feedback_sentence response when available; we only keep a tip
+  // here for incorrect attempts so a successful read doesn't display a
+  // gratuitous "slow down" message when the API has nothing to add.
   const worst = [...evaluation.words]
     .filter((w) => w.op !== 'D')
     .sort((a, b) => a.pronunciation_score - b.pronunciation_score)[0];
@@ -242,6 +246,12 @@ function adaptAccentifyResponse(
       : worst && worst.pronunciation_score < 0.7
         ? `Focus on "${worst.ref}" — try saying it more slowly and emphasize each syllable.`
         : 'Slow down and enunciate each word clearly.';
+
+  // Success/failure comes straight from the API's weighted_overall_score —
+  // not from an app-side threshold. That field already folds pronunciation
+  // quality and word-alignment together, so a perfect API verdict (1.0)
+  // means the read was both correct and well pronounced.
+  const apiVerdict = evaluation.overall?.weighted_overall_score ?? 0;
 
   return {
     attemptId,
@@ -254,7 +264,7 @@ function adaptAccentifyResponse(
       overall: overallPct,
     },
     feedback,
-    isCorrect: overallPct >= COMPLETE_THRESHOLD_PCT,
+    isCorrect: apiVerdict >= 1.0,
     rawWords: evaluation.words,
     rawWordCorrectness: evaluation.word_correctness,
     rawOverall: evaluation.overall,

@@ -29,6 +29,18 @@ function getConfig() {
   return { baseUrl, token };
 }
 
+function getFeedbackConfig() {
+  const extra =
+    (Constants.expoConfig?.extra as Record<string, string | undefined> | undefined) ??
+    (Constants.manifest as any)?.extra ??
+    {};
+  const baseUrl = extra.ACCENTIFY_FEEDBACK_API_URL?.replace(/\/+$/, '');
+  // Falls back to the evaluation token — the feedback Space uses the same HF
+  // bearer in practice.
+  const token = extra.ACCENTIFY_FEEDBACK_API_TOKEN ?? extra.ACCENTIFY_API_TOKEN;
+  return { baseUrl, token };
+}
+
 function authHeaders(token: string | undefined): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
@@ -73,10 +85,14 @@ function classify(status: number, body: any): AccentifyApiError {
     return new AccentifyApiError('unauthorized', 'Access to the pronunciation service is denied. Please contact support.', status);
   }
   if (status === 400) {
-    if (detail?.toLowerCase().includes('too short')) {
+    const detailLower = detail?.toLowerCase() ?? '';
+    if (detailLower.includes('too short')) {
       return new AccentifyApiError('audio_too_short', 'That recording was too short — try speaking for at least a second.', status);
     }
-    if (detail?.toLowerCase().includes('unknown word')) {
+    // "unknown word" and "no valid model tokens" both mean the model's
+    // tokenizer can't represent the reference — re-recording won't help; the
+    // controller needs to swap the word out.
+    if (detailLower.includes('unknown word') || detailLower.includes('no valid model tokens')) {
       return new AccentifyApiError('unknown_word', 'The model doesn\'t recognize that word yet. Pick a different one.', status);
     }
     return new AccentifyApiError('server_error', detail ?? message ?? 'The recording could not be evaluated.', status);
@@ -122,10 +138,11 @@ async function getJson<T>(path: string): Promise<T> {
 /**
  * HF Spaces on the free tier go to sleep after inactivity. The first request
  * after a cold start often returns 500/502/503 while the container spins up.
- * We swallow that one failure: ping /health (which forces the Space to wake
- * even if the model isn't loaded yet), wait briefly, then retry once.
+ * One retry isn't enough for /evaluate_sentence — the model loads lazily
+ * and the second request can still hit the boot window. Use progressive
+ * backoff over multiple attempts and a wake-up /health ping between tries.
  */
-const COLD_START_BACKOFF_MS = 1500;
+const COLD_START_BACKOFF_MS = [1500, 4000, 8000];
 
 async function postForm<T>(path: string, form: FormData): Promise<T> {
   const { baseUrl, token } = getConfig();
@@ -143,18 +160,19 @@ async function postForm<T>(path: string, form: FormData): Promise<T> {
   const isColdStart = (status: number) =>
     status === 500 || status === 502 || status === 503 || status === 504;
 
-  for (let tries = 0; tries < 2; tries++) {
+  const maxAttempts = COLD_START_BACKOFF_MS.length + 1;
+  for (let tries = 0; tries < maxAttempts; tries++) {
     let res: Response;
     try {
       res = await attempt();
     } catch (err) {
-      if (tries === 0) {
+      if (tries < COLD_START_BACKOFF_MS.length) {
         // Network failure on a sleeping Space looks identical to no internet.
-        // Try a wake-up ping and retry once before bubbling up.
+        // Wake it up and try again before bubbling up.
         await fetch(`${baseUrl}/health`, {
           headers: authHeaders(token),
         }).catch(() => undefined);
-        await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS));
+        await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS[tries]));
         continue;
       }
       throw new AccentifyApiError(
@@ -169,13 +187,18 @@ async function postForm<T>(path: string, form: FormData): Promise<T> {
       return (await res.json()) as T;
     }
 
-    if (tries === 0 && isColdStart(res.status)) {
+    if (tries < COLD_START_BACKOFF_MS.length && isColdStart(res.status)) {
+      if (__DEV__) {
+        console.log(
+          `[Accentify] ${path} ${res.status}; retrying in ${COLD_START_BACKOFF_MS[tries]}ms (attempt ${tries + 1}/${maxAttempts})`,
+        );
+      }
       // Drain the body so the connection can be reused, then warm + retry.
       await readBody(res).catch(() => undefined);
       await fetch(`${baseUrl}/health`, {
         headers: authHeaders(token),
       }).catch(() => undefined);
-      await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS));
+      await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS[tries]));
       continue;
     }
 
@@ -278,6 +301,24 @@ export function health(): Promise<unknown> {
   return getJson('/health');
 }
 
+/**
+ * Fire-and-forget warmup ping for the feedback Space (separate host from
+ * the evaluation Space — wakes independently from a cold start). Failure is
+ * swallowed; this only exists to shave cold-start latency off the first
+ * coaching feedback request.
+ */
+export async function feedbackHealth(): Promise<void> {
+  const { baseUrl, token } = getFeedbackConfig();
+  if (!baseUrl) return;
+  try {
+    await fetch(`${baseUrl}/health`, {
+      headers: { Accept: 'application/json', ...authHeaders(token) },
+    });
+  } catch {
+    // Swallow — warmup is best-effort.
+  }
+}
+
 /** GET /prompt_word?level=N (defaults to 1 if omitted). */
 export function promptWord(level: number = 1): Promise<PromptWordResponse> {
   return getJson<PromptWordResponse>(`/prompt_word?level=${encodeURIComponent(level)}`);
@@ -358,10 +399,11 @@ export async function evaluateSentence(input: {
 }
 
 // ─── AI feedback wrappers ─────────────────────────────────────────────────────
-// The HF Space exposes /feedback_word and /feedback_sentence which return a
-// natural-language coaching tip. Paths are not documented in the OpenAPI spec,
-// so we treat 404/405/422 as "endpoint unavailable" and let callers fall back
-// to local rule-based feedback.
+// /feedback_word and /feedback_sentence live on a SEPARATE HF Space
+// (ushna22-accentify-feedback) and take JSON, not multipart audio. They
+// receive the ARPAbet arrays / per-word alignment from the evaluate_* call
+// and turn it into natural-language coaching. We treat 404/405/422 as
+// "endpoint unavailable" and let callers fall back to local rule-based tips.
 
 export interface FeedbackWordResponse {
   word: string;
@@ -375,27 +417,103 @@ export interface FeedbackSentenceResponse {
 
 const FEEDBACK_UNAVAILABLE_STATUSES = new Set([404, 405, 422]);
 
+async function postJsonFeedback<T>(path: string, body: unknown): Promise<T> {
+  const { baseUrl, token } = getFeedbackConfig();
+  if (!baseUrl) {
+    // No feedback host configured — surface as 404 so callers fall back.
+    throw new AccentifyApiError(
+      'unknown',
+      'Feedback service is not configured.',
+      404,
+    );
+  }
+
+  const attempt = async (): Promise<Response> =>
+    fetch(`${baseUrl}${path}`, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...authHeaders(token),
+      },
+      body: JSON.stringify(body),
+    });
+
+  const isColdStart = (status: number) =>
+    status === 500 || status === 502 || status === 503 || status === 504;
+
+  const maxAttempts = COLD_START_BACKOFF_MS.length + 1;
+  for (let tries = 0; tries < maxAttempts; tries++) {
+    let res: Response;
+    try {
+      res = await attempt();
+    } catch (err) {
+      if (tries < COLD_START_BACKOFF_MS.length) {
+        await fetch(`${baseUrl}/health`, {
+          headers: authHeaders(token),
+        }).catch(() => undefined);
+        await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS[tries]));
+        continue;
+      }
+      throw new AccentifyApiError(
+        'network',
+        'Could not reach the feedback service. Check your internet connection and try again.',
+        undefined,
+        err,
+      );
+    }
+
+    if (res.ok) {
+      return (await res.json()) as T;
+    }
+
+    if (tries < COLD_START_BACKOFF_MS.length && isColdStart(res.status)) {
+      if (__DEV__) {
+        console.log(
+          `[Accentify] ${path} ${res.status}; retrying in ${COLD_START_BACKOFF_MS[tries]}ms (attempt ${tries + 1}/${maxAttempts})`,
+        );
+      }
+      await readBody(res).catch(() => undefined);
+      await fetch(`${baseUrl}/health`, {
+        headers: authHeaders(token),
+      }).catch(() => undefined);
+      await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS[tries]));
+      continue;
+    }
+
+    throw classify(res.status, await readBody(res));
+  }
+
+  throw new AccentifyApiError('unknown', 'Feedback request failed after retry.');
+}
+
 /**
- * POST /feedback_word — returns AI-generated coaching feedback for the word.
- * Returns an empty string if the endpoint isn't deployed (404/405) or rejects
- * the payload shape (422); callers should fall back to local feedback.
+ * POST /feedback_word — coaching tip derived from the evaluate_word ARPAbet
+ * alignment. Returns '' when the feedback Space is unavailable so callers
+ * can fall back to local rule-based feedback.
  */
 export async function feedbackWord(input: {
   word: string;
-  reference: string;
-  audioUri?: string;
-  encoding?: 'wav' | 'm4a' | 'mp3' | 'webm';
+  reference_arpabet: string[];
+  detected_arpabet: string[];
 }): Promise<string> {
-  const form = new FormData();
-  form.append('word', input.word);
-  form.append('reference', input.reference);
-  if (input.audioUri && input.encoding) {
-    form.append('audio', audioFilePart(input.audioUri, input.encoding));
-  }
   try {
-    const res = await postForm<FeedbackWordResponse>('/feedback_word', form);
+    const res = await postJsonFeedback<FeedbackWordResponse>('/feedback_word', {
+      word: input.word,
+      reference_arpabet: input.reference_arpabet,
+      detected_arpabet: input.detected_arpabet,
+    });
+    if (__DEV__) {
+      console.log('[Accentify] /feedback_word response:', JSON.stringify(res));
+    }
     return res?.feedback ?? '';
   } catch (e) {
+    if (__DEV__) {
+      console.log(
+        '[Accentify] /feedback_word error:',
+        e instanceof AccentifyApiError ? `code=${e.code} status=${e.status} msg=${e.message}` : e,
+      );
+    }
     if (
       e instanceof AccentifyApiError &&
       e.status !== undefined &&
@@ -407,28 +525,52 @@ export async function feedbackWord(input: {
   }
 }
 
+export interface FeedbackSentenceWord {
+  ref: string;
+  asr: string;
+  op: 'M' | 'S' | 'D';
+  pronunciation_score: number;
+}
+
+export interface FeedbackSentenceWordCorrectness {
+  matched: number;
+  substituted: number;
+  missing: number;
+  extra_spoken: number;
+  word_score_pct: number;
+}
+
+export interface FeedbackSentenceOverall {
+  pronunciation_score: number;
+  weighted_overall_score: number;
+}
+
 /**
- * POST /feedback_sentence — returns AI-generated coaching feedback for the
- * sentence. Same fallback semantics as `feedbackWord`.
+ * POST /feedback_sentence — coaching tip derived from the full evaluate_sentence
+ * output. Same unavailable-fallback semantics as feedbackWord.
  */
 export async function feedbackSentence(input: {
   reference_text: string;
-  audioUri?: string;
-  encoding?: 'wav' | 'm4a' | 'mp3' | 'webm';
-  sapi?: string[];
+  word_correctness: FeedbackSentenceWordCorrectness;
+  words: FeedbackSentenceWord[];
+  overall: FeedbackSentenceOverall;
 }): Promise<string> {
-  const form = new FormData();
-  form.append('reference_text', input.reference_text);
-  if (input.audioUri && input.encoding) {
-    form.append('audio', audioFilePart(input.audioUri, input.encoding));
-  }
-  if (input.sapi && input.sapi.length > 0) {
-    form.append('sapi', JSON.stringify(input.sapi));
-  }
   try {
-    const res = await postForm<FeedbackSentenceResponse>('/feedback_sentence', form);
+    const res = await postJsonFeedback<FeedbackSentenceResponse>(
+      '/feedback_sentence',
+      input,
+    );
+    if (__DEV__) {
+      console.log('[Accentify] /feedback_sentence response:', JSON.stringify(res));
+    }
     return res?.feedback ?? '';
   } catch (e) {
+    if (__DEV__) {
+      console.log(
+        '[Accentify] /feedback_sentence error:',
+        e instanceof AccentifyApiError ? `code=${e.code} status=${e.status} msg=${e.message}` : e,
+      );
+    }
     if (
       e instanceof AccentifyApiError &&
       e.status !== undefined &&

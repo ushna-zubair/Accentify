@@ -31,6 +31,7 @@ const HomeWordPronunciationScreen: React.FC<Props> = ({ navigation, route }) => 
           courseTitle: 'Word Pronunciation',
           completedCount: summary.completedCount,
           totalWeekly: summary.totalAttempts,
+          retryRoute: 'HomeWordPronunciation',
         });
       }}
     />

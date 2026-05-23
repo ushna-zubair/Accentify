@@ -105,6 +105,7 @@ const TutorWordPronunciationRoute: React.FC<
         courseTitle: 'Word Pronunciation',
         completedCount: summary.completedCount,
         totalWeekly: summary.totalAttempts,
+        retryRoute: 'WordPronunciationExercise',
       });
     }}
   />

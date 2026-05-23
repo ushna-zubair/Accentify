@@ -22,6 +22,7 @@ import { db, auth } from '../config/firebase';
 import { detectAudioEncoding } from '../services/pronunciationService';
 import {
   health as warmupAccentify,
+  feedbackHealth as warmupAccentifyFeedback,
   promptWord,
   evaluateWord,
   feedbackWord,
@@ -125,12 +126,25 @@ const sessionWordLevels = (cefr?: string): number[] => {
   return slots;
 };
 
+/**
+ * Words with fewer than this many *letters* aren't useful pronunciation
+ * drills — /prompt_word at low CEFR levels returns lots of 2-letter
+ * fillers ("OF", "IS", "TO") and punctuation-heavy tokens like "E.'S"
+ * (4 chars, 2 letters) that don't exercise any real phonemes. Anything
+ * below the floor is dropped client-side and topped up with more API calls.
+ */
+const MIN_WORD_LENGTH = 4;
+
+/** Letters only — punctuation and apostrophes don't count toward length. */
+const letterCount = (word: string): number => word.replace(/[^A-Za-z]/g, '').length;
+
 const dedupeWords = (words: PromptWordResponse[]): PromptWordResponse[] => {
   const seen = new Set<string>();
   const out: PromptWordResponse[] = [];
   for (const w of words) {
     const key = w.word?.toUpperCase();
     if (!key || seen.has(key)) continue;
+    if (letterCount(key) < MIN_WORD_LENGTH) continue;
     seen.add(key);
     out.push(w);
   }
@@ -172,6 +186,24 @@ const buildLocalWordFeedback = (evalRes: EvaluateWordResponse): string => {
   return `Try saying "${evalRes.word}" a little more slowly and clearly.`;
 };
 
+/**
+ * The API's `score` is alignment-based — it can return 1.0 even when a
+ * phoneme bar on the result screen reads 10% acoustic confidence (the
+ * model "matched" the reference to a span it didn't actually hear).
+ * We dock the score so the headline number agrees with the bars: every
+ * phoneme below this confidence floor counts as a missed phoneme. 0.15
+ * catches the cases users complain about (HUNK with AH at 10.3%, SMOG
+ * with AA at 1.6%) while leaving solidly-heard phonemes alone.
+ */
+const PHONEME_CONFIDENCE_FLOOR = 0.15;
+
+/**
+ * Hard ceiling on the docking penalty so a recording where every phoneme
+ * reads low-confidence doesn't crater to 0%. The API's alignment still
+ * carries some signal even when the absolute confidences are low.
+ */
+const MAX_CONFIDENCE_PENALTY = 0.5;
+
 const adaptWordResponse = (
   evalRes: EvaluateWordResponse,
   remoteFeedback: string,
@@ -179,10 +211,21 @@ const adaptWordResponse = (
   const phDetails = evalRes.phoneme_details ?? [];
   const comparison = evalRes.comparison ?? [];
 
-  // The model's score is the verdict. Keep PronunciationScore shape for
-  // storage compatibility, but every field mirrors `overall` — we don't
-  // invent clarity/fluency the model didn't return.
-  const overall = Math.round((evalRes.score ?? 0) * 100);
+  // Confidence-adjusted score: the API's `score` is alignment-based and
+  // ignores acoustic confidence, so we apply a penalty proportional to the
+  // fraction of phonemes that fell below the floor (capped so "every
+  // phoneme low" recordings don't crater to zero).
+  const rawScore = evalRes.score ?? 0;
+  const totalPhonemes = phDetails.length || 1;
+  const lowConfCount = phDetails.filter(
+    (p) => (p.confidence ?? 0) < PHONEME_CONFIDENCE_FLOOR,
+  ).length;
+  const confidencePenalty = Math.min(
+    MAX_CONFIDENCE_PENALTY,
+    lowConfCount / totalPhonemes,
+  );
+  const adjustedScore = rawScore * (1 - confidencePenalty);
+  const overall = Math.round(adjustedScore * 100);
   const score: PronunciationScore = {
     clarity: overall,
     accuracy: overall,
@@ -190,14 +233,18 @@ const adaptWordResponse = (
     overall,
   };
 
-  const isCorrect = overall >= COMPLETE_THRESHOLD_PCT;
+  // Success/failure comes from the confidence-adjusted score so the verdict
+  // matches the per-phoneme bars the user actually sees.
+  const isCorrect = adjustedScore >= 1.0;
   const wordResults: WordResult[] = [{ word: evalRes.word, isCorrect }];
 
   const missingPhones = (evalRes.missing_phones ?? []).filter(Boolean);
 
-  const feedback = isCorrect
-    ? ''
-    : remoteFeedback || buildLocalWordFeedback(evalRes);
+  // Always surface coaching feedback when the API returns it. Fall back to the
+  // local rule-based tip only when the model didn't say anything AND the
+  // attempt wasn't already correct.
+  const feedback =
+    remoteFeedback || (isCorrect ? '' : buildLocalWordFeedback(evalRes));
 
   return {
     isCorrect,
@@ -212,7 +259,7 @@ const adaptWordResponse = (
     detectedNative: evalRes.detected_native ?? [],
     detectedArpabet: evalRes.detected_arpabet ?? [],
     phonemeDetails: phDetails,
-    rawScore: evalRes.score ?? 0,
+    rawScore,
   };
 };
 
@@ -248,6 +295,7 @@ export const useWordPronunciationExerciseController = (
   useEffect(() => {
     let cancelled = false;
     warmupAccentify().catch(() => undefined);
+    warmupAccentifyFeedback();
     (async () => {
       const slots = sessionWordLevels(englishLevel);
       try {
@@ -264,18 +312,31 @@ export const useWordPronunciationExerciseController = (
         }
         let unique = dedupeWords(fulfilled);
 
-        // Band fallback: if the API returned nothing usable, retry at the
-        // target level only — last-ditch attempt before falling back to
-        // DEFAULT_WORDS already in state.
-        if (unique.length === 0) {
-          const retryLevel = cefrToWordLevel(englishLevel);
-          const retry = await Promise.allSettled(
-            Array.from({ length: WORDS_PER_SESSION }, () => promptWord(retryLevel)),
+        // Top-up loop: dedupeWords drops words shorter than MIN_WORD_LENGTH
+        // (and duplicates), so a low-level prompt session can come back with
+        // too few drills. Refill with parallel /prompt_word calls and
+        // escalate the level when a round adds nothing — /prompt_word at
+        // level 1 hands back mostly 2-letter fillers ("OF", "IS"), and
+        // retrying at the same level just churns through the same bucket.
+        const TOP_UP_BUDGET = WORDS_PER_SESSION * 3;
+        let escalatedLevel = cefrToWordLevel(englishLevel);
+        let attempts = 0;
+        while (unique.length < WORDS_PER_SESSION && attempts < TOP_UP_BUDGET) {
+          const needed = WORDS_PER_SESSION - unique.length;
+          attempts += needed;
+          const beforeRound = unique.length;
+          const extra = await Promise.allSettled(
+            Array.from({ length: needed }, () => promptWord(escalatedLevel)),
           );
-          for (const r of retry) {
-            if (r.status === 'fulfilled' && r.value?.word) fulfilled.push(r.value);
+          for (const r of extra) {
+            if (r.status === 'fulfilled' && r.value?.word) {
+              fulfilled.push(r.value);
+            }
           }
           unique = dedupeWords(fulfilled);
+          if (unique.length === beforeRound) {
+            escalatedLevel = Math.min(9, escalatedLevel + 1);
+          }
         }
 
         if (!cancelled && unique.length > 0) {
@@ -321,6 +382,38 @@ export const useWordPronunciationExerciseController = (
       if (durationTimerRef.current) clearInterval(durationTimerRef.current);
     };
   }, []);
+
+  /**
+   * Replace the current word with a fresh /prompt_word at the user's target
+   * level. Used when /evaluate_word rejects the prompt the API itself gave us
+   * (e.g. "no valid model tokens for this word") so the user isn't stuck
+   * re-recording an unevaluable word. Returns true when the swap succeeded.
+   */
+  const replaceCurrentWord = useCallback(async (): Promise<boolean> => {
+    let level = cefrToWordLevel(englishLevel);
+    const existing = new Set(words.map((w) => w.word?.toUpperCase()));
+    for (let attempt = 0; attempt < 5; attempt++) {
+      try {
+        const fresh = await promptWord(level);
+        const key = fresh?.word?.toUpperCase();
+        if (!key || letterCount(key) < MIN_WORD_LENGTH || existing.has(key)) {
+          // Same level keeps coming back too short — escalate so we don't
+          // chase another 2-letter filler in the next try.
+          level = Math.min(9, level + 1);
+          continue;
+        }
+        setWords((prev) => {
+          const next = [...prev];
+          next[currentIndex] = fresh;
+          return next;
+        });
+        return true;
+      } catch {
+        // Try again until we exhaust the budget.
+      }
+    }
+    return false;
+  }, [englishLevel, words, currentIndex]);
 
   const startRecording = useCallback(async () => {
     try {
@@ -395,22 +488,17 @@ export const useWordPronunciationExerciseController = (
           return;
         }
 
-        // Trust the model's score; only fetch coaching feedback when needed.
-        const preliminary = adaptWordResponse(evaluation, '');
-        let remoteFeedback = '';
-        if (preliminary.score.overall < COMPLETE_THRESHOLD_PCT) {
-          remoteFeedback = await feedbackWord({
-            word: currentWord.word,
-            reference: currentWord.reference,
-            audioUri: wavUri,
-            encoding,
-          }).catch(() => '');
-        }
+        // Wait for the coaching feedback before rendering the result so the
+        // score and the Coach tip arrive together. Feedback runs on a
+        // separate HF Space — the warmup ping above is what keeps that
+        // cold-start cost off the critical path.
+        const remoteFeedback = await feedbackWord({
+          word: currentWord.word,
+          reference_arpabet: evaluation.reference_arpabet ?? [],
+          detected_arpabet: evaluation.detected_arpabet ?? [],
+        }).catch(() => '');
 
-        const attemptResult =
-          remoteFeedback === ''
-            ? preliminary
-            : adaptWordResponse(evaluation, remoteFeedback);
+        const attemptResult = adaptWordResponse(evaluation, remoteFeedback);
         setResult(attemptResult);
         setAttemptCount((c) => c + 1);
         setAllScores((prev) => [...prev, attemptResult.score]);
@@ -447,6 +535,23 @@ export const useWordPronunciationExerciseController = (
         }
       } catch (apiErr: unknown) {
         console.error('[WordPronunciation] evaluation failed:', apiErr);
+        // The API sometimes hands us a /prompt_word that /evaluate_word can't
+        // tokenize ("no valid model tokens"/"unknown word"). Re-recording
+        // won't help — swap the current word for a fresh one and let the
+        // user retry with a word the model can actually score.
+        if (
+          apiErr instanceof AccentifyApiError &&
+          apiErr.code === 'unknown_word'
+        ) {
+          const replaced = await replaceCurrentWord();
+          setError(
+            replaced
+              ? "We swapped in a different word — the model couldn't score the previous one."
+              : "The model couldn't score that word. Try the next one.",
+          );
+          setPhase('idle');
+          return;
+        }
         const friendly =
           apiErr instanceof AccentifyApiError
             ? apiErr.userMessage
@@ -461,7 +566,7 @@ export const useWordPronunciationExerciseController = (
       setError(e instanceof Error ? e.message : 'Failed to process recording');
       setPhase('idle');
     }
-  }, [audioRecorder, currentWord, lessonId]);
+  }, [audioRecorder, currentWord, lessonId, replaceCurrentWord]);
 
   const tryAgain = useCallback(() => {
     setResult(null);

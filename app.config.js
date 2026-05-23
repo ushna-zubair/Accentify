@@ -42,10 +42,22 @@ export default {
             FIREBASE_MESSAGING_SENDER_ID: process.env.FIREBASE_MESSAGING_SENDER_ID,
             FIREBASE_APP_ID: process.env.FIREBASE_APP_ID,
             FIREBASE_MEASUREMENT_ID: process.env.FIREBASE_MEASUREMENT_ID,
-            // Accentify pronunciation + feedback model service (HF Space / Render / Fly etc).
+            // Accentify pronunciation evaluation service (HF Space).
             // Override per-environment via `EXPO_PUBLIC_ACCENTIFY_API_URL`.
             ACCENTIFY_API_URL: process.env.EXPO_PUBLIC_ACCENTIFY_API_URL || process.env.ACCENTIFY_API_URL,
             ACCENTIFY_API_TOKEN: process.env.EXPO_PUBLIC_ACCENTIFY_API_TOKEN || process.env.ACCENTIFY_API_TOKEN,
+            // Accentify coaching feedback service (separate HF Space). Takes the
+            // evaluate_* JSON output and returns natural-language tips. Falls
+            // back to the same token as the evaluation Space when unset.
+            ACCENTIFY_FEEDBACK_API_URL:
+                process.env.EXPO_PUBLIC_ACCENTIFY_FEEDBACK_API_URL ||
+                process.env.ACCENTIFY_FEEDBACK_API_URL ||
+                "https://ushna22-accentify-feedback.hf.space",
+            ACCENTIFY_FEEDBACK_API_TOKEN:
+                process.env.EXPO_PUBLIC_ACCENTIFY_FEEDBACK_API_TOKEN ||
+                process.env.ACCENTIFY_FEEDBACK_API_TOKEN ||
+                process.env.EXPO_PUBLIC_ACCENTIFY_API_TOKEN ||
+                process.env.ACCENTIFY_API_TOKEN,
             // Accentify conversation service (separate HF Space — different model + different token).
             // Hosts /conversation/text (Wavy Chat) and /conversation/audio (Tutor voice chat).
             ACCENTIFY_CONVO_API_URL:
@@ -57,6 +69,10 @@ export default {
                 process.env.ACCENTIFY_CONVO_API_TOKEN,
             // Google Sign-In: get this from Firebase Console → Authentication → Sign-in method → Google → Web client ID
             googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || process.env.GOOGLE_WEB_CLIENT_ID,
+            // Groq (chat completions + Whisper STT) — replaces the HF conversation Space for /text and STT half of /audio.
+            GROQ_API_KEY: process.env.EXPO_PUBLIC_GROQ_API_KEY || process.env.GROQ_API_KEY,
+            // Google Cloud Text-to-Speech — replaces the TTS half of the HF /audio endpoint.
+            GOOGLE_TTS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_TTS_API_KEY || process.env.GOOGLE_TTS_API_KEY,
             eas: {
                 projectId: "888767b5-bc51-4eae-a5dd-e62a25fceab2" // Optional: if you use EAS
             }

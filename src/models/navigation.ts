@@ -50,7 +50,14 @@ export type HomeStackParamList = {
   HomeWordPronunciation: { lessonId?: string };
   HomeVocabExercise: { lessonId?: string };
   WavyChat: undefined;
-  CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
+  CourseCompletion: {
+    lessonId: string;
+    courseTitle: string;
+    completedCount: number;
+    totalWeekly: number;
+    /** Screen name to navigate to when the learner taps "Attempt Again". */
+    retryRoute?: string;
+  };
 };
 
 export type LearnerTabParamList = {
@@ -67,7 +74,14 @@ export type TutorStackParamList = {
   PronunciationExercise: { lessonId: string };
   WordPronunciationExercise: { lessonId: string };
   ConversationExercise: { lessonId: string };
-  CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
+  CourseCompletion: {
+    lessonId: string;
+    courseTitle: string;
+    completedCount: number;
+    totalWeekly: number;
+    /** Screen name to navigate to when the learner taps "Attempt Again". */
+    retryRoute?: string;
+  };
 };
 
 export type CMSStackParamList = {
