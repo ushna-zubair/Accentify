@@ -91,6 +91,7 @@ const ChatBubble: React.FC<{ message: WavyChatMessage; tc: ThemeColors }> = ({ m
 
 const WavyChatScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
+  const dyn = useMemo(() => dynStyles(tc), [tc]);
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const chatScrollRef = useRef<ScrollView>(null);
@@ -159,23 +160,23 @@ const WavyChatScreen: React.FC = () => {
   };
 
   return (
-    <View style={[dynStyles(tc).container]}>
+    <View style={[dyn.container]}>
       {/* ── Header ── */}
       <View
         style={[
-          dynStyles(tc).header,
+          dyn.header,
           { paddingTop: Platform.OS === 'web' ? 16 : insets.top + 8 },
         ]}
       >
         <TouchableOpacity
-          style={dynStyles(tc).backBtn}
+          style={dyn.backBtn}
           onPress={() => navigation.goBack()}
           activeOpacity={0.7}
         >
           <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
-        <View style={dynStyles(tc).headerCenter}>
+        <View style={dyn.headerCenter}>
           <Svg width={32} height={32} viewBox="0 0 44 44">
             <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
             <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
@@ -190,13 +191,13 @@ const WavyChatScreen: React.FC = () => {
             />
           </Svg>
           <View style={{ marginLeft: 10 }}>
-            <Text style={dynStyles(tc).headerTitle}>Wavy</Text>
-            <Text style={dynStyles(tc).headerSub}>AI Language Assistant</Text>
+            <Text style={dyn.headerTitle}>Wavy</Text>
+            <Text style={dyn.headerSub}>AI Language Assistant</Text>
           </View>
         </View>
 
         <TouchableOpacity
-          style={dynStyles(tc).backBtn}
+          style={dyn.backBtn}
           onPress={handleClearChat}
           activeOpacity={0.7}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -235,12 +236,12 @@ const WavyChatScreen: React.FC = () => {
 
         <View
           style={[
-            dynStyles(tc).inputRow,
+            dyn.inputRow,
             { paddingBottom: Math.max(insets.bottom, 12) },
           ]}
         >
           <TextInput
-            style={dynStyles(tc).textInput}
+            style={dyn.textInput}
             placeholder="Ask Wavy anything..."
             placeholderTextColor="rgba(255,255,255,0.45)"
             value={inputText}
@@ -253,7 +254,7 @@ const WavyChatScreen: React.FC = () => {
           <TouchableOpacity
             onPress={handleSend}
             activeOpacity={0.6}
-            style={dynStyles(tc).sendBtn}
+            style={dyn.sendBtn}
           >
             <Ionicons name="send" size={20} color="#FFFFFF" />
           </TouchableOpacity>
