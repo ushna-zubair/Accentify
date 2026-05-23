@@ -40,7 +40,9 @@ export const AppPreferenceProvider: React.FC<{ children: ReactNode }> = ({ child
       try {
         const raw = await AsyncStorage.getItem(STORAGE_KEY);
         if (raw) {
-          setState({ ...defaultState, ...JSON.parse(raw) });
+          const parsed = JSON.parse(raw);
+          if (parsed.accentColor === 'Blue') parsed.accentColor = 'Purple';
+          setState({ ...defaultState, ...parsed });
         }
       } catch (e) {
         console.warn('Failed to load app preference settings', e);
