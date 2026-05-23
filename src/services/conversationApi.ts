@@ -106,6 +106,8 @@ async function readConvoBody(res: Response): Promise<any> {
 // pattern to accentifyApi.ts — ping /health then retry once.
 const COLD_START_BACKOFF_MS = 1500;
 const COLD_START_STATUSES = new Set([500, 502, 503, 504]);
+// Audio pipeline (Whisper + LLM + TTS) can be slow on CPU — 90s before giving up.
+const REQUEST_TIMEOUT_MS = 90_000;
 
 async function warmUp(baseUrl: string, token: string | undefined): Promise<void> {
   try {
@@ -134,8 +136,18 @@ async function callConvo<T>(opts: RequestOptions): Promise<T> {
   for (let tries = 0; tries < 2; tries++) {
     let res: Response;
     try {
-      res = await fetch(url, { method: opts.method, headers, body: opts.body });
-    } catch (err) {
+      const fetchPromise = fetch(url, { method: opts.method, headers, body: opts.body });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), REQUEST_TIMEOUT_MS),
+      );
+      res = await Promise.race([fetchPromise, timeoutPromise]);
+    } catch (err: any) {
+      if (err?.message === 'timeout') {
+        throw new ConversationApiError(
+          'network',
+          'The tutor is taking too long to respond. Please try again.',
+        );
+      }
       if (tries === 0) {
         await warmUp(baseUrl, token);
         await new Promise((r) => setTimeout(r, COLD_START_BACKOFF_MS));
