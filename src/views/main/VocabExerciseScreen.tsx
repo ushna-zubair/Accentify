@@ -1,214 +1,186 @@
-import React, { useEffect, useRef , useMemo} from 'react';
+/**
+ * VocabExerciseScreen
+ *
+ * Synonym-typing vocabulary exercise. Shows a word, the user types a synonym,
+ * and the screen confirms or reveals the correct answer. All wiring (load,
+ * validate, persist) lives in `useVocabExerciseController`.
+ */
+
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  TextInput,
   TouchableOpacity,
   ActivityIndicator,
   Animated,
   Easing,
   ScrollView,
-  Dimensions,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import Svg, { Rect, Path, Circle } from 'react-native-svg';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useVocabExerciseController } from '../../controllers';
 import { useHideTabBar } from '../../context/TabBarVisibilityContext';
-import type { TutorStackParamList } from '../../models';
 
-type ExerciseRoute = RouteProp<TutorStackParamList, 'VocabExercise'>;
-type ExerciseNav = NativeStackNavigationProp<TutorStackParamList, 'VocabExercise'>;
-const { width: SCREEN_W } = Dimensions.get('window');
+// The screen is registered in BOTH TutorStack (as `VocabExercise`, lesson-bound)
+// and HomeStack (as `HomeVocabExercise`, free practice from the home tab).
+// Both routes carry an optional `lessonId`; the controller falls back to
+// CEFR-band selection when it's missing.
+
+const AUTO_ADVANCE_MS = 900;
 
 // ═══════════════════════════════════════════════
 //  HELPERS
 // ═══════════════════════════════════════════════
 
-/** Return a color for the progress badge based on current index */
-const getProgressColor = (index: number, total: number, tc: ThemeColors): string => {
+const progressColor = (index: number, total: number, tc: ThemeColors): string => {
   if (total <= 1) return tc.success;
-  const ratio = index / (total - 1);
+  const ratio = index / Math.max(1, total - 1);
   if (ratio <= 0.34) return tc.success;
   if (ratio <= 0.67) return '#FD8E39';
   return tc.error;
 };
 
 // ═══════════════════════════════════════════════
-//  SUB-COMPONENTS
+//  RESULT OVERLAY
 // ═══════════════════════════════════════════════
 
-// ─── Result overlay (Check / X + success message) ───
-const ResultOverlay: React.FC<{ isCorrect: boolean; message: string }> = ({
+interface ResultPanelProps {
+  isCorrect: boolean;
+  correctAnswer: string;
+  matchedSynonym: string | null;
+  fuzzy: boolean;
+  definition: string;
+  example?: string;
+  onNext: () => void;
+}
+
+const ResultPanel: React.FC<ResultPanelProps> = ({
   isCorrect,
-  message,
+  correctAnswer,
+  matchedSynonym,
+  fuzzy,
+  definition,
+  example,
+  onNext,
 }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.spring(scaleAnim, {
+    Animated.spring(scale, {
       toValue: 1,
-      friction: 5,
-      tension: 80,
+      friction: 6,
+      tension: 90,
       useNativeDriver: true,
     }).start();
-  }, [scaleAnim]);
+  }, [scale]);
 
   return (
     <Animated.View
-      style={[styles.resultOverlay, { transform: [{ scale: scaleAnim }] }]}
+      style={[
+        styles.resultPanel,
+        {
+          backgroundColor: isCorrect ? tc.successBg : tc.errorBg,
+          borderColor: isCorrect ? tc.success : tc.error,
+          transform: [{ scale }],
+        },
+      ]}
     >
-      <View
-        style={[
-          styles.resultOverlayCircle,
-          { backgroundColor: isCorrect ? tc.success : tc.error },
-        ]}
-      >
-        {isCorrect ? (
-          <Ionicons name="checkmark" size={44} color={tc.white} />
-        ) : (
-          <Ionicons name="close" size={44} color={tc.white} />
-        )}
-      </View>
-      {message !== '' && (
+      <View style={styles.resultRow}>
+        <Ionicons
+          name={isCorrect ? 'checkmark-circle' : 'close-circle'}
+          size={28}
+          color={isCorrect ? tc.success : tc.error}
+        />
         <Text
           style={[
-            styles.resultMessage,
+            styles.resultHeadline,
             { color: isCorrect ? tc.success : tc.error },
           ]}
         >
-          {message}
+          {isCorrect ? 'Correct!' : 'Not quite'}
         </Text>
+      </View>
+
+      {isCorrect ? (
+        <Text style={[styles.resultBody, { color: tc.text }]}>
+          {fuzzy && matchedSynonym
+            ? `Matched "${matchedSynonym}" — watch the spelling.`
+            : `"${matchedSynonym}" is a great synonym.`}
+        </Text>
+      ) : (
+        <>
+          <Text style={[styles.resultBody, { color: tc.text }]}>
+            Correct answer: <Text style={styles.resultEmphasis}>{correctAnswer}</Text>
+          </Text>
+          {!!definition && (
+            <Text style={[styles.resultBody, { color: tc.textLight, marginTop: 6 }]}>
+              {definition}
+            </Text>
+          )}
+          {!!example && (
+            <Text style={[styles.resultExample, { color: tc.textMuted }]}>
+              e.g. {example}
+            </Text>
+          )}
+        </>
+      )}
+
+      {!isCorrect && (
+        <TouchableOpacity
+          onPress={onNext}
+          style={[styles.nextButton, { backgroundColor: tc.accent }]}
+          accessibilityLabel="Next word"
+        >
+          <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>
+            Next word
+          </Text>
+          <Ionicons name="arrow-forward" size={18} color={tc.textOnAccent} />
+        </TouchableOpacity>
       )}
     </Animated.View>
   );
 };
 
-// ─── Animated waveform ───
-const WaveformBar: React.FC<{
-  isRecording: boolean;
-  duration: number;
-  hasResult: boolean;
-}> = ({ isRecording, duration, hasResult }) => {
+// ═══════════════════════════════════════════════
+//  SESSION COMPLETE
+// ═══════════════════════════════════════════════
+
+const SessionCompleteCard: React.FC<{
+  correct: number;
+  total: number;
+  onDone: () => void;
+}> = ({ correct, total, onDone }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const progress = Math.min(duration / 10000, 1);
-
+  const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
   return (
-    <View style={styles.waveformContainer}>
-      <View style={styles.waveformTrack}>
-        <Svg width="100%" height={36} viewBox="0 0 300 36">
-          {/* Background bar */}
-          <Rect
-            x={0}
-            y={14}
-            width={300}
-            height={8}
-            rx={4}
-            fill={tc.accentLight}
-            opacity={0.4}
-          />
-          {/* Progress fill */}
-          <Rect
-            x={0}
-            y={14}
-            width={hasResult ? 300 : 300 * progress}
-            height={8}
-            rx={4}
-            fill={tc.accent}
-            opacity={0.6}
-          />
-          {/* Decorative wave — only visible when NOT showing a result */}
-          {!hasResult && (
-            <>
-              <Path
-                d="M10 18 Q25 6 40 18 Q55 30 70 18 Q85 6 100 18 Q115 30 130 18 Q145 6 160 18 Q175 30 190 18 Q205 6 220 18 Q235 30 250 18 Q265 6 280 18"
-                stroke="#5EDBA8"
-                strokeWidth={3}
-                fill="none"
-                strokeLinecap="round"
-                opacity={isRecording ? 1 : 0.7}
-              />
-              {/* Indicator dot */}
-              <Circle
-                cx={10 + 270 * progress}
-                cy={18}
-                r={5}
-                fill={tc.accent}
-              />
-            </>
-          )}
-        </Svg>
+    <View style={styles.doneCard}>
+      <View style={[styles.doneIcon, { backgroundColor: tc.successBg }]}>
+        <Ionicons name="trophy" size={36} color={tc.success} />
       </View>
-    </View>
-  );
-};
-
-// ─── Mic button with pulse ───
-const MicButton: React.FC<{
-  isRecording: boolean;
-  isProcessing: boolean;
-  hasResult: boolean;
-  onPress: () => void;
-}> = ({ isRecording, isProcessing, hasResult, onPress }) => {
-  const { colors: tc } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc), [tc]);
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    if (isRecording) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.12,
-            duration: 700,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 700,
-            easing: Easing.inOut(Easing.ease),
-            useNativeDriver: true,
-          }),
-        ]),
-      ).start();
-    } else {
-      pulseAnim.setValue(1);
-    }
-  }, [isRecording, pulseAnim]);
-
-  return (
-    <Animated.View
-      style={[styles.micBtnOuter, { transform: [{ scale: pulseAnim }] }]}
-    >
+      <Text style={styles.doneTitle}>Session complete</Text>
+      <Text style={styles.doneSub}>
+        You got <Text style={styles.resultEmphasis}>{correct}</Text> of{' '}
+        <Text style={styles.resultEmphasis}>{total}</Text> right ({pct}%).
+      </Text>
       <TouchableOpacity
-        style={[
-          styles.micBtn,
-          isRecording && styles.micBtnActive,
-          hasResult && styles.micBtnDone,
-        ]}
-        onPress={onPress}
-        disabled={isProcessing || (hasResult && !isRecording)}
-        activeOpacity={0.7}
+        onPress={onDone}
+        style={[styles.nextButton, { backgroundColor: tc.accent, marginTop: 24 }]}
       >
-        {isProcessing ? (
-          <ActivityIndicator size="small" color={tc.white} />
-        ) : (
-          <Ionicons
-            name={isRecording ? 'stop' : 'mic'}
-            size={28}
-            color={tc.white}
-          />
-        )}
+        <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>
+          Done
+        </Text>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 };
 
@@ -219,570 +191,414 @@ const MicButton: React.FC<{
 const VocabExerciseScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const navigation = useNavigation<ExerciseNav>();
-  const route = useRoute<ExerciseRoute>();
-  const { lessonId } = route.params;
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const lessonId = (route.params?.lessonId as string | undefined) ?? '';
   useHideTabBar();
 
-  const {
-    exercise,
-    currentPair,
-    loading,
-    error,
-    showDefinition,
-    isRecording,
-    isProcessing,
-    lastResult,
-    recordingDuration,
-    successMessage,
-    toggleDefinition,
-    playPronunciation,
-    startRecording,
-    stopRecording,
-    tryAgain,
-    nextPair,
-  } = useVocabExerciseController(lessonId);
+  const ctrl = useVocabExerciseController(lessonId);
+  const inputRef = useRef<TextInput>(null);
 
-  const handleMicPress = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
+  // Re-focus the text input each time we land on a new card.
+  useEffect(() => {
+    if (!ctrl.hasSubmitted && !ctrl.loading && ctrl.currentWord) {
+      // Defer to let the layout settle.
+      const t = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(t);
     }
-  };
+  }, [ctrl.currentWord?.id, ctrl.hasSubmitted, ctrl.loading]);
 
-  const handleNext = async () => {
-    const isComplete = await nextPair();
-    if (isComplete) {
-      navigation.replace('CourseCompletion', {
-        lessonId,
-        courseTitle: exercise.title,
-        completedCount: 3, // placeholder — real value from Firestore
-        totalWeekly: 7,
-      });
+  // Auto-advance on a correct answer.
+  useEffect(() => {
+    if (ctrl.hasSubmitted && ctrl.lastResult?.isCorrect) {
+      const t = setTimeout(() => ctrl.next(), AUTO_ADVANCE_MS);
+      return () => clearTimeout(t);
     }
-  };
+  }, [ctrl.hasSubmitted, ctrl.lastResult?.isCorrect, ctrl.next]);
 
-  if (loading) {
+  // ── Loading ──
+  if (ctrl.loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={tc.accent} />
+        <Text style={[styles.loadingText, { color: tc.textLight }]}>
+          Loading your words…
+        </Text>
       </SafeAreaView>
     );
   }
 
-  if (!currentPair) {
+  // ── Empty / error ──
+  if (ctrl.error || ctrl.words.length === 0) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.errorText}>No word pairs available</Text>
+        <Ionicons name="book-outline" size={48} color={tc.textMuted} />
+        <Text style={styles.errorText}>
+          {ctrl.error ?? 'No vocabulary words available for your level yet.'}
+        </Text>
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.nextButton, { backgroundColor: tc.accent, marginTop: 24 }]}
+        >
+          <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>
+            Back
+          </Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
-  const hasResult = lastResult !== null;
-  const isLastPair = exercise.currentIndex + 1 >= exercise.totalPairs;
-  const progressColor = getProgressColor(
-    exercise.currentIndex,
-    exercise.totalPairs,
-    tc,
-  );
+  // ── Session complete ──
+  if (ctrl.isSessionComplete) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Header
+          onBack={() => navigation.goBack()}
+          currentIndex={ctrl.totalWords}
+          total={ctrl.totalWords}
+          cefrLevel={ctrl.cefrLevel}
+          styles={styles}
+          tc={tc}
+        />
+        <SessionCompleteCard
+          correct={ctrl.sessionStats.correct}
+          total={ctrl.sessionStats.total}
+          onDone={() => navigation.goBack()}
+        />
+      </SafeAreaView>
+    );
+  }
+
+  const word = ctrl.currentWord!;
+  const showResult = ctrl.hasSubmitted && ctrl.lastResult;
+  const canSubmit = !ctrl.hasSubmitted && ctrl.inputValue.trim().length > 0;
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* ── Header ── */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <Ionicons name="chevron-back" size={24} color={tc.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{exercise.title}</Text>
-        <View style={[styles.progressBadge, { borderColor: progressColor }]}>
-          <Text style={[styles.progressText, { color: progressColor }]}>
-            {exercise.currentIndex + 1}/{exercise.totalPairs}
-          </Text>
-        </View>
-      </View>
-
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={false}
-      >
-        {/* ── Word Pair Card ── */}
-        <View style={styles.cardWrapper}>
-          <View style={[styles.card, hasResult && styles.cardWithResult]}>
-            {/* ── Two-column content ── */}
-            <View style={styles.columnsRow}>
-              {/* Left column: Basic word */}
-              <View style={styles.cardHalf}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.wordTypeLabel}>Basic</Text>
-                  <TouchableOpacity
-                    onPress={() => playPronunciation(currentPair.basicWord)}
-                    activeOpacity={0.6}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons
-                      name="volume-high-outline"
-                      size={16}
-                      color={tc.text}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.wordText}>{currentPair.basicWord}</Text>
-                <Text style={styles.phoneticText}>
-                  {currentPair.basicPhonetic}
-                </Text>
-
-                {/* Attempt phonetic (after recording) */}
-                {hasResult && (
-                  <View style={styles.attemptSection}>
-                    <Text style={styles.attemptLabel}>Your Attempt</Text>
-                    <Text
-                      style={[
-                        styles.attemptPhonetic,
-                        {
-                          color: lastResult.basicCorrect
-                            ? tc.success
-                            : tc.error,
-                        },
-                      ]}
-                    >
-                      {lastResult.basicAttemptPhonetic}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Definition (toggled) */}
-                {showDefinition && (
-                  <View style={styles.inCardDefinition}>
-                    <Text style={styles.definitionText}>
-                      {currentPair.basicDefinition}
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              {/* Vertical Divider */}
-              <View style={styles.cardDivider} />
-
-              {/* Right column: Vocab word */}
-              <View style={styles.cardHalf}>
-                <View style={styles.labelRow}>
-                  <Text style={styles.wordTypeLabel}>Vocab</Text>
-                  <TouchableOpacity
-                    onPress={() => playPronunciation(currentPair.vocabWord)}
-                    activeOpacity={0.6}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                    <Ionicons
-                      name="volume-high-outline"
-                      size={16}
-                      color={tc.text}
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.wordText}>{currentPair.vocabWord}</Text>
-                <Text style={styles.phoneticText}>
-                  {currentPair.vocabPhonetic}
-                </Text>
-
-                {/* Attempt phonetic (after recording) */}
-                {hasResult && (
-                  <View style={styles.attemptSection}>
-                    <Text style={styles.attemptLabel}>Current Attempt</Text>
-                    <Text
-                      style={[
-                        styles.attemptPhonetic,
-                        {
-                          color: lastResult.vocabCorrect
-                            ? tc.success
-                            : tc.error,
-                        },
-                      ]}
-                    >
-                      {lastResult.vocabAttemptPhonetic}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Definition (toggled) */}
-                {showDefinition && (
-                  <View style={styles.inCardDefinition}>
-                    <Text style={styles.definitionText}>
-                      {currentPair.vocabDefinition}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </View>
-
-            {/* ── Result overlay (centered below columns) ── */}
-            {hasResult && (
-              <ResultOverlay
-                isCorrect={lastResult.isCorrect}
-                message={
-                  lastResult.isCorrect
-                    ? successMessage
-                    : 'Try Again'
-                }
-              />
-            )}
-          </View>
-        </View>
-
-        {/* Definition toggle */}
-        <TouchableOpacity
-          style={styles.definitionToggle}
-          onPress={toggleDefinition}
-          activeOpacity={0.6}
-        >
-          <Text style={styles.definitionToggleText}>
-            {showDefinition ? 'Hide Definition' : 'Show Definition'}
-          </Text>
-        </TouchableOpacity>
-
-        {/* Try Again button (when incorrect) */}
-        {hasResult && !lastResult.isCorrect && (
-          <TouchableOpacity
-            style={styles.tryAgainBtn}
-            onPress={tryAgain}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.tryAgainText}>Try Again</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Next / Complete button (when correct) */}
-        {hasResult && lastResult.isCorrect && (
-          <TouchableOpacity
-            style={styles.nextBtn}
-            onPress={handleNext}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.nextBtnText}>
-              {isLastPair ? 'Complete' : 'Next'}
-            </Text>
-          </TouchableOpacity>
-        )}
-
-        {error && <Text style={styles.errorText}>{error}</Text>}
-      </ScrollView>
-
-      {/* ── Waveform ── */}
-      <WaveformBar
-        isRecording={isRecording}
-        duration={recordingDuration}
-        hasResult={hasResult}
+      <Header
+        onBack={() => navigation.goBack()}
+        currentIndex={ctrl.currentIndex}
+        total={ctrl.totalWords}
+        cefrLevel={ctrl.cefrLevel}
+        styles={styles}
+        tc={tc}
       />
 
-      {/* ── Mic Button ── */}
-      <View style={styles.micArea}>
-        <MicButton
-          isRecording={isRecording}
-          isProcessing={isProcessing}
-          hasResult={hasResult}
-          onPress={handleMicPress}
-        />
-        {/* Only show prompt text BEFORE a result */}
-        {!hasResult && (
-          <Text style={styles.speakNowText}>
-            {isProcessing
-              ? 'Processing...'
-              : isRecording
-                ? 'Listening...'
-                : 'Speak now'}
-          </Text>
-        )}
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={{ flex: 1 }}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* ── Word card ── */}
+          <View style={styles.wordCard}>
+            <Text style={[styles.partOfSpeech, { color: tc.textLight }]}>
+              {word.partOfSpeech || 'word'} · {word.cefrLevel}
+            </Text>
+            <Text style={[styles.wordTitle, { color: tc.text }]}>{word.word}</Text>
+            <Text style={[styles.prompt, { color: tc.textLight }]}>
+              Type a synonym
+            </Text>
+          </View>
+
+          {/* ── Input ── */}
+          <TextInput
+            ref={inputRef}
+            value={ctrl.inputValue}
+            onChangeText={ctrl.setInput}
+            editable={!ctrl.hasSubmitted}
+            placeholder="your answer…"
+            placeholderTextColor={tc.textMuted}
+            autoCapitalize="none"
+            autoCorrect={false}
+            returnKeyType="done"
+            onSubmitEditing={() => {
+              if (canSubmit) ctrl.submit();
+            }}
+            style={[
+              styles.input,
+              {
+                backgroundColor: tc.inputBg,
+                borderColor: showResult
+                  ? ctrl.lastResult!.isCorrect
+                    ? tc.success
+                    : tc.error
+                  : tc.inputBorder,
+                color: tc.text,
+              },
+            ]}
+            accessibilityLabel="Synonym input"
+          />
+
+          {/* ── Submit button (hidden once submitted) ── */}
+          {!ctrl.hasSubmitted && (
+            <TouchableOpacity
+              onPress={ctrl.submit}
+              disabled={!canSubmit || ctrl.isSubmitting}
+              style={[
+                styles.checkButton,
+                {
+                  backgroundColor: canSubmit ? tc.accent : tc.disabled,
+                },
+              ]}
+              accessibilityLabel="Check answer"
+            >
+              {ctrl.isSubmitting ? (
+                <ActivityIndicator size="small" color={tc.textOnAccent} />
+              ) : (
+                <Text style={[styles.checkButtonText, { color: tc.textOnAccent }]}>
+                  Check
+                </Text>
+              )}
+            </TouchableOpacity>
+          )}
+
+          {/* ── Result overlay ── */}
+          {showResult && (
+            <ResultPanel
+              isCorrect={ctrl.lastResult!.isCorrect}
+              correctAnswer={ctrl.lastResult!.correctAnswer}
+              matchedSynonym={ctrl.lastResult!.matchedSynonym}
+              fuzzy={ctrl.lastResult!.fuzzy}
+              definition={word.definition}
+              example={word.example}
+              onNext={ctrl.next}
+            />
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 };
 
 // ═══════════════════════════════════════════════
+//  HEADER (extracted to avoid prop drilling)
+// ═══════════════════════════════════════════════
+
+const Header: React.FC<{
+  onBack: () => void;
+  currentIndex: number;
+  total: number;
+  cefrLevel: string;
+  styles: ReturnType<typeof createStyles>;
+  tc: ThemeColors;
+}> = ({ onBack, currentIndex, total, cefrLevel, styles, tc }) => (
+  <View style={styles.header}>
+    <TouchableOpacity
+      onPress={onBack}
+      style={styles.backButton}
+      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+      accessibilityLabel="Go back"
+    >
+      <Ionicons name="chevron-back" size={24} color={tc.text} />
+    </TouchableOpacity>
+    <View
+      style={[
+        styles.progressBadge,
+        { backgroundColor: progressColor(currentIndex, total, tc) },
+      ]}
+    >
+      <Text style={styles.progressBadgeText}>
+        {Math.min(currentIndex + 1, total)} / {total}
+      </Text>
+    </View>
+    <View style={[styles.cefrChip, { backgroundColor: tc.accentBg }]}>
+      <Text style={[styles.cefrChipText, { color: tc.accentDark }]}>
+        {cefrLevel}
+      </Text>
+    </View>
+  </View>
+);
+
+// ═══════════════════════════════════════════════
 //  STYLES
 // ═══════════════════════════════════════════════
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.accentMuted,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: tc.accentMuted,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  // ── Header ──
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 6,
-    gap: 12,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    flex: 1,
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-  },
-  progressBadge: {
-    borderWidth: 1.5,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderStyle: 'dashed',
-  },
-  progressText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-  },
-
-  // ── Scroll ──
-  scrollContent: {
-    paddingHorizontal: 18,
-    paddingBottom: 8,
-    flexGrow: 1,
-  },
-
-  // ── Card wrapper ──
-  cardWrapper: {
-    position: 'relative',
-  },
-  card: {
-    backgroundColor: tc.white,
-    borderRadius: 20,
-    paddingVertical: 18,
-    paddingHorizontal: 14,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
-    borderWidth: 1,
-    borderColor: tc.accentLight,
-    minHeight: 280,
-  },
-  cardWithResult: {
-    minHeight: 320,
-  },
-  columnsRow: {
-    flexDirection: 'row',
-  },
-  cardHalf: {
-    flex: 1,
-    paddingHorizontal: 6,
-  },
-  cardDivider: {
-    width: 1,
-    backgroundColor: tc.divider,
-    marginVertical: 4,
-    marginHorizontal: 2,
-  },
-
-  // ── Labels & words ──
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
-  },
-  wordTypeLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: tc.textLight,
-  },
-  wordText: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-    marginBottom: 2,
-  },
-  phoneticText: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: tc.textLight,
-    marginBottom: 6,
-  },
-
-  // ── Attempt section ──
-  attemptSection: {
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  attemptLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    color: tc.text,
-    marginBottom: 2,
-  },
-  attemptPhonetic: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-  },
-
-  // ── In-card definition ──
-  inCardDefinition: {
-    marginTop: 8,
-    paddingTop: 6,
-    borderTopWidth: 0.5,
-    borderTopColor: tc.divider,
-  },
-  definitionText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: tc.textLight,
-    lineHeight: 16,
-  },
-
-  // ── Result overlay ──
-  resultOverlay: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 12,
-    paddingBottom: 6,
-  },
-  resultOverlayCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  resultMessage: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-
-  // ── Toggle ──
-  definitionToggle: {
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  definitionToggleText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.textLight,
-    textDecorationLine: 'underline',
-  },
-
-  // ── Try Again ──
-  tryAgainBtn: {
-    alignSelf: 'center',
-    borderWidth: 2,
-    borderColor: tc.success,
-    borderRadius: 24,
-    paddingVertical: 10,
-    paddingHorizontal: 36,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  tryAgainText: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: tc.success,
-  },
-
-  // ── Next / Complete button ──
-  nextBtn: {
-    alignSelf: 'center',
-    alignItems: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 36,
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  nextBtnText: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: tc.white,
-  },
-
-  // ── Error ──
-  errorText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.error,
-    textAlign: 'center',
-    marginTop: 8,
-  },
-
-  // ── Waveform ──
-  waveformContainer: {
-    paddingHorizontal: 28,
-    marginBottom: 6,
-  },
-  waveformTrack: {
-    backgroundColor: tc.accent,
-    borderRadius: 22,
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    overflow: 'hidden',
-  },
-
-  // ── Mic ──
-  micArea: {
-    alignItems: 'center',
-    paddingTop: 6,
-    paddingBottom: 10,
-  },
-  micBtnOuter: {
-    borderRadius: 20,
-  },
-  micBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 16,
-    backgroundColor: tc.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  micBtnActive: {
-    backgroundColor: tc.error,
-  },
-  micBtnDone: {
-    backgroundColor: tc.accentDark,
-    opacity: 0.7,
-  },
-  speakNowText: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.text,
-    marginTop: 6,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      backgroundColor: tc.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 24,
+    },
+    loadingText: {
+      marginTop: 12,
+      fontFamily: fonts.regular,
+      fontSize: 14,
+    },
+    errorText: {
+      marginTop: 16,
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.textLight,
+      textAlign: 'center',
+      maxWidth: 320,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 12,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    progressBadge: {
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 14,
+    },
+    progressBadgeText: {
+      color: tc.white,
+      fontFamily: fonts.semiBold,
+      fontSize: 13,
+    },
+    cefrChip: {
+      marginLeft: 'auto',
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 10,
+    },
+    cefrChipText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 12,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 40,
+    },
+    wordCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 16,
+      padding: 24,
+      marginBottom: 20,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    },
+    partOfSpeech: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      marginBottom: 8,
+    },
+    wordTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 36,
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    prompt: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+    },
+    input: {
+      borderWidth: 2,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      fontFamily: fonts.medium,
+      fontSize: 18,
+      marginBottom: 16,
+    },
+    checkButton: {
+      borderRadius: 12,
+      paddingVertical: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+    },
+    resultPanel: {
+      borderWidth: 1,
+      borderRadius: 14,
+      padding: 16,
+      marginTop: 16,
+    },
+    resultRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
+    },
+    resultHeadline: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+    },
+    resultBody: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      lineHeight: 20,
+    },
+    resultEmphasis: {
+      fontFamily: fonts.semiBold,
+    },
+    resultExample: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      fontStyle: 'italic',
+      marginTop: 8,
+    },
+    nextButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      marginTop: 16,
+    },
+    nextButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+    },
+    doneCard: {
+      alignItems: 'center',
+      padding: 32,
+      marginHorizontal: 20,
+      marginTop: 40,
+      backgroundColor: tc.surface,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    },
+    doneIcon: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 16,
+    },
+    doneTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 22,
+      color: tc.text,
+      marginBottom: 8,
+    },
+    doneSub: {
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      color: tc.textLight,
+      textAlign: 'center',
+    },
+  });
 
 export default VocabExerciseScreen;

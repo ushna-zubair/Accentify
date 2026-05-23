@@ -140,7 +140,7 @@ export const useLessonDetailController = (lessonId: string) => {
             status,
           };
         }
-      } catch (e: unknown) {
+      } catch (e: any) {
         // Permission errors are expected if rules aren't deployed yet
         if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
           console.warn('[LessonDetail] Firestore fetch warning:', e instanceof Error ? e.message : String(e));

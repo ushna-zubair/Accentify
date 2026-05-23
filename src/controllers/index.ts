@@ -19,4 +19,13 @@ export { useAccessControlController } from './useAccessControlController';
 export type { AccessControlTab, PendingInvite } from './useAccessControlController';
 export { useFeedbackReportsController } from './useFeedbackReportsController';
 export { useManageLessonsController } from './useManageLessonsController';
+export {
+  useManageVocabularyController,
+  EMPTY_FORM as EMPTY_VOCAB_FORM,
+  wordToForm,
+} from './useManageVocabularyController';
+export type {
+  VocabCefrFilter,
+  VocabFormState,
+} from './useManageVocabularyController';
 export { useSupportLogsController } from './useSupportLogsController';

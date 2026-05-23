@@ -243,6 +243,10 @@ const MobileAdminDashboard: React.FC = () => {
       navigation.navigate('AdminInsights');
     } else if (key === 'user_management') {
       navigation.navigate('AdminManageUsers');
+    } else if (key === 'content_management' || key === 'lessons') {
+      navigation.navigate('AdminManageLessons');
+    } else if (key === 'vocabulary') {
+      navigation.navigate('AdminManageVocabulary');
     } else if (key === 'create_announcement') {
       navigation.navigate('AdminAnnouncements');
     }

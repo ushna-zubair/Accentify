@@ -179,7 +179,7 @@ export const useTutorController = () => {
         recentLessons,
         studyPath,
       });
-    } catch (e: unknown) {
+    } catch (e: any) {
       // Permission errors are expected if rules aren't deployed yet — use fallback silently
       if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
         console.warn('[Tutor] Firestore permission denied, using sample data');

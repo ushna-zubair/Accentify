@@ -352,13 +352,19 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.exerciseCard, { opacity: 0.5 }]} activeOpacity={1}>
+        <TouchableOpacity
+          style={styles.exerciseCard}
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('HomeVocabExercise', {})}
+        >
           <View style={[styles.exerciseIcon, { backgroundColor: tc.successBg }]}>
             <Ionicons name="book-outline" size={24} color={tc.success} />
           </View>
           <View style={styles.exerciseInfo}>
             <Text style={styles.exerciseTitle}>Vocabulary Builder</Text>
-            <Text style={styles.exerciseDesc}>Coming soon</Text>
+            <Text style={styles.exerciseDesc}>
+              Type synonyms for words matched to your level
+            </Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>

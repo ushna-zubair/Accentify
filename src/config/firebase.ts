@@ -56,7 +56,17 @@ if (Platform.OS === 'web') {
     db = getFirestore(app);
   }
 } else {
-  db = getFirestore(app);
+  // Native: enable IndexedDB-backed persistent cache so users who have
+  // logged in before can read their `users/{uid}` doc offline. Without
+  // this, a flaky/slow network on launch makes AppNavigator think the
+  // profile is missing and routes them to CreateProfile.
+  try {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache({}),
+    });
+  } catch {
+    db = getFirestore(app);
+  }
 }
 export { db };
 

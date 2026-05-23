@@ -47,6 +47,7 @@ export type HomeStackParamList = {
   HomeMain: undefined;
   HomePronunciation: { lessonId?: string };
   HomeWordPronunciation: { lessonId?: string };
+  HomeVocabExercise: { lessonId?: string };
   WavyChat: undefined;
   CourseCompletion: { lessonId: string; courseTitle: string; completedCount: number; totalWeekly: number };
 };
@@ -76,6 +77,7 @@ export type AdminStackParamList = {
   AdminDashboard: undefined;
   AdminInsights: undefined;
   AdminManageLessons: undefined;
+  AdminManageVocabulary: undefined;
   AdminManageUsers: undefined;
   AdminUserDetail: { uid: string };
   AdminAnnouncements: undefined;

@@ -52,3 +52,17 @@ functions/lib/
 
 # Zip archives
 *.zip
+
+# Jupyter / Kaggle scratch — not part of the app
+*.ipynb
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+/sample_submission.csv
+/test.csv
+/train.csv
+/data/sample_submission.csv
+/data/test.csv
+/data/train.csv
+
+# One-off operational scripts that embed CLI OAuth client secrets
+scripts/_*.mjs

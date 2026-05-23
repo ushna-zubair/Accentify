@@ -47,6 +47,12 @@ export interface LessonDetailData {
   /** Remote image URL for the lesson illustration */
   imageUrl?: string;
   status: LessonStatus;
+  /**
+   * IDs into `vocabularyWords/{wordId}` for the synonym-typing exercise.
+   * Optional — when absent/empty, the exercise falls back to CEFR-band
+   * selection based on the user's English level.
+   */
+  vocabularyWordIds?: string[];
 }
 
 // ─── Vocab Exercise Models ───

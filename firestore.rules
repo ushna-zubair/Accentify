@@ -122,6 +122,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ─── Vocabulary words (synonym-typing exercise) ───
+    // Any authenticated learner can read the word bank; only admins curate.
+    match /vocabularyWords/{wordId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     // ─── Announcements ───
     match /announcements/{announcementId} {
       allow read: if isAuthenticated();

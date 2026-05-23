@@ -69,6 +69,8 @@ import AdminInsightsScreen from '../views/admin/AdminInsightsScreen';
 import AdminUserManagementScreen from '../views/admin/AdminUserManagementScreen';
 import AdminUserDetailScreen from '../views/admin/AdminUserDetailScreen';
 import AdminAnnouncementsScreen from '../views/admin/AdminAnnouncementsScreen';
+import AdminManageLessonsScreen from '../views/admin/AdminManageLessonsScreen';
+import AdminManageVocabularyScreen from '../views/admin/AdminManageVocabularyScreen';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const HomeStack = createNativeStackNavigator<HomeStackParamList>();
@@ -82,6 +84,7 @@ const HomeStackNavigator = () => {
       <HomeStack.Screen name="HomeMain" component={HomeMainScreen} />
       <HomeStack.Screen name="HomePronunciation" component={HomePronunciationScreen} />
       <HomeStack.Screen name="HomeWordPronunciation" component={HomeWordPronunciationScreen} />
+      <HomeStack.Screen name="HomeVocabExercise" component={VocabExerciseScreen} />
       <HomeStack.Screen name="WavyChat" component={WavyChatScreen} />
       <HomeStack.Screen name="CourseCompletion" component={CourseCompletionScreen} />
     </HomeStack.Navigator>
@@ -131,6 +134,8 @@ const AdminNavigator = () => {
       <AdminStack.Screen name="AdminManageUsers" component={AdminUserManagementScreen} />
       <AdminStack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
       <AdminStack.Screen name="AdminAnnouncements" component={AdminAnnouncementsScreen} />
+      <AdminStack.Screen name="AdminManageLessons" component={AdminManageLessonsScreen} />
+      <AdminStack.Screen name="AdminManageVocabulary" component={AdminManageVocabularyScreen} />
     </AdminStack.Navigator>
   );
 };

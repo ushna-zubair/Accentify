@@ -48,6 +48,7 @@ export type AdminMenuKey =
   | 'insights'
   | 'user_management'
   | 'content_management'
+  | 'vocabulary'
   | 'create_announcement';
 
 export interface AdminMenuItem {
@@ -293,6 +294,8 @@ export interface AdminLesson {
   enrolledCount: number;
   completedCount: number;
   vocabPairCount: number;
+  /** IDs into `vocabularyWords/{wordId}` for the synonym-typing exercise. */
+  vocabularyWordIds?: string[];
 }
 
 /** Form data for a single vocab word pair in the lesson form */
@@ -347,6 +350,11 @@ export interface AdminLessonFormData {
   maxAttempts: number;
   /** Vocab word pairs — only relevant for vocabulary-category lessons */
   vocabPairs: AdminVocabPairForm[];
+  /**
+   * IDs into `vocabularyWords/{wordId}` for the synonym-typing exercise.
+   * Empty array means the screen falls back to CEFR-band selection.
+   */
+  vocabularyWordIds: string[];
 }
 
 export const DEFAULT_LESSON_FORM: AdminLessonFormData = {
@@ -368,6 +376,7 @@ export const DEFAULT_LESSON_FORM: AdminLessonFormData = {
   passingScore: 70,
   maxAttempts: 0,
   vocabPairs: [],
+  vocabularyWordIds: [],
 };
 
 export interface AdminLessonStats {

@@ -80,7 +80,7 @@ export const useProgressController = () => {
 
       setProgressData(result);
       setSelectedWeekIndex(data.currentWeekIndex);
-    } catch (e: unknown) {
+    } catch (e: any) {
       if (e?.code === 'permission-denied' || e?.message?.includes('permissions')) {
         console.warn('[Progress] Firestore permission denied, using fallback');
       } else {

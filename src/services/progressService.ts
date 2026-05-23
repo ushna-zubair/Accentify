@@ -43,6 +43,7 @@ import {
 } from 'firebase/firestore';
 import { STREAK_THRESHOLD_PCT, COMPLETE_THRESHOLD_PCT } from '../config/scoring';
 import type { PronunciationAttempt, PronunciationItemType } from '../models/progress';
+import type { CefrLevel, VocabularyAttempt } from '../models/vocabulary';
 import { db } from '../config/firebase';
 import {
   getWeekNumber,
@@ -267,6 +268,141 @@ export const recordPronunciationAttempt = async (
   }
 
   return { completed, streakUpdated };
+};
+
+// ═══════════════════════════════════════════════
+//  VOCAB SYNONYM-TYPING ATTEMPTS
+// ═══════════════════════════════════════════════
+
+/**
+ * Sanitise an item key for Firestore (no /, ., #, $, [, ]).
+ * Mirrors the inline sanitisation in `recordPronunciationAttempt`.
+ */
+const vocabItemKey = (wordId: string): string =>
+  `vocab__${wordId.trim().toLowerCase()}`
+    .replace(/[/.#$\[\]]/g, '_')
+    .slice(0, 1000);
+
+/**
+ * Persist a single vocabulary synonym-typing attempt across all progress
+ * layers — daily, summary, per-attempt history, and per-item rolling stats.
+ *
+ * Returns whether this was the user's first-ever correct attempt at this
+ * word (so the caller / UI can show a "new word learned" cue), and whether
+ * the streak fired.
+ */
+export const recordVocabAttempt = async (
+  uid: string,
+  input: {
+    wordId: string;
+    prompt: string;
+    userAnswer: string;
+    matchedSynonym: string | null;
+    isCorrect: boolean;
+    cefrLevel: CefrLevel;
+    durationMs: number;
+  },
+): Promise<{ firstTimeCorrect: boolean; streakUpdated: boolean }> => {
+  const todayKey = toDateKey(new Date());
+  const createdAt = new Date().toISOString();
+  const durationSec = Math.max(0, Math.round(input.durationMs / 1000));
+
+  const attempt: VocabularyAttempt = {
+    itemType: 'vocab',
+    wordId: input.wordId,
+    prompt: input.prompt,
+    userAnswer: input.userAnswer,
+    matchedSynonym: input.matchedSynonym,
+    isCorrect: input.isCorrect,
+    cefrLevel: input.cefrLevel,
+    durationMs: Math.max(0, Math.round(input.durationMs)),
+    createdAt,
+  };
+
+  let firstTimeCorrect = false;
+  try {
+    const itemRef = doc(db, 'users', uid, 'progress', 'items', 'entries', vocabItemKey(input.wordId));
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(itemRef);
+      const prev = snap.exists() ? snap.data() : null;
+      const prevCorrect = (prev?.correctAttempts as number | undefined) ?? 0;
+      const prevConsecutive = (prev?.consecutiveCorrect as number | undefined) ?? 0;
+
+      firstTimeCorrect = input.isCorrect && prevCorrect === 0;
+
+      tx.set(
+        itemRef,
+        {
+          itemType: 'vocab',
+          reference: input.wordId,
+          cefrLevel: input.cefrLevel,
+          totalAttempts: increment(1),
+          correctAttempts: increment(input.isCorrect ? 1 : 0),
+          consecutiveCorrect: input.isCorrect ? prevConsecutive + 1 : 0,
+          lastSeenAt: createdAt,
+          lastCorrect: input.isCorrect,
+          updatedAt: Timestamp.now(),
+        },
+        { merge: true },
+      );
+    });
+  } catch (e) {
+    console.warn('[progressService] vocab item write failed:', e);
+  }
+
+  const dailyRef = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
+  try {
+    await setDoc(
+      dailyRef,
+      {
+        date: todayKey,
+        practiceItems: increment(1),
+        practiceSeconds: increment(durationSec),
+        vocabAttempts: increment(1),
+        vocabCorrect: increment(input.isCorrect ? 1 : 0),
+        vocabWordsLearned: increment(firstTimeCorrect ? 1 : 0),
+        updatedAt: Timestamp.now(),
+      },
+      { merge: true },
+    );
+  } catch (e) {
+    console.warn('[progressService] vocab daily write failed:', e);
+  }
+
+  try {
+    const summaryRef = doc(db, 'users', uid, 'progress', 'summary');
+    await setDoc(
+      summaryRef,
+      {
+        totalVocabAttempts: increment(1),
+        totalVocabWordsKnown: increment(firstTimeCorrect ? 1 : 0),
+        totalPracticeSeconds: increment(durationSec),
+        lastActiveAt: Timestamp.now(),
+      },
+      { merge: true },
+    );
+  } catch (e) {
+    console.warn('[progressService] vocab summary update failed:', e);
+  }
+
+  try {
+    const attemptsCol = collection(db, 'users', uid, 'progress', 'attempts', 'entries');
+    await addDoc(attemptsCol, { ...attempt, dateKey: todayKey });
+  } catch (e) {
+    console.warn('[progressService] vocab attempts history write failed:', e);
+  }
+
+  let streakUpdated = false;
+  if (input.isCorrect) {
+    try {
+      await updateStreak(uid);
+      streakUpdated = true;
+    } catch (e) {
+      console.warn('[progressService] vocab streak update failed:', e);
+    }
+  }
+
+  return { firstTimeCorrect, streakUpdated };
 };
 
 /**

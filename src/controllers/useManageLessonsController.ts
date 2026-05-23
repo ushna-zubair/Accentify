@@ -191,6 +191,7 @@ export const useManageLessonsController = () => {
       passingScore: lesson.passingScore ?? 70,
       maxAttempts: lesson.maxAttempts ?? 0,
       vocabPairs: [],
+      vocabularyWordIds: [...(lesson.vocabularyWordIds ?? [])],
     });
     setFocusTipInput('');
     setTagInput('');

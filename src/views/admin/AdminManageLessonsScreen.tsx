@@ -1238,6 +1238,47 @@ const LessonFormModal: React.FC<{
                     <Ionicons name="chevron-forward" size={18} color={tc.accent} />
                   </TouchableOpacity>
                 )}
+
+                {/* Vocabulary word IDs (synonym-typing exercise) */}
+                {isVocabCategory && (
+                  <View style={{ marginTop: 16 }}>
+                    <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textLight, marginBottom: 6 }}>
+                      Synonym-typing word IDs (optional)
+                    </Text>
+                    <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted, marginBottom: 8 }}>
+                      Comma- or newline-separated `vocabularyWords` IDs (e.g. a1_happy, b2_pursue).
+                      Leave empty to fall back to CEFR-band selection.
+                    </Text>
+                    <TextInput
+                      value={(formData.vocabularyWordIds ?? []).join(', ')}
+                      onChangeText={(v) =>
+                        updateField(
+                          'vocabularyWordIds',
+                          v
+                            .split(/[,\n]/)
+                            .map((s) => s.trim())
+                            .filter((s) => s.length > 0),
+                        )
+                      }
+                      placeholder="a1_happy, a1_friend, a2_journey"
+                      placeholderTextColor={tc.textMuted}
+                      multiline
+                      style={{
+                        borderWidth: 1,
+                        borderColor: tc.inputBorder,
+                        backgroundColor: tc.inputBg,
+                        borderRadius: 10,
+                        paddingHorizontal: 12,
+                        paddingVertical: 10,
+                        fontFamily: fonts.regular,
+                        fontSize: 13,
+                        color: tc.text,
+                        minHeight: 60,
+                        textAlignVertical: 'top',
+                      }}
+                    />
+                  </View>
+                )}
               </>
             )}
 

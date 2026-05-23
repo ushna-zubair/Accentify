@@ -5,3 +5,4 @@ export * from './admin';
 export * from './lessons';
 export * from './progress';
 export * from './navigation';
+export * from './vocabulary';

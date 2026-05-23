@@ -91,7 +91,7 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
           setData(SEED_DATA);
         }
       }
-    } catch (e: unknown) {
+    } catch (e: any) {
       // On permission errors (e.g. stale auth token after page refresh), retry once
       if (retryCount < 2 && e?.code === 'permission-denied') {
         console.warn('useDashboardAnalytics: permission-denied, retrying…', retryCount + 1);

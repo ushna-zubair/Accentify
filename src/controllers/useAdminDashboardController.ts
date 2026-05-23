@@ -26,6 +26,7 @@ import type {
 export const MENU_ITEMS: SidebarItem[] = [
   { label: 'Dashboard', icon: 'grid-outline', iconSet: 'ionicons', key: 'dashboard' },
   { label: 'Manage Lessons', icon: 'book-outline', iconSet: 'ionicons', key: 'lessons' },
+  { label: 'Manage Vocabulary', icon: 'library-outline', iconSet: 'ionicons', key: 'vocabulary' },
   { label: 'Manage Users', icon: 'people-outline', iconSet: 'ionicons', key: 'users' },
   { label: 'Feedback & Reports', icon: 'chatbox-ellipses-outline', iconSet: 'ionicons', key: 'feedback' },
 ];
@@ -40,7 +41,8 @@ export const OTHERS_ITEMS: SidebarItem[] = [
 export const ADMIN_MENU: AdminMenuItem[] = [
   { key: 'insights', label: 'Insights', filled: true },
   { key: 'user_management', label: 'User Management', filled: false },
-  { key: 'content_management', label: 'Content Management', filled: false },
+  { key: 'content_management', label: 'Manage Lessons', filled: false },
+  { key: 'vocabulary', label: 'Manage Vocabulary', filled: false },
   { key: 'create_announcement', label: 'Create Announcement', filled: false },
 ];
 

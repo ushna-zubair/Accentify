@@ -31,6 +31,10 @@ interface AuthContextType {
   loading: boolean;
   /** True when the user has authenticated but still owes a TOTP code. */
   pendingTotpChallenge: boolean;
+  /** True when the last attempt to load the user profile from Firestore failed
+   * (typically a network error). Distinguishes "couldn't fetch" from
+   * "fetched, no such doc". */
+  profileFetchError: boolean;
   signUp: (email: string, password: string) => Promise<UserCredential>;
   signIn: (email: string, password: string) => Promise<UserRole | null>;
   signOut: () => Promise<void>;
@@ -64,10 +68,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingTotpChallenge, setPendingTotpChallenge] = useState(false);
+  const [profileFetchError, setProfileFetchError] = useState(false);
 
   const fetchUserRole = useCallback(async (uid: string): Promise<UserRole | null> => {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
+      // Successful read — clear any prior error flag.
+      setProfileFetchError(false);
       if (userDoc.exists()) {
         const data = userDoc.data();
         const role = data.role as UserRole;
@@ -86,9 +93,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         return role;
       }
+      // Doc genuinely doesn't exist — fresh signup that hasn't onboarded yet.
+      setUserProfile(null);
+      setUserRole(null);
       return null;
     } catch (error) {
+      // Read failed (offline, timeout, permission, etc). Do NOT clear
+      // userProfile — keep whatever we had previously, and flag the error
+      // so the navigator can distinguish this from "no profile exists".
       console.error('Error fetching user role:', error);
+      setProfileFetchError(true);
       return null;
     }
   }, []);
@@ -342,6 +356,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserRole(null);
     setUserProfile(null);
     setPendingTotpChallenge(false);
+    setProfileFetchError(false);
   }, []);
 
   const clearTotpChallenge = useCallback(async () => {
@@ -400,6 +415,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userProfile,
     loading,
     pendingTotpChallenge,
+    profileFetchError,
     signUp,
     signIn,
     signOut,
@@ -410,7 +426,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sendVerificationEmail,
     reloadUser,
     clearTotpChallenge,
-  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
+  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, profileFetchError, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

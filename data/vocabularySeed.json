@@ -1,0 +1,4426 @@
+[
+  {
+    "id": "a1_happy",
+    "word": "happy",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "feeling pleasure or contentment",
+    "example": "She felt happy at her birthday party.",
+    "acceptableSynonyms": [
+      "glad",
+      "joyful",
+      "cheerful",
+      "pleased",
+      "content"
+    ],
+    "primarySynonym": "glad"
+  },
+  {
+    "id": "a1_sad",
+    "word": "sad",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "feeling sorrow or unhappiness",
+    "example": "He looked sad after the movie ended.",
+    "acceptableSynonyms": [
+      "unhappy",
+      "down",
+      "gloomy",
+      "blue",
+      "upset"
+    ],
+    "primarySynonym": "unhappy"
+  },
+  {
+    "id": "a1_big",
+    "word": "big",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "of considerable size or extent",
+    "example": "They bought a big TV for the living room.",
+    "acceptableSynonyms": [
+      "large",
+      "huge",
+      "great",
+      "massive"
+    ],
+    "primarySynonym": "large"
+  },
+  {
+    "id": "a1_small",
+    "word": "small",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "of limited size or amount",
+    "example": "A small dog ran across the road.",
+    "acceptableSynonyms": [
+      "little",
+      "tiny",
+      "mini"
+    ],
+    "primarySynonym": "little"
+  },
+  {
+    "id": "a1_hot",
+    "word": "hot",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "having a high temperature",
+    "example": "Be careful, the soup is very hot.",
+    "acceptableSynonyms": [
+      "warm",
+      "boiling",
+      "scorching"
+    ],
+    "primarySynonym": "warm"
+  },
+  {
+    "id": "a1_cold",
+    "word": "cold",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "having a low temperature",
+    "example": "The water in the pool was cold.",
+    "acceptableSynonyms": [
+      "cool",
+      "chilly",
+      "icy",
+      "freezing"
+    ],
+    "primarySynonym": "cool"
+  },
+  {
+    "id": "a1_good",
+    "word": "good",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "pleasant or of high quality",
+    "example": "That was a good meal, thank you.",
+    "acceptableSynonyms": [
+      "nice",
+      "fine",
+      "great",
+      "pleasant"
+    ],
+    "primarySynonym": "nice"
+  },
+  {
+    "id": "a1_bad",
+    "word": "bad",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "not good; poor in quality",
+    "example": "I had a bad day at work today.",
+    "acceptableSynonyms": [
+      "poor",
+      "awful",
+      "terrible",
+      "lousy"
+    ],
+    "primarySynonym": "poor"
+  },
+  {
+    "id": "a1_new",
+    "word": "new",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "recently made or produced",
+    "example": "She wore a new dress to the party.",
+    "acceptableSynonyms": [
+      "fresh",
+      "brand-new",
+      "modern",
+      "recent"
+    ],
+    "primarySynonym": "fresh"
+  },
+  {
+    "id": "a1_old",
+    "word": "old",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "having existed for a long time",
+    "example": "They live in an old farmhouse.",
+    "acceptableSynonyms": [
+      "ancient",
+      "aged",
+      "former"
+    ],
+    "primarySynonym": "ancient"
+  },
+  {
+    "id": "a1_fast",
+    "word": "fast",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "moving with great speed",
+    "example": "A fast train goes between the cities.",
+    "acceptableSynonyms": [
+      "quick",
+      "rapid",
+      "speedy",
+      "swift"
+    ],
+    "primarySynonym": "quick"
+  },
+  {
+    "id": "a1_slow",
+    "word": "slow",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "moving at a low speed",
+    "example": "Traffic was slow this morning.",
+    "acceptableSynonyms": [
+      "gradual",
+      "sluggish",
+      "unhurried"
+    ],
+    "primarySynonym": "gradual"
+  },
+  {
+    "id": "a1_fun",
+    "word": "fun",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "enjoyable or amusing",
+    "example": "The party was really fun.",
+    "acceptableSynonyms": [
+      "enjoyable",
+      "amusing",
+      "entertaining"
+    ],
+    "primarySynonym": "enjoyable"
+  },
+  {
+    "id": "a1_busy",
+    "word": "busy",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "occupied with work",
+    "example": "Mum is busy in the kitchen.",
+    "acceptableSynonyms": [
+      "occupied",
+      "engaged",
+      "active"
+    ],
+    "primarySynonym": "occupied"
+  },
+  {
+    "id": "a1_easy",
+    "word": "easy",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adjective",
+    "definition": "not difficult",
+    "example": "The test was easy for her.",
+    "acceptableSynonyms": [
+      "simple",
+      "effortless",
+      "straightforward"
+    ],
+    "primarySynonym": "simple"
+  },
+  {
+    "id": "a1_house",
+    "word": "house",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a building where people live",
+    "example": "They moved to a new house last year.",
+    "acceptableSynonyms": [
+      "home",
+      "residence",
+      "place"
+    ],
+    "primarySynonym": "home"
+  },
+  {
+    "id": "a1_friend",
+    "word": "friend",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a person you know and like",
+    "example": "My friend lives next door.",
+    "acceptableSynonyms": [
+      "buddy",
+      "pal",
+      "companion",
+      "mate"
+    ],
+    "primarySynonym": "buddy"
+  },
+  {
+    "id": "a1_food",
+    "word": "food",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "something people eat",
+    "example": "The food at this restaurant is great.",
+    "acceptableSynonyms": [
+      "meal",
+      "dish",
+      "cuisine"
+    ],
+    "primarySynonym": "meal"
+  },
+  {
+    "id": "a1_water",
+    "word": "water",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "the clear liquid we drink",
+    "example": "Please drink a glass of water.",
+    "acceptableSynonyms": [
+      "liquid",
+      "h2o"
+    ],
+    "primarySynonym": "liquid"
+  },
+  {
+    "id": "a1_day",
+    "word": "day",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a 24-hour period",
+    "example": "Today is a beautiful day.",
+    "acceptableSynonyms": [
+      "date",
+      "24 hours"
+    ],
+    "primarySynonym": "date"
+  },
+  {
+    "id": "a1_work",
+    "word": "work",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "activity done to earn money",
+    "example": "I go to work by bus every morning.",
+    "acceptableSynonyms": [
+      "job",
+      "employment",
+      "labour"
+    ],
+    "primarySynonym": "job"
+  },
+  {
+    "id": "a1_family",
+    "word": "family",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a group of related people",
+    "example": "I spent the holidays with my family.",
+    "acceptableSynonyms": [
+      "relatives",
+      "kin",
+      "household"
+    ],
+    "primarySynonym": "relatives"
+  },
+  {
+    "id": "a1_school",
+    "word": "school",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a place where children learn",
+    "example": "My son walks to school every day.",
+    "acceptableSynonyms": [
+      "academy",
+      "institute"
+    ],
+    "primarySynonym": "academy"
+  },
+  {
+    "id": "a1_book",
+    "word": "book",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "pages of writing bound together",
+    "example": "She is reading an interesting book.",
+    "acceptableSynonyms": [
+      "novel",
+      "volume",
+      "publication"
+    ],
+    "primarySynonym": "novel"
+  },
+  {
+    "id": "a1_car",
+    "word": "car",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a road vehicle with four wheels",
+    "example": "They sold their old car.",
+    "acceptableSynonyms": [
+      "auto",
+      "automobile",
+      "vehicle"
+    ],
+    "primarySynonym": "auto"
+  },
+  {
+    "id": "a1_road",
+    "word": "road",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a path for vehicles",
+    "example": "There is a lot of traffic on this road.",
+    "acceptableSynonyms": [
+      "street",
+      "route",
+      "highway"
+    ],
+    "primarySynonym": "street"
+  },
+  {
+    "id": "a1_child",
+    "word": "child",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a young person",
+    "example": "The child was playing with a ball.",
+    "acceptableSynonyms": [
+      "kid",
+      "youngster",
+      "minor"
+    ],
+    "primarySynonym": "kid"
+  },
+  {
+    "id": "a1_money",
+    "word": "money",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "coins and banknotes used to pay",
+    "example": "He saved money to buy a new bike.",
+    "acceptableSynonyms": [
+      "cash",
+      "funds",
+      "currency"
+    ],
+    "primarySynonym": "cash"
+  },
+  {
+    "id": "a1_city",
+    "word": "city",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a large town",
+    "example": "New York is a famous city.",
+    "acceptableSynonyms": [
+      "town",
+      "metropolis",
+      "urban area"
+    ],
+    "primarySynonym": "town"
+  },
+  {
+    "id": "a1_place",
+    "word": "place",
+    "cefrLevel": "A1",
+    "partOfSpeech": "noun",
+    "definition": "a particular position or area",
+    "example": "This is a nice place for a picnic.",
+    "acceptableSynonyms": [
+      "location",
+      "spot",
+      "site"
+    ],
+    "primarySynonym": "location"
+  },
+  {
+    "id": "a1_like",
+    "word": "like",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to find pleasant or agreeable",
+    "example": "I like chocolate ice cream.",
+    "acceptableSynonyms": [
+      "enjoy",
+      "love",
+      "fancy"
+    ],
+    "primarySynonym": "enjoy"
+  },
+  {
+    "id": "a1_want",
+    "word": "want",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to wish for or desire",
+    "example": "She wants a new phone.",
+    "acceptableSynonyms": [
+      "desire",
+      "need",
+      "wish"
+    ],
+    "primarySynonym": "desire"
+  },
+  {
+    "id": "a1_see",
+    "word": "see",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to notice with the eyes",
+    "example": "Can you see the bird in the tree?",
+    "acceptableSynonyms": [
+      "notice",
+      "spot",
+      "view",
+      "observe"
+    ],
+    "primarySynonym": "notice"
+  },
+  {
+    "id": "a1_give",
+    "word": "give",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to hand something to someone",
+    "example": "Please give me the salt.",
+    "acceptableSynonyms": [
+      "hand",
+      "offer",
+      "pass",
+      "present"
+    ],
+    "primarySynonym": "hand"
+  },
+  {
+    "id": "a1_help",
+    "word": "help",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to make something easier for someone",
+    "example": "Can you help me with my homework?",
+    "acceptableSynonyms": [
+      "assist",
+      "aid",
+      "support"
+    ],
+    "primarySynonym": "assist"
+  },
+  {
+    "id": "a1_talk",
+    "word": "talk",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to say words to someone",
+    "example": "They talk on the phone every day.",
+    "acceptableSynonyms": [
+      "speak",
+      "chat",
+      "converse"
+    ],
+    "primarySynonym": "speak"
+  },
+  {
+    "id": "a1_sleep",
+    "word": "sleep",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to rest with closed eyes",
+    "example": "Babies sleep a lot.",
+    "acceptableSynonyms": [
+      "rest",
+      "nap",
+      "doze",
+      "slumber"
+    ],
+    "primarySynonym": "rest"
+  },
+  {
+    "id": "a1_eat",
+    "word": "eat",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to put food in your mouth and swallow",
+    "example": "We eat dinner at seven.",
+    "acceptableSynonyms": [
+      "dine",
+      "consume",
+      "have"
+    ],
+    "primarySynonym": "dine"
+  },
+  {
+    "id": "a1_run",
+    "word": "run",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to move quickly on foot",
+    "example": "She runs every morning.",
+    "acceptableSynonyms": [
+      "jog",
+      "sprint",
+      "race",
+      "dash"
+    ],
+    "primarySynonym": "jog"
+  },
+  {
+    "id": "a1_look",
+    "word": "look",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to turn your eyes toward something",
+    "example": "Look at the beautiful sunset.",
+    "acceptableSynonyms": [
+      "watch",
+      "gaze",
+      "glance",
+      "view"
+    ],
+    "primarySynonym": "watch"
+  },
+  {
+    "id": "a1_start",
+    "word": "start",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to begin something",
+    "example": "School starts at eight.",
+    "acceptableSynonyms": [
+      "begin",
+      "commence",
+      "launch"
+    ],
+    "primarySynonym": "begin"
+  },
+  {
+    "id": "a1_stop",
+    "word": "stop",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to come to an end",
+    "example": "Please stop talking now.",
+    "acceptableSynonyms": [
+      "end",
+      "halt",
+      "cease",
+      "finish"
+    ],
+    "primarySynonym": "end"
+  },
+  {
+    "id": "a1_make",
+    "word": "make",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to create or produce",
+    "example": "She likes to make cakes.",
+    "acceptableSynonyms": [
+      "create",
+      "build",
+      "produce",
+      "craft"
+    ],
+    "primarySynonym": "create"
+  },
+  {
+    "id": "a1_use",
+    "word": "use",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to put something into action",
+    "example": "You can use my pen.",
+    "acceptableSynonyms": [
+      "employ",
+      "utilise",
+      "apply"
+    ],
+    "primarySynonym": "employ"
+  },
+  {
+    "id": "a1_find",
+    "word": "find",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to discover or locate",
+    "example": "I cannot find my keys.",
+    "acceptableSynonyms": [
+      "discover",
+      "locate",
+      "spot"
+    ],
+    "primarySynonym": "discover"
+  },
+  {
+    "id": "a1_know",
+    "word": "know",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to have information about",
+    "example": "Do you know my brother?",
+    "acceptableSynonyms": [
+      "understand",
+      "realise",
+      "recognise"
+    ],
+    "primarySynonym": "understand"
+  },
+  {
+    "id": "a1_ask",
+    "word": "ask",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to put a question to someone",
+    "example": "May I ask a question?",
+    "acceptableSynonyms": [
+      "question",
+      "inquire",
+      "query"
+    ],
+    "primarySynonym": "question"
+  },
+  {
+    "id": "a1_answer",
+    "word": "answer",
+    "cefrLevel": "A1",
+    "partOfSpeech": "verb",
+    "definition": "to reply to a question",
+    "example": "Please answer the phone.",
+    "acceptableSynonyms": [
+      "reply",
+      "respond"
+    ],
+    "primarySynonym": "reply"
+  },
+  {
+    "id": "a1_very",
+    "word": "very",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adverb",
+    "definition": "to a high degree",
+    "example": "It is very cold outside.",
+    "acceptableSynonyms": [
+      "extremely",
+      "really",
+      "highly",
+      "super"
+    ],
+    "primarySynonym": "extremely"
+  },
+  {
+    "id": "a1_often",
+    "word": "often",
+    "cefrLevel": "A1",
+    "partOfSpeech": "adverb",
+    "definition": "many times; frequently",
+    "example": "We often go to the cinema.",
+    "acceptableSynonyms": [
+      "frequently",
+      "regularly",
+      "usually"
+    ],
+    "primarySynonym": "frequently"
+  },
+  {
+    "id": "a2_pretty",
+    "word": "pretty",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "attractive in a delicate way",
+    "example": "What a pretty garden!",
+    "acceptableSynonyms": [
+      "lovely",
+      "beautiful",
+      "attractive",
+      "cute"
+    ],
+    "primarySynonym": "lovely"
+  },
+  {
+    "id": "a2_ugly",
+    "word": "ugly",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "unpleasant to look at",
+    "example": "That painting is really ugly.",
+    "acceptableSynonyms": [
+      "unattractive",
+      "unsightly",
+      "hideous"
+    ],
+    "primarySynonym": "unattractive"
+  },
+  {
+    "id": "a2_quick",
+    "word": "quick",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "done in a short time",
+    "example": "I had a quick lunch at the cafe.",
+    "acceptableSynonyms": [
+      "fast",
+      "rapid",
+      "swift",
+      "speedy"
+    ],
+    "primarySynonym": "fast"
+  },
+  {
+    "id": "a2_smart",
+    "word": "smart",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "showing intelligence",
+    "example": "She is a very smart student.",
+    "acceptableSynonyms": [
+      "clever",
+      "bright",
+      "intelligent",
+      "sharp"
+    ],
+    "primarySynonym": "clever"
+  },
+  {
+    "id": "a2_kind",
+    "word": "kind",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "caring and gentle to others",
+    "example": "It was kind of you to help.",
+    "acceptableSynonyms": [
+      "nice",
+      "caring",
+      "friendly",
+      "gentle",
+      "thoughtful"
+    ],
+    "primarySynonym": "nice"
+  },
+  {
+    "id": "a2_brave",
+    "word": "brave",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "showing courage",
+    "example": "The brave firefighter saved the dog.",
+    "acceptableSynonyms": [
+      "courageous",
+      "fearless",
+      "bold",
+      "daring"
+    ],
+    "primarySynonym": "courageous"
+  },
+  {
+    "id": "a2_lazy",
+    "word": "lazy",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "unwilling to work",
+    "example": "Do not be lazy — start your homework.",
+    "acceptableSynonyms": [
+      "idle",
+      "sluggish",
+      "slothful"
+    ],
+    "primarySynonym": "idle"
+  },
+  {
+    "id": "a2_tired",
+    "word": "tired",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "in need of sleep or rest",
+    "example": "I am too tired to cook tonight.",
+    "acceptableSynonyms": [
+      "exhausted",
+      "sleepy",
+      "weary",
+      "worn out"
+    ],
+    "primarySynonym": "exhausted"
+  },
+  {
+    "id": "a2_hungry",
+    "word": "hungry",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "wanting food",
+    "example": "The children were hungry after school.",
+    "acceptableSynonyms": [
+      "starving",
+      "famished",
+      "peckish"
+    ],
+    "primarySynonym": "starving"
+  },
+  {
+    "id": "a2_scared",
+    "word": "scared",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "afraid of something",
+    "example": "She was scared of the dog.",
+    "acceptableSynonyms": [
+      "afraid",
+      "frightened",
+      "terrified"
+    ],
+    "primarySynonym": "afraid"
+  },
+  {
+    "id": "a2_rich",
+    "word": "rich",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "having a lot of money",
+    "example": "His family is very rich.",
+    "acceptableSynonyms": [
+      "wealthy",
+      "affluent",
+      "well-off"
+    ],
+    "primarySynonym": "wealthy"
+  },
+  {
+    "id": "a2_poor",
+    "word": "poor",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "having little money",
+    "example": "The poor family asked for help.",
+    "acceptableSynonyms": [
+      "needy",
+      "broke",
+      "penniless"
+    ],
+    "primarySynonym": "needy"
+  },
+  {
+    "id": "a2_polite",
+    "word": "polite",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "having good manners",
+    "example": "He is always polite to teachers.",
+    "acceptableSynonyms": [
+      "courteous",
+      "well-mannered",
+      "civil"
+    ],
+    "primarySynonym": "courteous"
+  },
+  {
+    "id": "a2_rude",
+    "word": "rude",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "showing bad manners",
+    "example": "It is rude to interrupt people.",
+    "acceptableSynonyms": [
+      "impolite",
+      "disrespectful",
+      "discourteous"
+    ],
+    "primarySynonym": "impolite"
+  },
+  {
+    "id": "a2_noisy",
+    "word": "noisy",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "making a lot of sound",
+    "example": "The classroom was very noisy today.",
+    "acceptableSynonyms": [
+      "loud",
+      "rowdy",
+      "raucous"
+    ],
+    "primarySynonym": "loud"
+  },
+  {
+    "id": "a2_quiet",
+    "word": "quiet",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "making little sound",
+    "example": "The library is a quiet place.",
+    "acceptableSynonyms": [
+      "silent",
+      "still",
+      "hushed"
+    ],
+    "primarySynonym": "silent"
+  },
+  {
+    "id": "a2_beautiful",
+    "word": "beautiful",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "extremely pleasing to look at",
+    "example": "The sunset was beautiful.",
+    "acceptableSynonyms": [
+      "gorgeous",
+      "stunning",
+      "pretty",
+      "lovely"
+    ],
+    "primarySynonym": "gorgeous"
+  },
+  {
+    "id": "a2_important",
+    "word": "important",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "mattering a lot",
+    "example": "It is important to study.",
+    "acceptableSynonyms": [
+      "significant",
+      "crucial",
+      "vital",
+      "major"
+    ],
+    "primarySynonym": "significant"
+  },
+  {
+    "id": "a2_interesting",
+    "word": "interesting",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "holding attention",
+    "example": "The book was very interesting.",
+    "acceptableSynonyms": [
+      "fascinating",
+      "engaging",
+      "intriguing"
+    ],
+    "primarySynonym": "fascinating"
+  },
+  {
+    "id": "a2_boring",
+    "word": "boring",
+    "cefrLevel": "A2",
+    "partOfSpeech": "adjective",
+    "definition": "not interesting",
+    "example": "The film was boring and long.",
+    "acceptableSynonyms": [
+      "dull",
+      "tedious",
+      "uninteresting"
+    ],
+    "primarySynonym": "dull"
+  },
+  {
+    "id": "a2_journey",
+    "word": "journey",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "a trip from one place to another",
+    "example": "They planned a journey across Europe.",
+    "acceptableSynonyms": [
+      "trip",
+      "voyage",
+      "expedition",
+      "travel"
+    ],
+    "primarySynonym": "trip"
+  },
+  {
+    "id": "a2_holiday",
+    "word": "holiday",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "a period of rest and travel",
+    "example": "We took a holiday in Spain.",
+    "acceptableSynonyms": [
+      "vacation",
+      "break",
+      "getaway"
+    ],
+    "primarySynonym": "vacation"
+  },
+  {
+    "id": "a2_present",
+    "word": "present",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "something given as a gift",
+    "example": "She gave me a birthday present.",
+    "acceptableSynonyms": [
+      "gift",
+      "offering",
+      "token"
+    ],
+    "primarySynonym": "gift"
+  },
+  {
+    "id": "a2_idea",
+    "word": "idea",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "a thought or plan in the mind",
+    "example": "I have a great idea for dinner.",
+    "acceptableSynonyms": [
+      "thought",
+      "concept",
+      "notion",
+      "plan"
+    ],
+    "primarySynonym": "thought"
+  },
+  {
+    "id": "a2_problem",
+    "word": "problem",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "something that is difficult to deal with",
+    "example": "We had a problem with the car.",
+    "acceptableSynonyms": [
+      "issue",
+      "difficulty",
+      "trouble"
+    ],
+    "primarySynonym": "issue"
+  },
+  {
+    "id": "a2_answer",
+    "word": "answer",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "something said in reply",
+    "example": "Her answer surprised everyone.",
+    "acceptableSynonyms": [
+      "reply",
+      "response",
+      "solution"
+    ],
+    "primarySynonym": "reply"
+  },
+  {
+    "id": "a2_story",
+    "word": "story",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "a description of events",
+    "example": "Grandpa told us a great story.",
+    "acceptableSynonyms": [
+      "tale",
+      "narrative",
+      "account"
+    ],
+    "primarySynonym": "tale"
+  },
+  {
+    "id": "a2_picture",
+    "word": "picture",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "a visual image",
+    "example": "There is a picture on the wall.",
+    "acceptableSynonyms": [
+      "image",
+      "photo",
+      "illustration",
+      "photograph"
+    ],
+    "primarySynonym": "image"
+  },
+  {
+    "id": "a2_message",
+    "word": "message",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "information sent to someone",
+    "example": "I sent her a message this morning.",
+    "acceptableSynonyms": [
+      "note",
+      "text",
+      "memo",
+      "communication"
+    ],
+    "primarySynonym": "note"
+  },
+  {
+    "id": "a2_voice",
+    "word": "voice",
+    "cefrLevel": "A2",
+    "partOfSpeech": "noun",
+    "definition": "the sound a person makes when speaking",
+    "example": "She has a beautiful voice.",
+    "acceptableSynonyms": [
+      "tone",
+      "speech"
+    ],
+    "primarySynonym": "tone"
+  },
+  {
+    "id": "a2_begin",
+    "word": "begin",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to start something",
+    "example": "The class begins at nine.",
+    "acceptableSynonyms": [
+      "start",
+      "commence",
+      "launch",
+      "open"
+    ],
+    "primarySynonym": "start"
+  },
+  {
+    "id": "a2_finish",
+    "word": "finish",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to bring something to an end",
+    "example": "I must finish my homework first.",
+    "acceptableSynonyms": [
+      "end",
+      "complete",
+      "conclude",
+      "wrap up"
+    ],
+    "primarySynonym": "end"
+  },
+  {
+    "id": "a2_buy",
+    "word": "buy",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to get something for money",
+    "example": "I want to buy a new laptop.",
+    "acceptableSynonyms": [
+      "purchase",
+      "acquire",
+      "pick up"
+    ],
+    "primarySynonym": "purchase"
+  },
+  {
+    "id": "a2_sell",
+    "word": "sell",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to give something for money",
+    "example": "They sell fresh bread here.",
+    "acceptableSynonyms": [
+      "offload",
+      "trade",
+      "market"
+    ],
+    "primarySynonym": "offload"
+  },
+  {
+    "id": "a2_choose",
+    "word": "choose",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to pick out one option",
+    "example": "You can choose any flavour.",
+    "acceptableSynonyms": [
+      "pick",
+      "select",
+      "opt for",
+      "decide"
+    ],
+    "primarySynonym": "pick"
+  },
+  {
+    "id": "a2_leave",
+    "word": "leave",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to go away from a place",
+    "example": "We leave at six in the morning.",
+    "acceptableSynonyms": [
+      "depart",
+      "exit",
+      "go"
+    ],
+    "primarySynonym": "depart"
+  },
+  {
+    "id": "a2_arrive",
+    "word": "arrive",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to come to a place",
+    "example": "The train arrives at noon.",
+    "acceptableSynonyms": [
+      "reach",
+      "come",
+      "get in"
+    ],
+    "primarySynonym": "reach"
+  },
+  {
+    "id": "a2_meet",
+    "word": "meet",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to see and talk to someone",
+    "example": "I will meet you at the cafe.",
+    "acceptableSynonyms": [
+      "encounter",
+      "greet",
+      "see"
+    ],
+    "primarySynonym": "encounter"
+  },
+  {
+    "id": "a2_share",
+    "word": "share",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to give a part to others",
+    "example": "They share a flat in the city.",
+    "acceptableSynonyms": [
+      "split",
+      "divide",
+      "distribute"
+    ],
+    "primarySynonym": "split"
+  },
+  {
+    "id": "a2_listen",
+    "word": "listen",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to give attention to sound",
+    "example": "Listen carefully to the teacher.",
+    "acceptableSynonyms": [
+      "hear",
+      "attend",
+      "tune in"
+    ],
+    "primarySynonym": "hear"
+  },
+  {
+    "id": "a2_learn",
+    "word": "learn",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to gain knowledge or a skill",
+    "example": "Children learn quickly.",
+    "acceptableSynonyms": [
+      "study",
+      "discover",
+      "pick up"
+    ],
+    "primarySynonym": "study"
+  },
+  {
+    "id": "a2_teach",
+    "word": "teach",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to give knowledge to someone",
+    "example": "She teaches English at school.",
+    "acceptableSynonyms": [
+      "instruct",
+      "educate",
+      "train",
+      "tutor"
+    ],
+    "primarySynonym": "instruct"
+  },
+  {
+    "id": "a2_try",
+    "word": "try",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to make an effort to do something",
+    "example": "I will try the new recipe.",
+    "acceptableSynonyms": [
+      "attempt",
+      "endeavour",
+      "strive"
+    ],
+    "primarySynonym": "attempt"
+  },
+  {
+    "id": "a2_change",
+    "word": "change",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to make different",
+    "example": "Please change your shoes before entering.",
+    "acceptableSynonyms": [
+      "alter",
+      "modify",
+      "adjust",
+      "switch"
+    ],
+    "primarySynonym": "alter"
+  },
+  {
+    "id": "a2_build",
+    "word": "build",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to make something by putting parts together",
+    "example": "They are building a new bridge.",
+    "acceptableSynonyms": [
+      "construct",
+      "erect",
+      "assemble"
+    ],
+    "primarySynonym": "construct"
+  },
+  {
+    "id": "a2_carry",
+    "word": "carry",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to take something with you",
+    "example": "Can you carry this bag for me?",
+    "acceptableSynonyms": [
+      "transport",
+      "bear",
+      "haul"
+    ],
+    "primarySynonym": "transport"
+  },
+  {
+    "id": "a2_win",
+    "word": "win",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to be successful in a contest",
+    "example": "Our team will win the match.",
+    "acceptableSynonyms": [
+      "triumph",
+      "succeed",
+      "prevail"
+    ],
+    "primarySynonym": "triumph"
+  },
+  {
+    "id": "a2_lose",
+    "word": "lose",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to fail to keep something",
+    "example": "Try not to lose your keys.",
+    "acceptableSynonyms": [
+      "mislay",
+      "misplace"
+    ],
+    "primarySynonym": "mislay"
+  },
+  {
+    "id": "a2_enjoy",
+    "word": "enjoy",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to take pleasure in something",
+    "example": "I enjoy listening to music.",
+    "acceptableSynonyms": [
+      "like",
+      "love",
+      "relish",
+      "appreciate"
+    ],
+    "primarySynonym": "like"
+  },
+  {
+    "id": "a2_remember",
+    "word": "remember",
+    "cefrLevel": "A2",
+    "partOfSpeech": "verb",
+    "definition": "to keep something in your mind",
+    "example": "I remember my first day of school.",
+    "acceptableSynonyms": [
+      "recall",
+      "recollect",
+      "retain"
+    ],
+    "primarySynonym": "recall"
+  },
+  {
+    "id": "b1_excited",
+    "word": "excited",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "feeling great enthusiasm",
+    "example": "The children were excited about the trip.",
+    "acceptableSynonyms": [
+      "thrilled",
+      "enthusiastic",
+      "eager",
+      "pumped"
+    ],
+    "primarySynonym": "thrilled"
+  },
+  {
+    "id": "b1_bored",
+    "word": "bored",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "feeling weary because nothing is happening",
+    "example": "I was bored during the long lecture.",
+    "acceptableSynonyms": [
+      "uninterested",
+      "restless",
+      "tired"
+    ],
+    "primarySynonym": "uninterested"
+  },
+  {
+    "id": "b1_surprised",
+    "word": "surprised",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "feeling sudden mild shock",
+    "example": "She was surprised by the gift.",
+    "acceptableSynonyms": [
+      "amazed",
+      "astonished",
+      "startled",
+      "shocked"
+    ],
+    "primarySynonym": "amazed"
+  },
+  {
+    "id": "b1_lucky",
+    "word": "lucky",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "having good fortune",
+    "example": "You are lucky to have such a job.",
+    "acceptableSynonyms": [
+      "fortunate",
+      "blessed",
+      "favoured"
+    ],
+    "primarySynonym": "fortunate"
+  },
+  {
+    "id": "b1_careful",
+    "word": "careful",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "showing attention to avoid harm",
+    "example": "Be careful on the slippery floor.",
+    "acceptableSynonyms": [
+      "cautious",
+      "watchful",
+      "attentive",
+      "mindful"
+    ],
+    "primarySynonym": "cautious"
+  },
+  {
+    "id": "b1_generous",
+    "word": "generous",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "willing to give freely",
+    "example": "He is generous with his time.",
+    "acceptableSynonyms": [
+      "giving",
+      "kind",
+      "liberal",
+      "open-handed"
+    ],
+    "primarySynonym": "giving"
+  },
+  {
+    "id": "b1_jealous",
+    "word": "jealous",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "unhappy because someone has what you want",
+    "example": "She felt jealous of her sister.",
+    "acceptableSynonyms": [
+      "envious",
+      "resentful",
+      "covetous"
+    ],
+    "primarySynonym": "envious"
+  },
+  {
+    "id": "b1_honest",
+    "word": "honest",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "truthful and sincere",
+    "example": "I appreciate his honest answer.",
+    "acceptableSynonyms": [
+      "truthful",
+      "sincere",
+      "frank",
+      "straightforward"
+    ],
+    "primarySynonym": "truthful"
+  },
+  {
+    "id": "b1_nervous",
+    "word": "nervous",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "easily worried",
+    "example": "I get nervous before exams.",
+    "acceptableSynonyms": [
+      "anxious",
+      "tense",
+      "uneasy",
+      "jittery"
+    ],
+    "primarySynonym": "anxious"
+  },
+  {
+    "id": "b1_confident",
+    "word": "confident",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "feeling sure of yourself",
+    "example": "She is confident about the interview.",
+    "acceptableSynonyms": [
+      "self-assured",
+      "sure",
+      "positive",
+      "assured"
+    ],
+    "primarySynonym": "self-assured"
+  },
+  {
+    "id": "b1_serious",
+    "word": "serious",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "not joking; thoughtful",
+    "example": "This is a serious problem.",
+    "acceptableSynonyms": [
+      "grave",
+      "solemn",
+      "earnest",
+      "sober"
+    ],
+    "primarySynonym": "grave"
+  },
+  {
+    "id": "b1_silly",
+    "word": "silly",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "showing a lack of good sense",
+    "example": "Do not be silly — that is dangerous.",
+    "acceptableSynonyms": [
+      "foolish",
+      "absurd",
+      "goofy",
+      "daft"
+    ],
+    "primarySynonym": "foolish"
+  },
+  {
+    "id": "b1_useful",
+    "word": "useful",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "able to be used for a good purpose",
+    "example": "A torch is very useful when camping.",
+    "acceptableSynonyms": [
+      "helpful",
+      "handy",
+      "practical",
+      "beneficial"
+    ],
+    "primarySynonym": "helpful"
+  },
+  {
+    "id": "b1_useless",
+    "word": "useless",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "not having a useful purpose",
+    "example": "This broken pen is useless.",
+    "acceptableSynonyms": [
+      "worthless",
+      "pointless",
+      "futile",
+      "ineffective"
+    ],
+    "primarySynonym": "worthless"
+  },
+  {
+    "id": "b1_safe",
+    "word": "safe",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "protected from danger",
+    "example": "The children are safe at home.",
+    "acceptableSynonyms": [
+      "secure",
+      "protected",
+      "unharmed"
+    ],
+    "primarySynonym": "secure"
+  },
+  {
+    "id": "b1_dangerous",
+    "word": "dangerous",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "likely to cause harm",
+    "example": "It is dangerous to drive when tired.",
+    "acceptableSynonyms": [
+      "risky",
+      "hazardous",
+      "unsafe",
+      "perilous"
+    ],
+    "primarySynonym": "risky"
+  },
+  {
+    "id": "b1_weak",
+    "word": "weak",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "lacking strength",
+    "example": "I felt weak after the illness.",
+    "acceptableSynonyms": [
+      "feeble",
+      "fragile",
+      "frail",
+      "flimsy"
+    ],
+    "primarySynonym": "feeble"
+  },
+  {
+    "id": "b1_strong",
+    "word": "strong",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "having great power or force",
+    "example": "He is strong enough to lift this.",
+    "acceptableSynonyms": [
+      "powerful",
+      "sturdy",
+      "tough",
+      "robust"
+    ],
+    "primarySynonym": "powerful"
+  },
+  {
+    "id": "b1_similar",
+    "word": "similar",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "almost the same",
+    "example": "Our ideas are quite similar.",
+    "acceptableSynonyms": [
+      "alike",
+      "comparable",
+      "analogous"
+    ],
+    "primarySynonym": "alike"
+  },
+  {
+    "id": "b1_different",
+    "word": "different",
+    "cefrLevel": "B1",
+    "partOfSpeech": "adjective",
+    "definition": "not the same",
+    "example": "Their opinions are very different.",
+    "acceptableSynonyms": [
+      "distinct",
+      "dissimilar",
+      "unlike",
+      "varied"
+    ],
+    "primarySynonym": "distinct"
+  },
+  {
+    "id": "b1_decision",
+    "word": "decision",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "a choice you make",
+    "example": "It was a difficult decision to make.",
+    "acceptableSynonyms": [
+      "choice",
+      "verdict",
+      "conclusion",
+      "resolution"
+    ],
+    "primarySynonym": "choice"
+  },
+  {
+    "id": "b1_opportunity",
+    "word": "opportunity",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "a chance to do something good",
+    "example": "This job is a great opportunity.",
+    "acceptableSynonyms": [
+      "chance",
+      "opening",
+      "occasion",
+      "prospect"
+    ],
+    "primarySynonym": "chance"
+  },
+  {
+    "id": "b1_advice",
+    "word": "advice",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "suggestions about what to do",
+    "example": "I need some advice about my career.",
+    "acceptableSynonyms": [
+      "guidance",
+      "recommendation",
+      "counsel",
+      "tip"
+    ],
+    "primarySynonym": "guidance"
+  },
+  {
+    "id": "b1_experience",
+    "word": "experience",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "knowledge from doing something",
+    "example": "She has a lot of teaching experience.",
+    "acceptableSynonyms": [
+      "know-how",
+      "background",
+      "expertise"
+    ],
+    "primarySynonym": "know-how"
+  },
+  {
+    "id": "b1_mistake",
+    "word": "mistake",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "something done wrongly",
+    "example": "Everyone makes a mistake sometimes.",
+    "acceptableSynonyms": [
+      "error",
+      "slip",
+      "blunder",
+      "fault"
+    ],
+    "primarySynonym": "error"
+  },
+  {
+    "id": "b1_knowledge",
+    "word": "knowledge",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "information and understanding",
+    "example": "Her knowledge of history is impressive.",
+    "acceptableSynonyms": [
+      "information",
+      "awareness",
+      "expertise",
+      "wisdom"
+    ],
+    "primarySynonym": "information"
+  },
+  {
+    "id": "b1_goal",
+    "word": "goal",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "something you aim to achieve",
+    "example": "Our goal is to finish by Friday.",
+    "acceptableSynonyms": [
+      "aim",
+      "objective",
+      "target",
+      "ambition"
+    ],
+    "primarySynonym": "aim"
+  },
+  {
+    "id": "b1_plan",
+    "word": "plan",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "a method for doing something",
+    "example": "They made a plan for the weekend.",
+    "acceptableSynonyms": [
+      "scheme",
+      "strategy",
+      "blueprint",
+      "design"
+    ],
+    "primarySynonym": "scheme"
+  },
+  {
+    "id": "b1_result",
+    "word": "result",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "something that happens because of an action",
+    "example": "The result of the game was a tie.",
+    "acceptableSynonyms": [
+      "outcome",
+      "consequence",
+      "effect",
+      "upshot"
+    ],
+    "primarySynonym": "outcome"
+  },
+  {
+    "id": "b1_effort",
+    "word": "effort",
+    "cefrLevel": "B1",
+    "partOfSpeech": "noun",
+    "definition": "physical or mental energy used",
+    "example": "Building the house took huge effort.",
+    "acceptableSynonyms": [
+      "attempt",
+      "try",
+      "work",
+      "exertion"
+    ],
+    "primarySynonym": "attempt"
+  },
+  {
+    "id": "b1_discover",
+    "word": "discover",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to find something for the first time",
+    "example": "They discovered a hidden cave.",
+    "acceptableSynonyms": [
+      "find",
+      "uncover",
+      "spot",
+      "detect"
+    ],
+    "primarySynonym": "find"
+  },
+  {
+    "id": "b1_decide",
+    "word": "decide",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to make a choice",
+    "example": "I decided to stay at home.",
+    "acceptableSynonyms": [
+      "choose",
+      "determine",
+      "resolve",
+      "settle"
+    ],
+    "primarySynonym": "choose"
+  },
+  {
+    "id": "b1_suggest",
+    "word": "suggest",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to put forward an idea",
+    "example": "I suggest we leave early.",
+    "acceptableSynonyms": [
+      "propose",
+      "recommend",
+      "advise",
+      "put forward"
+    ],
+    "primarySynonym": "propose"
+  },
+  {
+    "id": "b1_prefer",
+    "word": "prefer",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to like one more than another",
+    "example": "I prefer tea to coffee.",
+    "acceptableSynonyms": [
+      "favour",
+      "like better",
+      "opt for"
+    ],
+    "primarySynonym": "favour"
+  },
+  {
+    "id": "b1_manage",
+    "word": "manage",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to succeed in doing something difficult",
+    "example": "She managed to finish the report.",
+    "acceptableSynonyms": [
+      "handle",
+      "cope with",
+      "pull off",
+      "accomplish"
+    ],
+    "primarySynonym": "handle"
+  },
+  {
+    "id": "b1_hope",
+    "word": "hope",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to want something to happen",
+    "example": "I hope you have a great day.",
+    "acceptableSynonyms": [
+      "wish",
+      "expect",
+      "anticipate"
+    ],
+    "primarySynonym": "wish"
+  },
+  {
+    "id": "b1_expect",
+    "word": "expect",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to think something will happen",
+    "example": "We expect rain this afternoon.",
+    "acceptableSynonyms": [
+      "anticipate",
+      "await",
+      "foresee",
+      "predict"
+    ],
+    "primarySynonym": "anticipate"
+  },
+  {
+    "id": "b1_prepare",
+    "word": "prepare",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to make ready",
+    "example": "Please prepare the table for dinner.",
+    "acceptableSynonyms": [
+      "ready",
+      "arrange",
+      "organise",
+      "set up"
+    ],
+    "primarySynonym": "ready"
+  },
+  {
+    "id": "b1_complain",
+    "word": "complain",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to say you are not satisfied",
+    "example": "He complained about the noise.",
+    "acceptableSynonyms": [
+      "grumble",
+      "protest",
+      "moan",
+      "whine"
+    ],
+    "primarySynonym": "grumble"
+  },
+  {
+    "id": "b1_encourage",
+    "word": "encourage",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to give support or confidence",
+    "example": "Teachers should encourage their students.",
+    "acceptableSynonyms": [
+      "support",
+      "motivate",
+      "inspire",
+      "urge"
+    ],
+    "primarySynonym": "support"
+  },
+  {
+    "id": "b1_describe",
+    "word": "describe",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to say what something is like",
+    "example": "Can you describe the man you saw?",
+    "acceptableSynonyms": [
+      "explain",
+      "portray",
+      "depict",
+      "outline"
+    ],
+    "primarySynonym": "explain"
+  },
+  {
+    "id": "b1_develop",
+    "word": "develop",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to grow or improve",
+    "example": "They develop new apps every month.",
+    "acceptableSynonyms": [
+      "grow",
+      "evolve",
+      "expand",
+      "progress"
+    ],
+    "primarySynonym": "grow"
+  },
+  {
+    "id": "b1_notice",
+    "word": "notice",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to see or become aware of",
+    "example": "I noticed a strange noise.",
+    "acceptableSynonyms": [
+      "observe",
+      "spot",
+      "detect",
+      "see"
+    ],
+    "primarySynonym": "observe"
+  },
+  {
+    "id": "b1_imagine",
+    "word": "imagine",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to form a picture in your mind",
+    "example": "Imagine a sunny beach.",
+    "acceptableSynonyms": [
+      "picture",
+      "envision",
+      "visualise",
+      "conceive"
+    ],
+    "primarySynonym": "picture"
+  },
+  {
+    "id": "b1_allow",
+    "word": "allow",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to let someone do something",
+    "example": "My parents allow me to stay up late.",
+    "acceptableSynonyms": [
+      "permit",
+      "let",
+      "authorise",
+      "grant"
+    ],
+    "primarySynonym": "permit"
+  },
+  {
+    "id": "b1_avoid",
+    "word": "avoid",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to keep away from",
+    "example": "Avoid eating too much sugar.",
+    "acceptableSynonyms": [
+      "evade",
+      "dodge",
+      "sidestep",
+      "shun"
+    ],
+    "primarySynonym": "evade"
+  },
+  {
+    "id": "b1_improve",
+    "word": "improve",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to make or become better",
+    "example": "I want to improve my English.",
+    "acceptableSynonyms": [
+      "enhance",
+      "better",
+      "upgrade",
+      "refine"
+    ],
+    "primarySynonym": "enhance"
+  },
+  {
+    "id": "b1_offer",
+    "word": "offer",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to present something to be accepted",
+    "example": "They offered me a new job.",
+    "acceptableSynonyms": [
+      "present",
+      "propose",
+      "extend",
+      "put forward"
+    ],
+    "primarySynonym": "present"
+  },
+  {
+    "id": "b1_receive",
+    "word": "receive",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to get something given",
+    "example": "I received your message yesterday.",
+    "acceptableSynonyms": [
+      "get",
+      "obtain",
+      "accept",
+      "take"
+    ],
+    "primarySynonym": "get"
+  },
+  {
+    "id": "b1_accept",
+    "word": "accept",
+    "cefrLevel": "B1",
+    "partOfSpeech": "verb",
+    "definition": "to agree to take or do something",
+    "example": "She accepted the invitation gladly.",
+    "acceptableSynonyms": [
+      "agree to",
+      "take",
+      "embrace",
+      "welcome"
+    ],
+    "primarySynonym": "agree to"
+  },
+  {
+    "id": "b2_annoyed",
+    "word": "annoyed",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "slightly angry",
+    "example": "I was annoyed by the constant noise.",
+    "acceptableSynonyms": [
+      "irritated",
+      "frustrated",
+      "vexed",
+      "peeved"
+    ],
+    "primarySynonym": "irritated"
+  },
+  {
+    "id": "b2_exhausted",
+    "word": "exhausted",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "extremely tired",
+    "example": "After the marathon she was exhausted.",
+    "acceptableSynonyms": [
+      "drained",
+      "worn out",
+      "spent",
+      "fatigued"
+    ],
+    "primarySynonym": "drained"
+  },
+  {
+    "id": "b2_delighted",
+    "word": "delighted",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "feeling great pleasure",
+    "example": "She was delighted with the result.",
+    "acceptableSynonyms": [
+      "thrilled",
+      "pleased",
+      "overjoyed",
+      "elated"
+    ],
+    "primarySynonym": "thrilled"
+  },
+  {
+    "id": "b2_fascinated",
+    "word": "fascinated",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "extremely interested",
+    "example": "He was fascinated by ancient history.",
+    "acceptableSynonyms": [
+      "captivated",
+      "intrigued",
+      "engrossed",
+      "absorbed"
+    ],
+    "primarySynonym": "captivated"
+  },
+  {
+    "id": "b2_reluctant",
+    "word": "reluctant",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "unwilling to do something",
+    "example": "She was reluctant to share her plans.",
+    "acceptableSynonyms": [
+      "hesitant",
+      "unwilling",
+      "loath",
+      "disinclined"
+    ],
+    "primarySynonym": "hesitant"
+  },
+  {
+    "id": "b2_eager",
+    "word": "eager",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "very enthusiastic to do something",
+    "example": "They were eager to begin the project.",
+    "acceptableSynonyms": [
+      "keen",
+      "enthusiastic",
+      "avid",
+      "impatient"
+    ],
+    "primarySynonym": "keen"
+  },
+  {
+    "id": "b2_anxious",
+    "word": "anxious",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "worried about a possible event",
+    "example": "She felt anxious before the speech.",
+    "acceptableSynonyms": [
+      "worried",
+      "apprehensive",
+      "uneasy",
+      "nervous"
+    ],
+    "primarySynonym": "worried"
+  },
+  {
+    "id": "b2_humble",
+    "word": "humble",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "having a modest view of yourself",
+    "example": "Despite his fame he remained humble.",
+    "acceptableSynonyms": [
+      "modest",
+      "unassuming",
+      "meek",
+      "self-effacing"
+    ],
+    "primarySynonym": "modest"
+  },
+  {
+    "id": "b2_stubborn",
+    "word": "stubborn",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "refusing to change opinion",
+    "example": "He is too stubborn to apologise.",
+    "acceptableSynonyms": [
+      "obstinate",
+      "inflexible",
+      "unyielding",
+      "pigheaded"
+    ],
+    "primarySynonym": "obstinate"
+  },
+  {
+    "id": "b2_ambitious",
+    "word": "ambitious",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "having strong desire to succeed",
+    "example": "She is an ambitious young manager.",
+    "acceptableSynonyms": [
+      "driven",
+      "aspiring",
+      "enterprising",
+      "go-getting"
+    ],
+    "primarySynonym": "driven"
+  },
+  {
+    "id": "b2_considerate",
+    "word": "considerate",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "careful about others’ feelings",
+    "example": "It was considerate of you to call.",
+    "acceptableSynonyms": [
+      "thoughtful",
+      "kind",
+      "attentive",
+      "mindful"
+    ],
+    "primarySynonym": "thoughtful"
+  },
+  {
+    "id": "b2_confused",
+    "word": "confused",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "unable to understand",
+    "example": "I was confused by the instructions.",
+    "acceptableSynonyms": [
+      "puzzled",
+      "baffled",
+      "bewildered",
+      "perplexed"
+    ],
+    "primarySynonym": "puzzled"
+  },
+  {
+    "id": "b2_demanding",
+    "word": "demanding",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "requiring a lot of effort",
+    "example": "It is a demanding job but rewarding.",
+    "acceptableSynonyms": [
+      "tough",
+      "taxing",
+      "strenuous",
+      "rigorous"
+    ],
+    "primarySynonym": "tough"
+  },
+  {
+    "id": "b2_flexible",
+    "word": "flexible",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "able to change easily",
+    "example": "Working hours here are flexible.",
+    "acceptableSynonyms": [
+      "adaptable",
+      "versatile",
+      "pliable",
+      "accommodating"
+    ],
+    "primarySynonym": "adaptable"
+  },
+  {
+    "id": "b2_obvious",
+    "word": "obvious",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "easy to see or understand",
+    "example": "It was obvious he was lying.",
+    "acceptableSynonyms": [
+      "clear",
+      "apparent",
+      "evident",
+      "plain"
+    ],
+    "primarySynonym": "clear"
+  },
+  {
+    "id": "b2_rare",
+    "word": "rare",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "not happening often",
+    "example": "A rare bird was spotted in the park.",
+    "acceptableSynonyms": [
+      "uncommon",
+      "scarce",
+      "unusual",
+      "infrequent"
+    ],
+    "primarySynonym": "uncommon"
+  },
+  {
+    "id": "b2_vague",
+    "word": "vague",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "not exact or clear",
+    "example": "His answer was annoyingly vague.",
+    "acceptableSynonyms": [
+      "unclear",
+      "imprecise",
+      "fuzzy",
+      "ambiguous"
+    ],
+    "primarySynonym": "unclear"
+  },
+  {
+    "id": "b2_vivid",
+    "word": "vivid",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "producing strong images in the mind",
+    "example": "She gave a vivid description of the scene.",
+    "acceptableSynonyms": [
+      "striking",
+      "lively",
+      "graphic",
+      "intense"
+    ],
+    "primarySynonym": "striking"
+  },
+  {
+    "id": "b2_gradual",
+    "word": "gradual",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "happening slowly over time",
+    "example": "There has been a gradual improvement.",
+    "acceptableSynonyms": [
+      "slow",
+      "steady",
+      "progressive",
+      "incremental"
+    ],
+    "primarySynonym": "slow"
+  },
+  {
+    "id": "b2_urgent",
+    "word": "urgent",
+    "cefrLevel": "B2",
+    "partOfSpeech": "adjective",
+    "definition": "requiring immediate action",
+    "example": "This is an urgent matter.",
+    "acceptableSynonyms": [
+      "pressing",
+      "critical",
+      "immediate",
+      "crucial"
+    ],
+    "primarySynonym": "pressing"
+  },
+  {
+    "id": "b2_challenge",
+    "word": "challenge",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "a difficult task",
+    "example": "Learning a new language is a challenge.",
+    "acceptableSynonyms": [
+      "test",
+      "trial",
+      "hurdle",
+      "ordeal"
+    ],
+    "primarySynonym": "test"
+  },
+  {
+    "id": "b2_opinion",
+    "word": "opinion",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "a personal view",
+    "example": "In my opinion the film was excellent.",
+    "acceptableSynonyms": [
+      "view",
+      "belief",
+      "standpoint",
+      "perspective"
+    ],
+    "primarySynonym": "view"
+  },
+  {
+    "id": "b2_benefit",
+    "word": "benefit",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "an advantage gained",
+    "example": "There are many benefits to exercise.",
+    "acceptableSynonyms": [
+      "advantage",
+      "gain",
+      "perk",
+      "reward"
+    ],
+    "primarySynonym": "advantage"
+  },
+  {
+    "id": "b2_concern",
+    "word": "concern",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "a feeling of worry",
+    "example": "My main concern is safety.",
+    "acceptableSynonyms": [
+      "worry",
+      "anxiety",
+      "unease",
+      "apprehension"
+    ],
+    "primarySynonym": "worry"
+  },
+  {
+    "id": "b2_evidence",
+    "word": "evidence",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "facts that prove something",
+    "example": "There is strong evidence of progress.",
+    "acceptableSynonyms": [
+      "proof",
+      "data",
+      "verification",
+      "corroboration"
+    ],
+    "primarySynonym": "proof"
+  },
+  {
+    "id": "b2_impact",
+    "word": "impact",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "a strong effect or influence",
+    "example": "Social media has a big impact on us.",
+    "acceptableSynonyms": [
+      "effect",
+      "influence",
+      "consequence",
+      "imprint"
+    ],
+    "primarySynonym": "effect"
+  },
+  {
+    "id": "b2_attempt",
+    "word": "attempt",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "an effort to do something",
+    "example": "It was her first attempt at skiing.",
+    "acceptableSynonyms": [
+      "try",
+      "effort",
+      "endeavour",
+      "shot"
+    ],
+    "primarySynonym": "try"
+  },
+  {
+    "id": "b2_progress",
+    "word": "progress",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "forward movement or improvement",
+    "example": "You are making great progress.",
+    "acceptableSynonyms": [
+      "advance",
+      "headway",
+      "development",
+      "growth"
+    ],
+    "primarySynonym": "advance"
+  },
+  {
+    "id": "b2_solution",
+    "word": "solution",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "a way to fix a problem",
+    "example": "We need a solution by Monday.",
+    "acceptableSynonyms": [
+      "answer",
+      "remedy",
+      "fix",
+      "resolution"
+    ],
+    "primarySynonym": "answer"
+  },
+  {
+    "id": "b2_approach",
+    "word": "approach",
+    "cefrLevel": "B2",
+    "partOfSpeech": "noun",
+    "definition": "a method of dealing with something",
+    "example": "They tried a new approach to teaching.",
+    "acceptableSynonyms": [
+      "method",
+      "strategy",
+      "tactic",
+      "technique"
+    ],
+    "primarySynonym": "method"
+  },
+  {
+    "id": "b2_pursue",
+    "word": "pursue",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to follow or aim to achieve",
+    "example": "She decided to pursue a career in law.",
+    "acceptableSynonyms": [
+      "chase",
+      "follow",
+      "seek",
+      "go after"
+    ],
+    "primarySynonym": "chase"
+  },
+  {
+    "id": "b2_achieve",
+    "word": "achieve",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to succeed in reaching a goal",
+    "example": "He achieved his dream of climbing Everest.",
+    "acceptableSynonyms": [
+      "attain",
+      "accomplish",
+      "realise",
+      "reach"
+    ],
+    "primarySynonym": "attain"
+  },
+  {
+    "id": "b2_encounter",
+    "word": "encounter",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to come across unexpectedly",
+    "example": "We encountered a problem during the trip.",
+    "acceptableSynonyms": [
+      "meet",
+      "come across",
+      "face",
+      "confront"
+    ],
+    "primarySynonym": "meet"
+  },
+  {
+    "id": "b2_reveal",
+    "word": "reveal",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to make known previously hidden information",
+    "example": "The report revealed serious issues.",
+    "acceptableSynonyms": [
+      "disclose",
+      "expose",
+      "show",
+      "unveil"
+    ],
+    "primarySynonym": "disclose"
+  },
+  {
+    "id": "b2_criticise",
+    "word": "criticise",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to express disapproval",
+    "example": "It is easy to criticise without offering help.",
+    "acceptableSynonyms": [
+      "disapprove",
+      "censure",
+      "condemn",
+      "fault"
+    ],
+    "primarySynonym": "disapprove"
+  },
+  {
+    "id": "b2_doubt",
+    "word": "doubt",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to feel uncertain about",
+    "example": "I doubt that he will come.",
+    "acceptableSynonyms": [
+      "question",
+      "mistrust",
+      "suspect",
+      "disbelieve"
+    ],
+    "primarySynonym": "question"
+  },
+  {
+    "id": "b2_hesitate",
+    "word": "hesitate",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to pause before acting",
+    "example": "Do not hesitate to call me.",
+    "acceptableSynonyms": [
+      "pause",
+      "waver",
+      "falter",
+      "delay"
+    ],
+    "primarySynonym": "pause"
+  },
+  {
+    "id": "b2_exaggerate",
+    "word": "exaggerate",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to make something seem larger or worse",
+    "example": "He tends to exaggerate his successes.",
+    "acceptableSynonyms": [
+      "overstate",
+      "embellish",
+      "amplify",
+      "overdo"
+    ],
+    "primarySynonym": "overstate"
+  },
+  {
+    "id": "b2_neglect",
+    "word": "neglect",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to fail to care for something",
+    "example": "Do not neglect your studies.",
+    "acceptableSynonyms": [
+      "ignore",
+      "overlook",
+      "disregard",
+      "forget"
+    ],
+    "primarySynonym": "ignore"
+  },
+  {
+    "id": "b2_postpone",
+    "word": "postpone",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to move to a later time",
+    "example": "We postponed the meeting until Friday.",
+    "acceptableSynonyms": [
+      "delay",
+      "defer",
+      "put off",
+      "reschedule"
+    ],
+    "primarySynonym": "delay"
+  },
+  {
+    "id": "b2_establish",
+    "word": "establish",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to set up or start something",
+    "example": "They established a charity in 1995.",
+    "acceptableSynonyms": [
+      "set up",
+      "found",
+      "institute",
+      "create"
+    ],
+    "primarySynonym": "set up"
+  },
+  {
+    "id": "b2_investigate",
+    "word": "investigate",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to study something carefully to find facts",
+    "example": "The police are investigating the crime.",
+    "acceptableSynonyms": [
+      "examine",
+      "probe",
+      "look into",
+      "inquire"
+    ],
+    "primarySynonym": "examine"
+  },
+  {
+    "id": "b2_emphasise",
+    "word": "emphasise",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to give special importance to",
+    "example": "Teachers emphasise the importance of practice.",
+    "acceptableSynonyms": [
+      "highlight",
+      "stress",
+      "underline",
+      "underscore"
+    ],
+    "primarySynonym": "highlight"
+  },
+  {
+    "id": "b2_recognise",
+    "word": "recognise",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to identify someone or something seen before",
+    "example": "I recognise her face from somewhere.",
+    "acceptableSynonyms": [
+      "identify",
+      "spot",
+      "know",
+      "distinguish"
+    ],
+    "primarySynonym": "identify"
+  },
+  {
+    "id": "b2_analyse",
+    "word": "analyse",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to examine carefully to understand",
+    "example": "We need to analyse the data first.",
+    "acceptableSynonyms": [
+      "examine",
+      "study",
+      "evaluate",
+      "assess"
+    ],
+    "primarySynonym": "examine"
+  },
+  {
+    "id": "b2_involve",
+    "word": "involve",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to include as a necessary part",
+    "example": "The job involves a lot of travel.",
+    "acceptableSynonyms": [
+      "include",
+      "entail",
+      "engage",
+      "comprise"
+    ],
+    "primarySynonym": "include"
+  },
+  {
+    "id": "b2_maintain",
+    "word": "maintain",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to keep in good condition or going",
+    "example": "Try to maintain a positive attitude.",
+    "acceptableSynonyms": [
+      "preserve",
+      "sustain",
+      "uphold",
+      "keep up"
+    ],
+    "primarySynonym": "preserve"
+  },
+  {
+    "id": "b2_acquire",
+    "word": "acquire",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to get or come to own",
+    "example": "She acquired several languages over the years.",
+    "acceptableSynonyms": [
+      "obtain",
+      "gain",
+      "get",
+      "procure"
+    ],
+    "primarySynonym": "obtain"
+  },
+  {
+    "id": "b2_adapt",
+    "word": "adapt",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to change to suit new conditions",
+    "example": "He quickly adapted to the new climate.",
+    "acceptableSynonyms": [
+      "adjust",
+      "modify",
+      "tailor",
+      "accommodate"
+    ],
+    "primarySynonym": "adjust"
+  },
+  {
+    "id": "b2_contribute",
+    "word": "contribute",
+    "cefrLevel": "B2",
+    "partOfSpeech": "verb",
+    "definition": "to give something together with others",
+    "example": "Everyone contributed to the gift.",
+    "acceptableSynonyms": [
+      "donate",
+      "give",
+      "provide",
+      "add"
+    ],
+    "primarySynonym": "donate"
+  },
+  {
+    "id": "c1_meticulous",
+    "word": "meticulous",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "showing great attention to detail",
+    "example": "She is meticulous in her research.",
+    "acceptableSynonyms": [
+      "careful",
+      "thorough",
+      "painstaking",
+      "fastidious"
+    ],
+    "primarySynonym": "careful"
+  },
+  {
+    "id": "c1_ambivalent",
+    "word": "ambivalent",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "having mixed feelings",
+    "example": "I feel ambivalent about moving abroad.",
+    "acceptableSynonyms": [
+      "uncertain",
+      "conflicted",
+      "undecided",
+      "torn"
+    ],
+    "primarySynonym": "uncertain"
+  },
+  {
+    "id": "c1_sceptical",
+    "word": "sceptical",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "doubtful about claims",
+    "example": "Many remain sceptical of the new plan.",
+    "acceptableSynonyms": [
+      "doubtful",
+      "unconvinced",
+      "dubious",
+      "cynical"
+    ],
+    "primarySynonym": "doubtful"
+  },
+  {
+    "id": "c1_despondent",
+    "word": "despondent",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "in low spirits from loss of hope",
+    "example": "He grew despondent after the rejection.",
+    "acceptableSynonyms": [
+      "dejected",
+      "disheartened",
+      "hopeless",
+      "morose"
+    ],
+    "primarySynonym": "dejected"
+  },
+  {
+    "id": "c1_exuberant",
+    "word": "exuberant",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "full of energy and excitement",
+    "example": "The crowd was exuberant after the win.",
+    "acceptableSynonyms": [
+      "lively",
+      "enthusiastic",
+      "effervescent",
+      "spirited"
+    ],
+    "primarySynonym": "lively"
+  },
+  {
+    "id": "c1_indignant",
+    "word": "indignant",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "angry at unfair treatment",
+    "example": "She felt indignant at the accusation.",
+    "acceptableSynonyms": [
+      "outraged",
+      "offended",
+      "incensed",
+      "resentful"
+    ],
+    "primarySynonym": "outraged"
+  },
+  {
+    "id": "c1_pragmatic",
+    "word": "pragmatic",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "dealing with things sensibly",
+    "example": "A pragmatic approach is needed here.",
+    "acceptableSynonyms": [
+      "practical",
+      "realistic",
+      "sensible",
+      "level-headed"
+    ],
+    "primarySynonym": "practical"
+  },
+  {
+    "id": "c1_taciturn",
+    "word": "taciturn",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "saying little; reserved",
+    "example": "Her grandfather was famously taciturn.",
+    "acceptableSynonyms": [
+      "reserved",
+      "quiet",
+      "reticent",
+      "tight-lipped"
+    ],
+    "primarySynonym": "reserved"
+  },
+  {
+    "id": "c1_ubiquitous",
+    "word": "ubiquitous",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "present everywhere",
+    "example": "Smartphones are now ubiquitous.",
+    "acceptableSynonyms": [
+      "omnipresent",
+      "pervasive",
+      "widespread",
+      "universal"
+    ],
+    "primarySynonym": "omnipresent"
+  },
+  {
+    "id": "c1_austere",
+    "word": "austere",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "severe in appearance or manner",
+    "example": "The hall had an austere atmosphere.",
+    "acceptableSynonyms": [
+      "stern",
+      "strict",
+      "plain",
+      "spartan"
+    ],
+    "primarySynonym": "stern"
+  },
+  {
+    "id": "c1_benevolent",
+    "word": "benevolent",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "well meaning and kind",
+    "example": "A benevolent donor funded the school.",
+    "acceptableSynonyms": [
+      "kind",
+      "kindly",
+      "charitable",
+      "altruistic"
+    ],
+    "primarySynonym": "kind"
+  },
+  {
+    "id": "c1_conspicuous",
+    "word": "conspicuous",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "standing out so as to be clearly visible",
+    "example": "Her absence was conspicuous.",
+    "acceptableSynonyms": [
+      "noticeable",
+      "prominent",
+      "obvious",
+      "striking"
+    ],
+    "primarySynonym": "noticeable"
+  },
+  {
+    "id": "c1_diligent",
+    "word": "diligent",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "showing care and effort in work",
+    "example": "She is a diligent and reliable employee.",
+    "acceptableSynonyms": [
+      "hardworking",
+      "industrious",
+      "assiduous",
+      "thorough"
+    ],
+    "primarySynonym": "hardworking"
+  },
+  {
+    "id": "c1_eloquent",
+    "word": "eloquent",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "fluent and persuasive in speech",
+    "example": "He gave an eloquent speech at the wedding.",
+    "acceptableSynonyms": [
+      "articulate",
+      "expressive",
+      "persuasive",
+      "fluent"
+    ],
+    "primarySynonym": "articulate"
+  },
+  {
+    "id": "c1_frivolous",
+    "word": "frivolous",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "not having serious purpose",
+    "example": "He spent his money on frivolous things.",
+    "acceptableSynonyms": [
+      "trivial",
+      "silly",
+      "flippant",
+      "shallow"
+    ],
+    "primarySynonym": "trivial"
+  },
+  {
+    "id": "c1_hostile",
+    "word": "hostile",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "showing strong dislike",
+    "example": "The crowd became hostile to the speaker.",
+    "acceptableSynonyms": [
+      "antagonistic",
+      "aggressive",
+      "unfriendly",
+      "belligerent"
+    ],
+    "primarySynonym": "antagonistic"
+  },
+  {
+    "id": "c1_inevitable",
+    "word": "inevitable",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "certain to happen",
+    "example": "Change is inevitable in any business.",
+    "acceptableSynonyms": [
+      "unavoidable",
+      "certain",
+      "imminent",
+      "inescapable"
+    ],
+    "primarySynonym": "unavoidable"
+  },
+  {
+    "id": "c1_lucrative",
+    "word": "lucrative",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "producing a lot of money",
+    "example": "They run a lucrative consulting firm.",
+    "acceptableSynonyms": [
+      "profitable",
+      "rewarding",
+      "remunerative",
+      "fruitful"
+    ],
+    "primarySynonym": "profitable"
+  },
+  {
+    "id": "c1_mundane",
+    "word": "mundane",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "ordinary and dull",
+    "example": "He grew tired of his mundane routine.",
+    "acceptableSynonyms": [
+      "ordinary",
+      "commonplace",
+      "humdrum",
+      "banal"
+    ],
+    "primarySynonym": "ordinary"
+  },
+  {
+    "id": "c1_nostalgic",
+    "word": "nostalgic",
+    "cefrLevel": "C1",
+    "partOfSpeech": "adjective",
+    "definition": "longing for the past",
+    "example": "Old photographs make me nostalgic.",
+    "acceptableSynonyms": [
+      "wistful",
+      "sentimental",
+      "reminiscent",
+      "pining"
+    ],
+    "primarySynonym": "wistful"
+  },
+  {
+    "id": "c1_paradigm",
+    "word": "paradigm",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a typical pattern or model",
+    "example": "The discovery shifted the paradigm of physics.",
+    "acceptableSynonyms": [
+      "model",
+      "standard",
+      "framework",
+      "archetype"
+    ],
+    "primarySynonym": "model"
+  },
+  {
+    "id": "c1_discrepancy",
+    "word": "discrepancy",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a difference between two things",
+    "example": "There is a discrepancy in the figures.",
+    "acceptableSynonyms": [
+      "inconsistency",
+      "mismatch",
+      "disparity",
+      "variance"
+    ],
+    "primarySynonym": "inconsistency"
+  },
+  {
+    "id": "c1_hypothesis",
+    "word": "hypothesis",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a proposed explanation",
+    "example": "They tested several hypotheses.",
+    "acceptableSynonyms": [
+      "theory",
+      "proposition",
+      "supposition",
+      "conjecture"
+    ],
+    "primarySynonym": "theory"
+  },
+  {
+    "id": "c1_nuance",
+    "word": "nuance",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a subtle distinction or shade of meaning",
+    "example": "He grasped every nuance of the argument.",
+    "acceptableSynonyms": [
+      "subtlety",
+      "shade",
+      "undertone",
+      "distinction"
+    ],
+    "primarySynonym": "subtlety"
+  },
+  {
+    "id": "c1_rationale",
+    "word": "rationale",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a reasoned explanation",
+    "example": "The rationale behind the policy is unclear.",
+    "acceptableSynonyms": [
+      "reasoning",
+      "justification",
+      "logic",
+      "basis"
+    ],
+    "primarySynonym": "reasoning"
+  },
+  {
+    "id": "c1_scrutiny",
+    "word": "scrutiny",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "close, critical examination",
+    "example": "The plan came under intense scrutiny.",
+    "acceptableSynonyms": [
+      "examination",
+      "inspection",
+      "review",
+      "study"
+    ],
+    "primarySynonym": "examination"
+  },
+  {
+    "id": "c1_tenet",
+    "word": "tenet",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a principle or belief held to be true",
+    "example": "Honesty is a core tenet of the company.",
+    "acceptableSynonyms": [
+      "principle",
+      "belief",
+      "doctrine",
+      "precept"
+    ],
+    "primarySynonym": "principle"
+  },
+  {
+    "id": "c1_threshold",
+    "word": "threshold",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a point of beginning or limit",
+    "example": "We crossed a threshold of acceptance.",
+    "acceptableSynonyms": [
+      "limit",
+      "boundary",
+      "cutoff",
+      "brink"
+    ],
+    "primarySynonym": "limit"
+  },
+  {
+    "id": "c1_rapport",
+    "word": "rapport",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a close relationship of understanding",
+    "example": "She quickly built rapport with the team.",
+    "acceptableSynonyms": [
+      "connection",
+      "bond",
+      "understanding",
+      "chemistry"
+    ],
+    "primarySynonym": "connection"
+  },
+  {
+    "id": "c1_void",
+    "word": "void",
+    "cefrLevel": "C1",
+    "partOfSpeech": "noun",
+    "definition": "a completely empty space",
+    "example": "His departure left a void in the office.",
+    "acceptableSynonyms": [
+      "emptiness",
+      "vacuum",
+      "gap",
+      "nothingness"
+    ],
+    "primarySynonym": "emptiness"
+  },
+  {
+    "id": "c1_exacerbate",
+    "word": "exacerbate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to make worse",
+    "example": "Stress can exacerbate the symptoms.",
+    "acceptableSynonyms": [
+      "worsen",
+      "aggravate",
+      "intensify",
+      "compound"
+    ],
+    "primarySynonym": "worsen"
+  },
+  {
+    "id": "c1_mitigate",
+    "word": "mitigate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to make less severe",
+    "example": "Vaccines mitigate the worst outcomes.",
+    "acceptableSynonyms": [
+      "lessen",
+      "reduce",
+      "alleviate",
+      "ease"
+    ],
+    "primarySynonym": "lessen"
+  },
+  {
+    "id": "c1_scrutinise",
+    "word": "scrutinise",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to examine closely",
+    "example": "Auditors will scrutinise the accounts.",
+    "acceptableSynonyms": [
+      "inspect",
+      "examine",
+      "study",
+      "pore over"
+    ],
+    "primarySynonym": "inspect"
+  },
+  {
+    "id": "c1_advocate",
+    "word": "advocate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to publicly support a cause",
+    "example": "She advocates for animal rights.",
+    "acceptableSynonyms": [
+      "support",
+      "champion",
+      "back",
+      "promote"
+    ],
+    "primarySynonym": "support"
+  },
+  {
+    "id": "c1_perpetuate",
+    "word": "perpetuate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to make something continue",
+    "example": "These stereotypes perpetuate prejudice.",
+    "acceptableSynonyms": [
+      "continue",
+      "sustain",
+      "maintain",
+      "prolong"
+    ],
+    "primarySynonym": "continue"
+  },
+  {
+    "id": "c1_undermine",
+    "word": "undermine",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to weaken gradually",
+    "example": "Constant criticism undermines confidence.",
+    "acceptableSynonyms": [
+      "weaken",
+      "erode",
+      "sabotage",
+      "compromise"
+    ],
+    "primarySynonym": "weaken"
+  },
+  {
+    "id": "c1_foster",
+    "word": "foster",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to encourage development",
+    "example": "We aim to foster creativity in students.",
+    "acceptableSynonyms": [
+      "encourage",
+      "nurture",
+      "cultivate",
+      "promote"
+    ],
+    "primarySynonym": "encourage"
+  },
+  {
+    "id": "c1_contemplate",
+    "word": "contemplate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to think about deeply",
+    "example": "He contemplated changing careers.",
+    "acceptableSynonyms": [
+      "consider",
+      "ponder",
+      "reflect on",
+      "mull over"
+    ],
+    "primarySynonym": "consider"
+  },
+  {
+    "id": "c1_dwell",
+    "word": "dwell",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to think or talk about at length",
+    "example": "Try not to dwell on past mistakes.",
+    "acceptableSynonyms": [
+      "linger on",
+      "ruminate",
+      "brood",
+      "fixate"
+    ],
+    "primarySynonym": "linger on"
+  },
+  {
+    "id": "c1_transcend",
+    "word": "transcend",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to go beyond ordinary limits",
+    "example": "Great art can transcend cultural barriers.",
+    "acceptableSynonyms": [
+      "exceed",
+      "surpass",
+      "rise above",
+      "outdo"
+    ],
+    "primarySynonym": "exceed"
+  },
+  {
+    "id": "c1_articulate",
+    "word": "articulate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to express clearly",
+    "example": "She articulated her concerns calmly.",
+    "acceptableSynonyms": [
+      "express",
+      "voice",
+      "enunciate",
+      "state"
+    ],
+    "primarySynonym": "express"
+  },
+  {
+    "id": "c1_discern",
+    "word": "discern",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to perceive or recognise",
+    "example": "It is hard to discern fact from rumour.",
+    "acceptableSynonyms": [
+      "perceive",
+      "detect",
+      "identify",
+      "distinguish"
+    ],
+    "primarySynonym": "perceive"
+  },
+  {
+    "id": "c1_elicit",
+    "word": "elicit",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to draw out a response or reaction",
+    "example": "His joke elicited laughter from the crowd.",
+    "acceptableSynonyms": [
+      "draw out",
+      "evoke",
+      "extract",
+      "bring about"
+    ],
+    "primarySynonym": "draw out"
+  },
+  {
+    "id": "c1_endorse",
+    "word": "endorse",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to declare public approval",
+    "example": "The mayor endorsed the new policy.",
+    "acceptableSynonyms": [
+      "support",
+      "back",
+      "approve",
+      "sanction"
+    ],
+    "primarySynonym": "support"
+  },
+  {
+    "id": "c1_fluctuate",
+    "word": "fluctuate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to rise and fall irregularly",
+    "example": "Prices fluctuate with demand.",
+    "acceptableSynonyms": [
+      "vary",
+      "shift",
+      "swing",
+      "oscillate"
+    ],
+    "primarySynonym": "vary"
+  },
+  {
+    "id": "c1_implement",
+    "word": "implement",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to put a plan into action",
+    "example": "They will implement the changes next month.",
+    "acceptableSynonyms": [
+      "execute",
+      "enact",
+      "carry out",
+      "apply"
+    ],
+    "primarySynonym": "execute"
+  },
+  {
+    "id": "c1_proliferate",
+    "word": "proliferate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to increase rapidly in number",
+    "example": "Online courses have proliferated lately.",
+    "acceptableSynonyms": [
+      "multiply",
+      "spread",
+      "mushroom",
+      "expand"
+    ],
+    "primarySynonym": "multiply"
+  },
+  {
+    "id": "c1_retain",
+    "word": "retain",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to keep possession of",
+    "example": "The team retained their championship title.",
+    "acceptableSynonyms": [
+      "keep",
+      "hold",
+      "preserve",
+      "maintain"
+    ],
+    "primarySynonym": "keep"
+  },
+  {
+    "id": "c1_surpass",
+    "word": "surpass",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to exceed or do better than",
+    "example": "Sales surpassed all expectations.",
+    "acceptableSynonyms": [
+      "exceed",
+      "beat",
+      "outdo",
+      "eclipse"
+    ],
+    "primarySynonym": "exceed"
+  },
+  {
+    "id": "c1_validate",
+    "word": "validate",
+    "cefrLevel": "C1",
+    "partOfSpeech": "verb",
+    "definition": "to confirm or prove correct",
+    "example": "The results validate our approach.",
+    "acceptableSynonyms": [
+      "confirm",
+      "verify",
+      "corroborate",
+      "authenticate"
+    ],
+    "primarySynonym": "confirm"
+  },
+  {
+    "id": "c2_recalcitrant",
+    "word": "recalcitrant",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "stubbornly resistant to authority",
+    "example": "The recalcitrant student refused to comply.",
+    "acceptableSynonyms": [
+      "unruly",
+      "defiant",
+      "intractable",
+      "obstreperous"
+    ],
+    "primarySynonym": "unruly"
+  },
+  {
+    "id": "c2_sycophantic",
+    "word": "sycophantic",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "insincerely flattering to gain favour",
+    "example": "His sycophantic praise was off-putting.",
+    "acceptableSynonyms": [
+      "fawning",
+      "obsequious",
+      "servile",
+      "toadying"
+    ],
+    "primarySynonym": "fawning"
+  },
+  {
+    "id": "c2_perspicacious",
+    "word": "perspicacious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "having a ready insight",
+    "example": "A perspicacious observer noticed the error.",
+    "acceptableSynonyms": [
+      "shrewd",
+      "astute",
+      "discerning",
+      "sharp-witted"
+    ],
+    "primarySynonym": "shrewd"
+  },
+  {
+    "id": "c2_ineffable",
+    "word": "ineffable",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "too great to be expressed in words",
+    "example": "The view was of ineffable beauty.",
+    "acceptableSynonyms": [
+      "indescribable",
+      "inexpressible",
+      "unutterable",
+      "beyond words"
+    ],
+    "primarySynonym": "indescribable"
+  },
+  {
+    "id": "c2_mendacious",
+    "word": "mendacious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "not telling the truth; lying",
+    "example": "The witness gave a mendacious account.",
+    "acceptableSynonyms": [
+      "dishonest",
+      "deceitful",
+      "untruthful",
+      "duplicitous"
+    ],
+    "primarySynonym": "dishonest"
+  },
+  {
+    "id": "c2_lugubrious",
+    "word": "lugubrious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "looking or sounding sad and dismal",
+    "example": "The funeral march was lugubrious.",
+    "acceptableSynonyms": [
+      "mournful",
+      "melancholy",
+      "doleful",
+      "sombre"
+    ],
+    "primarySynonym": "mournful"
+  },
+  {
+    "id": "c2_mellifluous",
+    "word": "mellifluous",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "sweet or musical; pleasant to hear",
+    "example": "She has a mellifluous singing voice.",
+    "acceptableSynonyms": [
+      "sweet-sounding",
+      "dulcet",
+      "harmonious",
+      "lyrical"
+    ],
+    "primarySynonym": "sweet-sounding"
+  },
+  {
+    "id": "c2_sanguine",
+    "word": "sanguine",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "optimistic in a difficult situation",
+    "example": "He remains sanguine despite setbacks.",
+    "acceptableSynonyms": [
+      "optimistic",
+      "hopeful",
+      "positive",
+      "upbeat"
+    ],
+    "primarySynonym": "optimistic"
+  },
+  {
+    "id": "c2_vituperative",
+    "word": "vituperative",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "bitter and abusive in speech",
+    "example": "The article was a vituperative attack.",
+    "acceptableSynonyms": [
+      "abusive",
+      "scathing",
+      "venomous",
+      "caustic"
+    ],
+    "primarySynonym": "abusive"
+  },
+  {
+    "id": "c2_quixotic",
+    "word": "quixotic",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "unrealistic and impractical",
+    "example": "It was a quixotic attempt to change the law.",
+    "acceptableSynonyms": [
+      "idealistic",
+      "romantic",
+      "impractical",
+      "utopian"
+    ],
+    "primarySynonym": "idealistic"
+  },
+  {
+    "id": "c2_inscrutable",
+    "word": "inscrutable",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "impossible to understand",
+    "example": "Her inscrutable smile gave nothing away.",
+    "acceptableSynonyms": [
+      "enigmatic",
+      "unfathomable",
+      "mysterious",
+      "cryptic"
+    ],
+    "primarySynonym": "enigmatic"
+  },
+  {
+    "id": "c2_ostentatious",
+    "word": "ostentatious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "designed to impress; showy",
+    "example": "The mansion was ostentatious in every detail.",
+    "acceptableSynonyms": [
+      "flashy",
+      "showy",
+      "pretentious",
+      "flamboyant"
+    ],
+    "primarySynonym": "flashy"
+  },
+  {
+    "id": "c2_pernicious",
+    "word": "pernicious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "having a harmful effect, especially gradually",
+    "example": "Rumours can have a pernicious influence.",
+    "acceptableSynonyms": [
+      "harmful",
+      "destructive",
+      "damaging",
+      "malign"
+    ],
+    "primarySynonym": "harmful"
+  },
+  {
+    "id": "c2_punctilious",
+    "word": "punctilious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "showing great attention to detail or proper behaviour",
+    "example": "He was punctilious about procedure.",
+    "acceptableSynonyms": [
+      "meticulous",
+      "scrupulous",
+      "fastidious",
+      "exacting"
+    ],
+    "primarySynonym": "meticulous"
+  },
+  {
+    "id": "c2_serendipitous",
+    "word": "serendipitous",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "occurring by happy chance",
+    "example": "Their meeting was entirely serendipitous.",
+    "acceptableSynonyms": [
+      "fortunate",
+      "fortuitous",
+      "lucky",
+      "chance"
+    ],
+    "primarySynonym": "fortunate"
+  },
+  {
+    "id": "c2_surreptitious",
+    "word": "surreptitious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "kept secret because of disapproval",
+    "example": "She cast a surreptitious glance behind her.",
+    "acceptableSynonyms": [
+      "stealthy",
+      "covert",
+      "clandestine",
+      "furtive"
+    ],
+    "primarySynonym": "stealthy"
+  },
+  {
+    "id": "c2_truculent",
+    "word": "truculent",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "eager or quick to argue or fight",
+    "example": "The truculent teenager picked fights daily.",
+    "acceptableSynonyms": [
+      "belligerent",
+      "combative",
+      "aggressive",
+      "pugnacious"
+    ],
+    "primarySynonym": "belligerent"
+  },
+  {
+    "id": "c2_unctuous",
+    "word": "unctuous",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "excessively flattering or smooth",
+    "example": "I disliked his unctuous manner.",
+    "acceptableSynonyms": [
+      "smug",
+      "oily",
+      "fawning",
+      "smarmy"
+    ],
+    "primarySynonym": "smug"
+  },
+  {
+    "id": "c2_vexatious",
+    "word": "vexatious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "causing annoyance or worry",
+    "example": "They filed a vexatious lawsuit.",
+    "acceptableSynonyms": [
+      "irksome",
+      "troublesome",
+      "irritating",
+      "bothersome"
+    ],
+    "primarySynonym": "irksome"
+  },
+  {
+    "id": "c2_voracious",
+    "word": "voracious",
+    "cefrLevel": "C2",
+    "partOfSpeech": "adjective",
+    "definition": "having a great appetite",
+    "example": "She is a voracious reader of biographies.",
+    "acceptableSynonyms": [
+      "ravenous",
+      "insatiable",
+      "greedy",
+      "gluttonous"
+    ],
+    "primarySynonym": "ravenous"
+  },
+  {
+    "id": "c2_anachronism",
+    "word": "anachronism",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "something out of its proper time",
+    "example": "A typewriter today is an anachronism.",
+    "acceptableSynonyms": [
+      "throwback",
+      "relic",
+      "antique",
+      "misfit"
+    ],
+    "primarySynonym": "throwback"
+  },
+  {
+    "id": "c2_catharsis",
+    "word": "catharsis",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "the release of strong emotion",
+    "example": "Writing about it provided real catharsis.",
+    "acceptableSynonyms": [
+      "release",
+      "purging",
+      "cleansing",
+      "relief"
+    ],
+    "primarySynonym": "release"
+  },
+  {
+    "id": "c2_epitome",
+    "word": "epitome",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a perfect example of something",
+    "example": "She is the epitome of grace.",
+    "acceptableSynonyms": [
+      "embodiment",
+      "quintessence",
+      "paragon",
+      "archetype"
+    ],
+    "primarySynonym": "embodiment"
+  },
+  {
+    "id": "c2_hegemony",
+    "word": "hegemony",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "leadership or dominance",
+    "example": "Cultural hegemony shapes everyday choices.",
+    "acceptableSynonyms": [
+      "dominance",
+      "supremacy",
+      "leadership",
+      "ascendancy"
+    ],
+    "primarySynonym": "dominance"
+  },
+  {
+    "id": "c2_idiosyncrasy",
+    "word": "idiosyncrasy",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a distinctive personal mannerism",
+    "example": "His main idiosyncrasy is humming while he works.",
+    "acceptableSynonyms": [
+      "peculiarity",
+      "quirk",
+      "eccentricity",
+      "oddity"
+    ],
+    "primarySynonym": "peculiarity"
+  },
+  {
+    "id": "c2_juxtaposition",
+    "word": "juxtaposition",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a side-by-side placement to compare",
+    "example": "The juxtaposition of old and new is striking.",
+    "acceptableSynonyms": [
+      "contrast",
+      "pairing",
+      "comparison",
+      "side-by-side"
+    ],
+    "primarySynonym": "contrast"
+  },
+  {
+    "id": "c2_litany",
+    "word": "litany",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a long and tedious recital",
+    "example": "He read out a litany of complaints.",
+    "acceptableSynonyms": [
+      "list",
+      "recitation",
+      "catalogue",
+      "rundown"
+    ],
+    "primarySynonym": "list"
+  },
+  {
+    "id": "c2_malaise",
+    "word": "malaise",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a general feeling of discomfort or unease",
+    "example": "A sense of malaise hung over the company.",
+    "acceptableSynonyms": [
+      "unease",
+      "discontent",
+      "lethargy",
+      "discomfort"
+    ],
+    "primarySynonym": "unease"
+  },
+  {
+    "id": "c2_paragon",
+    "word": "paragon",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a model of excellence",
+    "example": "She is regarded as a paragon of integrity.",
+    "acceptableSynonyms": [
+      "model",
+      "exemplar",
+      "ideal",
+      "epitome"
+    ],
+    "primarySynonym": "model"
+  },
+  {
+    "id": "c2_quagmire",
+    "word": "quagmire",
+    "cefrLevel": "C2",
+    "partOfSpeech": "noun",
+    "definition": "a difficult, inextricable situation",
+    "example": "The project sank into a legal quagmire.",
+    "acceptableSynonyms": [
+      "predicament",
+      "dilemma",
+      "morass",
+      "mire"
+    ],
+    "primarySynonym": "predicament"
+  },
+  {
+    "id": "c2_propagate",
+    "word": "propagate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to spread or promote widely",
+    "example": "These ideas propagate quickly online.",
+    "acceptableSynonyms": [
+      "spread",
+      "disseminate",
+      "broadcast",
+      "diffuse"
+    ],
+    "primarySynonym": "spread"
+  },
+  {
+    "id": "c2_vacillate",
+    "word": "vacillate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to alternate between options",
+    "example": "He vacillated over the decision for weeks.",
+    "acceptableSynonyms": [
+      "waver",
+      "hesitate",
+      "oscillate",
+      "dither"
+    ],
+    "primarySynonym": "waver"
+  },
+  {
+    "id": "c2_deride",
+    "word": "deride",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to express contempt for; ridicule",
+    "example": "Critics derided the film as juvenile.",
+    "acceptableSynonyms": [
+      "mock",
+      "ridicule",
+      "scorn",
+      "taunt"
+    ],
+    "primarySynonym": "mock"
+  },
+  {
+    "id": "c2_disparage",
+    "word": "disparage",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to regard or speak of as little worth",
+    "example": "It is unprofessional to disparage colleagues.",
+    "acceptableSynonyms": [
+      "belittle",
+      "denigrate",
+      "put down",
+      "demean"
+    ],
+    "primarySynonym": "belittle"
+  },
+  {
+    "id": "c2_extrapolate",
+    "word": "extrapolate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to estimate beyond known data",
+    "example": "We can extrapolate next year’s sales.",
+    "acceptableSynonyms": [
+      "infer",
+      "deduce",
+      "project",
+      "predict"
+    ],
+    "primarySynonym": "infer"
+  },
+  {
+    "id": "c2_espouse",
+    "word": "espouse",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to adopt or support a cause",
+    "example": "They espoused the ideals of the movement.",
+    "acceptableSynonyms": [
+      "support",
+      "embrace",
+      "champion",
+      "endorse"
+    ],
+    "primarySynonym": "support"
+  },
+  {
+    "id": "c2_repudiate",
+    "word": "repudiate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to refuse to accept or reject",
+    "example": "She repudiated the accusations vigorously.",
+    "acceptableSynonyms": [
+      "reject",
+      "renounce",
+      "disavow",
+      "denounce"
+    ],
+    "primarySynonym": "reject"
+  },
+  {
+    "id": "c2_capitulate",
+    "word": "capitulate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to surrender under conditions",
+    "example": "Eventually the rebels capitulated.",
+    "acceptableSynonyms": [
+      "surrender",
+      "yield",
+      "submit",
+      "concede"
+    ],
+    "primarySynonym": "surrender"
+  },
+  {
+    "id": "c2_ameliorate",
+    "word": "ameliorate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to make a situation better",
+    "example": "New policies ameliorated working conditions.",
+    "acceptableSynonyms": [
+      "improve",
+      "better",
+      "enhance",
+      "alleviate"
+    ],
+    "primarySynonym": "improve"
+  },
+  {
+    "id": "c2_equivocate",
+    "word": "equivocate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to use ambiguous language to avoid committing",
+    "example": "The politician equivocated on the question.",
+    "acceptableSynonyms": [
+      "hedge",
+      "prevaricate",
+      "evade",
+      "waffle"
+    ],
+    "primarySynonym": "hedge"
+  },
+  {
+    "id": "c2_admonish",
+    "word": "admonish",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to warn or reprimand firmly",
+    "example": "The judge admonished the lawyer for his outburst.",
+    "acceptableSynonyms": [
+      "rebuke",
+      "scold",
+      "reprove",
+      "chide"
+    ],
+    "primarySynonym": "rebuke"
+  },
+  {
+    "id": "c2_castigate",
+    "word": "castigate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to reprimand someone severely",
+    "example": "The press castigated the minister for the gaffe.",
+    "acceptableSynonyms": [
+      "rebuke",
+      "chastise",
+      "berate",
+      "upbraid"
+    ],
+    "primarySynonym": "rebuke"
+  },
+  {
+    "id": "c2_delineate",
+    "word": "delineate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to describe or portray precisely",
+    "example": "The report delineates the new strategy.",
+    "acceptableSynonyms": [
+      "outline",
+      "define",
+      "describe",
+      "sketch"
+    ],
+    "primarySynonym": "outline"
+  },
+  {
+    "id": "c2_enervate",
+    "word": "enervate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to weaken or drain of energy",
+    "example": "The humidity enervated everyone in the room.",
+    "acceptableSynonyms": [
+      "weaken",
+      "exhaust",
+      "sap",
+      "debilitate"
+    ],
+    "primarySynonym": "weaken"
+  },
+  {
+    "id": "c2_galvanise",
+    "word": "galvanise",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to shock or excite into action",
+    "example": "The speech galvanised the activists.",
+    "acceptableSynonyms": [
+      "stimulate",
+      "spur",
+      "motivate",
+      "energise"
+    ],
+    "primarySynonym": "stimulate"
+  },
+  {
+    "id": "c2_lambaste",
+    "word": "lambaste",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to criticise harshly",
+    "example": "Critics lambasted the film’s ending.",
+    "acceptableSynonyms": [
+      "criticise",
+      "blast",
+      "slate",
+      "pillory"
+    ],
+    "primarySynonym": "criticise"
+  },
+  {
+    "id": "c2_placate",
+    "word": "placate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to make someone less angry",
+    "example": "He tried to placate the angry customer.",
+    "acceptableSynonyms": [
+      "appease",
+      "pacify",
+      "soothe",
+      "mollify"
+    ],
+    "primarySynonym": "appease"
+  },
+  {
+    "id": "c2_proliferate",
+    "word": "proliferate",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to grow rapidly in number",
+    "example": "Fake accounts proliferated online.",
+    "acceptableSynonyms": [
+      "multiply",
+      "mushroom",
+      "spread",
+      "burgeon"
+    ],
+    "primarySynonym": "multiply"
+  },
+  {
+    "id": "c2_stymie",
+    "word": "stymie",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to prevent or hinder progress",
+    "example": "Red tape stymied the development.",
+    "acceptableSynonyms": [
+      "hinder",
+      "thwart",
+      "block",
+      "frustrate"
+    ],
+    "primarySynonym": "hinder"
+  },
+  {
+    "id": "c2_vex",
+    "word": "vex",
+    "cefrLevel": "C2",
+    "partOfSpeech": "verb",
+    "definition": "to annoy or worry",
+    "example": "The constant noise began to vex her.",
+    "acceptableSynonyms": [
+      "annoy",
+      "irritate",
+      "bother",
+      "aggravate"
+    ],
+    "primarySynonym": "annoy"
+  }
+]

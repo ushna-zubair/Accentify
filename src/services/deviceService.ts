@@ -11,8 +11,13 @@ let _installId: string | null = null;
 /** Call once at app startup to populate the async installation ID. */
 export const initDeviceId = async (): Promise<void> => {
   try {
-    const id = await Application.getInstallationIdAsync();
-    if (id) _installId = id;
+    if (Platform.OS === 'ios') {
+      const id = await Application.getIosIdForVendorAsync();
+      if (id) _installId = id;
+    } else if (Platform.OS === 'android') {
+      const id = Application.getAndroidId();
+      if (id) _installId = id;
+    }
   } catch {
     // Fallback handled by getDeviceId
   }

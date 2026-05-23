@@ -61,6 +61,9 @@ const mapLessonDoc = (docSnap: any): AdminLesson => {
     enrolledCount: d.enrolledCount ?? 0,
     completedCount: d.completedCount ?? 0,
     vocabPairCount: d.vocabPairCount ?? 0,
+    vocabularyWordIds: Array.isArray(d.vocabularyWordIds)
+      ? d.vocabularyWordIds.map((id: unknown) => String(id))
+      : [],
   };
 };
 
@@ -240,6 +243,26 @@ export const saveVocabPairs = async (
   });
 
   await batch.commit();
+};
+
+// ═══════════════════════════════════════════════
+//  VOCABULARY WORD LINKAGE (new synonym-typing exercise)
+// ═══════════════════════════════════════════════
+
+/**
+ * Read the `vocabularyWordIds` field on a lesson doc (refs into
+ * `vocabularyWords/{wordId}`). Returns an empty array when the field is
+ * missing, the lesson doesn't exist, or the value isn't an array — callers
+ * should then fall back to CEFR-band selection.
+ */
+export const fetchVocabularyWordIdsForLesson = async (
+  lessonId: string,
+): Promise<string[]> => {
+  const snap = await getDoc(doc(db, LESSONS_COL, lessonId));
+  if (!snap.exists()) return [];
+  const raw = snap.data().vocabularyWordIds;
+  if (!Array.isArray(raw)) return [];
+  return raw.map((id) => String(id)).filter((s) => s.length > 0);
 };
 
 // ─── Compute stats from items ───

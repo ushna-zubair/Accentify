@@ -1,620 +1,240 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
-import {
-  useAudioRecorder,
-  RecordingPresets,
-  AudioModule,
-  setAudioModeAsync,
-} from 'expo-audio';
-import Constants from 'expo-constants';
-import { doc, getDoc, setDoc, collection, getDocs, updateDoc, increment } from 'firebase/firestore';
-import { db, auth } from '../config/firebase';
-import type { VocabWordPair, VocabExerciseData, SpeechRecognitionResult } from '../models';
-import { onExerciseComplete } from '../services/progressService';
-import { levenshtein } from '../utils/stringUtils';
-
-// ═══════════════════════════════════════════════
-//  SAMPLE WORD PAIRS (fallback)
-// ═══════════════════════════════════════════════
-
-const SAMPLE_WORD_PAIRS: VocabWordPair[] = [
-  {
-    id: 'wp_1',
-    basicWord: 'Understand',
-    vocabWord: 'Comprehend',
-    basicPhonetic: 'Uhn-dun-stand',
-    vocabPhonetic: 'Kom-pruh-hend',
-    basicDefinition:
-      'To "understand" is to know the meaning or significance of something',
-    vocabDefinition:
-      'To comprehend means to mentally grasp the complete nature or meaning of something',
-    exampleSentence: 'She comprehends the complexity of the situation.',
-  },
-  {
-    id: 'wp_2',
-    basicWord: 'Help',
-    vocabWord: 'Assist',
-    basicPhonetic: 'H-alp',
-    vocabPhonetic: 'Uh-sist',
-    basicDefinition:
-      'To "help" is to assist or make it easier for someone to do something',
-    vocabDefinition:
-      'To assist means to give support or aid to someone in an action or effort',
-    exampleSentence: 'The nurse will assist the doctor during surgery.',
-  },
-  {
-    id: 'wp_3',
-    basicWord: 'Look Closely',
-    vocabWord: 'Scrutinize',
-    basicPhonetic: 'Luk-Klow-slee',
-    vocabPhonetic: 'Skroo-tuh-nize',
-    basicDefinition:
-      'To "look closely" means to examine something carefully and in detail',
-    vocabDefinition:
-      'To scrutinize means to examine or inspect closely and thoroughly with critical attention',
-    exampleSentence: 'The auditor will scrutinize every transaction.',
-  },
-];
-
-const DEFAULT_EXERCISE: VocabExerciseData = {
-  lessonId: '',
-  title: 'Vocab Growth',
-  wordPairs: [],
-  currentIndex: 0,
-  totalPairs: 0,
-};
-
-// ═══════════════════════════════════════════════
-//  PRONUNCIATION FEEDBACK HELPERS
-// ═══════════════════════════════════════════════
-
-/** Simple phonetic approximation of a word (placeholder for real IPA engine) */
-const toPhonetic = (word: string): string => {
-  const PHONETIC_MAP: Record<string, string> = {
-    understand: 'Uhn-dun-stand',
-    comprehend: 'Kom-pruh-hend',
-    help: 'H-alp',
-    assist: 'Uh-sist',
-    'look closely': 'Luk-Klow-slee',
-    scrutinize: 'Skroo-tuh-nize',
-  };
-  return PHONETIC_MAP[word.toLowerCase()] ?? word;
-};
-
-/** Pick a random success message for correct attempts */
-const SUCCESS_MESSAGES = [
-  'Well Done!!!',
-  'Keep it up!!!',
-  'Excellent!!!',
-  'Great Job!!!',
-  'Awesome!!!',
-];
-const pickSuccessMessage = (): string =>
-  SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)];
-
-/** Generate human-readable pronunciation feedback */
-const generateFeedback = (
-  targetWord: string,
-  transcript: string,
-  isCorrect: boolean,
-): string => {
-  if (isCorrect) {
-    const praises = [
-      'Well done, keep up the good work!',
-      'Perfect pronunciation!',
-      'Excellent! You nailed it!',
-      'Great job, spot on!',
-    ];
-    return praises[Math.floor(Math.random() * praises.length)];
-  }
-
-  // Generate specific feedback based on common mispronunciation patterns
-  const target = targetWord.toLowerCase();
-  const spoken = transcript.toLowerCase();
-
-  if (!spoken || spoken === 'unclear') {
-    return `Try saying "${targetWord}" more clearly. Speak slowly and emphasize each syllable.`;
-  }
-
-  // Check first letter
-  if (spoken[0] !== target[0]) {
-    return `Almost! Try a deeper pronunciation of the letter ${target[0].toUpperCase()} in the beginning and don't emphasize the ${spoken[0].toUpperCase()} as much`;
-  }
-
-  // Check ending
-  if (spoken.slice(-2) !== target.slice(-2)) {
-    return `Good start! Focus on the ending — try to finish with "${target.slice(-3)}" more clearly.`;
-  }
-
-  // Middle section
-  return `Close! Pay attention to the middle syllables. Try breaking it down: "${toPhonetic(targetWord)}"`;
-};
-
-// ═══════════════════════════════════════════════
-//  WHISPER API INTEGRATION
-// ═══════════════════════════════════════════════
-
-/** Read HF token from app.json extra config (set via EAS or local .env) */
-const HF_API_TOKEN: string =
-  (Constants.expoConfig?.extra?.hfApiToken as string) ?? '';
-
-const WHISPER_API_URL =
-  'https://api-inference.huggingface.co/models/openai/whisper-large-v3';
-
 /**
- * Send recorded audio to Whisper API for speech-to-text.
- * Falls back to a mock when no HF_API_TOKEN is configured.
+ * useVocabExerciseController.ts
+ *
+ * Drives the synonym-typing vocabulary exercise:
+ *   - Loads a batch of words for the user — either from the lesson's
+ *     `vocabularyWordIds` field, or via CEFR-band selection keyed off
+ *     `userProfile.studyPlan.englishLevel`.
+ *   - Manages the current card + text input + submission state.
+ *   - Validates the typed synonym via `checkSynonym` (case-insensitive,
+ *     1-edit typo tolerance, min 4-char fuzzy guard).
+ *   - Persists every attempt through `recordVocabAttempt` so the daily
+ *     activity log, summary, attempts history, per-item rolling stats,
+ *     and streak all stay in sync.
  */
-export const transcribeAudio = async (
-  audioUri: string,
-  pair: VocabWordPair,
-): Promise<SpeechRecognitionResult> => {
-  if (!HF_API_TOKEN) {
-    console.warn(
-      '[Whisper] No hfApiToken in app config. Using mock transcription.',
-    );
-    return mockTranscription(pair);
-  }
 
-  try {
-    const formData = new FormData();
-    formData.append('file', {
-      uri: audioUri,
-      type: 'audio/m4a',
-      name: 'recording.m4a',
-    } as unknown as Blob);
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { auth } from '../config/firebase';
+import { fetchVocabularyWordIdsForLesson } from '../services/lessonService';
+import {
+  fetchWordsByIds,
+  fetchWordsForCefrBand,
+  normaliseCefr,
+  targetCefrBand,
+} from '../services/vocabularyService';
+import { recordVocabAttempt } from '../services/progressService';
+import { onExerciseComplete } from '../services/progressService';
+import { checkSynonym } from '../utils/synonymMatch';
+import type { VocabularyWord, VocabAttemptResult, CefrLevel } from '../models/vocabulary';
 
-    const response = await fetch(WHISPER_API_URL, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${HF_API_TOKEN}` },
-      body: formData,
-    });
+const SESSION_SIZE = 10;
 
-    if (!response.ok) {
-      throw new Error(`Whisper API error: ${response.status}`);
-    }
+export interface VocabSessionStats {
+  total: number;
+  correct: number;
+  wrong: number;
+}
 
-    const result = await response.json();
-    const transcript = (result.text ?? '').trim().toLowerCase();
+export interface UseVocabExerciseController {
+  loading: boolean;
+  error: string | null;
+  /** Whole batch for this session (after load completes). */
+  words: VocabularyWord[];
+  /** Word the user is currently looking at (or null when session done). */
+  currentWord: VocabularyWord | null;
+  currentIndex: number;
+  totalWords: number;
+  /** Controlled value of the synonym text input. */
+  inputValue: string;
+  /** Set after `submit()` until `next()` clears it. */
+  lastResult: VocabAttemptResult | null;
+  /** True between submit() and next() — UI shows the result overlay. */
+  hasSubmitted: boolean;
+  /** True while persisting an attempt. */
+  isSubmitting: boolean;
+  sessionStats: VocabSessionStats;
+  /** True when the user has worked through every card in the batch. */
+  isSessionComplete: boolean;
+  /** The CEFR level used to pick this batch — handy for the UI header. */
+  cefrLevel: CefrLevel;
 
-    const words = transcript.split(/\s+/);
-    const basicSpoken = words[0] ?? '';
-    const vocabSpoken = words.slice(1).join(' ') || words[0] || '';
+  setInput: (v: string) => void;
+  submit: () => Promise<void>;
+  next: () => void;
+}
 
-    const basicTarget = pair.basicWord.toLowerCase();
-    const vocabTarget = pair.vocabWord.toLowerCase();
-
-    const basicCorrect =
-      basicSpoken === basicTarget || levenshtein(basicSpoken, basicTarget) <= 2;
-    const vocabCorrect =
-      vocabSpoken === vocabTarget || levenshtein(vocabSpoken, vocabTarget) <= 2;
-
-    return {
-      transcript,
-      confidence: result.confidence ?? 0.8,
-      isCorrect: basicCorrect && vocabCorrect,
-      basicAttemptPhonetic: toPhonetic(basicSpoken),
-      basicCorrect,
-      basicFeedback: generateFeedback(pair.basicWord, basicSpoken, basicCorrect),
-      vocabAttemptPhonetic: toPhonetic(vocabSpoken),
-      vocabCorrect,
-      vocabFeedback: generateFeedback(pair.vocabWord, vocabSpoken, vocabCorrect),
-    };
-  } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : String(error);
-    console.error('[Whisper] API call failed:', msg);
-    return {
-      transcript: '',
-      confidence: 0,
-      isCorrect: false,
-      basicAttemptPhonetic: '',
-      basicCorrect: false,
-      basicFeedback: 'Could not process audio. Please try again.',
-      vocabAttemptPhonetic: '',
-      vocabCorrect: false,
-      vocabFeedback: 'Could not process audio. Please try again.',
-    };
-  }
-};
-
-/** Deterministic-ish mock for development when no API token is available */
-const mockTranscription = async (
-  pair: VocabWordPair,
-): Promise<SpeechRecognitionResult> => {
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  const basicCorrect = Math.random() > 0.15;
-  const vocabCorrect = Math.random() > 0.5;
-  const isCorrect = basicCorrect && vocabCorrect;
-
-  const basicTranscript = basicCorrect
-    ? pair.basicWord.toLowerCase()
-    : pair.basicWord.toLowerCase().slice(0, -1) + 'x';
-  const vocabTranscript = vocabCorrect
-    ? pair.vocabWord.toLowerCase()
-    : pair.vocabWord.toLowerCase().replace(pair.vocabWord[0], 'X');
-
-  return {
-    transcript: `${basicTranscript} ${vocabTranscript}`,
-    confidence: isCorrect ? 0.92 : 0.45,
-    isCorrect,
-    basicAttemptPhonetic: basicCorrect
-      ? pair.basicPhonetic
-      : pair.basicPhonetic.replace(/-/g, '-') + 'x',
-    basicCorrect,
-    basicFeedback: generateFeedback(pair.basicWord, basicTranscript, basicCorrect),
-    vocabAttemptPhonetic: vocabCorrect
-      ? pair.vocabPhonetic
-      : pair.vocabPhonetic.replace(/^./, 'X'),
-    vocabCorrect,
-    vocabFeedback: generateFeedback(pair.vocabWord, vocabTranscript, vocabCorrect),
-  };
-};
-
-// ═══════════════════════════════════════════════
-//  CONTROLLER
-// ═══════════════════════════════════════════════
-
-export const useVocabExerciseController = (lessonId: string) => {
-  const [exercise, setExercise] = useState<VocabExerciseData>(DEFAULT_EXERCISE);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  // UI state
-  const [showDefinition, setShowDefinition] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [lastResult, setLastResult] = useState<SpeechRecognitionResult | null>(null);
-  const [recordingDuration, setRecordingDuration] = useState(0);
-  const [attemptCount, setAttemptCount] = useState(0);
-  const [successMessage, setSuccessMessage] = useState('');
-
-  // ── Audio recorder (expo-audio) ──
-  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
-
-  // Audio refs
-  const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // Current word pair
-  const currentPair: VocabWordPair | null =
-    exercise.wordPairs[exercise.currentIndex] ?? null;
-
-  // ── Fetch exercise data ──
-  const fetchExercise = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      let wordPairs: VocabWordPair[] = [];
-
-      // Try Firestore
-      try {
-        const pairsRef = collection(db, 'lessons', lessonId, 'vocabPairs');
-        const pairsSnap = await getDocs(pairsRef);
-
-        if (!pairsSnap.empty) {
-          wordPairs = pairsSnap.docs.map((d) => {
-            const data = d.data();
-            return {
-              id: d.id,
-              basicWord: data.basicWord ?? '',
-              vocabWord: data.vocabWord ?? '',
-              basicPhonetic: data.basicPhonetic ?? '',
-              vocabPhonetic: data.vocabPhonetic ?? '',
-              basicDefinition: data.basicDefinition ?? data.definition ?? '',
-              vocabDefinition: data.vocabDefinition ?? data.definition ?? '',
-              exampleSentence: data.exampleSentence,
-            };
-          });
-        }
-      } catch (e: unknown) {
-        // Permission errors are expected if rules aren't deployed yet
-        if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
-          console.warn('[VocabExercise] Firestore fetch warning:', e instanceof Error ? e.message : String(e));
-        }
-      }
-
-      // Fallback to sample data
-      if (wordPairs.length === 0) {
-        wordPairs = SAMPLE_WORD_PAIRS;
-      }
-
-      // Get user progress for this lesson
-      let currentIndex = 0;
-      const uid = auth.currentUser?.uid;
-      if (uid) {
-        try {
-          const progressSnap = await getDoc(
-            doc(db, 'users', uid, 'lessons', lessonId),
-          );
-          if (progressSnap.exists()) {
-            currentIndex = progressSnap.data().vocabIndex ?? 0;
-          }
-        } catch {
-          // ignore
-        }
-      }
-
-      // Clamp index
-      if (currentIndex >= wordPairs.length) currentIndex = 0;
-
-      setExercise({
-        lessonId,
-        title: 'Vocab Growth',
-        wordPairs,
-        currentIndex,
-        totalPairs: wordPairs.length,
-      });
-    } catch (e: unknown) {
-      console.error('[VocabExercise] fetchExercise error:', e);
-      setError(e instanceof Error ? e.message : 'Failed to load exercise');
-    } finally {
-      setLoading(false);
-    }
-  }, [lessonId]);
-
-  useEffect(() => {
-    let ignore = false;
-    fetchExercise();
-    return () => {
-      ignore = true;
-      // Cleanup
-      try {
-        if (audioRecorder.isRecording) {
-          audioRecorder.stop().catch(() => {});
-        }
-      } catch {
-        // AudioRecorder native object may already be released
-      }
-    };
-  }, [fetchExercise]);
-
-  // ── Toggle definition visibility ──
-  const toggleDefinition = useCallback(() => {
-    setShowDefinition((prev) => !prev);
-  }, []);
-
-  // ── Audio: Play pronunciation ──
-  const playPronunciation = useCallback(
-    async (word: string) => {
-      // Placeholder — integrate with TTS (e.g., expo-speech or Google TTS)
-      if (__DEV__) console.log('[VocabExercise] Play pronunciation for:', word);
-      // import * as Speech from 'expo-speech';
-      // Speech.speak(word, { language: 'en-US', rate: 0.8 });
-    },
-    [],
+export const useVocabExerciseController = (
+  lessonId: string,
+): UseVocabExerciseController => {
+  const { userProfile } = useAuth();
+  // `UserProfile` is a lightweight projection — `studyPlan` lives on the
+  // full Firestore user doc but isn't surfaced on the public type. Other
+  // screens (PronunciationExerciseScreen, HomeWordPronunciationScreen) use
+  // the same `as any` cast, so we follow that convention here.
+  const rawEnglishLevel = (userProfile as any)?.studyPlan?.englishLevel as
+    | string
+    | undefined;
+  const cefrLevel = useMemo<CefrLevel>(
+    () => normaliseCefr(rawEnglishLevel),
+    [rawEnglishLevel],
   );
 
-  // ── Audio: Start recording ──
-  const startRecording = useCallback(async () => {
-    try {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [words, setWords] = useState<VocabularyWord[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [inputValue, setInputValue] = useState('');
+  const [lastResult, setLastResult] = useState<VocabAttemptResult | null>(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionStats, setSessionStats] = useState<VocabSessionStats>({
+    total: 0,
+    correct: 0,
+    wrong: 0,
+  });
+
+  // Track when the current card was first shown — used for durationMs.
+  const cardStartedAtRef = useRef<number>(Date.now());
+
+  // ── Load words for this session ────────────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
       setError(null);
-
-      // Request permissions
-      const { granted } = await AudioModule.requestRecordingPermissionsAsync();
-      if (!granted) {
-        setError('Microphone permission is required');
-        return;
-      }
-
-      // Configure audio mode
-      await setAudioModeAsync({
-        allowsRecording: true,
-        playsInSilentMode: true,
-      });
-
-      // Start recording
       try {
-        await audioRecorder.prepareToRecordAsync();
-      } catch {
-        // Recorder may already be prepared or was released — ignore
-      }
-      audioRecorder.record();
-
-      setIsRecording(true);
-      setRecordingDuration(0);
-
-      // Start duration timer
-      durationTimerRef.current = setInterval(() => {
-        setRecordingDuration((prev) => prev + 100);
-      }, 100);
-    } catch (e: unknown) {
-      console.error('[VocabExercise] startRecording error:', e);
-      setError('Failed to start recording');
-    }
-  }, [audioRecorder]);
-
-  // ── Audio: Stop recording & process ──
-  const stopRecording = useCallback(async () => {
-    if (!audioRecorder.isRecording) return;
-
-    try {
-      // Stop duration timer
-      if (durationTimerRef.current) {
-        clearInterval(durationTimerRef.current);
-        durationTimerRef.current = null;
-      }
-
-      setIsRecording(false);
-      setIsProcessing(true);
-
-      await audioRecorder.stop();
-      const uri = audioRecorder.uri;
-
-      // Reset audio mode
-      await setAudioModeAsync({
-        allowsRecording: false,
-      });
-
-      if (!uri) {
-        setError('Recording failed — no audio captured');
-        setIsProcessing(false);
-        return;
-      }
-
-      if (!currentPair) {
-        setIsProcessing(false);
-        return;
-      }
-
-      // Send to Whisper API for transcription with full pair context
-      const result = await transcribeAudio(uri, currentPair);
-
-      setLastResult(result);
-      setAttemptCount((prev) => prev + 1);
-      setSuccessMessage(result.isCorrect ? pickSuccessMessage() : '');
-
-      // Save attempt to Firestore
-      const uid = auth.currentUser?.uid;
-      if (uid) {
-        try {
-          const attemptId = `${currentPair.id}_${Date.now()}`;
-          await setDoc(
-            doc(db, 'users', uid, 'lessons', lessonId, 'attempts', attemptId),
-            {
-              wordPairId: currentPair.id,
-              basicWord: currentPair.basicWord,
-              vocabWord: currentPair.vocabWord,
-              transcript: result.transcript,
-              confidence: result.confidence,
-              isCorrect: result.isCorrect,
-              basicCorrect: result.basicCorrect,
-              basicAttemptPhonetic: result.basicAttemptPhonetic,
-              basicFeedback: result.basicFeedback,
-              vocabCorrect: result.vocabCorrect,
-              vocabAttemptPhonetic: result.vocabAttemptPhonetic,
-              vocabFeedback: result.vocabFeedback,
-              attemptNumber: attemptCount + 1,
-              attemptedAt: new Date().toISOString(),
-            },
-          );
-
-          // Update attempt count on the user's lesson doc
-          await setDoc(
-            doc(db, 'users', uid, 'lessons', lessonId),
-            {
-              totalAttempts: increment(1),
-              lastAttemptAt: new Date().toISOString(),
-            },
-            { merge: true },
-          );
-        } catch {
-          // Non-critical — don't block UX
-        }
-      }
-    } catch (e: unknown) {
-      console.error('[VocabExercise] stopRecording error:', e);
-      setError('Failed to process recording');
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [currentPair, lessonId, attemptCount]);
-
-  // ── Try again (clear result, ready for re-recording) ──
-  const tryAgain = useCallback(() => {
-    setLastResult(null);
-    setRecordingDuration(0);
-    setSuccessMessage('');
-  }, []);
-
-  // ── Navigate to next word pair ──
-  const nextPair = useCallback(async () => {
-    const nextIndex = exercise.currentIndex + 1;
-
-    if (nextIndex >= exercise.totalPairs) {
-      // Exercise complete — mark lesson as completed
-      const uid = auth.currentUser?.uid;
-      if (uid) {
-        try {
-          await setDoc(
-            doc(db, 'users', uid, 'lessons', lessonId),
-            {
-              status: 'completed',
-              completedAt: new Date().toISOString(),
-              vocabIndex: 0,
-            },
-            { merge: true },
-          );
-
-          // Update progress summary
+        // 1. Lesson-linked words take precedence.
+        let batch: VocabularyWord[] = [];
+        if (lessonId) {
           try {
-            const summaryRef = doc(db, 'users', uid, 'progress', 'summary');
-            const summarySnap = await getDoc(summaryRef);
-            if (summarySnap.exists()) {
-              const data = summarySnap.data();
-              await updateDoc(summaryRef, {
-                completedLessons: (data.completedLessons ?? 0) + 1,
-              });
+            const ids = await fetchVocabularyWordIdsForLesson(lessonId);
+            if (ids.length > 0) {
+              batch = await fetchWordsByIds(ids);
             }
-          } catch {
-            // Non-critical
+          } catch (e) {
+            console.warn('[VocabExercise] lesson word lookup failed:', e);
           }
-
-          // Update progress: streak, daily activity, weekly aggregation
-          await onExerciseComplete(uid, 'vocab', {
-            wordsLearned: exercise.totalPairs,
-          });
-        } catch {
-          // ignore
         }
+
+        // 2. CEFR-band fallback.
+        if (batch.length === 0) {
+          const band = targetCefrBand(cefrLevel);
+          batch = await fetchWordsForCefrBand(band, SESSION_SIZE);
+        }
+
+        if (cancelled) return;
+        setWords(batch);
+        setCurrentIndex(0);
+        setInputValue('');
+        setLastResult(null);
+        setHasSubmitted(false);
+        setSessionStats({ total: 0, correct: 0, wrong: 0 });
+        cardStartedAtRef.current = Date.now();
+      } catch (e) {
+        if (cancelled) return;
+        console.error('[VocabExercise] load error:', e);
+        setError(e instanceof Error ? e.message : 'Failed to load words');
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonId, cefrLevel]);
 
-      return true;
-    }
+  const currentWord = words[currentIndex] ?? null;
+  const isSessionComplete = !loading && words.length > 0 && currentIndex >= words.length;
 
-    // Save current index to Firestore
+  // ── Submit handler ─────────────────────────────────────────────────────
+  const submit = useCallback(async () => {
+    if (!currentWord || hasSubmitted || isSubmitting) return;
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+
+    const match = checkSynonym(trimmed, currentWord.acceptableSynonyms);
+    const result: VocabAttemptResult = {
+      isCorrect: match.correct,
+      userAnswer: trimmed,
+      matchedSynonym: match.matched ?? null,
+      fuzzy: !!match.fuzzy,
+      correctAnswer:
+        currentWord.primarySynonym || currentWord.acceptableSynonyms[0] || '',
+    };
+    setLastResult(result);
+    setHasSubmitted(true);
+    setSessionStats((s) => ({
+      total: s.total + 1,
+      correct: s.correct + (result.isCorrect ? 1 : 0),
+      wrong: s.wrong + (result.isCorrect ? 0 : 1),
+    }));
+
+    // ── Persist ──
     const uid = auth.currentUser?.uid;
     if (uid) {
+      setIsSubmitting(true);
       try {
-        await setDoc(
-          doc(db, 'users', uid, 'lessons', lessonId),
-          { vocabIndex: nextIndex, status: 'in_progress' },
-          { merge: true },
-        );
-      } catch {
-        // ignore
+        await recordVocabAttempt(uid, {
+          wordId: currentWord.id,
+          prompt: currentWord.word,
+          userAnswer: trimmed,
+          matchedSynonym: result.matchedSynonym,
+          isCorrect: result.isCorrect,
+          cefrLevel: currentWord.cefrLevel,
+          durationMs: Date.now() - cardStartedAtRef.current,
+        });
+      } catch (e) {
+        console.warn('[VocabExercise] recordVocabAttempt failed:', e);
+      } finally {
+        setIsSubmitting(false);
       }
     }
+  }, [currentWord, hasSubmitted, isSubmitting, inputValue]);
 
-    setExercise((prev) => ({ ...prev, currentIndex: nextIndex }));
-    setShowDefinition(false);
+  // ── Advance to the next card ───────────────────────────────────────────
+  const next = useCallback(() => {
+    setCurrentIndex((i) => {
+      const nextIdx = i + 1;
+      if (nextIdx >= words.length) {
+        // Session done — fire the standard "exercise complete" pipeline.
+        // IMPORTANT: pass wordsLearned: 0 to avoid double-counting. The daily
+        // `vocabWordsLearned`, `vocabAttempts`, `vocabCorrect`, summary
+        // counters, and streak are all already updated per-attempt by
+        // `recordVocabAttempt`. We still call onExerciseComplete to fire the
+        // weekly re-aggregation, lesson completion, and admin analytics.
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          onExerciseComplete(uid, 'vocab', { wordsLearned: 0 }).catch((e) =>
+            console.warn('[VocabExercise] onExerciseComplete failed:', e),
+          );
+        }
+      }
+      return nextIdx;
+    });
+    setInputValue('');
     setLastResult(null);
-    setRecordingDuration(0);
-    setAttemptCount(0);
-    setSuccessMessage('');
-
-    return false;
-  }, [exercise.currentIndex, exercise.totalPairs, lessonId]);
-
-  // ── Navigate to previous word pair ──
-  const prevPair = useCallback(() => {
-    if (exercise.currentIndex <= 0) return;
-    setExercise((prev) => ({ ...prev, currentIndex: prev.currentIndex - 1 }));
-    setShowDefinition(false);
-    setLastResult(null);
-    setRecordingDuration(0);
-    setAttemptCount(0);
-    setSuccessMessage('');
-  }, [exercise.currentIndex]);
+    setHasSubmitted(false);
+    cardStartedAtRef.current = Date.now();
+  }, [words.length]);
 
   return {
-    exercise,
-    currentPair,
     loading,
     error,
-    showDefinition,
-    isRecording,
-    isProcessing,
+    words,
+    currentWord,
+    currentIndex,
+    totalWords: words.length,
+    inputValue,
     lastResult,
-    recordingDuration,
-    attemptCount,
-    successMessage,
-    toggleDefinition,
-    playPronunciation,
-    startRecording,
-    stopRecording,
-    tryAgain,
-    nextPair,
-    prevPair,
+    hasSubmitted,
+    isSubmitting,
+    sessionStats,
+    isSessionComplete,
+    cefrLevel,
+    setInput: setInputValue,
+    submit,
+    next,
   };
 };

@@ -283,12 +283,18 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
+          {navigation.canGoBack() ? (
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <View style={styles.backRow}>
+                <FontAwesome5 name="chevron-left" size={16} color={tc.text} />
+                <Text style={styles.backArrow}>Create Profile</Text>
+              </View>
+            </TouchableOpacity>
+          ) : (
             <View style={styles.backRow}>
-              <FontAwesome5 name="chevron-left" size={16} color={tc.text} />
               <Text style={styles.backArrow}>Create Profile</Text>
             </View>
-          </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.avatarSection}>

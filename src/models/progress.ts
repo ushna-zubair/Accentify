@@ -35,7 +35,11 @@ export interface OverallPerformance {
 
 export interface WeeklyProgress {
   weekNumber: number;
-  year: number;
+  /**
+   * ISO year of `weekStartDate`. Persisted by aggregateWeek; absent on
+   * freshly-constructed in-memory entries until they're saved.
+   */
+  year?: number;
   weekStartDate: string;
   pronunciation: PronunciationMetrics;
   conversation: ConversationMetrics;
@@ -52,6 +56,9 @@ export interface ProgressData {
 
 // ─── Per-attempt history ───
 export type PronunciationItemType = 'word' | 'sentence';
+
+/** Broader item type covering all attempt-bearing exercises in the app. */
+export type ItemType = PronunciationItemType | 'vocab';
 
 export interface PronunciationAttempt {
   itemType: PronunciationItemType;
@@ -72,6 +79,10 @@ export interface DailyEntry {
   practiceSeconds: number;
   pronunciationAttempts: number;
   vocabWordsLearned: number;
+  /** Total vocab synonym-typing attempts (right + wrong) on this date. */
+  vocabAttempts?: number;
+  /** Correct vocab synonym-typing attempts on this date. */
+  vocabCorrect?: number;
   conversationTurns: number;
   lessonsCompleted: number;
   attempts: PronunciationAttempt[];
