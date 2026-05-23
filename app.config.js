@@ -51,7 +51,7 @@ export default {
             ACCENTIFY_CONVO_API_URL:
                 process.env.EXPO_PUBLIC_ACCENTIFY_CONVO_API_URL ||
                 process.env.ACCENTIFY_CONVO_API_URL ||
-                "https://ahmad7080-accentify-audio-conversation.hf.space",
+                "https://ushna22-accentify-audio-conversation.hf.space",
             ACCENTIFY_CONVO_API_TOKEN:
                 process.env.EXPO_PUBLIC_ACCENTIFY_CONVO_API_TOKEN ||
                 process.env.ACCENTIFY_CONVO_API_TOKEN,
