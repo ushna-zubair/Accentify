@@ -29,6 +29,10 @@ interface AuthContextType {
   userRole: UserRole | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  /** True while the Firestore user profile is being fetched after auth resolves. */
+  profileLoading: boolean;
+  /** True when the Firestore profile fetch failed (e.g. network error). */
+  profileFetchError: boolean;
   /** True when the user has authenticated but still owes a TOTP code. */
   pendingTotpChallenge: boolean;
   signUp: (email: string, password: string) => Promise<UserCredential>;
@@ -63,6 +67,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileFetchError, setProfileFetchError] = useState(false);
   const [pendingTotpChallenge, setPendingTotpChallenge] = useState(false);
 
   const fetchUserRole = useCallback(async (uid: string): Promise<UserRole | null> => {
@@ -380,15 +386,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
+      // Unblock navigation as soon as Firebase Auth resolves — this is fast
+      // (local token check, ~50-100 ms). The Firestore profile fetch below runs
+      // concurrently and is tracked separately via profileLoading/profileFetchError
+      // so AppNavigator can keep showing the splash until the profile is ready.
+      setLoading(false);
+
       if (user) {
-        await fetchUserRole(user.uid);
+        setProfileLoading(true);
+        setProfileFetchError(false);
+        try {
+          await fetchUserRole(user.uid);
+        } catch {
+          setProfileFetchError(true);
+        } finally {
+          setProfileLoading(false);
+        }
         // Record this device in the user's device sessions
         recordDeviceSession(user.uid).catch(() => { });
       } else {
         setUserRole(null);
         setUserProfile(null);
       }
-      setLoading(false);
     });
 
     return unsubscribe;
@@ -399,6 +418,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userRole,
     userProfile,
     loading,
+    profileLoading,
+    profileFetchError,
     pendingTotpChallenge,
     signUp,
     signIn,
@@ -410,7 +431,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sendVerificationEmail,
     reloadUser,
     clearTotpChallenge,
-  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
+  }), [currentUser, userRole, userProfile, loading, profileLoading, profileFetchError, pendingTotpChallenge, signUp, signIn, signOut, fetchUserRole, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

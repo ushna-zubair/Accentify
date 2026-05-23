@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../context/AuthContext';
 import { TabBarVisibilityProvider, useTabBarVisibility } from '../context/TabBarVisibilityContext';
 import { convoHealth } from '../services/conversationApi';
+import { health as pronunciationHealth } from '../services/accentifyApi';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
@@ -310,6 +311,7 @@ const LearnerNavigator = () => {
   // swallowed, the per-screen warmup pings still kick in too.
   useEffect(() => {
     convoHealth().catch(() => {});
+    pronunciationHealth().catch(() => {});
   }, []);
 
   return (
@@ -330,7 +332,7 @@ const LearnerNavigator = () => {
 };
 
 const AppNavigator: React.FC = () => {
-  const { currentUser, loading, userRole, userProfile, reloadUser, pendingTotpChallenge, profileFetchError, fetchUserRole } = useAuth();
+  const { currentUser, loading, profileLoading, profileFetchError, userRole, userProfile, reloadUser, pendingTotpChallenge, fetchUserRole } = useAuth();
   const [appState, setAppState] = useState(AppState.currentState);
   const [splashVisible, setSplashVisible] = useState(true);
   const [retrying, setRetrying] = useState(false);
@@ -359,7 +361,7 @@ const AppNavigator: React.FC = () => {
     };
   }, [appState, currentUser, reloadUser]);
 
-  if (loading || splashVisible) {
+  if (loading || splashVisible || profileLoading) {
     return (
       <View style={{
         flex: 1, alignItems: 'center', justifyContent: 'center',
