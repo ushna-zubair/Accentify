@@ -57,7 +57,7 @@ const createId = (): string =>
   `tc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
 const TUTOR_GREETING =
-  "Hi! I'm your AI tutor. Tap the mic and talk to me — I'll listen, then reply with my voice.";
+  "Hi! I'm your AI tutor. Tap the mic and speak a sentence — I'll listen and give you instant feedback on your English grammar and word choice.";
 
 // Reject obvious silence / accidental taps before we hit the API.
 const MIN_RECORDING_MS = 600;
@@ -306,6 +306,9 @@ export const useTutorChatController = () => {
       return;
     }
 
+    // Give expo-audio a moment to flush the recording to disk before uploading.
+    await new Promise((r) => setTimeout(r, 300));
+
     let response: ConversationAudioResponse;
     try {
       // The conversation Space uses Whisper (distil-small.en), which decodes
@@ -371,14 +374,20 @@ export const useTutorChatController = () => {
   const toggleMic = useCallback(async () => {
     const p = phaseRef.current;
     if (p === 'processing') return; // ignore taps while waiting on the API
-    if (p === 'recording') {
-      await stopAndSend();
-      return;
+    try {
+      if (p === 'recording') {
+        await stopAndSend();
+        return;
+      }
+      // idle / error / speaking → start a new recording (interrupts any playback)
+      stopAndReleasePlayer();
+      await startRecording();
+    } catch (e) {
+      console.error('[Tutor] toggleMic unhandled error:', e);
+      setError('Something went wrong. Please try again.');
+      setPhase('idle');
     }
-    // idle / error / speaking → start a new recording (interrupts any playback)
-    stopAndReleasePlayer();
-    await startRecording();
-  }, [startRecording, stopAndSend, stopAndReleasePlayer]);
+  }, [startRecording, stopAndSend, stopAndReleasePlayer, setPhase]);
 
   const dismissError = useCallback(() => setError(null), []);
 
