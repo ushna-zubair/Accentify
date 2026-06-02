@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import {
   collection,
   doc,
@@ -26,7 +32,6 @@ import type {
 
 const LESSONS_COL = 'lessons';
 
-// ─── Helpers ───
 const tsToISO = (ts: any): string => {
   if (!ts) return '';
   if (ts.toDate) return ts.toDate().toISOString();
@@ -67,7 +72,6 @@ const mapLessonDoc = (docSnap: any): AdminLesson => {
   };
 };
 
-// ─── Fetch all lessons ───
 export const fetchAllLessons = async (maxItems = 200): Promise<AdminLesson[]> => {
   const q = query(collection(db, LESSONS_COL), orderBy('order', 'asc'), limit(maxItems));
   const snap = await getDocs(q);
@@ -92,7 +96,6 @@ export const fetchAllLessons = async (maxItems = 200): Promise<AdminLesson[]> =>
 /** Lesson fields that go to the main document (excludes vocabPairs sub-collection) */
 type LessonDocFields = Omit<AdminLessonFormData, 'vocabPairs'>;
 
-// ─── Create lesson ───
 export const createLesson = async (
   formData: LessonDocFields,
   adminUid: string,
@@ -108,7 +111,6 @@ export const createLesson = async (
   return docRef.id;
 };
 
-// ─── Update lesson ───
 export const updateLesson = async (
   lessonId: string,
   formData: Partial<LessonDocFields>,
@@ -119,7 +121,6 @@ export const updateLesson = async (
   });
 };
 
-// ─── Delete lesson (cascade vocabPairs) ───
 export const deleteLesson = async (lessonId: string): Promise<void> => {
   // First delete all vocabPairs in the sub-collection
   const pairsSnap = await getDocs(collection(db, LESSONS_COL, lessonId, 'vocabPairs'));
@@ -129,7 +130,6 @@ export const deleteLesson = async (lessonId: string): Promise<void> => {
   await deleteDoc(doc(db, LESSONS_COL, lessonId));
 };
 
-// ─── Update lesson status ───
 export const updateLessonStatus = async (
   lessonId: string,
   newStatus: AdminLessonStatus,
@@ -140,11 +140,7 @@ export const updateLessonStatus = async (
   });
 };
 
-// ─── Duplicate lesson (including vocabPairs) ───
-export const duplicateLesson = async (
-  lessonId: string,
-  adminUid: string,
-): Promise<string> => {
+export const duplicateLesson = async (lessonId: string, adminUid: string): Promise<string> => {
   const snap = await getDoc(doc(db, LESSONS_COL, lessonId));
   if (!snap.exists()) throw new Error('Lesson not found');
   const data = snap.data();
@@ -192,10 +188,6 @@ export const duplicateLesson = async (
 
   return docRef.id;
 };
-
-// ═══════════════════════════════════════════════
-//  VOCAB PAIR CRUD
-// ═══════════════════════════════════════════════
 
 /** Fetch all vocab pairs for a lesson */
 export const fetchVocabPairs = async (lessonId: string): Promise<AdminVocabPairForm[]> => {
@@ -245,9 +237,7 @@ export const saveVocabPairs = async (
   await batch.commit();
 };
 
-// ═══════════════════════════════════════════════
 //  VOCABULARY WORD LINKAGE (new synonym-typing exercise)
-// ═══════════════════════════════════════════════
 
 /**
  * Read the `vocabularyWordIds` field on a lesson doc (refs into
@@ -255,9 +245,7 @@ export const saveVocabPairs = async (
  * missing, the lesson doesn't exist, or the value isn't an array — callers
  * should then fall back to CEFR-band selection.
  */
-export const fetchVocabularyWordIdsForLesson = async (
-  lessonId: string,
-): Promise<string[]> => {
+export const fetchVocabularyWordIdsForLesson = async (lessonId: string): Promise<string[]> => {
   const snap = await getDoc(doc(db, LESSONS_COL, lessonId));
   if (!snap.exists()) return [];
   const raw = snap.data().vocabularyWordIds;
@@ -265,7 +253,6 @@ export const fetchVocabularyWordIdsForLesson = async (
   return raw.map((id) => String(id)).filter((s) => s.length > 0);
 };
 
-// ─── Compute stats from items ───
 export const computeLessonStats = (items: AdminLesson[]): AdminLessonStats => {
   const total = items.length;
   const published = items.filter((i) => i.status === 'published').length;

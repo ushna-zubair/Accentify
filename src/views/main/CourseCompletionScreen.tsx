@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -48,37 +54,91 @@ type CompletionNav = NativeStackNavigationProp<TutorStackParamList, 'CourseCompl
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-// ═══════════════════════════════════════════════
-//  CELEBRATION ILLUSTRATION (SVG)
-// ═══════════════════════════════════════════════
-
 const CelebrationIllustration: React.FC = () => (
   <View style={illustrationStyles.container}>
     <View style={illustrationStyles.frame}>
       {/* Confetti pieces */}
       <View style={[illustrationStyles.confetti, { top: 10, left: 15 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FE7F9C', width: 8, height: 3, borderRadius: 2, transform: [{ rotate: '45deg' }] }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            {
+              backgroundColor: '#FE7F9C',
+              width: 8,
+              height: 3,
+              borderRadius: 2,
+              transform: [{ rotate: '45deg' }],
+            },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { top: 12, right: 18 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#3F66FB', width: 7, height: 3, borderRadius: 2, transform: [{ rotate: '-30deg' }] }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            {
+              backgroundColor: '#3F66FB',
+              width: 7,
+              height: 3,
+              borderRadius: 2,
+              transform: [{ rotate: '-30deg' }],
+            },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { top: 28, left: 50 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FD8E39', width: 6, height: 6 }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            { backgroundColor: '#FD8E39', width: 6, height: 6 },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { top: 22, right: 45 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#3DC13C', width: 8, height: 3, borderRadius: 2, transform: [{ rotate: '60deg' }] }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            {
+              backgroundColor: '#3DC13C',
+              width: 8,
+              height: 3,
+              borderRadius: 2,
+              transform: [{ rotate: '60deg' }],
+            },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { bottom: 80, left: 20 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#9FB2FD', width: 6, height: 6 }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            { backgroundColor: '#9FB2FD', width: 6, height: 6 },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { bottom: 75, right: 15 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#F3BB1B', width: 6, height: 3, borderRadius: 2 }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            { backgroundColor: '#F3BB1B', width: 6, height: 3, borderRadius: 2 },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { top: 40, left: 10 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#E94F54', width: 5, height: 5 }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            { backgroundColor: '#E94F54', width: 5, height: 5 },
+          ]}
+        />
       </View>
       <View style={[illustrationStyles.confetti, { top: 45, right: 12 }]}>
-        <View style={[illustrationStyles.confettiDot, { backgroundColor: '#FE7F9C', width: 5, height: 5 }]} />
+        <View
+          style={[
+            illustrationStyles.confettiDot,
+            { backgroundColor: '#FE7F9C', width: 5, height: 5 },
+          ]}
+        />
       </View>
 
       {/* Balloons */}
@@ -255,21 +315,51 @@ const illustrationStyles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
-//  CONFETTI MODAL ILLUSTRATION
-// ═══════════════════════════════════════════════
-
 const ConfettiPartyPopper: React.FC = () => (
   <View style={modalIllustrationStyles.container}>
     {/* Confetti pieces around */}
-    <View style={[modalIllustrationStyles.confettiPiece, { top: 0, left: 10, backgroundColor: '#FE7F9C', transform: [{ rotate: '45deg' }] }]} />
-    <View style={[modalIllustrationStyles.confettiPiece, { top: 5, right: 15, backgroundColor: '#3F66FB', transform: [{ rotate: '-30deg' }] }]} />
-    <View style={[modalIllustrationStyles.confettiPiece, { top: 20, left: 30, backgroundColor: '#FD8E39', transform: [{ rotate: '60deg' }] }]} />
-    <View style={[modalIllustrationStyles.confettiPiece, { top: 18, right: 35, backgroundColor: '#3DC13C', transform: [{ rotate: '-45deg' }] }]} />
-    <View style={[modalIllustrationStyles.confettiDot, { top: 12, left: 55, backgroundColor: '#3F66FB' }]} />
-    <View style={[modalIllustrationStyles.confettiDot, { top: 25, right: 50, backgroundColor: '#E94F54' }]} />
-    <View style={[modalIllustrationStyles.confettiCurl, { top: 5, left: 50, borderColor: '#FE7F9C' }]} />
-    <View style={[modalIllustrationStyles.confettiCurl, { top: 15, right: 25, borderColor: '#9FB2FD' }]} />
+    <View
+      style={[
+        modalIllustrationStyles.confettiPiece,
+        { top: 0, left: 10, backgroundColor: '#FE7F9C', transform: [{ rotate: '45deg' }] },
+      ]}
+    />
+    <View
+      style={[
+        modalIllustrationStyles.confettiPiece,
+        { top: 5, right: 15, backgroundColor: '#3F66FB', transform: [{ rotate: '-30deg' }] },
+      ]}
+    />
+    <View
+      style={[
+        modalIllustrationStyles.confettiPiece,
+        { top: 20, left: 30, backgroundColor: '#FD8E39', transform: [{ rotate: '60deg' }] },
+      ]}
+    />
+    <View
+      style={[
+        modalIllustrationStyles.confettiPiece,
+        { top: 18, right: 35, backgroundColor: '#3DC13C', transform: [{ rotate: '-45deg' }] },
+      ]}
+    />
+    <View
+      style={[
+        modalIllustrationStyles.confettiDot,
+        { top: 12, left: 55, backgroundColor: '#3F66FB' },
+      ]}
+    />
+    <View
+      style={[
+        modalIllustrationStyles.confettiDot,
+        { top: 25, right: 50, backgroundColor: '#E94F54' },
+      ]}
+    />
+    <View
+      style={[modalIllustrationStyles.confettiCurl, { top: 5, left: 50, borderColor: '#FE7F9C' }]}
+    />
+    <View
+      style={[modalIllustrationStyles.confettiCurl, { top: 15, right: 25, borderColor: '#9FB2FD' }]}
+    />
 
     {/* Party Popper */}
     <Text style={modalIllustrationStyles.partyEmoji}>🎉</Text>
@@ -310,10 +400,6 @@ const modalIllustrationStyles = StyleSheet.create({
     zIndex: 2,
   },
 });
-
-// ═══════════════════════════════════════════════
-//  CONGRATULATIONS MODAL
-// ═══════════════════════════════════════════════
 
 interface CongratulationsModalProps {
   visible: boolean;
@@ -359,20 +445,25 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="none" statusBarTranslucent>
       <Animated.View style={[modalStyles.overlay, { opacity: opacityAnim }]}>
-        <Animated.View
-          style={[
-            modalStyles.card,
-            { transform: [{ scale: scaleAnim }] },
-          ]}
-        >
+        <Animated.View style={[modalStyles.card, { transform: [{ scale: scaleAnim }] }]}>
           {/* Decorative confetti strip at top */}
           <View style={modalStyles.confettiStrip}>
             {/* Decorative dots */}
-            <View style={[modalStyles.stripDot, { backgroundColor: '#FE7F9C', left: 10, top: 8 }]} />
-            <View style={[modalStyles.stripDot, { backgroundColor: '#3F66FB', right: 20, top: 5 }]} />
-            <View style={[modalStyles.stripDot, { backgroundColor: '#FD8E39', left: 40, top: 15 }]} />
-            <View style={[modalStyles.stripDot, { backgroundColor: '#3DC13C', right: 45, top: 12 }]} />
-            <View style={[modalStyles.stripDot, { backgroundColor: '#9FB2FD', left: 80, top: 4 }]} />
+            <View
+              style={[modalStyles.stripDot, { backgroundColor: '#FE7F9C', left: 10, top: 8 }]}
+            />
+            <View
+              style={[modalStyles.stripDot, { backgroundColor: '#3F66FB', right: 20, top: 5 }]}
+            />
+            <View
+              style={[modalStyles.stripDot, { backgroundColor: '#FD8E39', left: 40, top: 15 }]}
+            />
+            <View
+              style={[modalStyles.stripDot, { backgroundColor: '#3DC13C', right: 45, top: 12 }]}
+            />
+            <View
+              style={[modalStyles.stripDot, { backgroundColor: '#9FB2FD', left: 80, top: 4 }]}
+            />
           </View>
 
           <Text style={modalStyles.title}>Congratulations!</Text>
@@ -383,11 +474,7 @@ const CongratulationsModal: React.FC<CongratulationsModalProps> = ({
             {completedCount} down, {remaining} to go, complete your weekly streak!
           </Text>
 
-          <TouchableOpacity
-            style={modalStyles.okayButton}
-            onPress={onDismiss}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={modalStyles.okayButton} onPress={onDismiss} activeOpacity={0.7}>
             <Text style={modalStyles.okayText}>OKAY!</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -464,10 +551,6 @@ const modalStyles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
-
 const CourseCompletionScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
@@ -523,9 +606,7 @@ const CourseCompletionScreen: React.FC = () => {
           const data = streakSnap.data();
           const lastActive = data.lastActiveDate?.toDate?.() ?? new Date(0);
           const now = new Date();
-          const diffDays = Math.floor(
-            (now.getTime() - lastActive.getTime()) / 86400000,
-          );
+          const diffDays = Math.floor((now.getTime() - lastActive.getTime()) / 86400000);
 
           if (diffDays <= 1) {
             currentStreak = (data.dayStreak ?? 0) + (diffDays === 1 ? 1 : 0);
@@ -608,17 +689,12 @@ const CourseCompletionScreen: React.FC = () => {
 
           {/* Congratulatory Message */}
           <Text style={styles.congratsMessage}>
-            Congratulations, you have successfully completed the second course!
-            You may attempt again for more practice or proceed to the next
-            level.
+            Congratulations, you have successfully completed the second course! You may attempt
+            again for more practice or proceed to the next level.
           </Text>
 
           {/* Back to Menu Button */}
-          <TouchableOpacity
-            style={styles.proceedBtn}
-            onPress={handleProceed}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.proceedBtn} onPress={handleProceed} activeOpacity={0.7}>
             <Text style={styles.proceedBtnText}>Back to Menu</Text>
           </TouchableOpacity>
 
@@ -644,82 +720,77 @@ const CourseCompletionScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.accentMuted,
+    },
+    content: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingBottom: 40,
+      alignItems: 'center',
+    },
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.accentMuted,
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    alignItems: 'center',
-  },
+    dashboardLabel: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.text,
+      alignSelf: 'flex-start',
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    courseTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 24,
+      color: tc.text,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
 
-  // ── Header ──
-  dashboardLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.text,
-    alignSelf: 'flex-start',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  courseTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: tc.text,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
+    // ── Message ──
+    congratsMessage: {
+      fontFamily: fonts.medium,
+      fontSize: 17,
+      color: tc.text,
+      textAlign: 'center',
+      lineHeight: 28,
+      marginTop: 16,
+      marginBottom: 28,
+      paddingHorizontal: 8,
+    },
 
-  // ── Message ──
-  congratsMessage: {
-    fontFamily: fonts.medium,
-    fontSize: 17,
-    color: tc.text,
-    textAlign: 'center',
-    lineHeight: 28,
-    marginTop: 16,
-    marginBottom: 28,
-    paddingHorizontal: 8,
-  },
-
-  // ── Buttons ──
-  proceedBtn: {
-    width: '100%',
-    backgroundColor: tc.accent,
-    borderRadius: 28,
-    paddingVertical: 16,
-    alignItems: 'center',
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
-    marginBottom: 16,
-  },
-  proceedBtnText: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.white,
-  },
-  attemptAgainBtn: {
-    paddingVertical: 8,
-  },
-  attemptAgainText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    color: tc.textLight,
-    textDecorationLine: 'underline',
-    fontStyle: 'italic',
-  },
-});
+    proceedBtn: {
+      width: '100%',
+      backgroundColor: tc.accent,
+      borderRadius: 28,
+      paddingVertical: 16,
+      alignItems: 'center',
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 4,
+      marginBottom: 16,
+    },
+    proceedBtnText: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.white,
+    },
+    attemptAgainBtn: {
+      paddingVertical: 8,
+    },
+    attemptAgainText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.textLight,
+      textDecorationLine: 'underline',
+      fontStyle: 'italic',
+    },
+  });
 
 export default CourseCompletionScreen;

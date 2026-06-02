@@ -1,4 +1,10 @@
-import React, { useState , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,11 +31,6 @@ import type {
   EnglishLevel,
 } from '../../models';
 
-// ═══════════════════════════════════════════════
-//  SUB-COMPONENTS
-// ═══════════════════════════════════════════════
-
-// ─── Lesson Status Icon ───
 const LessonIcon: React.FC<{ item: LessonDay }> = ({ item }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
@@ -55,7 +56,6 @@ const LessonIcon: React.FC<{ item: LessonDay }> = ({ item }) => {
   );
 };
 
-// ─── Metric Bar Chart (4 bars with labels) ───
 interface MetricBar {
   label: string;
   value: number;
@@ -108,7 +108,6 @@ const MetricBarChart: React.FC<{ title: string; bars: MetricBar[] }> = ({ title,
   );
 };
 
-// ─── Overall Performance Donut ───
 const PerformanceDonut: React.FC<{ performance: OverallPerformance }> = ({ performance }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
@@ -179,7 +178,6 @@ const PerformanceDonut: React.FC<{ performance: OverallPerformance }> = ({ perfo
   );
 };
 
-// ─── Level Picker Modal ───
 const LevelPickerModal: React.FC<{
   visible: boolean;
   selected: EnglishLevel;
@@ -189,39 +187,33 @@ const LevelPickerModal: React.FC<{
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   return (
-  <Modal visible={visible} transparent animationType="slide">
-    <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={onClose}>
-      <View style={styles.pickerContent}>
-        <Text style={styles.pickerTitle}>Set English Level</Text>
-        {ENGLISH_LEVELS.map((lvl) => (
-          <TouchableOpacity
-            key={lvl}
-            style={[styles.pickerOption, selected === lvl && styles.pickerOptionSelected]}
-            onPress={() => onSelect(lvl)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.pickerOptionText,
-                selected === lvl && styles.pickerOptionTextSelected,
-              ]}
+    <Modal visible={visible} transparent animationType="slide">
+      <TouchableOpacity style={styles.pickerOverlay} activeOpacity={1} onPress={onClose}>
+        <View style={styles.pickerContent}>
+          <Text style={styles.pickerTitle}>Set English Level</Text>
+          {ENGLISH_LEVELS.map((lvl) => (
+            <TouchableOpacity
+              key={lvl}
+              style={[styles.pickerOption, selected === lvl && styles.pickerOptionSelected]}
+              onPress={() => onSelect(lvl)}
+              activeOpacity={0.7}
             >
-              {lvl}
-            </Text>
-            {selected === lvl && (
-              <Ionicons name="checkmark-circle" size={20} color={tc.accent} />
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
-    </TouchableOpacity>
-  </Modal>
+              <Text
+                style={[
+                  styles.pickerOptionText,
+                  selected === lvl && styles.pickerOptionTextSelected,
+                ]}
+              >
+                {lvl}
+              </Text>
+              {selected === lvl && <Ionicons name="checkmark-circle" size={20} color={tc.accent} />}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </TouchableOpacity>
+    </Modal>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 const PRONUNCIATION_COLORS = ['#E74C3C', '#2ECC71', '#F1C40F', '#E67E22'];
 const CONVERSATION_COLORS = ['#2ECC71', '#F1C40F', '#E67E22', '#E74C3C'];
@@ -253,19 +245,51 @@ const AdminInsightsScreen: React.FC = () => {
   // Map metrics to bar data
   const pronunciationBars: MetricBar[] = insightsData.weeklyProgress
     ? [
-        { label: 'Clarity', value: insightsData.weeklyProgress.pronunciation.clarity, color: PRONUNCIATION_COLORS[0] },
-        { label: 'Sound\nAccuracy', value: insightsData.weeklyProgress.pronunciation.soundAccuracy, color: PRONUNCIATION_COLORS[1] },
-        { label: 'Rhythm &\nTempo', value: insightsData.weeklyProgress.pronunciation.rhythmAndTone, color: PRONUNCIATION_COLORS[2] },
-        { label: 'Smoothness', value: insightsData.weeklyProgress.pronunciation.smoothness, color: PRONUNCIATION_COLORS[3] },
+        {
+          label: 'Clarity',
+          value: insightsData.weeklyProgress.pronunciation.clarity,
+          color: PRONUNCIATION_COLORS[0],
+        },
+        {
+          label: 'Sound\nAccuracy',
+          value: insightsData.weeklyProgress.pronunciation.soundAccuracy,
+          color: PRONUNCIATION_COLORS[1],
+        },
+        {
+          label: 'Rhythm &\nTempo',
+          value: insightsData.weeklyProgress.pronunciation.rhythmAndTone,
+          color: PRONUNCIATION_COLORS[2],
+        },
+        {
+          label: 'Smoothness',
+          value: insightsData.weeklyProgress.pronunciation.smoothness,
+          color: PRONUNCIATION_COLORS[3],
+        },
       ]
     : [];
 
   const conversationBars: MetricBar[] = insightsData.weeklyProgress
     ? [
-        { label: 'Fluency', value: insightsData.weeklyProgress.conversation.fluency, color: CONVERSATION_COLORS[0] },
-        { label: 'Vocabulary', value: insightsData.weeklyProgress.conversation.vocabulary, color: CONVERSATION_COLORS[1] },
-        { label: 'Grammar\nUsage', value: insightsData.weeklyProgress.conversation.grammarUsage, color: CONVERSATION_COLORS[2] },
-        { label: 'Turn-Taking', value: insightsData.weeklyProgress.conversation.turnTaking, color: CONVERSATION_COLORS[3] },
+        {
+          label: 'Fluency',
+          value: insightsData.weeklyProgress.conversation.fluency,
+          color: CONVERSATION_COLORS[0],
+        },
+        {
+          label: 'Vocabulary',
+          value: insightsData.weeklyProgress.conversation.vocabulary,
+          color: CONVERSATION_COLORS[1],
+        },
+        {
+          label: 'Grammar\nUsage',
+          value: insightsData.weeklyProgress.conversation.grammarUsage,
+          color: CONVERSATION_COLORS[2],
+        },
+        {
+          label: 'Turn-Taking',
+          value: insightsData.weeklyProgress.conversation.turnTaking,
+          color: CONVERSATION_COLORS[3],
+        },
       ]
     : [];
 
@@ -273,17 +297,19 @@ const AdminInsightsScreen: React.FC = () => {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+          }}
+          style={styles.backBtn}
+        >
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Insights</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* ── User ID Search ── */}
         <View style={styles.userIdSection}>
           <Text style={styles.userIdLabel}>User ID:</Text>
@@ -306,11 +332,7 @@ const AdminInsightsScreen: React.FC = () => {
 
         {/* ── Loading / Error ── */}
         {loading && (
-          <ActivityIndicator
-            size="large"
-            color={tc.accent}
-            style={{ marginVertical: 32 }}
-          />
+          <ActivityIndicator size="large" color={tc.accent} style={{ marginVertical: 32 }} />
         )}
         {error && <Text style={styles.errorText}>{error}</Text>}
 
@@ -325,7 +347,8 @@ const AdminInsightsScreen: React.FC = () => {
                   No Progress Data Available
                 </Text>
                 <Text style={[styles.errorText, { color: tc.textMuted, marginTop: 4 }]}>
-                  This user hasn't completed any exercises yet. Data shown below reflects zero values.
+                  This user hasn't completed any exercises yet. Data shown below reflects zero
+                  values.
                 </Text>
               </View>
             )}
@@ -389,303 +412,299 @@ const AdminInsightsScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 10,
+    },
+    backBtn: {
+      padding: 4,
+    },
+    headerTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 20,
+      color: tc.text,
+    },
+    headerSpacer: {
+      width: 32,
+    },
 
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 10,
-  },
-  backBtn: {
-    padding: 4,
-  },
-  headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-  },
-  headerSpacer: {
-    width: 32,
-  },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 40,
+    },
 
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
+    // User ID
+    userIdSection: {
+      alignItems: 'center',
+      marginTop: 12,
+      marginBottom: 16,
+    },
+    userIdLabel: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.text,
+      marginBottom: 8,
+    },
+    userIdInputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: '80%',
+    },
+    userIdInput: {
+      flex: 1,
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.text,
+      backgroundColor: tc.accentMuted,
+      borderRadius: 24,
+      paddingHorizontal: 20,
+      paddingVertical: 12,
+      textAlign: 'center',
+    },
+    searchBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: tc.accent,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: 8,
+    },
 
-  // User ID
-  userIdSection: {
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 16,
-  },
-  userIdLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.text,
-    marginBottom: 8,
-  },
-  userIdInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '80%',
-  },
-  userIdInput: {
-    flex: 1,
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.text,
-    backgroundColor: tc.accentMuted,
-    borderRadius: 24,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    textAlign: 'center',
-  },
-  searchBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: tc.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
+    errorText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.error,
+      textAlign: 'center',
+      marginVertical: 12,
+    },
 
-  errorText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.error,
-    textAlign: 'center',
-    marginVertical: 12,
-  },
+    // Weekly header
+    weeklyHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    weeklyTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 15,
+      color: tc.text,
+      flex: 1,
+    },
+    dateBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.accentMuted,
+      borderRadius: 12,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      gap: 4,
+    },
+    dateBadgeText: {
+      fontFamily: fonts.medium,
+      fontSize: 11,
+      color: tc.text,
+    },
 
-  // Weekly header
-  weeklyHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  weeklyTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: tc.text,
-    flex: 1,
-  },
-  dateBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tc.accentMuted,
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    gap: 4,
-  },
-  dateBadgeText: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
-    color: tc.text,
-  },
+    divider: {
+      height: 1,
+      backgroundColor: tc.divider,
+      marginBottom: 12,
+    },
 
-  divider: {
-    height: 1,
-    backgroundColor: tc.divider,
-    marginBottom: 12,
-  },
+    // Lesson day icons
+    lessonDayList: {
+      paddingBottom: 16,
+      gap: 12,
+    },
+    lessonIconWrapper: {
+      alignItems: 'center',
+      width: 68,
+    },
+    lessonIconCircle: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    lessonStatusLabel: {
+      fontFamily: fonts.regular,
+      fontSize: 9,
+      color: tc.textLight,
+      textAlign: 'center',
+    },
 
-  // Lesson day icons
-  lessonDayList: {
-    paddingBottom: 16,
-    gap: 12,
-  },
-  lessonIconWrapper: {
-    alignItems: 'center',
-    width: 68,
-  },
-  lessonIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  lessonStatusLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 9,
-    color: tc.textLight,
-    textAlign: 'center',
-  },
+    // Overall Performance
+    sectionCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+      padding: 16,
+      marginBottom: 16,
+    },
+    sectionCardTitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.textLight,
+      marginBottom: 8,
+    },
 
-  // Overall Performance
-  sectionCard: {
-    backgroundColor: tc.surface,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tc.cardBorder,
-    padding: 16,
-    marginBottom: 16,
-  },
-  sectionCardTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.textLight,
-    marginBottom: 8,
-  },
+    // Donut
+    donutContainer: {
+      alignItems: 'center',
+    },
+    donutCenter: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 150,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    donutCenterValue: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+    },
+    donutLegend: {
+      marginTop: 12,
+      gap: 6,
+      alignSelf: 'flex-end',
+      paddingRight: 4,
+    },
+    donutLegendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    donutLegendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    donutLegendText: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textLight,
+    },
 
-  // Donut
-  donutContainer: {
-    alignItems: 'center',
-  },
-  donutCenter: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 150,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  donutCenterValue: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-  },
-  donutLegend: {
-    marginTop: 12,
-    gap: 6,
-    alignSelf: 'flex-end',
-    paddingRight: 4,
-  },
-  donutLegendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  donutLegendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  donutLegendText: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: tc.textLight,
-  },
+    // Metric Cards Row
+    metricsRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 20,
+    },
+    metricCard: {
+      flex: 1,
+      backgroundColor: '#FDE8F0',
+      borderRadius: 14,
+      padding: 12,
+      paddingBottom: 8,
+    },
+    metricCardTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      color: tc.text,
+      marginBottom: 10,
+    },
+    metricChartContainer: {
+      alignItems: 'center',
+    },
+    metricLabelsRow: {
+      flexDirection: 'row',
+      marginTop: 4,
+    },
+    metricBarLabel: {
+      fontFamily: fonts.regular,
+      fontSize: 8,
+      color: tc.textLight,
+      textAlign: 'center',
+    },
 
-  // Metric Cards Row
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  metricCard: {
-    flex: 1,
-    backgroundColor: '#FDE8F0',
-    borderRadius: 14,
-    padding: 12,
-    paddingBottom: 8,
-  },
-  metricCardTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: tc.text,
-    marginBottom: 10,
-  },
-  metricChartContainer: {
-    alignItems: 'center',
-  },
-  metricLabelsRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  metricBarLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 8,
-    color: tc.textLight,
-    textAlign: 'center',
-  },
+    // Set Level
+    setLevelSection: {
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    setLevelTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+      marginBottom: 10,
+    },
+    levelDropdown: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accentMuted,
+      borderRadius: 28,
+      paddingVertical: 14,
+      paddingHorizontal: 28,
+      gap: 10,
+      width: '70%',
+    },
+    levelDropdownText: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+    },
 
-  // Set Level
-  setLevelSection: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  setLevelTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-    marginBottom: 10,
-  },
-  levelDropdown: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accentMuted,
-    borderRadius: 28,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    gap: 10,
-    width: '70%',
-  },
-  levelDropdownText: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-  },
-
-  // Level Picker Modal
-  pickerOverlay: {
-    flex: 1,
-    backgroundColor: tc.overlay,
-    justifyContent: 'flex-end',
-  },
-  pickerContent: {
-    backgroundColor: tc.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 40,
-  },
-  pickerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-    marginBottom: 16,
-  },
-  pickerOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 4,
-  },
-  pickerOptionSelected: {
-    backgroundColor: tc.accentMuted,
-  },
-  pickerOptionText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  pickerOptionTextSelected: {
-    fontFamily: fonts.semiBold,
-    color: tc.accent,
-  },
-});
+    // Level Picker Modal
+    pickerOverlay: {
+      flex: 1,
+      backgroundColor: tc.overlay,
+      justifyContent: 'flex-end',
+    },
+    pickerContent: {
+      backgroundColor: tc.white,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      padding: 24,
+      paddingBottom: 40,
+    },
+    pickerTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+      marginBottom: 16,
+    },
+    pickerOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      marginBottom: 4,
+    },
+    pickerOptionSelected: {
+      backgroundColor: tc.accentMuted,
+    },
+    pickerOptionText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    pickerOptionTextSelected: {
+      fontFamily: fonts.semiBold,
+      color: tc.accent,
+    },
+  });
 
 export default AdminInsightsScreen;

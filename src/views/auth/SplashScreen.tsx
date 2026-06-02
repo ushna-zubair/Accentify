@@ -1,4 +1,10 @@
-import React, { useEffect , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useEffect, useMemo } from 'react';
 import { View, Image, StyleSheet, Text } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../../models';
@@ -31,27 +37,28 @@ const SplashScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 24,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-    color: tc.accent,
-    letterSpacing: 6,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    content: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logo: {
+      width: 200,
+      height: 200,
+      marginBottom: 24,
+    },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 22,
+      color: tc.accent,
+      letterSpacing: 6,
+    },
+  });
 
 export default SplashScreen;

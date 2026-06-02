@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * supportService.ts
  *
  * Firestore CRUD & queries for support tickets and system logs.
@@ -39,8 +45,6 @@ import type {
 const TICKETS_COL = 'support_tickets';
 const SYSTEM_LOGS_COL = 'system_logs';
 const ACTIVITY_LOGS_COL = 'admin_activity_logs';
-
-// ─── Helpers ───
 
 const tsToISO = (ts: any): string => {
   if (!ts) return '';
@@ -88,10 +92,6 @@ const mapLogDoc = (d: any): SystemLog => {
   };
 };
 
-// ═══════════════════════════════════════════════
-//  SUPPORT TICKETS
-// ═══════════════════════════════════════════════
-
 export async function fetchSupportTickets(maxItems = 200): Promise<SupportTicket[]> {
   const ref = collection(db, TICKETS_COL);
   const q = query(ref, orderBy('createdAt', 'desc'), limit(maxItems));
@@ -99,9 +99,7 @@ export async function fetchSupportTickets(maxItems = 200): Promise<SupportTicket
   return snap.docs.map(mapTicketDoc);
 }
 
-export async function fetchTicketsByStatus(
-  status: SupportTicketStatus,
-): Promise<SupportTicket[]> {
+export async function fetchTicketsByStatus(status: SupportTicketStatus): Promise<SupportTicket[]> {
   const ref = collection(db, TICKETS_COL);
   const q = query(ref, where('status', '==', status), orderBy('createdAt', 'desc'));
   const snap = await getDocs(q);
@@ -188,10 +186,7 @@ export async function assignTicket(
   });
 }
 
-export async function respondToTicket(
-  ticketId: string,
-  response: string,
-): Promise<void> {
+export async function respondToTicket(ticketId: string, response: string): Promise<void> {
   const ref = doc(db, TICKETS_COL, ticketId);
   await updateDoc(ref, {
     response,
@@ -203,8 +198,6 @@ export async function deleteTicket(ticketId: string): Promise<void> {
   const ref = doc(db, TICKETS_COL, ticketId);
   await deleteDoc(ref);
 }
-
-// ─── Stats ───
 
 export function computeSupportStats(tickets: SupportTicket[]): SupportStats {
   const open = tickets.filter((t) => t.status === 'open').length;
@@ -237,13 +230,7 @@ export function computeSupportStats(tickets: SupportTicket[]): SupportStats {
   };
 }
 
-// ═══════════════════════════════════════════════
-//  SYSTEM LOGS
-// ═══════════════════════════════════════════════
-
-export async function fetchSystemLogs(
-  limitCount: number = 100,
-): Promise<SystemLog[]> {
+export async function fetchSystemLogs(limitCount: number = 100): Promise<SystemLog[]> {
   const ref = collection(db, SYSTEM_LOGS_COL);
   const q = query(ref, orderBy('timestamp', 'desc'), limit(limitCount));
   const snap = await getDocs(q);
@@ -255,7 +242,12 @@ export async function fetchSystemLogsByLevel(
   limitCount: number = 100,
 ): Promise<SystemLog[]> {
   const ref = collection(db, SYSTEM_LOGS_COL);
-  const q = query(ref, where('level', '==', level), orderBy('timestamp', 'desc'), limit(limitCount));
+  const q = query(
+    ref,
+    where('level', '==', level),
+    orderBy('timestamp', 'desc'),
+    limit(limitCount),
+  );
   const snap = await getDocs(q);
   return snap.docs.map(mapLogDoc);
 }
@@ -265,7 +257,12 @@ export async function fetchSystemLogsBySource(
   limitCount: number = 100,
 ): Promise<SystemLog[]> {
   const ref = collection(db, SYSTEM_LOGS_COL);
-  const q = query(ref, where('source', '==', source), orderBy('timestamp', 'desc'), limit(limitCount));
+  const q = query(
+    ref,
+    where('source', '==', source),
+    orderBy('timestamp', 'desc'),
+    limit(limitCount),
+  );
   const snap = await getDocs(q);
   return snap.docs.map(mapLogDoc);
 }
@@ -298,8 +295,6 @@ export async function deleteSystemLog(logId: string): Promise<void> {
   await deleteDoc(ref);
 }
 
-// ─── Fetch admin activity logs (from access-control collection) ───
-
 export async function fetchAdminActivityLogs(
   limitCount: number = 100,
 ): Promise<AdminActivityLog[]> {
@@ -320,8 +315,6 @@ export async function fetchAdminActivityLogs(
     };
   });
 }
-
-// ─── Combined logs (system + activity) for unified view ───
 
 export interface UnifiedLogEntry {
   id: string;

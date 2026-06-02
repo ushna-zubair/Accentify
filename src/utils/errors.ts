@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Shared async error handling utilities.
  *
  * Services that do single Firestore reads/writes can let errors propagate
@@ -36,7 +42,7 @@ export function friendlyError(err: unknown): AppError {
     switch (err.code) {
       case 'permission-denied':
       case 'functions/permission-denied':
-        return new AppError('You don\'t have permission to do this.', err.code, err);
+        return new AppError("You don't have permission to do this.", err.code, err);
       case 'not-found':
       case 'functions/not-found':
         return new AppError('The requested resource was not found.', err.code, err);

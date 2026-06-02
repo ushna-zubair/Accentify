@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * AdminFeedbackReportsScreen.tsx
  *
  * Professional admin feedback & reports panel with:
@@ -39,10 +45,16 @@ import {
   FEEDBACK_STATUS_LABELS,
 } from '../../models';
 
-// ─── Constants ───
 const ALL_STATUSES: FeedbackStatus[] = ['open', 'in_progress', 'resolved', 'closed'];
 const ALL_PRIORITIES: FeedbackPriority[] = ['critical', 'high', 'medium', 'low'];
-const ALL_CATEGORIES: FeedbackCategory[] = ['bug', 'feature', 'content', 'ui', 'performance', 'other'];
+const ALL_CATEGORIES: FeedbackCategory[] = [
+  'bug',
+  'feature',
+  'content',
+  'ui',
+  'performance',
+  'other',
+];
 const TABS: { key: FeedbackTab; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'open', label: 'Open' },
@@ -51,7 +63,6 @@ const TABS: { key: FeedbackTab; label: string }[] = [
   { key: 'closed', label: 'Closed' },
 ];
 
-// ─── Helpers ───
 const webConfirm = (title: string, msg: string, onOk: () => void) => {
   if (Platform.OS === 'web') {
     // eslint-disable-next-line no-restricted-globals
@@ -85,7 +96,6 @@ const fmtDate = (iso: string): string => {
   });
 };
 
-// ─── Color Maps ───
 const statusColor = (s: FeedbackStatus, tc: ThemeColors) => {
   const map: Record<FeedbackStatus, { bg: string; text: string }> = {
     open: { bg: tc.accent + '18', text: tc.accent },
@@ -119,14 +129,12 @@ const categoryIcon = (c: FeedbackCategory): string => {
   return map[c] ?? 'ellipsis-horizontal-circle';
 };
 
-// ═══════════════════════════════════════════════
-//  SMALL COMPONENTS
-// ═══════════════════════════════════════════════
-
 const StatusBadge: React.FC<{ status: FeedbackStatus; tc: ThemeColors }> = ({ status, tc }) => {
   const c = statusColor(status, tc);
   return (
-    <View style={{ backgroundColor: c.bg, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 }}>
+    <View
+      style={{ backgroundColor: c.bg, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 }}
+    >
       <Text style={{ fontFamily: fonts.semiBold, fontSize: 11, color: c.text }}>
         {FEEDBACK_STATUS_LABELS[status]}
       </Text>
@@ -134,10 +142,23 @@ const StatusBadge: React.FC<{ status: FeedbackStatus; tc: ThemeColors }> = ({ st
   );
 };
 
-const PriorityBadge: React.FC<{ priority: FeedbackPriority; tc: ThemeColors }> = ({ priority, tc }) => {
+const PriorityBadge: React.FC<{ priority: FeedbackPriority; tc: ThemeColors }> = ({
+  priority,
+  tc,
+}) => {
   const c = priorityColor(priority, tc);
   return (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: c.bg, paddingVertical: 3, paddingHorizontal: 8, borderRadius: 12 }}>
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
+        backgroundColor: c.bg,
+        paddingVertical: 3,
+        paddingHorizontal: 8,
+        borderRadius: 12,
+      }}
+    >
       <Ionicons name={c.icon as any} size={12} color={c.text} />
       <Text style={{ fontFamily: fonts.semiBold, fontSize: 11, color: c.text }}>
         {FEEDBACK_PRIORITY_LABELS[priority]}
@@ -146,7 +167,10 @@ const PriorityBadge: React.FC<{ priority: FeedbackPriority; tc: ThemeColors }> =
   );
 };
 
-const CategoryBadge: React.FC<{ category: FeedbackCategory; tc: ThemeColors }> = ({ category, tc }) => (
+const CategoryBadge: React.FC<{ category: FeedbackCategory; tc: ThemeColors }> = ({
+  category,
+  tc,
+}) => (
   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
     <Ionicons name={categoryIcon(category) as any} size={14} color={tc.textLight} />
     <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textLight }}>
@@ -186,17 +210,28 @@ const FilterChip: React.FC<{
   </TouchableOpacity>
 );
 
-// ═══════════════════════════════════════════════
-//  STATS BAR
-// ═══════════════════════════════════════════════
-const StatsBar: React.FC<{ stats: any; tc: ThemeColors; isWide: boolean }> = ({ stats, tc, isWide }) => {
+const StatsBar: React.FC<{ stats: any; tc: ThemeColors; isWide: boolean }> = ({
+  stats,
+  tc,
+  isWide,
+}) => {
   const cards = [
     { label: 'Total', value: stats.total, icon: 'chatbox-ellipses', color: tc.accent },
     { label: 'Open', value: stats.open, icon: 'alert-circle', color: '#3B82F6' },
-    { label: 'In Progress', value: stats.inProgress, icon: 'time', color: tc.warningDeep ?? tc.warning },
+    {
+      label: 'In Progress',
+      value: stats.inProgress,
+      icon: 'time',
+      color: tc.warningDeep ?? tc.warning,
+    },
     { label: 'Resolved', value: stats.resolved, icon: 'checkmark-circle', color: tc.success },
     { label: 'Critical', value: stats.critical, icon: 'flame', color: tc.error },
-    { label: 'Avg Resolution', value: `${stats.avgResolutionHours}h`, icon: 'hourglass', color: '#8B5CF6' },
+    {
+      label: 'Avg Resolution',
+      value: `${stats.avgResolutionHours}h`,
+      icon: 'hourglass',
+      color: '#8B5CF6',
+    },
   ];
 
   return (
@@ -206,7 +241,7 @@ const StatsBar: React.FC<{ stats: any; tc: ThemeColors; isWide: boolean }> = ({ 
           key={c.label}
           style={{
             flex: isWide ? 1 : undefined,
-            width: isWide ? undefined : '31%' as any,
+            width: isWide ? undefined : ('31%' as any),
             minWidth: 140,
             backgroundColor: tc.white,
             borderRadius: 12,
@@ -231,9 +266,7 @@ const StatsBar: React.FC<{ stats: any; tc: ThemeColors; isWide: boolean }> = ({ 
             <Ionicons name={c.icon as any} size={18} color={c.color} />
           </View>
           <View>
-            <Text style={{ fontFamily: fonts.bold, fontSize: 18, color: tc.text }}>
-              {c.value}
-            </Text>
+            <Text style={{ fontFamily: fonts.bold, fontSize: 18, color: tc.text }}>{c.value}</Text>
             <Text style={{ fontFamily: fonts.regular, fontSize: 10, color: tc.textMuted }}>
               {c.label}
             </Text>
@@ -244,9 +277,6 @@ const StatsBar: React.FC<{ stats: any; tc: ThemeColors; isWide: boolean }> = ({ 
   );
 };
 
-// ═══════════════════════════════════════════════
-//  FEEDBACK LIST ITEM
-// ═══════════════════════════════════════════════
 const FeedbackRow: React.FC<{
   item: FeedbackItem;
   onPress: () => void;
@@ -285,7 +315,10 @@ const FeedbackRow: React.FC<{
       <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }} numberOfLines={1}>
         {item.subject}
       </Text>
-      <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }} numberOfLines={1}>
+      <Text
+        style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}
+        numberOfLines={1}
+      >
         {item.userFullName} · {item.userEmail}
       </Text>
     </View>
@@ -321,9 +354,6 @@ const FeedbackRow: React.FC<{
   </TouchableOpacity>
 );
 
-// ═══════════════════════════════════════════════
-//  DETAIL MODAL
-// ═══════════════════════════════════════════════
 const DetailModal: React.FC<{
   visible: boolean;
   item: FeedbackItem | null;
@@ -361,7 +391,9 @@ const DetailModal: React.FC<{
   tc,
   width,
 }) => {
-  const [activeSection, setActiveSection] = useState<'details' | 'respond' | 'notes' | 'activity'>('details');
+  const [activeSection, setActiveSection] = useState<'details' | 'respond' | 'notes' | 'activity'>(
+    'details',
+  );
   const isWide = width >= 900;
 
   if (!item) return null;
@@ -381,7 +413,11 @@ const DetailModal: React.FC<{
         backgroundColor: activeSection === key ? tc.accent : 'transparent',
       }}
     >
-      <Ionicons name={icon as any} size={16} color={activeSection === key ? tc.white : tc.textLight} />
+      <Ionicons
+        name={icon as any}
+        size={16}
+        color={activeSection === key ? tc.white : tc.textLight}
+      />
       <Text
         style={{
           fontFamily: activeSection === key ? fonts.semiBold : fonts.medium,
@@ -413,7 +449,12 @@ const DetailModal: React.FC<{
             maxWidth: 720,
             maxHeight: '92%' as any,
             ...(Platform.OS === 'web'
-              ? { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 30 }
+              ? {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 30,
+                }
               : {}),
           }}
         >
@@ -435,7 +476,9 @@ const DetailModal: React.FC<{
                 <PriorityBadge priority={item.priority} tc={tc} />
                 <StatusBadge status={item.status} tc={tc} />
               </View>
-              <Text style={{ fontFamily: fonts.bold, fontSize: 18, color: tc.text, marginBottom: 2 }}>
+              <Text
+                style={{ fontFamily: fonts.bold, fontSize: 18, color: tc.text, marginBottom: 2 }}
+              >
                 {item.subject}
               </Text>
               <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}>
@@ -470,7 +513,14 @@ const DetailModal: React.FC<{
             {activeSection === 'details' && (
               <View>
                 {/* Description */}
-                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 8 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.semiBold,
+                    fontSize: 14,
+                    color: tc.text,
+                    marginBottom: 8,
+                  }}
+                >
                   Description
                 </Text>
                 <View
@@ -481,7 +531,14 @@ const DetailModal: React.FC<{
                     marginBottom: 20,
                   }}
                 >
-                  <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.text, lineHeight: 20 }}>
+                  <Text
+                    style={{
+                      fontFamily: fonts.regular,
+                      fontSize: 13,
+                      color: tc.text,
+                      lineHeight: 20,
+                    }}
+                  >
                     {item.description || 'No description provided.'}
                   </Text>
                 </View>
@@ -492,14 +549,22 @@ const DetailModal: React.FC<{
                     { label: 'ID', value: item.id.slice(0, 12) + '…', icon: 'finger-print' },
                     { label: 'App Version', value: item.appVersion || '—', icon: 'phone-portrait' },
                     { label: 'Device', value: item.deviceInfo || '—', icon: 'hardware-chip' },
-                    { label: 'Assigned To', value: item.assignedToName || 'Unassigned', icon: 'person' },
+                    {
+                      label: 'Assigned To',
+                      value: item.assignedToName || 'Unassigned',
+                      icon: 'person',
+                    },
                     { label: 'Last Updated', value: fmtDate(item.updatedAt), icon: 'calendar' },
-                    { label: 'Tags', value: item.tags.length > 0 ? item.tags.join(', ') : '—', icon: 'pricetags' },
+                    {
+                      label: 'Tags',
+                      value: item.tags.length > 0 ? item.tags.join(', ') : '—',
+                      icon: 'pricetags',
+                    },
                   ].map((m) => (
                     <View
                       key={m.label}
                       style={{
-                        width: isWide ? '48%' as any : '100%' as any,
+                        width: isWide ? ('48%' as any) : ('100%' as any),
                         flexDirection: 'row',
                         alignItems: 'center',
                         gap: 8,
@@ -510,7 +575,10 @@ const DetailModal: React.FC<{
                       <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textMuted }}>
                         {m.label}:
                       </Text>
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.text, flex: 1 }} numberOfLines={1}>
+                      <Text
+                        style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.text, flex: 1 }}
+                        numberOfLines={1}
+                      >
                         {m.value}
                       </Text>
                     </View>
@@ -520,7 +588,14 @@ const DetailModal: React.FC<{
                 {/* Previous response */}
                 {item.responseMessage ? (
                   <View>
-                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 8 }}>
+                    <Text
+                      style={{
+                        fontFamily: fonts.semiBold,
+                        fontSize: 14,
+                        color: tc.text,
+                        marginBottom: 8,
+                      }}
+                    >
                       Admin Response
                     </Text>
                     <View
@@ -533,10 +608,24 @@ const DetailModal: React.FC<{
                         marginBottom: 16,
                       }}
                     >
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.text, lineHeight: 20 }}>
+                      <Text
+                        style={{
+                          fontFamily: fonts.regular,
+                          fontSize: 13,
+                          color: tc.text,
+                          lineHeight: 20,
+                        }}
+                      >
                         {item.responseMessage}
                       </Text>
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted, marginTop: 6 }}>
+                      <Text
+                        style={{
+                          fontFamily: fonts.regular,
+                          fontSize: 11,
+                          color: tc.textMuted,
+                          marginTop: 6,
+                        }}
+                      >
                         — {item.respondedByName}, {fmtDate(item.respondedAt ?? '')}
                       </Text>
                     </View>
@@ -544,7 +633,14 @@ const DetailModal: React.FC<{
                 ) : null}
 
                 {/* Quick Actions */}
-                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 10 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.semiBold,
+                    fontSize: 14,
+                    color: tc.text,
+                    marginBottom: 10,
+                  }}
+                >
                   Change Status
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
@@ -581,7 +677,14 @@ const DetailModal: React.FC<{
                   })}
                 </View>
 
-                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 10 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.semiBold,
+                    fontSize: 14,
+                    color: tc.text,
+                    marginBottom: 10,
+                  }}
+                >
                   Change Priority
                 </Text>
                 <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
@@ -607,7 +710,11 @@ const DetailModal: React.FC<{
                           opacity: submitting ? 0.5 : 1,
                         }}
                       >
-                        <Ionicons name={c.icon as any} size={14} color={isCurrent ? c.text : tc.textLight} />
+                        <Ionicons
+                          name={c.icon as any}
+                          size={14}
+                          color={isCurrent ? c.text : tc.textLight}
+                        />
                         <Text
                           style={{
                             fontFamily: isCurrent ? fonts.semiBold : fonts.medium,
@@ -627,11 +734,26 @@ const DetailModal: React.FC<{
             {/* ── Respond Section ── */}
             {activeSection === 'respond' && (
               <View>
-                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 4 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.semiBold,
+                    fontSize: 14,
+                    color: tc.text,
+                    marginBottom: 4,
+                  }}
+                >
                   Reply to User
                 </Text>
-                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted, marginBottom: 12 }}>
-                  This message will be sent to {item.userFullName} and the status will be set to "In Progress".
+                <Text
+                  style={{
+                    fontFamily: fonts.regular,
+                    fontSize: 12,
+                    color: tc.textMuted,
+                    marginBottom: 12,
+                  }}
+                >
+                  This message will be sent to {item.userFullName} and the status will be set to "In
+                  Progress".
                 </Text>
                 <TextInput
                   style={{
@@ -671,14 +793,23 @@ const DetailModal: React.FC<{
                   ) : (
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                       <Ionicons name="send" size={18} color={tc.white} />
-                      <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>Send Response</Text>
+                      <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>
+                        Send Response
+                      </Text>
                     </View>
                   )}
                 </TouchableOpacity>
 
                 {item.responseMessage ? (
                   <View style={{ marginTop: 24 }}>
-                    <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.textLight, marginBottom: 8 }}>
+                    <Text
+                      style={{
+                        fontFamily: fonts.semiBold,
+                        fontSize: 13,
+                        color: tc.textLight,
+                        marginBottom: 8,
+                      }}
+                    >
                       Previous Response
                     </Text>
                     <View
@@ -690,10 +821,24 @@ const DetailModal: React.FC<{
                         borderLeftColor: tc.accent,
                       }}
                     >
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.text, lineHeight: 20 }}>
+                      <Text
+                        style={{
+                          fontFamily: fonts.regular,
+                          fontSize: 13,
+                          color: tc.text,
+                          lineHeight: 20,
+                        }}
+                      >
                         {item.responseMessage}
                       </Text>
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted, marginTop: 6 }}>
+                      <Text
+                        style={{
+                          fontFamily: fonts.regular,
+                          fontSize: 11,
+                          color: tc.textMuted,
+                          marginTop: 6,
+                        }}
+                      >
                         — {item.respondedByName}, {fmtDate(item.respondedAt ?? '')}
                       </Text>
                     </View>
@@ -705,10 +850,24 @@ const DetailModal: React.FC<{
             {/* ── Notes Section ── */}
             {activeSection === 'notes' && (
               <View>
-                <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 4 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.semiBold,
+                    fontSize: 14,
+                    color: tc.text,
+                    marginBottom: 4,
+                  }}
+                >
                   Internal Admin Notes
                 </Text>
-                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted, marginBottom: 12 }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.regular,
+                    fontSize: 12,
+                    color: tc.textMuted,
+                    marginBottom: 12,
+                  }}
+                >
                   These notes are only visible to the admin team.
                 </Text>
                 <TextInput
@@ -747,7 +906,9 @@ const DetailModal: React.FC<{
                   {submitting ? (
                     <ActivityIndicator color={tc.white} size="small" />
                   ) : (
-                    <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>Save Notes</Text>
+                    <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>
+                      Save Notes
+                    </Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -759,7 +920,14 @@ const DetailModal: React.FC<{
                 {activityLog.length === 0 ? (
                   <View style={{ alignItems: 'center', paddingVertical: 40 }}>
                     <Ionicons name="time-outline" size={40} color={tc.disabled} />
-                    <Text style={{ fontFamily: fonts.medium, fontSize: 14, color: tc.textMuted, marginTop: 10 }}>
+                    <Text
+                      style={{
+                        fontFamily: fonts.medium,
+                        fontSize: 14,
+                        color: tc.textMuted,
+                        marginTop: 10,
+                      }}
+                    >
                       No activity recorded yet
                     </Text>
                   </View>
@@ -789,9 +957,17 @@ const DetailModal: React.FC<{
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text }}>
-                          <Text style={{ fontFamily: fonts.semiBold }}>{log.adminName}</Text> {log.details}
+                          <Text style={{ fontFamily: fonts.semiBold }}>{log.adminName}</Text>{' '}
+                          {log.details}
                         </Text>
-                        <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted, marginTop: 2 }}>
+                        <Text
+                          style={{
+                            fontFamily: fonts.regular,
+                            fontSize: 11,
+                            color: tc.textMuted,
+                            marginTop: 2,
+                          }}
+                        >
                           {fmtDate(log.timestamp)}
                         </Text>
                       </View>
@@ -835,7 +1011,13 @@ const DetailModal: React.FC<{
                 activeOpacity={0.7}
               >
                 <Ionicons name="archive" size={16} color={tc.warningDeep ?? tc.warning} />
-                <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.warningDeep ?? tc.warning }}>
+                <Text
+                  style={{
+                    fontFamily: fonts.medium,
+                    fontSize: 12,
+                    color: tc.warningDeep ?? tc.warning,
+                  }}
+                >
                   Archive
                 </Text>
               </TouchableOpacity>
@@ -852,15 +1034,19 @@ const DetailModal: React.FC<{
                   borderColor: tc.error + '30',
                 }}
                 onPress={() =>
-                  webConfirm('Delete', `Permanently delete this feedback? This cannot be undone.`, () =>
-                    onDelete(item.id),
+                  webConfirm(
+                    'Delete',
+                    `Permanently delete this feedback? This cannot be undone.`,
+                    () => onDelete(item.id),
                   )
                 }
                 disabled={submitting}
                 activeOpacity={0.7}
               >
                 <Ionicons name="trash" size={16} color={tc.error} />
-                <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.error }}>Delete</Text>
+                <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.error }}>
+                  Delete
+                </Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity
@@ -874,7 +1060,9 @@ const DetailModal: React.FC<{
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.textLight }}>Close</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.textLight }}>
+                Close
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -883,9 +1071,6 @@ const DetailModal: React.FC<{
   );
 };
 
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 const AdminFeedbackReportsScreen: React.FC = () => {
   const { colors: tc, isDark } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -898,9 +1083,18 @@ const AdminFeedbackReportsScreen: React.FC = () => {
 
   if (ctrl.loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: tc.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: tc.background,
+        }}
+      >
         <ActivityIndicator size="large" color={tc.accent} />
-        <Text style={{ fontFamily: fonts.medium, fontSize: 15, color: tc.textLight, marginTop: 12 }}>
+        <Text
+          style={{ fontFamily: fonts.medium, fontSize: 15, color: tc.textLight, marginTop: 12 }}
+        >
           Loading feedback…
         </Text>
       </View>
@@ -920,12 +1114,21 @@ const AdminFeedbackReportsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            marginBottom: 22,
+          }}
+        >
           <View>
             <Text style={{ fontFamily: fonts.bold, fontSize: 24, color: tc.text }}>
               Feedback & Reports
             </Text>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: tc.textMuted, marginTop: 4 }}>
+            <Text
+              style={{ fontFamily: fonts.regular, fontSize: 14, color: tc.textMuted, marginTop: 4 }}
+            >
               Review and manage user feedback, bug reports, and feature requests
             </Text>
           </View>
@@ -945,7 +1148,9 @@ const AdminFeedbackReportsScreen: React.FC = () => {
             activeOpacity={0.7}
           >
             <Ionicons name="refresh" size={18} color={tc.accent} />
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>Refresh</Text>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>
+              Refresh
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -967,7 +1172,9 @@ const AdminFeedbackReportsScreen: React.FC = () => {
               {ctrl.error}
             </Text>
             <TouchableOpacity onPress={ctrl.refresh}>
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>Retry</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>
+                Retry
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -991,9 +1198,10 @@ const AdminFeedbackReportsScreen: React.FC = () => {
         >
           {TABS.map((tab) => {
             const isActive = ctrl.activeTab === tab.key;
-            const count = tab.key === 'all'
-              ? ctrl.allItems.length
-              : ctrl.allItems.filter((i) => i.status === tab.key).length;
+            const count =
+              tab.key === 'all'
+                ? ctrl.allItems.length
+                : ctrl.allItems.filter((i) => i.status === tab.key).length;
             return (
               <TouchableOpacity
                 key={tab.key}
@@ -1028,7 +1236,11 @@ const AdminFeedbackReportsScreen: React.FC = () => {
                     }}
                   >
                     <Text
-                      style={{ fontFamily: fonts.bold, fontSize: 10, color: isActive ? tc.white : tc.accent }}
+                      style={{
+                        fontFamily: fonts.bold,
+                        fontSize: 10,
+                        color: isActive ? tc.white : tc.accent,
+                      }}
                     >
                       {count}
                     </Text>
@@ -1040,7 +1252,15 @@ const AdminFeedbackReportsScreen: React.FC = () => {
         </View>
 
         {/* ── Filters Row ── */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 10,
+            marginBottom: 16,
+            flexWrap: 'wrap',
+          }}
+        >
           {/* Search */}
           <View
             style={{
@@ -1092,7 +1312,11 @@ const AdminFeedbackReportsScreen: React.FC = () => {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="funnel-outline" size={14} color={ctrl.categoryFilter !== 'all' ? tc.accent : tc.textLight} />
+              <Ionicons
+                name="funnel-outline"
+                size={14}
+                color={ctrl.categoryFilter !== 'all' ? tc.accent : tc.textLight}
+              />
               <Text
                 style={{
                   fontFamily: fonts.medium,
@@ -1100,7 +1324,9 @@ const AdminFeedbackReportsScreen: React.FC = () => {
                   color: ctrl.categoryFilter !== 'all' ? tc.accent : tc.textLight,
                 }}
               >
-                {ctrl.categoryFilter === 'all' ? 'Category' : FEEDBACK_CATEGORY_LABELS[ctrl.categoryFilter]}
+                {ctrl.categoryFilter === 'all'
+                  ? 'Category'
+                  : FEEDBACK_CATEGORY_LABELS[ctrl.categoryFilter]}
               </Text>
               <Ionicons name="chevron-down" size={14} color={tc.textMuted} />
             </TouchableOpacity>
@@ -1117,26 +1343,64 @@ const AdminFeedbackReportsScreen: React.FC = () => {
                   zIndex: 100,
                   minWidth: 180,
                   ...(Platform.OS === 'web'
-                    ? { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 }
+                    ? {
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 12,
+                      }
                     : {}),
                 }}
               >
                 <TouchableOpacity
-                  style={{ paddingVertical: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: tc.divider }}
-                  onPress={() => { ctrl.setCategoryFilter('all'); setShowCategoryFilter(false); }}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderBottomWidth: 1,
+                    borderBottomColor: tc.divider,
+                  }}
+                  onPress={() => {
+                    ctrl.setCategoryFilter('all');
+                    setShowCategoryFilter(false);
+                  }}
                 >
-                  <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: ctrl.categoryFilter === 'all' ? tc.accent : tc.text }}>
+                  <Text
+                    style={{
+                      fontFamily: fonts.medium,
+                      fontSize: 13,
+                      color: ctrl.categoryFilter === 'all' ? tc.accent : tc.text,
+                    }}
+                  >
                     All Categories
                   </Text>
                 </TouchableOpacity>
                 {ALL_CATEGORIES.map((cat) => (
                   <TouchableOpacity
                     key={cat}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 14 }}
-                    onPress={() => { ctrl.setCategoryFilter(cat); setShowCategoryFilter(false); }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 8,
+                      paddingVertical: 10,
+                      paddingHorizontal: 14,
+                    }}
+                    onPress={() => {
+                      ctrl.setCategoryFilter(cat);
+                      setShowCategoryFilter(false);
+                    }}
                   >
-                    <Ionicons name={categoryIcon(cat) as any} size={16} color={ctrl.categoryFilter === cat ? tc.accent : tc.textLight} />
-                    <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: ctrl.categoryFilter === cat ? tc.accent : tc.text }}>
+                    <Ionicons
+                      name={categoryIcon(cat) as any}
+                      size={16}
+                      color={ctrl.categoryFilter === cat ? tc.accent : tc.textLight}
+                    />
+                    <Text
+                      style={{
+                        fontFamily: fonts.medium,
+                        fontSize: 13,
+                        color: ctrl.categoryFilter === cat ? tc.accent : tc.text,
+                      }}
+                    >
                       {FEEDBACK_CATEGORY_LABELS[cat]}
                     </Text>
                   </TouchableOpacity>
@@ -1165,7 +1429,11 @@ const AdminFeedbackReportsScreen: React.FC = () => {
               }}
               activeOpacity={0.7}
             >
-              <Ionicons name="flag-outline" size={14} color={ctrl.priorityFilter !== 'all' ? tc.accent : tc.textLight} />
+              <Ionicons
+                name="flag-outline"
+                size={14}
+                color={ctrl.priorityFilter !== 'all' ? tc.accent : tc.textLight}
+              />
               <Text
                 style={{
                   fontFamily: fonts.medium,
@@ -1173,7 +1441,9 @@ const AdminFeedbackReportsScreen: React.FC = () => {
                   color: ctrl.priorityFilter !== 'all' ? tc.accent : tc.textLight,
                 }}
               >
-                {ctrl.priorityFilter === 'all' ? 'Priority' : FEEDBACK_PRIORITY_LABELS[ctrl.priorityFilter]}
+                {ctrl.priorityFilter === 'all'
+                  ? 'Priority'
+                  : FEEDBACK_PRIORITY_LABELS[ctrl.priorityFilter]}
               </Text>
               <Ionicons name="chevron-down" size={14} color={tc.textMuted} />
             </TouchableOpacity>
@@ -1190,15 +1460,34 @@ const AdminFeedbackReportsScreen: React.FC = () => {
                   zIndex: 100,
                   minWidth: 160,
                   ...(Platform.OS === 'web'
-                    ? { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 12 }
+                    ? {
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.1,
+                        shadowRadius: 12,
+                      }
                     : {}),
                 }}
               >
                 <TouchableOpacity
-                  style={{ paddingVertical: 10, paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: tc.divider }}
-                  onPress={() => { ctrl.setPriorityFilter('all'); setShowPriorityFilter(false); }}
+                  style={{
+                    paddingVertical: 10,
+                    paddingHorizontal: 14,
+                    borderBottomWidth: 1,
+                    borderBottomColor: tc.divider,
+                  }}
+                  onPress={() => {
+                    ctrl.setPriorityFilter('all');
+                    setShowPriorityFilter(false);
+                  }}
                 >
-                  <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: ctrl.priorityFilter === 'all' ? tc.accent : tc.text }}>
+                  <Text
+                    style={{
+                      fontFamily: fonts.medium,
+                      fontSize: 13,
+                      color: ctrl.priorityFilter === 'all' ? tc.accent : tc.text,
+                    }}
+                  >
                     All Priorities
                   </Text>
                 </TouchableOpacity>
@@ -1207,11 +1496,30 @@ const AdminFeedbackReportsScreen: React.FC = () => {
                   return (
                     <TouchableOpacity
                       key={p}
-                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 10, paddingHorizontal: 14 }}
-                      onPress={() => { ctrl.setPriorityFilter(p); setShowPriorityFilter(false); }}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        gap: 8,
+                        paddingVertical: 10,
+                        paddingHorizontal: 14,
+                      }}
+                      onPress={() => {
+                        ctrl.setPriorityFilter(p);
+                        setShowPriorityFilter(false);
+                      }}
                     >
-                      <Ionicons name={c.icon as any} size={14} color={ctrl.priorityFilter === p ? tc.accent : c.text} />
-                      <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: ctrl.priorityFilter === p ? tc.accent : tc.text }}>
+                      <Ionicons
+                        name={c.icon as any}
+                        size={14}
+                        color={ctrl.priorityFilter === p ? tc.accent : c.text}
+                      />
+                      <Text
+                        style={{
+                          fontFamily: fonts.medium,
+                          fontSize: 13,
+                          color: ctrl.priorityFilter === p ? tc.accent : tc.text,
+                        }}
+                      >
                         {FEEDBACK_PRIORITY_LABELS[p]}
                       </Text>
                     </TouchableOpacity>
@@ -1258,11 +1566,41 @@ const AdminFeedbackReportsScreen: React.FC = () => {
             }}
           >
             <View style={{ width: 48 }} />
-            <Text style={{ flex: 2.5, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}>FEEDBACK</Text>
-            {isWide && <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}>CATEGORY</Text>}
-            <Text style={{ flex: 0.8, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}>PRIORITY</Text>
-            <Text style={{ flex: 0.8, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}>STATUS</Text>
-            {isWide && <Text style={{ flex: 0.8, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, textAlign: 'right' }}>TIME</Text>}
+            <Text
+              style={{ flex: 2.5, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}
+            >
+              FEEDBACK
+            </Text>
+            {isWide && (
+              <Text
+                style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}
+              >
+                CATEGORY
+              </Text>
+            )}
+            <Text
+              style={{ flex: 0.8, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}
+            >
+              PRIORITY
+            </Text>
+            <Text
+              style={{ flex: 0.8, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted }}
+            >
+              STATUS
+            </Text>
+            {isWide && (
+              <Text
+                style={{
+                  flex: 0.8,
+                  fontFamily: fonts.semiBold,
+                  fontSize: 11,
+                  color: tc.textMuted,
+                  textAlign: 'right',
+                }}
+              >
+                TIME
+              </Text>
+            )}
             <View style={{ width: 26 }} />
           </View>
 
@@ -1279,10 +1617,24 @@ const AdminFeedbackReportsScreen: React.FC = () => {
           {ctrl.items.length === 0 && (
             <View style={{ alignItems: 'center', paddingVertical: 60 }}>
               <Ionicons name="chatbox-ellipses-outline" size={52} color={tc.disabled} />
-              <Text style={{ fontFamily: fonts.medium, fontSize: 16, color: tc.textMuted, marginTop: 14 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.medium,
+                  fontSize: 16,
+                  color: tc.textMuted,
+                  marginTop: 14,
+                }}
+              >
                 No feedback found
               </Text>
-              <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 4 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.regular,
+                  fontSize: 13,
+                  color: tc.textMuted,
+                  marginTop: 4,
+                }}
+              >
                 {ctrl.searchQuery || ctrl.categoryFilter !== 'all' || ctrl.priorityFilter !== 'all'
                   ? 'Try adjusting your filters or search query'
                   : 'User feedback and reports will appear here'}
@@ -1293,7 +1645,9 @@ const AdminFeedbackReportsScreen: React.FC = () => {
 
         {/* Result count */}
         {ctrl.items.length > 0 && (
-          <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted, marginTop: 10 }}>
+          <Text
+            style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted, marginTop: 10 }}
+          >
             Showing {ctrl.items.length} of {ctrl.allItems.length} items
           </Text>
         )}

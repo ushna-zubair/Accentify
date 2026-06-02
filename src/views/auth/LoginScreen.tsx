@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -58,7 +64,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       await signIn(email, password);
     } catch (error: any) {
       let message = 'Sign in failed. Please try again.';
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      if (
+        error.code === 'auth/user-not-found' ||
+        error.code === 'auth/wrong-password' ||
+        error.code === 'auth/invalid-credential'
+      ) {
         message = 'Invalid email or password.';
       } else if (error.code === 'auth/invalid-email') {
         message = 'Please enter a valid email address.';
@@ -74,7 +84,6 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
-      // AppNavigator routes new users (profileComplete === false) to the
       // CreateProfile stack automatically — no manual navigation needed.
       await signInWithGoogle();
     } catch (error: any) {
@@ -95,7 +104,11 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     } catch (error: any) {
       // Apple's SDK throws ERR_REQUEST_CANCELED when the user dismisses the sheet
       const msg = String(error?.code || error?.message || '');
-      if (msg.includes('ERR_REQUEST_CANCELED') || msg.includes('CANCELLED') || msg.includes('cancelled')) {
+      if (
+        msg.includes('ERR_REQUEST_CANCELED') ||
+        msg.includes('CANCELLED') ||
+        msg.includes('cancelled')
+      ) {
         return;
       }
       showAlert('Error', error?.message || 'Apple Sign-In failed');
@@ -107,10 +120,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWideWeb && styles.webScrollContent,
-        ]}
+        contentContainerStyle={[styles.scrollContent, isWideWeb && styles.webScrollContent]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -235,206 +245,207 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.white,
-  },
-  webContainer: {
-    backgroundColor: '#F5F6FA',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
-  },
-  webScrollContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-  },
-  webCard: {
-    width: '100%',
-    maxWidth: 480,
-    backgroundColor: tc.white,
-    borderRadius: 20,
-    paddingHorizontal: 36,
-    paddingVertical: 36,
-    ...(Platform.OS === 'web'
-      ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-      }
-      : {}),
-  },
-  /* ── Logo ── */
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-  },
-  /* ── Title & Subtitle ── */
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: tc.textLight,
-    marginBottom: 28,
-    lineHeight: 18,
-  },
-  /* ── Inputs ── */
-  inputsContainer: {
-    gap: 8,
-    marginBottom: 12,
-  },
-  /* ── Remember / Forgot Row ── */
-  optionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 28,
-  },
-  rememberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: tc.accent,
-    borderColor: tc.accent,
-  },
-  rememberText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.textLight,
-  },
-  forgotText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: tc.accent,
-  },
-  /* ── Sign In Button ── */
-  signInButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    gap: 12,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-    marginBottom: 28,
-  },
-  signInButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  /* ── Divider ── */
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: tc.inputBorder,
-  },
-  dividerText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.textLight,
-    marginHorizontal: 14,
-  },
-  /* ── Social Buttons ── */
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 28,
-  },
-  socialButton: {
-    width: 60,
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  /* ── OTP Login ── */
-  otpButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    gap: 10,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: tc.accent,
-    borderRadius: 12,
-    borderStyle: 'dashed',
-  },
-  otpButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.accent,
-  },
-  /* ── Sign Up ── */
-  signUpContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signUpText: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.text,
-  },
-  signUpLink: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: tc.accent,
-    textDecorationLine: 'underline',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.white,
+    },
+    webContainer: {
+      backgroundColor: '#F5F6FA',
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 32,
+    },
+    webScrollContent: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+      paddingHorizontal: 16,
+    },
+    webCard: {
+      width: '100%',
+      maxWidth: 480,
+      backgroundColor: tc.white,
+      borderRadius: 20,
+      paddingHorizontal: 36,
+      paddingVertical: 36,
+      ...(Platform.OS === 'web'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 24,
+          }
+        : {}),
+    },
+    /* ── Logo ── */
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+      marginTop: 8,
+    },
+    logo: {
+      width: 100,
+      height: 100,
+    },
+    /* ── Title & Subtitle ── */
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 20,
+      color: tc.text,
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 13,
+      color: tc.textLight,
+      marginBottom: 28,
+      lineHeight: 18,
+    },
+    /* ── Inputs ── */
+    inputsContainer: {
+      gap: 8,
+      marginBottom: 12,
+    },
+    /* ── Remember / Forgot Row ── */
+    optionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 28,
+    },
+    rememberRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    checkbox: {
+      width: 18,
+      height: 18,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: tc.accent,
+      borderColor: tc.accent,
+    },
+    rememberText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.textLight,
+    },
+    forgotText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 12,
+      color: tc.accent,
+    },
+    /* ── Sign In Button ── */
+    signInButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      paddingHorizontal: 32,
+      gap: 12,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+      marginBottom: 28,
+    },
+    signInButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+    arrowCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    /* ── Divider ── */
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: tc.inputBorder,
+    },
+    dividerText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.textLight,
+      marginHorizontal: 14,
+    },
+    /* ── Social Buttons ── */
+    socialRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 24,
+      marginBottom: 28,
+    },
+    socialButton: {
+      width: 60,
+      height: 52,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    /* ── OTP Login ── */
+    otpButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      gap: 10,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: tc.accent,
+      borderRadius: 12,
+      borderStyle: 'dashed',
+    },
+    otpButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.accent,
+    },
+    /* ── Sign Up ── */
+    signUpContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    signUpText: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.text,
+    },
+    signUpLink: {
+      fontFamily: fonts.bold,
+      fontSize: 13,
+      color: tc.accent,
+      textDecorationLine: 'underline',
+    },
+  });
 
 export default LoginScreen;

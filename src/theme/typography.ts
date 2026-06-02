@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Accentify Design System – Typography Tokens
  *
  * Font: Poppins (Google Fonts)
@@ -13,7 +19,6 @@
 
 import { TextStyle } from 'react-native';
 
-// ─── Font Family Constants ───
 // These map to the exact names loaded via @expo-google-fonts/poppins.
 // Using weight-specific family names is the cross-platform safe pattern.
 export const fonts = {
@@ -22,8 +27,6 @@ export const fonts = {
   semiBold: 'Poppins_600SemiBold',
   bold: 'Poppins_700Bold',
 } as const;
-
-// ─── Typography Scale ───
 
 /**
  * Header – Mobile
@@ -189,8 +192,6 @@ const labelXXS: TextStyle = {
   letterSpacing: 0,
 };
 
-// ─── Exports ───
-
 export const typography = {
   // Headers
   h1,
@@ -206,11 +207,9 @@ export const typography = {
   paragraphXS,
   paragraphXXS,
 
-  // Button
   buttonLG,
   buttonMD,
 
-  // Label
   labelXL,
   labelLG,
   labelMD,

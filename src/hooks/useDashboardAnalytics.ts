@@ -1,12 +1,16 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useEffect, useState, useCallback } from 'react';
 import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { db } from '../config/firebase';
 import { getFunctions } from 'firebase/functions';
 import type { DashboardData } from '../models';
-import {
-  seedGlobalStats,
-} from '../services/adminService';
+import { seedGlobalStats } from '../services/adminService';
 
 const functions = getFunctions(undefined, 'us-central1');
 const runAdminAggregation = httpsCallable(functions, 'runAdminAggregation');
@@ -65,8 +69,8 @@ export function useDashboardAnalytics(): UseDashboardAnalyticsResult {
     sessionsGrowth: raw.sessionsGrowth ?? 0,
     sessionsThisWeek: raw.sessionsThisWeek ?? [],
     sessionsLastWeek: raw.sessionsLastWeek ?? [],
-    lastAggregatedAt: raw.lastAggregatedAt?.toDate?.()?.toISOString()
-      ?? raw.lastAggregatedAt ?? null,
+    lastAggregatedAt:
+      raw.lastAggregatedAt?.toDate?.()?.toISOString() ?? raw.lastAggregatedAt ?? null,
   });
 
   const fetchAnalytics = useCallback(async (retryCount = 0) => {

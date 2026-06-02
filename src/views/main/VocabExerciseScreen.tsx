@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * VocabExerciseScreen
  *
  * Synonym-typing vocabulary exercise. Shows a word, the user types a synonym,
@@ -35,10 +41,6 @@ import { useHideTabBar } from '../../context/TabBarVisibilityContext';
 
 const AUTO_ADVANCE_MS = 900;
 
-// ═══════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════
-
 const progressColor = (index: number, total: number, tc: ThemeColors): string => {
   if (total <= 1) return tc.success;
   const ratio = index / Math.max(1, total - 1);
@@ -46,10 +48,6 @@ const progressColor = (index: number, total: number, tc: ThemeColors): string =>
   if (ratio <= 0.67) return '#FD8E39';
   return tc.error;
 };
-
-// ═══════════════════════════════════════════════
-//  RESULT OVERLAY
-// ═══════════════════════════════════════════════
 
 interface ResultPanelProps {
   isCorrect: boolean;
@@ -100,12 +98,7 @@ const ResultPanel: React.FC<ResultPanelProps> = ({
           size={28}
           color={isCorrect ? tc.success : tc.error}
         />
-        <Text
-          style={[
-            styles.resultHeadline,
-            { color: isCorrect ? tc.success : tc.error },
-          ]}
-        >
+        <Text style={[styles.resultHeadline, { color: isCorrect ? tc.success : tc.error }]}>
           {isCorrect ? 'Correct!' : 'Not quite'}
         </Text>
       </View>
@@ -127,9 +120,7 @@ const ResultPanel: React.FC<ResultPanelProps> = ({
             </Text>
           )}
           {!!example && (
-            <Text style={[styles.resultExample, { color: tc.textMuted }]}>
-              e.g. {example}
-            </Text>
+            <Text style={[styles.resultExample, { color: tc.textMuted }]}>e.g. {example}</Text>
           )}
         </>
       )}
@@ -140,19 +131,13 @@ const ResultPanel: React.FC<ResultPanelProps> = ({
           style={[styles.nextButton, { backgroundColor: tc.accent }]}
           accessibilityLabel="Next word"
         >
-          <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>
-            Next word
-          </Text>
+          <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>Next word</Text>
           <Ionicons name="arrow-forward" size={18} color={tc.textOnAccent} />
         </TouchableOpacity>
       )}
     </Animated.View>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  SESSION COMPLETE
-// ═══════════════════════════════════════════════
 
 const SessionCompleteCard: React.FC<{
   correct: number;
@@ -176,17 +161,11 @@ const SessionCompleteCard: React.FC<{
         onPress={onDone}
         style={[styles.nextButton, { backgroundColor: tc.accent, marginTop: 24 }]}
       >
-        <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>
-          Done
-        </Text>
+        <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>Done</Text>
       </TouchableOpacity>
     </View>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 const VocabExerciseScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
@@ -216,14 +195,11 @@ const VocabExerciseScreen: React.FC = () => {
     }
   }, [ctrl.hasSubmitted, ctrl.lastResult?.isCorrect, ctrl.next]);
 
-  // ── Loading ──
   if (ctrl.loading) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
         <ActivityIndicator size="large" color={tc.accent} />
-        <Text style={[styles.loadingText, { color: tc.textLight }]}>
-          Loading your words…
-        </Text>
+        <Text style={[styles.loadingText, { color: tc.textLight }]}>Loading your words…</Text>
       </SafeAreaView>
     );
   }
@@ -240,9 +216,7 @@ const VocabExerciseScreen: React.FC = () => {
           onPress={() => navigation.goBack()}
           style={[styles.nextButton, { backgroundColor: tc.accent, marginTop: 24 }]}
         >
-          <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>
-            Back
-          </Text>
+          <Text style={[styles.nextButtonText, { color: tc.textOnAccent }]}>Back</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -298,9 +272,7 @@ const VocabExerciseScreen: React.FC = () => {
               {word.partOfSpeech || 'word'} · {word.cefrLevel}
             </Text>
             <Text style={[styles.wordTitle, { color: tc.text }]}>{word.word}</Text>
-            <Text style={[styles.prompt, { color: tc.textLight }]}>
-              Type a synonym
-            </Text>
+            <Text style={[styles.prompt, { color: tc.textLight }]}>Type a synonym</Text>
           </View>
 
           {/* ── Input ── */}
@@ -348,9 +320,7 @@ const VocabExerciseScreen: React.FC = () => {
               {ctrl.isSubmitting ? (
                 <ActivityIndicator size="small" color={tc.textOnAccent} />
               ) : (
-                <Text style={[styles.checkButtonText, { color: tc.textOnAccent }]}>
-                  Check
-                </Text>
+                <Text style={[styles.checkButtonText, { color: tc.textOnAccent }]}>Check</Text>
               )}
             </TouchableOpacity>
           )}
@@ -373,9 +343,7 @@ const VocabExerciseScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
 //  HEADER (extracted to avoid prop drilling)
-// ═══════════════════════════════════════════════
 
 const Header: React.FC<{
   onBack: () => void;
@@ -395,26 +363,17 @@ const Header: React.FC<{
       <Ionicons name="chevron-back" size={24} color={tc.text} />
     </TouchableOpacity>
     <View
-      style={[
-        styles.progressBadge,
-        { backgroundColor: progressColor(currentIndex, total, tc) },
-      ]}
+      style={[styles.progressBadge, { backgroundColor: progressColor(currentIndex, total, tc) }]}
     >
       <Text style={styles.progressBadgeText}>
         {Math.min(currentIndex + 1, total)} / {total}
       </Text>
     </View>
     <View style={[styles.cefrChip, { backgroundColor: tc.accentBg }]}>
-      <Text style={[styles.cefrChipText, { color: tc.accentDark }]}>
-        {cefrLevel}
-      </Text>
+      <Text style={[styles.cefrChipText, { color: tc.accentDark }]}>{cefrLevel}</Text>
     </View>
   </View>
 );
-
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
 
 const createStyles = (tc: ThemeColors) =>
   StyleSheet.create({

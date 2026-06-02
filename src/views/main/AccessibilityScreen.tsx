@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -22,7 +28,12 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 const isWeb = Platform.OS === 'web';
 
 const COLOR_BLIND_OPTIONS: ColorBlindMode[] = ['None', 'Deuteranope', 'Protanope', 'Tritanope'];
-const FONT_STYLE_OPTIONS: FontStyleOption[] = ['Standard', 'Bold', 'Extra Bold (Dyslexia Friendly)', 'Italic'];
+const FONT_STYLE_OPTIONS: FontStyleOption[] = [
+  'Standard',
+  'Bold',
+  'Extra Bold (Dyslexia Friendly)',
+  'Italic',
+];
 
 interface SectionCardProps {
   children: React.ReactNode;
@@ -30,7 +41,9 @@ interface SectionCardProps {
 }
 
 const SectionCard: React.FC<SectionCardProps> = ({ children, tc }) => (
-  <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accent }]}>{children}</View>
+  <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accent }]}>
+    {children}
+  </View>
 );
 
 interface ToggleRowProps {
@@ -71,7 +84,11 @@ const OptionButton: React.FC<OptionButtonProps> = ({
   tc,
 }) => (
   <TouchableOpacity
-    style={[styles.optionButton, { backgroundColor: tc.divider }, selected && { backgroundColor: tc.accentLight }]}
+    style={[
+      styles.optionButton,
+      { backgroundColor: tc.divider },
+      selected && { backgroundColor: tc.accentLight },
+    ]}
     onPress={onPress}
     activeOpacity={0.7}
   >
@@ -140,7 +157,13 @@ const AccessibilityScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.container}
         contentContainerStyle={[
           styles.contentContainer,
-          isWide && { maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any, paddingHorizontal: 32, paddingTop: 28 },
+          isWide && {
+            maxWidth: 680,
+            alignSelf: 'center' as any,
+            width: '100%' as any,
+            paddingHorizontal: 32,
+            paddingTop: 28,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >

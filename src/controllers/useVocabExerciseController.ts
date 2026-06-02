@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useVocabExerciseController.ts
  *
  * Drives the synonym-typing vocabulary exercise:
@@ -66,21 +72,14 @@ export interface UseVocabExerciseController {
   next: () => void;
 }
 
-export const useVocabExerciseController = (
-  lessonId: string,
-): UseVocabExerciseController => {
+export const useVocabExerciseController = (lessonId: string): UseVocabExerciseController => {
   const { userProfile } = useAuth();
   // `UserProfile` is a lightweight projection — `studyPlan` lives on the
   // full Firestore user doc but isn't surfaced on the public type. Other
   // screens (PronunciationExerciseScreen, HomeWordPronunciationScreen) use
   // the same `as any` cast, so we follow that convention here.
-  const rawEnglishLevel = (userProfile as any)?.studyPlan?.englishLevel as
-    | string
-    | undefined;
-  const cefrLevel = useMemo<CefrLevel>(
-    () => normaliseCefr(rawEnglishLevel),
-    [rawEnglishLevel],
-  );
+  const rawEnglishLevel = (userProfile as any)?.studyPlan?.englishLevel as string | undefined;
+  const cefrLevel = useMemo<CefrLevel>(() => normaliseCefr(rawEnglishLevel), [rawEnglishLevel]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +98,6 @@ export const useVocabExerciseController = (
   // Track when the current card was first shown — used for durationMs.
   const cardStartedAtRef = useRef<number>(Date.now());
 
-  // ── Load words for this session ────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
@@ -162,7 +160,6 @@ export const useVocabExerciseController = (
   const currentWord = words[currentIndex] ?? null;
   const isSessionComplete = !loading && words.length > 0 && currentIndex >= words.length;
 
-  // ── Submit handler ─────────────────────────────────────────────────────
   const submit = useCallback(async () => {
     if (!currentWord || hasSubmitted || isSubmitting) return;
     const trimmed = inputValue.trim();
@@ -174,8 +171,7 @@ export const useVocabExerciseController = (
       userAnswer: trimmed,
       matchedSynonym: match.matched ?? null,
       fuzzy: !!match.fuzzy,
-      correctAnswer:
-        currentWord.primarySynonym || currentWord.acceptableSynonyms[0] || '',
+      correctAnswer: currentWord.primarySynonym || currentWord.acceptableSynonyms[0] || '',
     };
     setLastResult(result);
     setHasSubmitted(true);
@@ -207,7 +203,6 @@ export const useVocabExerciseController = (
     }
   }, [currentWord, hasSubmitted, isSubmitting, inputValue]);
 
-  // ── Advance to the next card ───────────────────────────────────────────
   const next = useCallback(() => {
     setCurrentIndex((i) => {
       const nextIdx = i + 1;

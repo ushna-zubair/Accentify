@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Conversation service for the Wavy text chat and the Tutor voice chat.
  *
  * Previously this hit a single HF Space that bundled Whisper + Qwen + TTS.
@@ -13,23 +19,11 @@
  * controllers don't need to change beyond honoring the new `audio_format`
  * field on the audio response (now 'mp3' instead of 'wav').
  */
-import {
-  GroqApiError,
-  groqChat,
-  groqTranscribe,
-  type GroqChatMessage,
-} from './groqApi';
+import { GroqApiError, groqChat, groqTranscribe, type GroqChatMessage } from './groqApi';
 import { GoogleTtsError, googleTtsSynthesize } from './googleTtsApi';
 
-// ─── Errors ───────────────────────────────────────────────────────────────────
-
 export class ConversationApiError extends Error {
-  readonly code:
-    | 'unauthorized'
-    | 'bad_request'
-    | 'server_error'
-    | 'network'
-    | 'unknown';
+  readonly code: 'unauthorized' | 'bad_request' | 'server_error' | 'network' | 'unknown';
   readonly userMessage: string;
   readonly status?: number;
 
@@ -52,22 +46,32 @@ export class ConversationApiError extends Error {
 function wrapError(e: unknown): ConversationApiError {
   if (e instanceof GroqApiError) {
     const code =
-      e.code === 'rate_limited' ? 'server_error'
-      : e.code === 'unauthorized' ? 'unauthorized'
-      : e.code === 'bad_request' ? 'bad_request'
-      : e.code === 'network' ? 'network'
-      : e.code === 'server_error' ? 'server_error'
-      : 'unknown';
+      e.code === 'rate_limited'
+        ? 'server_error'
+        : e.code === 'unauthorized'
+          ? 'unauthorized'
+          : e.code === 'bad_request'
+            ? 'bad_request'
+            : e.code === 'network'
+              ? 'network'
+              : e.code === 'server_error'
+                ? 'server_error'
+                : 'unknown';
     return new ConversationApiError(code, e.userMessage, e.status, e);
   }
   if (e instanceof GoogleTtsError) {
     const code =
-      e.code === 'quota' ? 'server_error'
-      : e.code === 'unauthorized' ? 'unauthorized'
-      : e.code === 'bad_request' ? 'bad_request'
-      : e.code === 'network' ? 'network'
-      : e.code === 'server_error' ? 'server_error'
-      : 'unknown';
+      e.code === 'quota'
+        ? 'server_error'
+        : e.code === 'unauthorized'
+          ? 'unauthorized'
+          : e.code === 'bad_request'
+            ? 'bad_request'
+            : e.code === 'network'
+              ? 'network'
+              : e.code === 'server_error'
+                ? 'server_error'
+                : 'unknown';
     return new ConversationApiError(code, e.userMessage, e.status, e);
   }
   if (e instanceof ConversationApiError) return e;
@@ -78,8 +82,6 @@ function wrapError(e: unknown): ConversationApiError {
     e,
   );
 }
-
-// ─── Response types (preserved for controller compatibility) ──────────────────
 
 /**
  * Prior turn passed into a conversation call so the model has context.
@@ -110,7 +112,6 @@ export interface ConversationAudioResponse {
   sample_rate: number;
 }
 
-// ─── Wavy persona ─────────────────────────────────────────────────────────────
 //
 // Wavy is the chat assistant inside Accentify. The persona is deliberately
 // minimal: just identity, two on-demand skills (pronunciation breakdown +
@@ -119,11 +120,11 @@ export interface ConversationAudioResponse {
 // "tutor mode" when the user explicitly asks.
 
 const WAVY_PERSONA = [
-  "You are Wavy, the chat assistant inside Accentify — a mobile app that helps people practice their English through pronunciation, vocabulary, and conversation exercises with progress and streak tracking.",
-  "Be a friendly, relaxed conversation partner. Answer whatever the user asks naturally. Do not steer every reply toward language learning — just have a normal conversation.",
+  'You are Wavy, the chat assistant inside Accentify — a mobile app that helps people practice their English through pronunciation, vocabulary, and conversation exercises with progress and streak tracking.',
+  'Be a friendly, relaxed conversation partner. Answer whatever the user asks naturally. Do not steer every reply toward language learning — just have a normal conversation.',
   "If the user asks how to pronounce a word, give an inline phonetic breakdown using simple syllable-with-stress format: capitalize the stressed syllable, hyphenate the rest. Example: 'entrepreneur = AHN-truh-pruh-NUR'. Don't use IPA or ARPAbet symbols.",
   "If the user asks about the app, briefly explain Accentify's features: pronunciation, vocabulary, and conversation exercises; daily streaks; weekly progress charts; a personalized study path based on their CEFR level.",
-  "Format: keep replies short (1-3 sentences is the norm). Plain prose only — no markdown, bullet points, asterisks, code blocks, or emojis. Your reply may be read aloud by a TTS engine.",
+  'Format: keep replies short (1-3 sentences is the norm). Plain prose only — no markdown, bullet points, asterisks, code blocks, or emojis. Your reply may be read aloud by a TTS engine.',
 ].join(' ');
 
 function buildSystemMessages(_opts: {
@@ -135,8 +136,6 @@ function buildSystemMessages(_opts: {
   // helps with English when asked.
   return [{ role: 'system', content: WAVY_PERSONA }];
 }
-
-// ─── Endpoint wrappers ────────────────────────────────────────────────────────
 
 /**
  * Lightweight health check used by controllers on mount to prewarm the
@@ -151,9 +150,7 @@ export async function convoHealth(): Promise<unknown> {
  * Trim a history array to the most recent N messages. Used by both
  * conversationText and conversationAudio to keep payloads bounded.
  */
-function trimHistory(
-  history?: ConversationHistoryMessage[],
-): ConversationHistoryMessage[] {
+function trimHistory(history?: ConversationHistoryMessage[]): ConversationHistoryMessage[] {
   if (!history?.length) return [];
   return history.slice(-CONVERSATION_HISTORY_LIMIT);
 }

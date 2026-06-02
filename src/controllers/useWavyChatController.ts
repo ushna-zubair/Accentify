@@ -1,11 +1,11 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  doc,
-  setDoc,
-  collection,
-  addDoc,
-  Timestamp,
-} from 'firebase/firestore';
+import { doc, setDoc, collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import {
   conversationText,
@@ -13,11 +13,7 @@ import {
   type ConversationHistoryMessage,
 } from '../services/conversationApi';
 import { useAuth } from '../context/AuthContext';
-import {
-  loadWavyHistory,
-  saveWavyHistory,
-  clearWavyHistory,
-} from '../services/chatStorage';
+import { loadWavyHistory, saveWavyHistory, clearWavyHistory } from '../services/chatStorage';
 import { friendlySound } from '../services/arpabetFriendly';
 
 export interface WavyChatLastResult {
@@ -33,20 +29,12 @@ export interface WavyChatLastResult {
   itemType?: 'word' | 'sentence';
 }
 
-// ═══════════════════════════════════════════════
-//  TYPES
-// ═══════════════════════════════════════════════
-
 export interface WavyChatMessage {
   id: string;
   role: 'wavy' | 'user';
   text: string;
   timestamp: string;
 }
-
-// ═══════════════════════════════════════════════
-//  PHONETIC MAP
-// ═══════════════════════════════════════════════
 
 const PHONETIC_MAP: Record<string, string> = {
   play: 'pley',
@@ -82,13 +70,8 @@ const PHONETIC_MAP: Record<string, string> = {
   spent: 'spent',
 };
 
-// ═══════════════════════════════════════════════
-//  AI RESPONSE LOGIC
-// ═══════════════════════════════════════════════
-
 /** Normalize a word for lookup */
-const normalize = (w: string): string =>
-  w.toLowerCase().replace(/[^a-z']/g, '');
+const normalize = (w: string): string => w.toLowerCase().replace(/[^a-z']/g, '');
 
 /** Break a word into syllables (simple heuristic) */
 const breakIntoSyllables = (word: string): string => {
@@ -114,8 +97,19 @@ const breakIntoSyllables = (word: string): string => {
 };
 
 const HELP_INTENT_KEYWORDS = [
-  'help', 'stuck', 'tip', 'tips', 'how', 'cant', "can't", 'hard',
-  'difficult', 'hint', 'advice', 'pronounce', 'pronunciation',
+  'help',
+  'stuck',
+  'tip',
+  'tips',
+  'how',
+  'cant',
+  "can't",
+  'hard',
+  'difficult',
+  'hint',
+  'advice',
+  'pronounce',
+  'pronunciation',
 ];
 
 const isHelpIntent = (lower: string): boolean =>
@@ -150,12 +144,7 @@ const offlineWordTip = (word: string): string => {
   return `Try breaking "${word}" into syllables: ${phonetic}.\nSlow it down, then speed up.`;
 };
 
-const createId = (): string =>
-  `wc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
-
-// ═══════════════════════════════════════════════
-//  CONTROLLER
-// ═══════════════════════════════════════════════
+const createId = (): string => `wc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
 export const useWavyChatController = (
   lessonId: string,
@@ -167,9 +156,7 @@ export const useWavyChatController = (
   // not surfaced on the lightweight `UserProfile` type — same `as any` cast
   // other screens use.
   const { userProfile } = useAuth();
-  const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as
-    | string
-    | undefined;
+  const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as string | undefined;
   // First name is used by Wavy to address the learner. We pass the full
   // fullName through and let the service extract the first token.
   const learnerName = userProfile?.fullName;
@@ -285,12 +272,10 @@ export const useWavyChatController = (
         // Build conversation history from prior bubbles (excluding the user
         // turn currently being sent — that goes in `userText`). The service
         // trims the array to its own limit, so we send what we have.
-        const history: ConversationHistoryMessage[] = messagesRef.current.map(
-          (m) => ({
-            role: m.role === 'wavy' ? 'assistant' : 'user',
-            content: m.text,
-          }),
-        );
+        const history: ConversationHistoryMessage[] = messagesRef.current.map((m) => ({
+          role: m.role === 'wavy' ? 'assistant' : 'user',
+          content: m.text,
+        }));
         try {
           const res = await conversationText(userText, cefrLevel, learnerName, history);
           const reply = res?.response_text?.trim();
@@ -378,22 +363,12 @@ export const useWavyChatController = (
       const uid = auth.currentUser?.uid;
       if (uid) {
         try {
-          await addDoc(
-            collection(
-              db,
-              'users',
-              uid,
-              'lessons',
-              lessonId,
-              'wavyChats',
-            ),
-            {
-              userMessage: msg,
-              aiResponse: reply,
-              sentence: currentSentence,
-              createdAt: Timestamp.now(),
-            },
-          );
+          await addDoc(collection(db, 'users', uid, 'lessons', lessonId, 'wavyChats'), {
+            userMessage: msg,
+            aiResponse: reply,
+            sentence: currentSentence,
+            createdAt: Timestamp.now(),
+          });
           await setDoc(
             doc(db, 'users', uid, 'lessons', lessonId),
             {

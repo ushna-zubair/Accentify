@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Polyline, Circle as SvgCircle, Line } from 'react-native-svg';
@@ -32,8 +38,7 @@ const LineChart: React.FC<LineChartProps> = ({
   const usableHeight = height - padding * 2;
 
   // Divisor guard — `length - 1` is zero for single-point series and -1 for empty.
-  const xStep = (data: number[]) =>
-    data.length > 1 ? usableWidth / (data.length - 1) : 0;
+  const xStep = (data: number[]) => (data.length > 1 ? usableWidth / (data.length - 1) : 0);
 
   const toPoints = (data: number[]) => {
     if (!data?.length) return '';
@@ -104,13 +109,7 @@ const LineChart: React.FC<LineChartProps> = ({
 
         {/* Dots for this week */}
         {thisWeekCoords.map((coord, i) => (
-          <SvgCircle
-            key={i}
-            cx={coord.x}
-            cy={coord.y}
-            r={3.5}
-            fill={LINE_COLORS.thisWeek}
-          />
+          <SvgCircle key={i} cx={coord.x} cy={coord.y} r={3.5} fill={LINE_COLORS.thisWeek} />
         ))}
       </Svg>
 
@@ -126,26 +125,27 @@ const LineChart: React.FC<LineChartProps> = ({
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  labelsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  label: {
-    fontFamily: fonts.regular,
-    fontSize: 10,
-    color: tc.textMuted,
-  },
-  emptyWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.textMuted,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    labelsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: 4,
+    },
+    label: {
+      fontFamily: fonts.regular,
+      fontSize: 10,
+      color: tc.textMuted,
+    },
+    emptyWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.textMuted,
+    },
+  });
 
 export default LineChart;

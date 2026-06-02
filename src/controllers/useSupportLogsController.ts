@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useSupportLogsController.ts
  *
  * State management for the admin Support & Logs panel.
@@ -41,10 +47,8 @@ export function useSupportLogsController() {
   const adminName = auth.currentUser?.displayName ?? 'Admin';
   const adminEmail = auth.currentUser?.email ?? '';
 
-  // ─── Top-level tab ───
   const [mainTab, setMainTab] = useState<SupportTab>('tickets');
 
-  // ─── Tickets state ───
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(true);
   const [ticketsError, setTicketsError] = useState<string | null>(null);
@@ -67,7 +71,6 @@ export function useSupportLogsController() {
   const [detailTicket, setDetailTicket] = useState<SupportTicket | null>(null);
   const [responseInput, setResponseInput] = useState('');
 
-  // ─── Logs state ───
   const [logs, setLogs] = useState<UnifiedLogEntry[]>([]);
   const [logsLoading, setLogsLoading] = useState(false);
   const [logsError, setLogsError] = useState<string | null>(null);
@@ -75,7 +78,6 @@ export function useSupportLogsController() {
   const [logSourceFilter, setLogSourceFilter] = useState<SystemLogSource | 'all'>('all');
   const [logSearch, setLogSearch] = useState('');
 
-  // ─── Fetch tickets ───
   const fetchTickets = useCallback(async () => {
     setTicketsLoading(true);
     setTicketsError(null);
@@ -89,7 +91,6 @@ export function useSupportLogsController() {
     }
   }, []);
 
-  // ─── Fetch logs ───
   const fetchLogs = useCallback(async () => {
     setLogsLoading(true);
     setLogsError(null);
@@ -107,7 +108,9 @@ export function useSupportLogsController() {
   useEffect(() => {
     let ignore = false;
     fetchTickets();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchTickets]);
 
   useEffect(() => {
@@ -115,21 +118,19 @@ export function useSupportLogsController() {
     if (mainTab === 'logs' && logs.length === 0 && !logsLoading) {
       fetchLogs();
     }
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [mainTab, logs.length, logsLoading, fetchLogs]);
 
-  // ─── Computed stats ───
   const stats: SupportStats = useMemo(() => computeSupportStats(tickets), [tickets]);
 
-  // ─── Filtered tickets ───
   const filteredTickets: SupportTicket[] = useMemo(() => {
     let result = [...tickets];
 
-    // Tab filter
     if (ticketTab !== 'all') {
       result = result.filter((t) => t.status === ticketTab);
     }
-    // Category filter
     if (categoryFilter !== 'all') {
       result = result.filter((t) => t.category === categoryFilter);
     }
@@ -137,7 +138,6 @@ export function useSupportLogsController() {
     if (priorityFilter !== 'all') {
       result = result.filter((t) => t.priority === priorityFilter);
     }
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -149,7 +149,6 @@ export function useSupportLogsController() {
           t.tags.some((tag) => tag.toLowerCase().includes(q)),
       );
     }
-    // Sort
     switch (sortBy) {
       case 'oldest':
         result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -169,7 +168,6 @@ export function useSupportLogsController() {
     return result;
   }, [tickets, ticketTab, categoryFilter, priorityFilter, searchQuery, sortBy]);
 
-  // ─── Filtered logs ───
   const filteredLogs: UnifiedLogEntry[] = useMemo(() => {
     let result = [...logs];
     if (logLevelFilter !== 'all') {
@@ -190,7 +188,6 @@ export function useSupportLogsController() {
     return result;
   }, [logs, logLevelFilter, logSourceFilter, logSearch]);
 
-  // ─── Ticket form actions ───
   const openCreateForm = useCallback(() => {
     setEditingTicket(null);
     setFormData(DEFAULT_TICKET_FORM);
@@ -245,7 +242,6 @@ export function useSupportLogsController() {
     }));
   }, []);
 
-  // ─── Save ticket ───
   const handleSave = useCallback(async () => {
     if (!formData.subject.trim()) return;
     setSubmitting(true);
@@ -260,12 +256,7 @@ export function useSupportLogsController() {
           ),
         );
       } else {
-        const newId = await createSupportTicket(
-          formData,
-          adminUid,
-          adminEmail,
-          adminName,
-        );
+        const newId = await createSupportTicket(formData, adminUid, adminEmail, adminName);
         const now = new Date().toISOString();
         setTickets((prev) => [
           {
@@ -291,7 +282,6 @@ export function useSupportLogsController() {
     }
   }, [formData, editingTicket, adminUid, adminEmail, adminName, closeForm]);
 
-  // ─── Quick status change ───
   const handleStatusChange = useCallback(
     async (ticketId: string, newStatus: SupportTicketStatus) => {
       setSubmitting(true);
@@ -305,7 +295,8 @@ export function useSupportLogsController() {
                   ...t,
                   status: newStatus,
                   updatedAt: now,
-                  resolvedAt: newStatus === 'resolved' || newStatus === 'closed' ? now : t.resolvedAt,
+                  resolvedAt:
+                    newStatus === 'resolved' || newStatus === 'closed' ? now : t.resolvedAt,
                 }
               : t,
           ),
@@ -317,7 +308,8 @@ export function useSupportLogsController() {
                   ...prev,
                   status: newStatus,
                   updatedAt: now,
-                  resolvedAt: newStatus === 'resolved' || newStatus === 'closed' ? now : prev.resolvedAt,
+                  resolvedAt:
+                    newStatus === 'resolved' || newStatus === 'closed' ? now : prev.resolvedAt,
                 }
               : null,
           );
@@ -331,7 +323,6 @@ export function useSupportLogsController() {
     [detailTicket],
   );
 
-  // ─── Quick priority change ───
   const handlePriorityChange = useCallback(
     async (ticketId: string, newPriority: SupportTicketPriority) => {
       setSubmitting(true);
@@ -339,7 +330,9 @@ export function useSupportLogsController() {
         await updateTicketPriority(ticketId, newPriority);
         setTickets((prev) =>
           prev.map((t) =>
-            t.id === ticketId ? { ...t, priority: newPriority, updatedAt: new Date().toISOString() } : t,
+            t.id === ticketId
+              ? { ...t, priority: newPriority, updatedAt: new Date().toISOString() }
+              : t,
           ),
         );
       } catch (e: unknown) {
@@ -351,7 +344,6 @@ export function useSupportLogsController() {
     [],
   );
 
-  // ─── Assign to self ───
   const handleAssignToMe = useCallback(
     async (ticketId: string) => {
       setSubmitting(true);
@@ -360,7 +352,13 @@ export function useSupportLogsController() {
         setTickets((prev) =>
           prev.map((t) =>
             t.id === ticketId
-              ? { ...t, assignedTo: adminUid, assignedToName: adminName, status: 'in_progress' as SupportTicketStatus, updatedAt: new Date().toISOString() }
+              ? {
+                  ...t,
+                  assignedTo: adminUid,
+                  assignedToName: adminName,
+                  status: 'in_progress' as SupportTicketStatus,
+                  updatedAt: new Date().toISOString(),
+                }
               : t,
           ),
         );
@@ -373,7 +371,6 @@ export function useSupportLogsController() {
     [adminUid, adminName],
   );
 
-  // ─── Send response ───
   const handleSendResponse = useCallback(
     async (ticketId: string) => {
       if (!responseInput.trim()) return;
@@ -382,12 +379,16 @@ export function useSupportLogsController() {
         await respondToTicket(ticketId, responseInput.trim());
         setTickets((prev) =>
           prev.map((t) =>
-            t.id === ticketId ? { ...t, response: responseInput.trim(), updatedAt: new Date().toISOString() } : t,
+            t.id === ticketId
+              ? { ...t, response: responseInput.trim(), updatedAt: new Date().toISOString() }
+              : t,
           ),
         );
         if (detailTicket?.id === ticketId) {
           setDetailTicket((prev) =>
-            prev ? { ...prev, response: responseInput.trim(), updatedAt: new Date().toISOString() } : null,
+            prev
+              ? { ...prev, response: responseInput.trim(), updatedAt: new Date().toISOString() }
+              : null,
           );
         }
         setResponseInput('');
@@ -400,21 +401,22 @@ export function useSupportLogsController() {
     [responseInput, detailTicket],
   );
 
-  // ─── Delete ticket ───
-  const handleDelete = useCallback(async (ticketId: string) => {
-    setSubmitting(true);
-    try {
-      await deleteTicket(ticketId);
-      setTickets((prev) => prev.filter((t) => t.id !== ticketId));
-      if (detailTicket?.id === ticketId) setDetailTicket(null);
-    } catch (e: unknown) {
-      setTicketsError(e instanceof Error ? e.message : 'Failed to delete ticket');
-    } finally {
-      setSubmitting(false);
-    }
-  }, [detailTicket]);
+  const handleDelete = useCallback(
+    async (ticketId: string) => {
+      setSubmitting(true);
+      try {
+        await deleteTicket(ticketId);
+        setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+        if (detailTicket?.id === ticketId) setDetailTicket(null);
+      } catch (e: unknown) {
+        setTicketsError(e instanceof Error ? e.message : 'Failed to delete ticket');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [detailTicket],
+  );
 
-  // ─── View ticket detail ───
   const openDetail = useCallback((ticket: SupportTicket) => {
     setDetailTicket(ticket);
     setResponseInput(ticket.response || '');
@@ -425,9 +427,13 @@ export function useSupportLogsController() {
     setResponseInput('');
   }, []);
 
-  // ─── Log a system event ───
   const logSystemEvent = useCallback(
-    async (level: SystemLogLevel, source: SystemLogSource, message: string, details: string = '') => {
+    async (
+      level: SystemLogLevel,
+      source: SystemLogSource,
+      message: string,
+      details: string = '',
+    ) => {
       try {
         await createSystemLog(level, source, message, details, adminUid, adminName);
         // Refresh if on logs tab

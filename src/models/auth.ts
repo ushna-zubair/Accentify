@@ -1,4 +1,9 @@
-// ─── Auth / User Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import type { Timestamp } from 'firebase/firestore';
 
 export type UserRole = 'learner' | 'content_author' | 'admin';
@@ -141,8 +146,6 @@ export interface OnboardingPayload {
     englishLevel: string;
   };
 }
-
-// ─── User Management Models ───
 
 /** Row data shown in the admin Manage Users table */
 export interface ManagedUser {

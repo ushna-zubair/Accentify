@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * vocabularyService.ts
  *
  * Firestore access for the vocabulary synonym-typing exercise.
@@ -36,10 +42,6 @@ import { CEFR_ORDER, type CefrLevel, type VocabularyWord } from '../models/vocab
 
 const VOCAB_COL = 'vocabularyWords';
 
-// ═══════════════════════════════════════════════
-//  CEFR BAND HELPERS
-// ═══════════════════════════════════════════════
-
 /**
  * Normalise an arbitrary englishLevel string (incl. legacy values like
  * "B1 Intermediate" or onboarding's "unsure" sentinel) into a CEFR code.
@@ -64,10 +66,6 @@ export const targetCefrBand = (userLevel: CefrLevel): CefrLevel[] => {
   return CEFR_ORDER.slice(lo, hi + 1) as CefrLevel[];
 };
 
-// ═══════════════════════════════════════════════
-//  MAPPERS
-// ═══════════════════════════════════════════════
-
 const mapWordDoc = (id: string, data: any): VocabularyWord => ({
   id,
   word: String(data.word ?? ''),
@@ -87,10 +85,6 @@ const mapWordDoc = (id: string, data: any): VocabularyWord => ({
   updatedAt: data.updatedAt,
   createdBy: data.createdBy,
 });
-
-// ═══════════════════════════════════════════════
-//  READS
-// ═══════════════════════════════════════════════
 
 /**
  * Fetch an ordered list of words by their IDs (e.g. from a lesson's
@@ -171,10 +165,7 @@ export const fetchWeightedBandSession = async (
   const stretchCount = stretch ? Math.max(1, Math.round(max * 0.2)) : 0;
   const targetCount = Math.max(0, max - reviewCount - stretchCount);
 
-  const pickBucket = async (
-    level: CefrLevel | undefined,
-    n: number,
-  ): Promise<VocabularyWord[]> =>
+  const pickBucket = async (level: CefrLevel | undefined, n: number): Promise<VocabularyWord[]> =>
     !level || n <= 0 ? [] : fetchWordsForCefrBand([level], n, excludeIds);
 
   const [reviewWords, targetWords, stretchWords] = await Promise.all([
@@ -189,9 +180,7 @@ export const fetchWeightedBandSession = async (
 /**
  * Fetch a single vocabulary word by id, or null if it doesn't exist.
  */
-export const fetchVocabularyWord = async (
-  wordId: string,
-): Promise<VocabularyWord | null> => {
+export const fetchVocabularyWord = async (wordId: string): Promise<VocabularyWord | null> => {
   const snap = await getDoc(doc(db, VOCAB_COL, wordId));
   if (!snap.exists()) return null;
   return mapWordDoc(snap.id, snap.data());
@@ -243,9 +232,7 @@ export const fetchSpacedRepetitionWords = async (
   }
 };
 
-// ═══════════════════════════════════════════════
 //  ADMIN WRITES (used by future admin UI / seed script)
-// ═══════════════════════════════════════════════
 
 export type VocabularyWordInput = Omit<
   VocabularyWord,
@@ -283,13 +270,11 @@ export const deleteVocabularyWord = async (wordId: string): Promise<void> => {
   await deleteDoc(doc(db, VOCAB_COL, wordId));
 };
 
-// ═══════════════════════════════════════════════
-//  ADMIN LIST / COUNT
-// ═══════════════════════════════════════════════
-
 /** Fetch every vocabulary word, ordered by CEFR then word. Admin-only consumer. */
 export const fetchAllVocabularyWords = async (): Promise<VocabularyWord[]> => {
-  const snap = await getDocs(query(collection(db, VOCAB_COL), orderBy('cefrLevel'), orderBy('word')));
+  const snap = await getDocs(
+    query(collection(db, VOCAB_COL), orderBy('cefrLevel'), orderBy('word')),
+  );
   return snap.docs.map((d) => mapWordDoc(d.id, d.data()));
 };
 
@@ -310,9 +295,7 @@ export const countWordsByCefr = async (): Promise<Record<CefrLevel, number>> => 
   return counts;
 };
 
-// ═══════════════════════════════════════════════
 //  BULK SEED (idempotent upsert via deterministic ids)
-// ═══════════════════════════════════════════════
 
 /**
  * Upsert a batch of pre-built VocabularyWord objects into Firestore. The doc

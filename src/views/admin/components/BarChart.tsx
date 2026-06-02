@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Rect } from 'react-native-svg';
@@ -81,27 +87,28 @@ const BarChart: React.FC<BarChartProps> = ({ data, height = 180 }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  labelsRow: {
-    flexDirection: 'row',
-    marginTop: 6,
-  },
-  label: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: tc.textMuted,
-    textAlign: 'center',
-    position: 'absolute',
-  },
-  emptyWrap: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.textMuted,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    labelsRow: {
+      flexDirection: 'row',
+      marginTop: 6,
+    },
+    label: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textMuted,
+      textAlign: 'center',
+      position: 'absolute',
+    },
+    emptyWrap: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    emptyText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.textMuted,
+    },
+  });
 
 export default BarChart;

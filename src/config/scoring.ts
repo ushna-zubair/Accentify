@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Single source of truth for pronunciation scoring thresholds and result tiers.
  *
  * Score scale convention: the Accentify API returns 0–1 floats; the app
@@ -31,8 +37,6 @@ const TIER_LABELS: Record<ScoreTier, string> = {
 
 export const tierLabel = (tier: ScoreTier): string => TIER_LABELS[tier];
 
-export const isCompleted = (overallPct: number): boolean =>
-  overallPct >= COMPLETE_THRESHOLD_PCT;
+export const isCompleted = (overallPct: number): boolean => overallPct >= COMPLETE_THRESHOLD_PCT;
 
-export const isPracticeItem = (overallPct: number): boolean =>
-  overallPct >= PRACTICE_THRESHOLD_PCT;
+export const isPracticeItem = (overallPct: number): boolean => overallPct >= PRACTICE_THRESHOLD_PCT;

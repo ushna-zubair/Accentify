@@ -1,4 +1,9 @@
-// ─── Admin Dashboard Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 export interface TopLearner {
   name: string;
   sessions: number;
@@ -29,7 +34,6 @@ export interface SidebarItem {
   key: string;
 }
 
-// ─── Admin Mobile Dashboard Models ───
 export interface AdminOnline {
   uid: string;
   name: string;
@@ -64,8 +68,6 @@ export interface AdminMobileDashboardData {
   adminsOnline: AdminOnline[];
   menuItems: AdminMenuItem[];
 }
-
-// ─── Admin Access Control Models ───
 
 export type AdminRole = 'super_admin' | 'admin' | 'moderator' | 'viewer';
 
@@ -172,10 +174,6 @@ export interface InviteAdminPayload {
   permissions: AdminPermissions;
 }
 
-// ═══════════════════════════════════════════════
-//  FEEDBACK & REPORTS
-// ═══════════════════════════════════════════════
-
 export type FeedbackCategory = 'bug' | 'feature' | 'content' | 'ui' | 'performance' | 'other';
 export type FeedbackPriority = 'critical' | 'high' | 'medium' | 'low';
 export type FeedbackStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | 'archived';
@@ -242,9 +240,7 @@ export interface FeedbackStats {
 
 export type FeedbackTab = 'all' | 'open' | 'in_progress' | 'resolved' | 'closed';
 
-// ═══════════════════════════════════════════════
 //  MANAGE LESSONS (Admin)
-// ═══════════════════════════════════════════════
 
 export type LessonCategory = 'conversation' | 'pronunciation' | 'vocabulary';
 export type AdminLessonStatus = 'published' | 'draft' | 'archived';
@@ -391,13 +387,15 @@ export interface AdminLessonStats {
 
 export type ManageLessonsTab = 'all' | 'published' | 'draft' | 'archived';
 
-// ═══════════════════════════════════════════════
-//  SUPPORT & LOGS
-// ═══════════════════════════════════════════════
-
 export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
 export type SupportTicketPriority = 'critical' | 'high' | 'medium' | 'low';
-export type SupportTicketCategory = 'account' | 'billing' | 'technical' | 'content' | 'feature_request' | 'other';
+export type SupportTicketCategory =
+  | 'account'
+  | 'billing'
+  | 'technical'
+  | 'content'
+  | 'feature_request'
+  | 'other';
 
 export const SUPPORT_STATUS_LABELS: Record<SupportTicketStatus, string> = {
   open: 'Open',
@@ -508,4 +506,3 @@ export interface SystemLog {
   timestamp: string;
   metadata: Record<string, any>;
 }
-

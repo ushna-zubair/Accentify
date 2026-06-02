@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * accessControlService.ts
  *
  * Firestore CRUD for admin access control.
@@ -35,8 +41,6 @@ import type {
 } from '../models';
 import { DEFAULT_ROLE_PERMISSIONS } from '../models';
 
-// ─── Fetch All Admins ───
-
 export async function fetchAdminMembers(): Promise<AdminMember[]> {
   const usersRef = collection(db, 'users');
   const q = query(usersRef, where('role', '==', 'admin'));
@@ -55,7 +59,8 @@ export async function fetchAdminMembers(): Promise<AdminMember[]> {
       fullName: profile.fullName ?? d.fullName ?? 'Admin',
       avatarUrl: profile.profilePictureUrl ?? '',
       adminRole: d.adminRole ?? 'admin',
-      permissions: d.adminPermissions ?? DEFAULT_ROLE_PERMISSIONS[d.adminRole as AdminRole ?? 'admin'],
+      permissions:
+        d.adminPermissions ?? DEFAULT_ROLE_PERMISSIONS[(d.adminRole as AdminRole) ?? 'admin'],
       status: d.status ?? 'active',
       lastSeen: d.lastSeen?.toDate?.()?.toISOString() ?? d.lastLoginAt ?? null,
       createdAt: d.createdAt?.toDate?.()?.toISOString() ?? new Date().toISOString(),
@@ -65,13 +70,16 @@ export async function fetchAdminMembers(): Promise<AdminMember[]> {
   }
 
   // Sort: super_admin first, then by name
-  const rolePriority: Record<string, number> = { super_admin: 0, admin: 1, moderator: 2, viewer: 3 };
+  const rolePriority: Record<string, number> = {
+    super_admin: 0,
+    admin: 1,
+    moderator: 2,
+    viewer: 3,
+  };
   admins.sort((a, b) => (rolePriority[a.adminRole] ?? 9) - (rolePriority[b.adminRole] ?? 9));
 
   return admins;
 }
-
-// ─── Update Admin Role ───
 
 export async function updateAdminRole(
   targetUid: string,
@@ -102,8 +110,6 @@ export async function updateAdminRole(
   await batch.commit();
 }
 
-// ─── Update Admin Permissions ───
-
 export async function updateAdminPermissions(
   targetUid: string,
   permissions: AdminPermissions,
@@ -131,8 +137,6 @@ export async function updateAdminPermissions(
   await batch.commit();
 }
 
-// ─── Suspend / Reactivate Admin ───
-
 export async function updateAdminStatus(
   targetUid: string,
   newStatus: 'active' | 'suspended' | 'deactivated',
@@ -147,7 +151,8 @@ export async function updateAdminStatus(
     updatedAt: serverTimestamp(),
   });
 
-  const action = newStatus === 'active' ? 'reactivate' : newStatus === 'suspended' ? 'suspend' : 'deactivate';
+  const action =
+    newStatus === 'active' ? 'reactivate' : newStatus === 'suspended' ? 'suspend' : 'deactivate';
   const logRef = doc(collection(db, 'admin_activity_logs'));
   batch.set(logRef, {
     adminUid: performerUid,
@@ -160,8 +165,6 @@ export async function updateAdminStatus(
 
   await batch.commit();
 }
-
-// ─── Invite New Admin ───
 
 export async function inviteAdmin(
   payload: InviteAdminPayload,
@@ -217,8 +220,6 @@ export async function inviteAdmin(
   return inviteRef.id;
 }
 
-// ─── Remove Admin (demote to learner) ───
-
 export async function removeAdmin(
   targetUid: string,
   performerUid: string,
@@ -242,11 +243,7 @@ export async function removeAdmin(
   );
 }
 
-// ─── Fetch Activity Logs ───
-
-export async function fetchActivityLogs(
-  limitCount: number = 50,
-): Promise<AdminActivityLog[]> {
+export async function fetchActivityLogs(limitCount: number = 50): Promise<AdminActivityLog[]> {
   const logsRef = collection(db, 'admin_activity_logs');
   const q = query(logsRef, orderBy('timestamp', 'desc'), limit(limitCount));
   const snap = await getDocs(q);
@@ -264,8 +261,6 @@ export async function fetchActivityLogs(
     };
   });
 }
-
-// ─── Log Activity ───
 
 async function logActivity(
   adminUid: string,
@@ -288,8 +283,6 @@ async function logActivity(
   }
 }
 
-// ─── Fetch Pending Invitations ───
-
 export async function fetchPendingInvitations(): Promise<
   Array<{ id: string; email: string; fullName: string; adminRole: AdminRole; createdAt: string }>
 > {
@@ -297,19 +290,19 @@ export async function fetchPendingInvitations(): Promise<
   const q = query(invRef, where('status', '==', 'pending'));
   const snap = await getDocs(q);
 
-  return snap.docs.map((d) => {
-    const data = d.data();
-    return {
-      id: d.id,
-      email: data.email ?? '',
-      fullName: data.fullName ?? '',
-      adminRole: data.adminRole ?? 'admin',
-      createdAt: data.createdAt?.toDate?.()?.toISOString() ?? '',
-    };
-  }).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  return snap.docs
+    .map((d) => {
+      const data = d.data();
+      return {
+        id: d.id,
+        email: data.email ?? '',
+        fullName: data.fullName ?? '',
+        adminRole: data.adminRole ?? 'admin',
+        createdAt: data.createdAt?.toDate?.()?.toISOString() ?? '',
+      };
+    })
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
-
-// ─── Revoke Invitation ───
 
 export async function revokeInvitation(
   invitationId: string,

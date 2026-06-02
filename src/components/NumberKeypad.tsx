@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -5,12 +11,7 @@ import { useAppTheme, type ThemeColors } from '../hooks/useAppTheme';
 import { fonts } from '../theme/typography';
 
 /** Standard 1-9, empty/0/backspace layout */
-const KEYPAD_KEYS = [
-  '1', '2', '3',
-  '4', '5', '6',
-  '7', '8', '9',
-  '',  '0', 'backspace',
-] as const;
+const KEYPAD_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'backspace'] as const;
 
 type KeypadSize = 'normal' | 'compact';
 
@@ -26,11 +27,7 @@ interface NumberKeypadProps {
 /**
  * Shared numeric keypad used across PIN, OTP, and authenticator screens.
  */
-const NumberKeypad: React.FC<NumberKeypadProps> = ({
-  onKeyPress,
-  size = 'normal',
-  style,
-}) => {
+const NumberKeypad: React.FC<NumberKeypadProps> = ({ onKeyPress, size = 'normal', style }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const isCompact = size === 'compact';
@@ -66,23 +63,24 @@ const NumberKeypad: React.FC<NumberKeypadProps> = ({
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    width: '100%',
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  button: {
-    width: '30%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  text: {
-    fontFamily: fonts.medium,
-    color: tc.text,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'space-between',
+    },
+    button: {
+      width: '30%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    text: {
+      fontFamily: fonts.medium,
+      color: tc.text,
+    },
+  });
 
 export default NumberKeypad;

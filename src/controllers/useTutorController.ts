@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { doc, getDoc, collection, query, getDocs, where } from 'firebase/firestore';
@@ -10,9 +16,7 @@ import type {
   LessonStatus,
 } from '../models';
 
-// ═══════════════════════════════════════════════
 //  SAMPLE LESSON DATA (fallback when Firestore is empty)
-// ═══════════════════════════════════════════════
 
 const SAMPLE_LESSONS: TutorLesson[] = [
   {
@@ -38,8 +42,7 @@ const SAMPLE_LESSONS: TutorLesson[] = [
   {
     id: 'lesson_3',
     title: 'Hanging out friends',
-    description:
-      'Hang out with your friend Alex and Joe while chatting about your day.',
+    description: 'Hang out with your friend Alex and Joe while chatting about your day.',
     difficulty: 'Medium',
     category: 'conversation',
     status: 'upcoming',
@@ -48,8 +51,7 @@ const SAMPLE_LESSONS: TutorLesson[] = [
   {
     id: 'lesson_4',
     title: 'English Pronunciation',
-    description:
-      'Read and get instant feedback from AI on your pronunciation.',
+    description: 'Read and get instant feedback from AI on your pronunciation.',
     difficulty: 'Medium',
     category: 'pronunciation',
     status: 'upcoming',
@@ -58,8 +60,7 @@ const SAMPLE_LESSONS: TutorLesson[] = [
   {
     id: 'lesson_5',
     title: 'Vocabulary Growth LVL 1',
-    description:
-      'Learn new words and meanings with help from the AI tutor.',
+    description: 'Learn new words and meanings with help from the AI tutor.',
     difficulty: 'Easy',
     category: 'vocabulary',
     status: 'upcoming',
@@ -74,7 +75,6 @@ const DEFAULT_DATA: TutorScreenData = {
   studyPath: [],
 };
 
-// ─── Thumbnail category colors (used when no image) ───
 export const CATEGORY_COLORS: Record<string, string> = {
   conversation: '#9FB2FD',
   pronunciation: '#FEC79C',
@@ -85,10 +85,6 @@ export const CATEGORY_COLORS: Record<string, string> = {
 const getThumbnail = (_category: string): any => {
   return undefined;
 };
-
-// ═══════════════════════════════════════════════
-//  CONTROLLER
-// ═══════════════════════════════════════════════
 
 export const useTutorController = () => {
   const [data, setData] = useState<TutorScreenData>(DEFAULT_DATA);
@@ -117,8 +113,7 @@ export const useTutorController = () => {
       const progressSnap = await getDoc(doc(db, 'users', uid, 'progress', 'summary'));
       const progressData = progressSnap.exists() ? progressSnap.data() : {};
       const totalSeconds = (progressData?.totalPracticeSeconds as number) ?? 0;
-      const totalHours =
-        progressData?.totalHours ?? Math.round((totalSeconds / 3600) * 10) / 10;
+      const totalHours = progressData?.totalHours ?? Math.round((totalSeconds / 3600) * 10) / 10;
       const stats: TutorStats = {
         completedLessons: progressData?.completedLessons ?? 0,
         totalHours,
@@ -142,19 +137,21 @@ export const useTutorController = () => {
             userLessonStatus[d.id] = (d.data().status as LessonStatus) ?? 'upcoming';
           });
 
-          lessons = lessonsSnap.docs.map((d) => {
-            const lData = d.data();
-            return {
-              id: d.id,
-              title: lData.title ?? '',
-              description: lData.description ?? '',
-              difficulty: (lData.difficulty as LessonDifficulty) ?? 'Easy',
-              category: lData.category ?? 'conversation',
-              status: userLessonStatus[d.id] ?? 'upcoming',
-              order: lData.order ?? 0,
-              thumbnail: getThumbnail(lData.category ?? 'conversation'),
-            };
-          }).sort((a, b) => a.order - b.order);
+          lessons = lessonsSnap.docs
+            .map((d) => {
+              const lData = d.data();
+              return {
+                id: d.id,
+                title: lData.title ?? '',
+                description: lData.description ?? '',
+                difficulty: (lData.difficulty as LessonDifficulty) ?? 'Easy',
+                category: lData.category ?? 'conversation',
+                status: userLessonStatus[d.id] ?? 'upcoming',
+                order: lData.order ?? 0,
+                thumbnail: getThumbnail(lData.category ?? 'conversation'),
+              };
+            })
+            .sort((a, b) => a.order - b.order);
         }
       } catch (e: unknown) {
         console.warn('[Tutor] Lessons fetch warning:', e instanceof Error ? e.message : String(e));

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Word-level pronunciation exercise. Pulls one word at a time from the HF
  * /prompt_word endpoint, scores recordings with /evaluate_word, and renders a
  * phoneme-level breakdown so learners can see exactly which sounds tripped
@@ -22,16 +28,8 @@ import { useHideTabBar } from '../../context/TabBarVisibilityContext';
 import { RecordingControl } from '../../components/RecordingControl';
 import { SpeakerButton } from '../../components/SpeakerButton';
 import { useWordPronunciationExerciseController } from '../../controllers/useWordPronunciationExerciseController';
-import {
-  AiMascot,
-  ResultIcon,
-  WavyChatOverlay,
-} from './PronunciationExerciseScreen';
-import {
-  COMPLETE_THRESHOLD_PCT,
-  tierForScore,
-  tierLabel,
-} from '../../config/scoring';
+import { AiMascot, ResultIcon, WavyChatOverlay } from './PronunciationExerciseScreen';
+import { COMPLETE_THRESHOLD_PCT, tierForScore, tierLabel } from '../../config/scoring';
 import { friendlySounds } from '../../services/arpabetFriendly';
 import type { PronunciationScore } from '../../models';
 
@@ -56,9 +54,12 @@ const getProgressColor = (idx: number, total: number, tc: ThemeColors): string =
   return tc.error;
 };
 
-export const WordPronunciationExerciseScreen: React.FC<
-  WordPronunciationExerciseScreenProps
-> = ({ lessonId, englishLevel, onExit, onComplete }) => {
+export const WordPronunciationExerciseScreen: React.FC<WordPronunciationExerciseScreenProps> = ({
+  lessonId,
+  englishLevel,
+  onExit,
+  onComplete,
+}) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   useHideTabBar();
@@ -169,18 +170,14 @@ export const WordPronunciationExerciseScreen: React.FC<
               {word?.word ?? ''}
             </Text>
             {word?.reference ? (
-              <Text style={styles.referenceArpabet}>
-                /{word.reference.trim()}/
-              </Text>
+              <Text style={styles.referenceArpabet}>/{word.reference.trim()}/</Text>
             ) : null}
           </View>
 
           {isProcessing && (
             <View style={styles.processingWrap}>
               <ActivityIndicator size="large" color={tc.accent} />
-              <Text style={styles.processingText}>
-                Analyzing pronunciation…
-              </Text>
+              <Text style={styles.processingText}>Analyzing pronunciation…</Text>
             </View>
           )}
         </View>
@@ -209,11 +206,7 @@ export const WordPronunciationExerciseScreen: React.FC<
                       ).join(' and ')} sound.`
                     : 'Slow it down and try again.';
 
-              const primaryLabel = isLastWord
-                ? 'Finish'
-                : passed
-                  ? 'Next word'
-                  : 'Skip & continue';
+              const primaryLabel = isLastWord ? 'Finish' : passed ? 'Next word' : 'Skip & continue';
 
               return (
                 <>
@@ -335,7 +328,9 @@ export const WordPronunciationExerciseScreen: React.FC<
                                     { backgroundColor: tc.accentMuted, borderColor: tc.accent },
                                   ]}
                                 >
-                                  <Text style={[styles.phonemeChipText, { color: tc.accent }]}>{p}</Text>
+                                  <Text style={[styles.phonemeChipText, { color: tc.accent }]}>
+                                    {p}
+                                  </Text>
                                 </View>
                               ))}
                             </View>
@@ -382,7 +377,9 @@ export const WordPronunciationExerciseScreen: React.FC<
                                       { backgroundColor: tc.accentMuted, borderColor: tc.divider },
                                     ]}
                                   >
-                                    <Text style={[styles.phonemeChipText, { color: tc.text }]}>{p}</Text>
+                                    <Text style={[styles.phonemeChipText, { color: tc.text }]}>
+                                      {p}
+                                    </Text>
                                   </View>
                                 ))}
                               </View>
@@ -774,7 +771,10 @@ const createStyles = (tc: ThemeColors) =>
     // Phoneme comparison sections
     phonemeCompareSection: { marginTop: 10 },
     phonemeCompareLabel: {
-      fontFamily: fonts.semiBold, fontSize: 12, color: tc.textLight, marginBottom: 4,
+      fontFamily: fonts.semiBold,
+      fontSize: 12,
+      color: tc.textLight,
+      marginBottom: 4,
     },
 
     // Phoneme chip sub-text (shows detected_arp or checkmark)

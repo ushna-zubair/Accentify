@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection,
@@ -22,19 +28,28 @@ import type {
   Announcement,
   AdminMenuItem,
 } from '../models';
-// ------- Constants -------
 export const MENU_ITEMS: SidebarItem[] = [
   { label: 'Dashboard', icon: 'grid-outline', iconSet: 'ionicons', key: 'dashboard' },
   { label: 'Manage Lessons', icon: 'book-outline', iconSet: 'ionicons', key: 'lessons' },
   { label: 'Manage Vocabulary', icon: 'library-outline', iconSet: 'ionicons', key: 'vocabulary' },
   { label: 'Manage Users', icon: 'people-outline', iconSet: 'ionicons', key: 'users' },
-  { label: 'Feedback & Reports', icon: 'chatbox-ellipses-outline', iconSet: 'ionicons', key: 'feedback' },
+  {
+    label: 'Feedback & Reports',
+    icon: 'chatbox-ellipses-outline',
+    iconSet: 'ionicons',
+    key: 'feedback',
+  },
 ];
 
 export const OTHERS_ITEMS: SidebarItem[] = [
   { label: 'Settings', icon: 'settings-outline', iconSet: 'ionicons', key: 'settings' },
   { label: 'Subscription & billing', icon: 'card-outline', iconSet: 'ionicons', key: 'billing' },
-  { label: 'Admin access control', icon: 'shield-checkmark-outline', iconSet: 'ionicons', key: 'access' },
+  {
+    label: 'Admin access control',
+    icon: 'shield-checkmark-outline',
+    iconSet: 'ionicons',
+    key: 'access',
+  },
   { label: 'Support & logs', icon: 'help-circle-outline', iconSet: 'ionicons', key: 'support' },
 ];
 
@@ -62,7 +77,6 @@ const DEFAULT_MOBILE: AdminMobileDashboardData = {
   menuItems: ADMIN_MENU,
 };
 
-// ─── Desktop / Tablet Controller (existing) ───
 export const useAdminDashboardController = () => {
   const { signOut } = useAuth();
   const [activeMenu, setActiveMenu] = useState('dashboard');
@@ -99,7 +113,6 @@ export const useAdminDashboardController = () => {
   };
 };
 
-// ─── Mobile Admin Dashboard Controller ───
 export const useAdminMobileDashboardController = () => {
   const { currentUser, userProfile, signOut } = useAuth();
   const [mobileData, setMobileData] = useState<AdminMobileDashboardData>(DEFAULT_MOBILE);
@@ -125,9 +138,7 @@ export const useAdminMobileDashboardController = () => {
         currentUser.email?.split('@')[0] ??
         'Admin';
 
-      const adminAvatarUrl =
-        userProfile?.profile?.profilePictureUrl ??
-        undefined;
+      const adminAvatarUrl = userProfile?.profile?.profilePictureUrl ?? undefined;
 
       // 2. Latest announcement from Firestore
       let announcement: Announcement | null = DEFAULT_ANNOUNCEMENT;
@@ -248,7 +259,9 @@ export const useAdminMobileDashboardController = () => {
   useEffect(() => {
     let ignore = false;
     fetchDashboard();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchDashboard]);
 
   return {
@@ -260,4 +273,3 @@ export const useAdminMobileDashboardController = () => {
     handleLogout,
   };
 };
-

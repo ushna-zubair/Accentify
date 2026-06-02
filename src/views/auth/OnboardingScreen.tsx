@@ -1,4 +1,10 @@
-import React, { useRef, useState , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -53,12 +59,14 @@ const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const viewabilityConfig = useRef({ viewAreaCoveragePercentThreshold: 60 });
-  const onViewableItemsChanged = useRef(({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
-    const firstViewable = viewableItems.find((item) => item.index !== null);
-    if (firstViewable?.index !== null && firstViewable?.index !== undefined) {
-      setCurrentSlide(firstViewable.index);
-    }
-  });
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
+      const firstViewable = viewableItems.find((item) => item.index !== null);
+      if (firstViewable?.index !== null && firstViewable?.index !== undefined) {
+        setCurrentSlide(firstViewable.index);
+      }
+    },
+  );
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const index = Math.round(event.nativeEvent.contentOffset.x / width);
@@ -118,10 +126,7 @@ const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.bottomContainer}>
         <View style={styles.pagination}>
           {slides.map((_, index) => (
-            <View
-              key={index}
-              style={[styles.dot, currentSlide === index && styles.dotActive]}
-            />
+            <View key={index} style={[styles.dot, currentSlide === index && styles.dotActive]} />
           ))}
         </View>
 
@@ -137,92 +142,93 @@ const OnboardingScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  skipButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 10,
-    padding: 10,
-  },
-  skipText: {
-    fontFamily: fonts.medium,
-    fontSize: 16,
-    color: tc.text,
-  },
-  slide: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
-  },
-  image: {
-    width: 300,
-    height: 300,
-    marginBottom: 20,
-    resizeMode: 'contain',
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 28,
-    color: tc.text,
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 16,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 24,
-    paddingHorizontal: 20,
-  },
-  bottomContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 30,
-    paddingBottom: 40,
-  },
-  pagination: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  dot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: tc.inputBorder,
-  },
-  dotActive: {
-    backgroundColor: tc.accent,
-    width: 24,
-  },
-  nextButton: {
-    minWidth: 56,
-    height: 56,
-    paddingHorizontal: 18,
-    borderRadius: 28,
-    backgroundColor: tc.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  buttonText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: tc.white,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    skipButton: {
+      position: 'absolute',
+      top: 50,
+      right: 20,
+      zIndex: 10,
+      padding: 10,
+    },
+    skipText: {
+      fontFamily: fonts.medium,
+      fontSize: 16,
+      color: tc.text,
+    },
+    slide: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 40,
+    },
+    image: {
+      width: 300,
+      height: 300,
+      marginBottom: 20,
+      resizeMode: 'contain',
+    },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 28,
+      color: tc.text,
+      textAlign: 'center',
+      marginBottom: 12,
+    },
+    subtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 16,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 24,
+      paddingHorizontal: 20,
+    },
+    bottomContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 30,
+      paddingBottom: 40,
+    },
+    pagination: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    dot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+      backgroundColor: tc.inputBorder,
+    },
+    dotActive: {
+      backgroundColor: tc.accent,
+      width: 24,
+    },
+    nextButton: {
+      minWidth: 56,
+      height: 56,
+      paddingHorizontal: 18,
+      borderRadius: 28,
+      backgroundColor: tc.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
+      elevation: 8,
+    },
+    buttonText: {
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      color: tc.white,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+  });
 
 export default OnboardingScreen;

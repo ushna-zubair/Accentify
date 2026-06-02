@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * WavyChatScreen
  *
  * A full-screen AI chat experience with Wavy — accessible from the Home tab.
@@ -35,28 +41,14 @@ import { convoHealth } from '../../services/conversationApi';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-// ═══════════════════════════════════════════════
-//  CHAT BUBBLE
-// ═══════════════════════════════════════════════
-
 const ChatBubble: React.FC<{ message: WavyChatMessage; tc: ThemeColors }> = ({ message, tc }) => {
   const isWavy = message.role === 'wavy';
   return (
     <View>
-      <Text
-        style={[
-          styles.roleLabel,
-          isWavy ? styles.roleLabelLeft : styles.roleLabelRight,
-        ]}
-      >
+      <Text style={[styles.roleLabel, isWavy ? styles.roleLabelLeft : styles.roleLabelRight]}>
         {isWavy ? 'Wavy' : 'You'}
       </Text>
-      <View
-        style={[
-          styles.bubbleRow,
-          isWavy ? styles.bubbleRowLeft : styles.bubbleRowRight,
-        ]}
-      >
+      <View style={[styles.bubbleRow, isWavy ? styles.bubbleRowLeft : styles.bubbleRowRight]}>
         {isWavy && (
           <Svg width={28} height={28} viewBox="0 0 44 44" style={{ marginRight: 8 }}>
             <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
@@ -72,22 +64,13 @@ const ChatBubble: React.FC<{ message: WavyChatMessage; tc: ThemeColors }> = ({ m
             />
           </Svg>
         )}
-        <View
-          style={[
-            styles.bubble,
-            isWavy ? styles.bubbleWavy : styles.bubbleUser,
-          ]}
-        >
+        <View style={[styles.bubble, isWavy ? styles.bubbleWavy : styles.bubbleUser]}>
           <Text style={styles.bubbleText}>{message.text}</Text>
         </View>
       </View>
     </View>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 const WavyChatScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
@@ -114,30 +97,20 @@ const WavyChatScreen: React.FC = () => {
     }, [translateY]),
   );
 
-  const {
-    messages,
-    inputText,
-    setInputText,
-    isTyping,
-    sendMessage,
-    clearChat,
-  } = useWavyChatController('general', '');
+  const { messages, inputText, setInputText, isTyping, sendMessage, clearChat } =
+    useWavyChatController('general', '');
 
   const handleClearChat = useCallback(() => {
-    Alert.alert(
-      'Clear chat?',
-      'This will remove your conversation with Wavy on this device.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Clear',
-          style: 'destructive',
-          onPress: () => {
-            clearChat().catch(() => {});
-          },
+    Alert.alert('Clear chat?', 'This will remove your conversation with Wavy on this device.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Clear',
+        style: 'destructive',
+        onPress: () => {
+          clearChat().catch(() => {});
         },
-      ],
-    );
+      },
+    ]);
   }, [clearChat]);
 
   // Wake the HF Space on screen mount so the first message doesn't pay
@@ -162,10 +135,7 @@ const WavyChatScreen: React.FC = () => {
     <View style={[dynStyles(tc).container]}>
       {/* ── Header ── */}
       <View
-        style={[
-          dynStyles(tc).header,
-          { paddingTop: Platform.OS === 'web' ? 16 : insets.top + 8 },
-        ]}
+        style={[dynStyles(tc).header, { paddingTop: Platform.OS === 'web' ? 16 : insets.top + 8 }]}
       >
         <TouchableOpacity
           style={dynStyles(tc).backBtn}
@@ -208,11 +178,7 @@ const WavyChatScreen: React.FC = () => {
 
       {/* ── Messages + Input (both wrapped so the keyboard pushes the
               input row above itself, instead of hiding it). ── */}
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior="padding"
-        keyboardVerticalOffset={0}
-      >
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior="padding" keyboardVerticalOffset={0}>
         <ScrollView
           ref={chatScrollRef}
           style={styles.messagesArea}
@@ -233,12 +199,7 @@ const WavyChatScreen: React.FC = () => {
           )}
         </ScrollView>
 
-        <View
-          style={[
-            dynStyles(tc).inputRow,
-            { paddingBottom: Math.max(insets.bottom, 12) },
-          ]}
-        >
+        <View style={[dynStyles(tc).inputRow, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <TextInput
             style={dynStyles(tc).textInput}
             placeholder="Ask Wavy anything..."
@@ -250,11 +211,7 @@ const WavyChatScreen: React.FC = () => {
             selectionColor="rgba(255,255,255,0.6)"
             multiline
           />
-          <TouchableOpacity
-            onPress={handleSend}
-            activeOpacity={0.6}
-            style={dynStyles(tc).sendBtn}
-          >
+          <TouchableOpacity onPress={handleSend} activeOpacity={0.6} style={dynStyles(tc).sendBtn}>
             <Ionicons name="send" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -263,9 +220,7 @@ const WavyChatScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
 //  STATIC STYLES (message bubbles, shared)
-// ═══════════════════════════════════════════════
 
 const styles = StyleSheet.create({
   // Messages
@@ -357,9 +312,7 @@ const styles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
 //  DYNAMIC STYLES (theme-aware)
-// ═══════════════════════════════════════════════
 
 const dynStyles = (tc: ThemeColors) =>
   StyleSheet.create({

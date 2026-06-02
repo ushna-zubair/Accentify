@@ -1,16 +1,13 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  useAudioRecorder,
-  AudioModule,
-  setAudioModeAsync,
-} from 'expo-audio';
+import { useAudioRecorder, AudioModule, setAudioModeAsync } from 'expo-audio';
 import { WAV2VEC2_RECORDING_OPTIONS } from '../utils/audioRecording';
-import {
-  doc,
-  setDoc,
-  Timestamp,
-  increment,
-} from 'firebase/firestore';
+import { doc, setDoc, Timestamp, increment } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import {
   fetchSentences,
@@ -35,9 +32,7 @@ import { onExerciseComplete, recordPronunciationAttempt } from '../services/prog
 import { COMPLETE_THRESHOLD_PCT, PRACTICE_THRESHOLD_PCT } from '../config/scoring';
 import { levenshtein, normalize } from '../utils/stringUtils';
 
-// ═══════════════════════════════════════════════
 //  DEFAULT SENTENCES (used while loading from backend)
-// ═══════════════════════════════════════════════
 
 const DEFAULT_SENTENCES: PronunciationSentence[] = [
   {
@@ -72,10 +67,6 @@ const FEEDBACK_TEMPLATES = [
     ],
   },
 ];
-
-// ═══════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════
 
 const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -159,17 +150,9 @@ const evaluatePronunciation = (
 // transcribeAudio has been replaced by the Cloud Function `transcribeAndEvaluate`
 // via pronunciationService.ts — see stopRecording below.
 
-// ═══════════════════════════════════════════════
-//  CONTROLLER HOOK
-// ═══════════════════════════════════════════════
-
 export type PronunciationPhase = 'idle' | 'recording' | 'processing' | 'result';
 
-export const usePronunciationExerciseController = (
-  lessonId: string,
-  englishLevel?: string,
-) => {
-  // ── State ──
+export const usePronunciationExerciseController = (lessonId: string, englishLevel?: string) => {
   const [sentences, setSentences] = useState<PronunciationSentence[]>(DEFAULT_SENTENCES);
   const [sentenceIds, setSentenceIds] = useState<(string | undefined)[]>([]);
   const [sentenceSapi, setSentenceSapi] = useState<(string[] | undefined)[]>([]);
@@ -193,12 +176,10 @@ export const usePronunciationExerciseController = (
   const recorderRef = useRef(audioRecorder);
   recorderRef.current = audioRecorder;
 
-  // ── Refs ──
   const durationTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingDurationRef = useRef(0);
 
-  // ── Derived ──
   const sentence = sentences[currentIndex];
   const totalSentences = sentences.length;
   const isLastSentence = currentIndex >= totalSentences - 1;
@@ -214,9 +195,7 @@ export const usePronunciationExerciseController = (
       try {
         const data = await fetchSentences(undefined, 3, englishLevel);
         if (!cancelled && data.length > 0) {
-          setSentences(
-            data.map((s) => ({ text: s.text, difficulty: s.difficulty })),
-          );
+          setSentences(data.map((s) => ({ text: s.text, difficulty: s.difficulty })));
           setSentenceIds(data.map((s) => s.id));
           setSentenceSapi(data.map((s) => s.sapi));
         }
@@ -226,7 +205,9 @@ export const usePronunciationExerciseController = (
         if (!cancelled) setSentencesLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [englishLevel]);
 
   // ── Countdown timer ──
@@ -371,7 +352,6 @@ export const usePronunciationExerciseController = (
               pronunciationScore: rw.pronunciation_score,
             }))
           : evaluation.wordResults;
-
       } catch (apiErr: unknown) {
         console.error('[Pronunciation] evaluation failed:', apiErr);
         const friendly =
@@ -463,15 +443,7 @@ export const usePronunciationExerciseController = (
       setError(e instanceof Error ? e.message : 'Failed to process recording');
       setPhase('idle');
     }
-  }, [
-    audioRecorder,
-    sentence,
-    currentIndex,
-    attemptCount,
-    lessonId,
-    sentenceIds,
-    sentenceSapi,
-  ]);
+  }, [audioRecorder, sentence, currentIndex, attemptCount, lessonId, sentenceIds, sentenceSapi]);
 
   // ── Try Again ──
   const tryAgain = useCallback(() => {
@@ -502,9 +474,7 @@ export const usePronunciationExerciseController = (
     setCompleting(true);
     try {
       const avgScore = computeAverage(allScores);
-      const completedCount = allScores.filter(
-        (s) => s.overall >= COMPLETE_THRESHOLD_PCT,
-      ).length;
+      const completedCount = allScores.filter((s) => s.overall >= COMPLETE_THRESHOLD_PCT).length;
       await setDoc(
         doc(db, 'users', uid, 'lessons', lessonId),
         {
@@ -530,7 +500,6 @@ export const usePronunciationExerciseController = (
   }, [allScores, lessonId]);
 
   return {
-    // Data
     sentence,
     currentIndex,
     totalSentences,
@@ -543,7 +512,6 @@ export const usePronunciationExerciseController = (
     error,
     sentencesLoading,
     completing,
-    // Actions
     startRecording,
     stopRecording,
     tryAgain,

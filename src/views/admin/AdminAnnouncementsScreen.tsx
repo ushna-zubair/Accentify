@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import {
   View,
@@ -16,10 +22,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useAnnouncementsController } from '../../controllers';
-
-// ═══════════════════════════════════════════════
-//  ADMIN ANNOUNCEMENTS SCREEN
-// ═══════════════════════════════════════════════
 
 const AdminAnnouncementsScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
@@ -52,7 +54,12 @@ const AdminAnnouncementsScreen: React.FC = () => {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-        <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+          }}
+          style={styles.backBtn}
+        >
           <Ionicons name="arrow-back" size={22} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Announcements</Text>
@@ -94,10 +101,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
           return (
             <TouchableOpacity
               key={item.id}
-              style={[
-                styles.announcementCard,
-                isSelected && styles.announcementCardSelected,
-              ]}
+              style={[styles.announcementCard, isSelected && styles.announcementCardSelected]}
               activeOpacity={0.7}
               onPress={() => toggleSelect(item.id)}
             >
@@ -109,19 +113,10 @@ const AdminAnnouncementsScreen: React.FC = () => {
                   <Text style={styles.cardBody} numberOfLines={2}>
                     {item.body}
                   </Text>
-                  <Text style={styles.cardMeta}>
-                    Announcement #{index + 1}
-                  </Text>
+                  <Text style={styles.cardMeta}>Announcement #{index + 1}</Text>
                 </View>
-                <View
-                  style={[
-                    styles.checkCircle,
-                    isSelected && styles.checkCircleActive,
-                  ]}
-                >
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={14} color={tc.white} />
-                  )}
+                <View style={[styles.checkCircle, isSelected && styles.checkCircleActive]}>
+                  {isSelected && <Ionicons name="checkmark" size={14} color={tc.white} />}
                 </View>
               </View>
             </TouchableOpacity>
@@ -141,9 +136,7 @@ const AdminAnnouncementsScreen: React.FC = () => {
             ) : (
               <>
                 <Ionicons name="trash-outline" size={18} color={tc.white} />
-                <Text style={styles.deleteBtnText}>
-                  Delete Selected ({selectedIds.size})
-                </Text>
+                <Text style={styles.deleteBtnText}>Delete Selected ({selectedIds.size})</Text>
               </>
             )}
           </TouchableOpacity>
@@ -191,10 +184,6 @@ const AdminAnnouncementsScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
-
 const createStyles = (tc: ThemeColors, screenWidth: number) => {
   const isWide = Platform.OS === 'web' && screenWidth >= 600;
   const maxContentWidth = isWide ? 640 : screenWidth;
@@ -211,7 +200,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       alignItems: 'center',
     },
 
-    // Header
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -247,7 +235,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       width: isWide ? '100%' : undefined,
     },
 
-    // Error
     errorBanner: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -296,7 +283,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       color: tc.accent,
     },
 
-    // Empty state
     emptyState: {
       alignItems: 'center',
       paddingVertical: 32,

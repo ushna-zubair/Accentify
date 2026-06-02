@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import {
   collection,
   doc,
@@ -25,7 +31,6 @@ import type {
 const FEEDBACK_COL = 'feedback';
 const ACTIVITY_COL = 'feedback_activity';
 
-// ─── Helpers ───
 const tsToISO = (ts: any): string => {
   if (!ts) return '';
   if (ts.toDate) return ts.toDate().toISOString();
@@ -61,14 +66,12 @@ const mapDoc = (docSnap: any): FeedbackItem => {
   };
 };
 
-// ─── Fetch all feedback items ───
 export const fetchFeedbackItems = async (maxItems = 200): Promise<FeedbackItem[]> => {
   const q = query(collection(db, FEEDBACK_COL), orderBy('createdAt', 'desc'), limit(maxItems));
   const snap = await getDocs(q);
   return snap.docs.map(mapDoc);
 };
 
-// ─── Update feedback status ───
 export const updateFeedbackStatus = async (
   feedbackId: string,
   newStatus: FeedbackStatus,
@@ -82,7 +85,9 @@ export const updateFeedbackStatus = async (
   });
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'status_change',
     details: `Changed status to ${newStatus}`,
     timestamp: serverTimestamp(),
@@ -90,7 +95,6 @@ export const updateFeedbackStatus = async (
   await batch.commit();
 };
 
-// ─── Update feedback priority ───
 export const updateFeedbackPriority = async (
   feedbackId: string,
   newPriority: FeedbackPriority,
@@ -104,7 +108,9 @@ export const updateFeedbackPriority = async (
   });
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'priority_change',
     details: `Changed priority to ${newPriority}`,
     timestamp: serverTimestamp(),
@@ -112,7 +118,6 @@ export const updateFeedbackPriority = async (
   await batch.commit();
 };
 
-// ─── Assign feedback to admin ───
 export const assignFeedback = async (
   feedbackId: string,
   assigneeUid: string,
@@ -128,7 +133,9 @@ export const assignFeedback = async (
   });
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'assigned',
     details: `Assigned to ${assigneeName}`,
     timestamp: serverTimestamp(),
@@ -136,7 +143,6 @@ export const assignFeedback = async (
   await batch.commit();
 };
 
-// ─── Add admin notes ───
 export const updateAdminNotes = async (
   feedbackId: string,
   notes: string,
@@ -150,7 +156,9 @@ export const updateAdminNotes = async (
   });
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'notes_update',
     details: 'Updated admin notes',
     timestamp: serverTimestamp(),
@@ -158,7 +166,6 @@ export const updateAdminNotes = async (
   await batch.commit();
 };
 
-// ─── Send response to user ───
 export const respondToFeedback = async (
   feedbackId: string,
   message: string,
@@ -176,7 +183,9 @@ export const respondToFeedback = async (
   });
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'responded',
     details: 'Sent response to user',
     timestamp: serverTimestamp(),
@@ -184,7 +193,6 @@ export const respondToFeedback = async (
   await batch.commit();
 };
 
-// ─── Delete / Archive feedback ───
 export const archiveFeedback = async (
   feedbackId: string,
   adminUid: string,
@@ -197,7 +205,9 @@ export const archiveFeedback = async (
   });
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'archived',
     details: 'Archived feedback',
     timestamp: serverTimestamp(),
@@ -214,7 +224,9 @@ export const deleteFeedback = async (
   batch.delete(doc(db, FEEDBACK_COL, feedbackId));
   const logRef = doc(collection(db, ACTIVITY_COL));
   batch.set(logRef, {
-    feedbackId, adminUid, adminName,
+    feedbackId,
+    adminUid,
+    adminName,
     action: 'deleted',
     details: 'Deleted feedback item',
     timestamp: serverTimestamp(),
@@ -222,7 +234,6 @@ export const deleteFeedback = async (
   await batch.commit();
 };
 
-// ─── Compute stats from items ───
 export const computeFeedbackStats = (items: FeedbackItem[]): FeedbackStats => {
   const total = items.length;
   const open = items.filter((i) => i.status === 'open').length;
@@ -247,10 +258,18 @@ export const computeFeedbackStats = (items: FeedbackItem[]): FeedbackStats => {
   const acted = total - open;
   const satisfactionRate = acted > 0 ? Math.round((resolved / acted) * 100) : 0;
 
-  return { total, open, inProgress, resolved, closed, critical, avgResolutionHours, satisfactionRate };
+  return {
+    total,
+    open,
+    inProgress,
+    resolved,
+    closed,
+    critical,
+    avgResolutionHours,
+    satisfactionRate,
+  };
 };
 
-// ─── Activity log ───
 const logFeedbackActivity = async (
   feedbackId: string,
   adminUid: string,

@@ -1,4 +1,9 @@
-// ─── Navigation Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 export type ProfileData = {
   fullName: string;
   nickName: string;
@@ -14,7 +19,6 @@ export type StudyPlanData = {
   englishLevel: string;
 };
 
-// ─── Navigation Param Lists ───
 export type AuthStackParamList = {
   Splash: undefined;
   Onboarding: undefined;
@@ -27,11 +31,43 @@ export type AuthStackParamList = {
   NativeLanguage: { profile: ProfileData; learningGoals: string[] };
   EnglishLevel: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
   PlacementQuiz: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string };
-  SetupPin: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string };
-  SetupFaceID: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null };
-  TwoFactorAuth: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
-  ChooseVerificationMethod: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
-  SetupAuthenticator: { profile: ProfileData; learningGoals: string[]; nativeLanguage: string; englishLevel: string; appPin: string | null; biometricsEnabled: boolean };
+  SetupPin: {
+    profile: ProfileData;
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+  };
+  SetupFaceID: {
+    profile: ProfileData;
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+    appPin: string | null;
+  };
+  TwoFactorAuth: {
+    profile: ProfileData;
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+    appPin: string | null;
+    biometricsEnabled: boolean;
+  };
+  ChooseVerificationMethod: {
+    profile: ProfileData;
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+    appPin: string | null;
+    biometricsEnabled: boolean;
+  };
+  SetupAuthenticator: {
+    profile: ProfileData;
+    learningGoals: string[];
+    nativeLanguage: string;
+    englishLevel: string;
+    appPin: string | null;
+    biometricsEnabled: boolean;
+  };
 };
 
 export type SettingsStackParamList = {

@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -94,7 +100,8 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
       } else if (error.code === 'auth/weak-password') {
         message = 'Password should be at least 6 characters.';
       } else if (error.code === 'auth/operation-not-allowed') {
-        message = 'Email/password sign-up is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
+        message =
+          'Email/password sign-up is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
       } else if (error.code === 'auth/too-many-requests') {
         message = 'Too many requests. Please wait a few minutes before trying again.';
         setCooldown(60); // Set cooldown on rate limit
@@ -114,7 +121,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const { isNewUser } = await signInWithGoogle();
       if (isNewUser) {
-        showAlert('Success', 'Google account linked! Let\'s set up your profile.');
+        showAlert('Success', "Google account linked! Let's set up your profile.");
         navigation.navigate('CreateProfile');
       }
       // If not a new user, AppNavigator handles routing automatically
@@ -123,7 +130,10 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         return; // User cancelled, no alert needed
       }
       if (!error?.message?.includes('not available')) {
-        showAlert('Google Sign-Up Error', error.message || 'Something went wrong. Please try again.');
+        showAlert(
+          'Google Sign-Up Error',
+          error.message || 'Something went wrong. Please try again.',
+        );
       }
     } finally {
       setSocialLoading(null);
@@ -135,7 +145,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
     try {
       const { isNewUser } = await signInWithApple();
       if (isNewUser) {
-        showAlert('Success', 'Apple account linked! Let\'s set up your profile.');
+        showAlert('Success', "Apple account linked! Let's set up your profile.");
         navigation.navigate('CreateProfile');
       }
       // If not a new user, AppNavigator handles routing automatically
@@ -144,7 +154,10 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
         return; // User cancelled, no alert needed
       }
       if (!error?.message?.includes('not available') && !error?.message?.includes('Unavailable')) {
-        showAlert('Apple Sign-Up Error', error.message || 'Something went wrong. Please try again.');
+        showAlert(
+          'Apple Sign-Up Error',
+          error.message || 'Something went wrong. Please try again.',
+        );
       }
     } finally {
       setSocialLoading(null);
@@ -154,10 +167,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWideWeb && styles.webScrollContent,
-        ]}
+        contentContainerStyle={[styles.scrollContent, isWideWeb && styles.webScrollContent]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -203,7 +213,7 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
 
           <View style={styles.signUpButtonContainer}>
             <CustomButton
-              title={cooldown > 0 ? `Try again in ${cooldown}s` : "Sign Up"}
+              title={cooldown > 0 ? `Try again in ${cooldown}s` : 'Sign Up'}
               onPress={handleSignUp}
               loading={loading}
               variant="primary"
@@ -260,147 +270,148 @@ const SignUpScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.white,
-  },
-  webContainer: {
-    backgroundColor: '#F5F6FA',
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 32,
-  },
-  webScrollContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-  },
-  webCard: {
-    width: '100%',
-    maxWidth: 480,
-    backgroundColor: tc.white,
-    borderRadius: 20,
-    paddingHorizontal: 36,
-    paddingVertical: 36,
-    ...(Platform.OS === 'web'
-      ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 24,
-      }
-      : {}),
-  },
-  /* ── Logo ── */
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-    marginTop: 8,
-  },
-  logo: {
-    width: 100,
-    height: 100,
-  },
-  /* ── Title ── */
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-    textAlign: 'center',
-    marginBottom: 28,
-  },
-  /* ── Inputs ── */
-  inputsContainer: {
-    gap: 8,
-    marginBottom: 4,
-  },
-  /* ── Checkbox ── */
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 12,
-    gap: 8,
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: tc.accent,
-    borderColor: tc.accent,
-  },
-  checkboxText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.text,
-  },
-  /* ── Sign Up Button ── */
-  signUpButtonContainer: {
-    marginTop: 16,
-    marginBottom: 28,
-  },
-  /* ── Divider ── */
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: tc.inputBorder,
-  },
-  dividerText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.textLight,
-    marginHorizontal: 14,
-  },
-  /* ── Social Buttons ── */
-  socialRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 28,
-  },
-  socialButton: {
-    width: 60,
-    height: 52,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  /* ── Sign In Link ── */
-  signInContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  signInText: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.text,
-  },
-  signInLink: {
-    fontFamily: fonts.bold,
-    fontSize: 13,
-    color: tc.accent,
-    textDecorationLine: 'underline',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.white,
+    },
+    webContainer: {
+      backgroundColor: '#F5F6FA',
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+      paddingTop: 16,
+      paddingBottom: 32,
+    },
+    webScrollContent: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+      paddingHorizontal: 16,
+    },
+    webCard: {
+      width: '100%',
+      maxWidth: 480,
+      backgroundColor: tc.white,
+      borderRadius: 20,
+      paddingHorizontal: 36,
+      paddingVertical: 36,
+      ...(Platform.OS === 'web'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.08,
+            shadowRadius: 24,
+          }
+        : {}),
+    },
+    /* ── Logo ── */
+    logoContainer: {
+      alignItems: 'center',
+      marginBottom: 20,
+      marginTop: 8,
+    },
+    logo: {
+      width: 100,
+      height: 100,
+    },
+    /* ── Title ── */
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 20,
+      color: tc.text,
+      textAlign: 'center',
+      marginBottom: 28,
+    },
+    /* ── Inputs ── */
+    inputsContainer: {
+      gap: 8,
+      marginBottom: 4,
+    },
+    /* ── Checkbox ── */
+    checkboxContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 12,
+      gap: 8,
+    },
+    checkbox: {
+      width: 18,
+      height: 18,
+      borderRadius: 4,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: tc.accent,
+      borderColor: tc.accent,
+    },
+    checkboxText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.text,
+    },
+    /* ── Sign Up Button ── */
+    signUpButtonContainer: {
+      marginTop: 16,
+      marginBottom: 28,
+    },
+    /* ── Divider ── */
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: tc.inputBorder,
+    },
+    dividerText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.textLight,
+      marginHorizontal: 14,
+    },
+    /* ── Social Buttons ── */
+    socialRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 24,
+      marginBottom: 28,
+    },
+    socialButton: {
+      width: 60,
+      height: 52,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    /* ── Sign In Link ── */
+    signInContainer: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    signInText: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.text,
+    },
+    signInLink: {
+      fontFamily: fonts.bold,
+      fontSize: 13,
+      color: tc.accent,
+      textDecorationLine: 'underline',
+    },
+  });
 
 export default SignUpScreen;

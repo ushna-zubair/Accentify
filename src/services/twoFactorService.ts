@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Frontend wrappers for the TOTP 2FA Cloud Functions.
  *
  * Flow:
@@ -19,8 +25,8 @@ export interface TwoFAStatus {
 }
 
 export interface EnrollResult {
-  secret: string;       // base32 secret — show as text for manual entry
-  otpauthUrl: string;   // otpauth://totp/... — render as QR code
+  secret: string; // base32 secret — show as text for manual entry
+  otpauthUrl: string; // otpauth://totp/... — render as QR code
 }
 
 /** Read whether 2FA is currently enabled for the signed-in user. */
@@ -57,20 +63,14 @@ export async function confirmTotpEnrollment(code: string): Promise<{ enabled: bo
 
 /** Login challenge: verify a 6-digit code. */
 export async function verifyTotpCode(code: string): Promise<{ verified: boolean }> {
-  const fn = httpsCallable<{ code: string }, { verified: boolean }>(
-    functions,
-    'verifyTotpCode',
-  );
+  const fn = httpsCallable<{ code: string }, { verified: boolean }>(functions, 'verifyTotpCode');
   const result = await fn({ code });
   return result.data;
 }
 
 /** Disable 2FA — requires a current code to prove possession. */
 export async function disableTotp(code: string): Promise<{ enabled: boolean }> {
-  const fn = httpsCallable<{ code: string }, { enabled: boolean }>(
-    functions,
-    'disableTotp',
-  );
+  const fn = httpsCallable<{ code: string }, { enabled: boolean }>(functions, 'disableTotp');
   const result = await fn({ code });
   return result.data;
 }

@@ -1,4 +1,9 @@
-// ─── Barrel file: re-exports all domain-specific models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 export * from './auth';
 export * from './settings';
 export * from './admin';

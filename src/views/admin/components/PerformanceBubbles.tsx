@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Circle as SvgCircle, G, Text as SvgText } from 'react-native-svg';
@@ -24,9 +30,9 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
 
   // Positions for overlapping bubble layout
   const positions = [
-    { cx: 100, cy: 80 },   // top center
-    { cx: 170, cy: 120 },  // right
-    { cx: 80, cy: 160 },   // bottom left
+    { cx: 100, cy: 80 }, // top center
+    { cx: 170, cy: 120 }, // right
+    { cx: 80, cy: 160 }, // bottom left
   ];
 
   return (
@@ -37,13 +43,7 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
           const r = item.size / 2;
           return (
             <G key={item.label}>
-              <SvgCircle
-                cx={pos.cx}
-                cy={pos.cy}
-                r={r}
-                fill={item.color}
-                opacity={0.9}
-              />
+              <SvgCircle cx={pos.cx} cy={pos.cy} r={r} fill={item.color} opacity={0.9} />
               <SvgText
                 x={pos.cx}
                 y={pos.cy - 10}
@@ -82,11 +82,12 @@ const PerformanceBubbles: React.FC<PerformanceBubblesProps> = ({ data }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
 
 export default PerformanceBubbles;

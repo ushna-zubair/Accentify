@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Client for Groq Cloud — used as a fast replacement for the HF conversation
  * Space.
  *
@@ -44,12 +50,7 @@ export class GroqApiError extends Error {
   readonly userMessage: string;
   readonly status?: number;
 
-  constructor(
-    code: GroqApiError['code'],
-    userMessage: string,
-    status?: number,
-    cause?: unknown,
-  ) {
+  constructor(code: GroqApiError['code'], userMessage: string, status?: number, cause?: unknown) {
     super(userMessage);
     this.name = 'GroqApiError';
     this.code = code;
@@ -60,8 +61,7 @@ export class GroqApiError extends Error {
 }
 
 function classifyGroq(status: number, body: any): GroqApiError {
-  const detail =
-    typeof body?.error?.message === 'string' ? body.error.message : undefined;
+  const detail = typeof body?.error?.message === 'string' ? body.error.message : undefined;
   if (status === 401 || status === 403) {
     return new GroqApiError(
       'unauthorized',
@@ -70,11 +70,7 @@ function classifyGroq(status: number, body: any): GroqApiError {
     );
   }
   if (status === 429) {
-    return new GroqApiError(
-      'rate_limited',
-      'Groq rate limit hit — try again in a moment.',
-      status,
-    );
+    return new GroqApiError('rate_limited', 'Groq rate limit hit — try again in a moment.', status);
   }
   if (status === 400 || status === 422) {
     return new GroqApiError('bad_request', detail ?? 'Bad request to Groq.', status);
@@ -98,8 +94,6 @@ async function readBody(res: Response): Promise<any> {
     return text;
   }
 }
-
-// ─── Chat completion ──────────────────────────────────────────────────────────
 
 export interface GroqChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -159,8 +153,6 @@ export async function groqChat(opts: GroqChatOptions): Promise<string> {
   return text.trim();
 }
 
-// ─── Whisper STT ──────────────────────────────────────────────────────────────
-
 export interface GroqTranscribeInput {
   audioUri: string;
   encoding: 'wav' | 'm4a' | 'mp3' | 'webm';
@@ -209,12 +201,7 @@ export async function groqTranscribe(input: GroqTranscribeInput): Promise<string
       body: form,
     });
   } catch (err) {
-    throw new GroqApiError(
-      'network',
-      'Could not reach Groq for transcription.',
-      undefined,
-      err,
-    );
+    throw new GroqApiError('network', 'Could not reach Groq for transcription.', undefined, err);
   }
 
   if (!res.ok) {

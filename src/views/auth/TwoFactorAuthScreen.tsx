@@ -1,4 +1,10 @@
-import React, { useState , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, Alert, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -13,7 +19,8 @@ type Props = NativeStackScreenProps<AuthStackParamList, 'TwoFactorAuth'>;
 const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
+  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } =
+    route.params;
   const { completeOnboarding } = useAuth();
   const [loading, setLoading] = useState(false);
 
@@ -60,9 +67,7 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
         <Text style={styles.title}>Enable Two Factor Authentication</Text>
 
         {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Secure your account with Two-Factor{'\n'}Authentication
-        </Text>
+        <Text style={styles.subtitle}>Secure your account with Two-Factor{'\n'}Authentication</Text>
 
         {/* Lock & Key Illustration */}
         <View style={styles.illustrationContainer}>
@@ -86,7 +91,8 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Description */}
         <Text style={styles.description}>
-          Add an extra layer of security to your{'\n'}account. You'll use both your password{'\n'}and a verification method to log in safely.
+          Add an extra layer of security to your{'\n'}account. You'll use both your password{'\n'}
+          and a verification method to log in safely.
         </Text>
 
         {/* Bottom Buttons */}
@@ -127,185 +133,186 @@ const TwoFactorAuthScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  /* ── Title ── */
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: tc.text,
-    paddingTop: 24,
-    marginBottom: 20,
-    lineHeight: 32,
-  },
-  /* ── Subtitle ── */
-  subtitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.text,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 28,
-  },
-  /* ── Illustration ── */
-  illustrationContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 28,
-  },
-  illustrationBg: {
-    width: 180,
-    height: 160,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-  },
-  /* Key */
-  keyContainer: {
-    position: 'absolute',
-    top: 10,
-    left: 10,
-    transform: [{ rotate: '-45deg' }],
-    zIndex: 2,
-  },
-  keyHead: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 4,
-    borderColor: tc.warning,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  keyHole: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: tc.warning,
-  },
-  keyShaft: {
-    width: 4,
-    height: 50,
-    backgroundColor: tc.warning,
-    marginLeft: 13,
-    marginTop: -2,
-  },
-  keyTeeth1: {
-    width: 10,
-    height: 4,
-    backgroundColor: tc.warning,
-    marginLeft: 17,
-    marginTop: -16,
-  },
-  keyTeeth2: {
-    width: 8,
-    height: 4,
-    backgroundColor: tc.warning,
-    marginLeft: 17,
-    marginTop: 4,
-  },
-  /* Lock */
-  lockBody: {
-    width: 72,
-    height: 56,
-    backgroundColor: tc.success,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 30,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 5,
-  },
-  lockShackle: {
-    position: 'absolute',
-    top: -24,
-    width: 36,
-    height: 30,
-    borderWidth: 5,
-    borderColor: tc.success,
-    borderBottomWidth: 0,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-  },
-  lockKeyhole: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: tc.success,
-    marginTop: 4,
-  },
-  /* ── Description ── */
-  description: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 24,
-  },
-  /* ── Bottom Buttons ── */
-  bottomContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 'auto',
-    paddingBottom: 32,
-    gap: 16,
-  },
-  skipButton: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.white,
-    borderRadius: 999,
-    paddingVertical: 16,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-  },
-  skipButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.text,
-  },
-  continueButton: {
-    flex: 1.5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    gap: 10,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  continueButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+    },
+    /* ── Title ── */
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 24,
+      color: tc.text,
+      paddingTop: 24,
+      marginBottom: 20,
+      lineHeight: 32,
+    },
+    /* ── Subtitle ── */
+    subtitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.text,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: 28,
+    },
+    /* ── Illustration ── */
+    illustrationContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 28,
+    },
+    illustrationBg: {
+      width: 180,
+      height: 160,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'relative',
+    },
+    /* Key */
+    keyContainer: {
+      position: 'absolute',
+      top: 10,
+      left: 10,
+      transform: [{ rotate: '-45deg' }],
+      zIndex: 2,
+    },
+    keyHead: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      borderWidth: 4,
+      borderColor: tc.warning,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    keyHole: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: tc.warning,
+    },
+    keyShaft: {
+      width: 4,
+      height: 50,
+      backgroundColor: tc.warning,
+      marginLeft: 13,
+      marginTop: -2,
+    },
+    keyTeeth1: {
+      width: 10,
+      height: 4,
+      backgroundColor: tc.warning,
+      marginLeft: 17,
+      marginTop: -16,
+    },
+    keyTeeth2: {
+      width: 8,
+      height: 4,
+      backgroundColor: tc.warning,
+      marginLeft: 17,
+      marginTop: 4,
+    },
+    /* Lock */
+    lockBody: {
+      width: 72,
+      height: 56,
+      backgroundColor: tc.success,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginTop: 30,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 5,
+    },
+    lockShackle: {
+      position: 'absolute',
+      top: -24,
+      width: 36,
+      height: 30,
+      borderWidth: 5,
+      borderColor: tc.success,
+      borderBottomWidth: 0,
+      borderTopLeftRadius: 18,
+      borderTopRightRadius: 18,
+    },
+    lockKeyhole: {
+      width: 12,
+      height: 12,
+      borderRadius: 6,
+      backgroundColor: tc.success,
+      marginTop: 4,
+    },
+    /* ── Description ── */
+    description: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 24,
+    },
+    /* ── Bottom Buttons ── */
+    bottomContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: 'auto',
+      paddingBottom: 32,
+      gap: 16,
+    },
+    skipButton: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.white,
+      borderRadius: 999,
+      paddingVertical: 16,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+    },
+    skipButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.text,
+    },
+    continueButton: {
+      flex: 1.5,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+      gap: 10,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    continueButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+    arrowCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
 
 export default TwoFactorAuthScreen;

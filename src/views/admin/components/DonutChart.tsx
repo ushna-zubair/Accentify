@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, { Circle as SvgCircle, G } from 'react-native-svg';
@@ -99,62 +105,63 @@ const DonutChart: React.FC<DonutChartProps> = ({
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    alignItems: 'center',
-  },
-  tooltip: {
-    position: 'absolute',
-    backgroundColor: tc.text,
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    minWidth: 130,
-  },
-  tooltipTitle: {
-    color: tc.white,
-    fontFamily: fonts.bold,
-    fontSize: 13,
-  },
-  tooltipSub: {
-    fontFamily: fonts.regular,
-    color: tc.disabled,
-    fontSize: 11,
-    marginTop: 2,
-  },
-  tooltipValue: {
-    color: tc.white,
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    marginTop: 4,
-  },
-  legendRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    flexWrap: 'wrap',
-    gap: 16,
-    marginTop: 14,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  legendLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: tc.textLight,
-  },
-  legendPct: {
-    fontFamily: fonts.semiBold,
-    fontSize: 12,
-    color: tc.text,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      alignItems: 'center',
+    },
+    tooltip: {
+      position: 'absolute',
+      backgroundColor: tc.text,
+      borderRadius: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      minWidth: 130,
+    },
+    tooltipTitle: {
+      color: tc.white,
+      fontFamily: fonts.bold,
+      fontSize: 13,
+    },
+    tooltipSub: {
+      fontFamily: fonts.regular,
+      color: tc.disabled,
+      fontSize: 11,
+      marginTop: 2,
+    },
+    tooltipValue: {
+      color: tc.white,
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      marginTop: 4,
+    },
+    legendRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      gap: 16,
+      marginTop: 14,
+    },
+    legendItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    legendDot: {
+      width: 10,
+      height: 10,
+      borderRadius: 5,
+    },
+    legendLabel: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textLight,
+    },
+    legendPct: {
+      fontFamily: fonts.semiBold,
+      fontSize: 12,
+      color: tc.text,
+    },
+  });
 
 export default DonutChart;

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * TwoFactorSettingsScreen — TOTP-based 2FA management.
  *
  * States:
@@ -149,7 +155,6 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
     webAlert('Copied', 'Secret copied to clipboard.');
   }, [secret]);
 
-  // ─────────────────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <SafeAreaView style={styles.safe}>
@@ -194,9 +199,7 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             </View>
 
-            <Text style={styles.statusTitle}>
-              {enabled ? '2FA is Enabled' : '2FA is Disabled'}
-            </Text>
+            <Text style={styles.statusTitle}>{enabled ? '2FA is Enabled' : '2FA is Disabled'}</Text>
             <Text style={styles.statusSub}>
               {enabled
                 ? 'You will need a code from your authenticator app each time you sign in.'
@@ -216,11 +219,7 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
                 )}
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity
-                style={styles.dangerBtn}
-                onPress={startDisable}
-                disabled={working}
-              >
+              <TouchableOpacity style={styles.dangerBtn} onPress={startDisable} disabled={working}>
                 <Text style={styles.dangerBtnText}>Turn Off 2FA</Text>
               </TouchableOpacity>
             )}
@@ -228,8 +227,8 @@ const TwoFactorSettingsScreen: React.FC<Props> = ({ navigation }) => {
             <View style={styles.infoCard}>
               <Ionicons name="information-circle-outline" size={20} color={tc.accent} />
               <Text style={styles.infoText}>
-                We never see your authenticator secret in plaintext — it's encrypted at rest.
-                If you lose access to your authenticator app, contact support to reset.
+                We never see your authenticator secret in plaintext — it's encrypted at rest. If you
+                lose access to your authenticator app, contact support to reset.
               </Text>
             </View>
           </>
@@ -404,8 +403,20 @@ const createStyles = (tc: ThemeColors) =>
     },
     infoText: { fontFamily: fonts.regular, fontSize: 13, color: tc.text, flex: 1, lineHeight: 19 },
 
-    stepTitle: { fontFamily: fonts.semiBold, fontSize: 15, color: tc.text, marginTop: 18, marginBottom: 6 },
-    stepDesc: { fontFamily: fonts.regular, fontSize: 13, color: tc.textLight, marginBottom: 12, lineHeight: 19 },
+    stepTitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+      marginTop: 18,
+      marginBottom: 6,
+    },
+    stepDesc: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      marginBottom: 12,
+      lineHeight: 19,
+    },
 
     qrWrap: {
       alignSelf: 'center',

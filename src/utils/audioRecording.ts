@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Recording options tuned for the Accentify (wav2vec2) backend.
  *
  * wav2vec2 expects 16 kHz mono PCM. We get as close as each platform allows:

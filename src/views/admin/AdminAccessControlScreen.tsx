@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * AdminAccessControlScreen.tsx
  *
  * Professional admin access control panel with:
@@ -28,24 +34,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useAccessControlController } from '../../controllers/useAccessControlController';
-import type {
-  AdminMember,
-  AdminRole,
-  AdminPermissions,
-  AdminActivityLog,
-} from '../../models';
-import {
-  ADMIN_ROLE_LABELS,
-  DEFAULT_ROLE_PERMISSIONS,
-  PERMISSION_LABELS,
-} from '../../models';
+import type { AdminMember, AdminRole, AdminPermissions, AdminActivityLog } from '../../models';
+import { ADMIN_ROLE_LABELS, DEFAULT_ROLE_PERMISSIONS, PERMISSION_LABELS } from '../../models';
 import type { AccessControlTab, PendingInvite } from '../../controllers/useAccessControlController';
 
-// ─── Constants ───
 const ALL_ROLES: AdminRole[] = ['super_admin', 'admin', 'moderator', 'viewer'];
 const PERMISSION_KEYS = Object.keys(PERMISSION_LABELS) as (keyof AdminPermissions)[];
 
-// ─── Helper ───
 const webConfirm = (title: string, message: string, onConfirm: () => void) => {
   if (Platform.OS === 'web') {
     // eslint-disable-next-line no-restricted-globals
@@ -78,7 +73,6 @@ const formatDate = (isoDate: string): string => {
   });
 };
 
-// ─── Role Badge ───
 const RoleBadge: React.FC<{ role: AdminRole; tc: ThemeColors }> = ({ role, tc }) => {
   const colorMap: Record<AdminRole, { bg: string; text: string }> = {
     super_admin: { bg: tc.error + '18', text: tc.error },
@@ -88,7 +82,9 @@ const RoleBadge: React.FC<{ role: AdminRole; tc: ThemeColors }> = ({ role, tc })
   };
   const c = colorMap[role] ?? colorMap.viewer;
   return (
-    <View style={{ backgroundColor: c.bg, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 }}>
+    <View
+      style={{ backgroundColor: c.bg, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 12 }}
+    >
       <Text style={{ fontFamily: fonts.semiBold, fontSize: 11, color: c.text }}>
         {ADMIN_ROLE_LABELS[role]}
       </Text>
@@ -96,22 +92,36 @@ const RoleBadge: React.FC<{ role: AdminRole; tc: ThemeColors }> = ({ role, tc })
   );
 };
 
-// ─── Status Dot ───
 const StatusIndicator: React.FC<{ status: string; tc: ThemeColors }> = ({ status, tc }) => {
   const color = status === 'active' ? tc.success : status === 'suspended' ? tc.warning : tc.error;
   return (
     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
       <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: color }} />
-      <Text style={{ fontFamily: fonts.medium, fontSize: 12, color: tc.textLight, textTransform: 'capitalize' as any }}>
+      <Text
+        style={{
+          fontFamily: fonts.medium,
+          fontSize: 12,
+          color: tc.textLight,
+          textTransform: 'capitalize' as any,
+        }}
+      >
         {status}
       </Text>
     </View>
   );
 };
 
-// ─── Avatar ───
-const AdminAvatar: React.FC<{ name: string; size?: number; tc: ThemeColors }> = ({ name, size = 38, tc }) => {
-  const initials = name.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
+const AdminAvatar: React.FC<{ name: string; size?: number; tc: ThemeColors }> = ({
+  name,
+  size = 38,
+  tc,
+}) => {
+  const initials = name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
   // Deterministic color from name
   const hue = name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
   const bg = `hsl(${hue}, 55%, 92%)`;
@@ -129,14 +139,11 @@ const AdminAvatar: React.FC<{ name: string; size?: number; tc: ThemeColors }> = 
         borderColor: fg + '25',
       }}
     >
-      <Text style={{ fontFamily: fonts.bold, fontSize: size * 0.36, color: fg }}>
-        {initials}
-      </Text>
+      <Text style={{ fontFamily: fonts.bold, fontSize: size * 0.36, color: fg }}>{initials}</Text>
     </View>
   );
 };
 
-// ─── Tab Button ───
 const TabButton: React.FC<{
   label: string;
   icon: string;
@@ -192,7 +199,6 @@ const TabButton: React.FC<{
   </TouchableOpacity>
 );
 
-// ─── Action Icon Button ───
 const ActionButton: React.FC<{
   icon: string;
   color: string;
@@ -222,13 +228,10 @@ const ActionButton: React.FC<{
     disabled={disabled}
   >
     <Ionicons name={icon as any} size={15} color={color} />
-    {label && (
-      <Text style={{ fontFamily: fonts.medium, fontSize: 12, color }}>{label}</Text>
-    )}
+    {label && <Text style={{ fontFamily: fonts.medium, fontSize: 12, color }}>{label}</Text>}
   </TouchableOpacity>
 );
 
-// ─── Activity Log Icon ───
 const getActionIcon = (action: string): { icon: string; color: string } => {
   const map: Record<string, { icon: string; color: string }> = {
     role_change: { icon: 'swap-horizontal', color: '#6366F1' },
@@ -244,9 +247,6 @@ const getActionIcon = (action: string): { icon: string; color: string } => {
   return map[action] ?? { icon: 'ellipse', color: '#6B7280' };
 };
 
-// ═══════════════════════════════════════════════
-//  MEMBERS TAB
-// ═══════════════════════════════════════════════
 const MembersTab: React.FC<{
   members: AdminMember[];
   pendingInvites: PendingInvite[];
@@ -280,15 +280,30 @@ const MembersTab: React.FC<{
       <View style={{ flexDirection: 'row', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
         {[
           { label: 'Total Admins', value: members.length, icon: 'people', color: tc.accent },
-          { label: 'Active', value: members.filter((m) => m.status === 'active').length, icon: 'checkmark-circle', color: tc.success },
-          { label: 'Suspended', value: members.filter((m) => m.status === 'suspended').length, icon: 'pause-circle', color: tc.warning },
-          { label: 'Pending Invites', value: pendingInvites.length, icon: 'mail', color: '#8B5CF6' },
+          {
+            label: 'Active',
+            value: members.filter((m) => m.status === 'active').length,
+            icon: 'checkmark-circle',
+            color: tc.success,
+          },
+          {
+            label: 'Suspended',
+            value: members.filter((m) => m.status === 'suspended').length,
+            icon: 'pause-circle',
+            color: tc.warning,
+          },
+          {
+            label: 'Pending Invites',
+            value: pendingInvites.length,
+            icon: 'mail',
+            color: '#8B5CF6',
+          },
         ].map((stat) => (
           <View
             key={stat.label}
             style={{
               flex: isWide ? 1 : undefined,
-              width: isWide ? undefined : '47%' as any,
+              width: isWide ? undefined : ('47%' as any),
               backgroundColor: tc.white,
               borderRadius: 14,
               padding: 18,
@@ -298,7 +313,12 @@ const MembersTab: React.FC<{
               alignItems: 'center',
               gap: 14,
               ...(Platform.OS === 'web'
-                ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6 }
+                ? {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 6,
+                  }
                 : {}),
             }}
           >
@@ -315,10 +335,24 @@ const MembersTab: React.FC<{
               <Ionicons name={stat.icon as any} size={20} color={stat.color} />
             </View>
             <View>
-              <Text style={{ fontFamily: fonts.bold, fontSize: 22, color: tc.text, letterSpacing: -0.5 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.bold,
+                  fontSize: 22,
+                  color: tc.text,
+                  letterSpacing: -0.5,
+                }}
+              >
                 {stat.value}
               </Text>
-              <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted, marginTop: 1 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.regular,
+                  fontSize: 11,
+                  color: tc.textMuted,
+                  marginTop: 1,
+                }}
+              >
                 {stat.label}
               </Text>
             </View>
@@ -335,7 +369,12 @@ const MembersTab: React.FC<{
           borderColor: tc.cardBorder,
           overflow: 'hidden',
           ...(Platform.OS === 'web'
-            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+            ? {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 10,
+              }
             : {}),
         }}
       >
@@ -350,28 +389,83 @@ const MembersTab: React.FC<{
             backgroundColor: tc.surfaceAlt,
           }}
         >
-          <Text style={{ flex: 2.5, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+          <Text
+            style={{
+              flex: 2.5,
+              fontFamily: fonts.semiBold,
+              fontSize: 11,
+              color: tc.textMuted,
+              letterSpacing: 0.5,
+              textTransform: 'uppercase' as any,
+            }}
+          >
             Member
           </Text>
           {isWide && (
-            <Text style={{ flex: 1.5, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+            <Text
+              style={{
+                flex: 1.5,
+                fontFamily: fonts.semiBold,
+                fontSize: 11,
+                color: tc.textMuted,
+                letterSpacing: 0.5,
+                textTransform: 'uppercase' as any,
+              }}
+            >
               Role
             </Text>
           )}
-          <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+          <Text
+            style={{
+              flex: 1,
+              fontFamily: fonts.semiBold,
+              fontSize: 11,
+              color: tc.textMuted,
+              letterSpacing: 0.5,
+              textTransform: 'uppercase' as any,
+            }}
+          >
             Status
           </Text>
           {isWide && (
-            <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+            <Text
+              style={{
+                flex: 1,
+                fontFamily: fonts.semiBold,
+                fontSize: 11,
+                color: tc.textMuted,
+                letterSpacing: 0.5,
+                textTransform: 'uppercase' as any,
+              }}
+            >
               Last Seen
             </Text>
           )}
           {isWide && (
-            <Text style={{ flex: 1, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+            <Text
+              style={{
+                flex: 1,
+                fontFamily: fonts.semiBold,
+                fontSize: 11,
+                color: tc.textMuted,
+                letterSpacing: 0.5,
+                textTransform: 'uppercase' as any,
+              }}
+            >
               2FA
             </Text>
           )}
-          <Text style={{ width: 140, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any, textAlign: 'right' }}>
+          <Text
+            style={{
+              width: 140,
+              fontFamily: fonts.semiBold,
+              fontSize: 11,
+              color: tc.textMuted,
+              letterSpacing: 0.5,
+              textTransform: 'uppercase' as any,
+              textAlign: 'right',
+            }}
+          >
             Actions
           </Text>
         </View>
@@ -404,12 +498,24 @@ const MembersTab: React.FC<{
                       {member.fullName}
                     </Text>
                     {isSelf && (
-                      <View style={{ backgroundColor: tc.accent + '18', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 }}>
-                        <Text style={{ fontFamily: fonts.medium, fontSize: 10, color: tc.accent }}>You</Text>
+                      <View
+                        style={{
+                          backgroundColor: tc.accent + '18',
+                          borderRadius: 6,
+                          paddingHorizontal: 6,
+                          paddingVertical: 1,
+                        }}
+                      >
+                        <Text style={{ fontFamily: fonts.medium, fontSize: 10, color: tc.accent }}>
+                          You
+                        </Text>
                       </View>
                     )}
                   </View>
-                  <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }} numberOfLines={1}>
+                  <Text
+                    style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}
+                    numberOfLines={1}
+                  >
                     {member.email}
                   </Text>
                   {!isWide && (
@@ -470,7 +576,9 @@ const MembersTab: React.FC<{
               )}
 
               {/* Actions */}
-              <View style={{ width: 140, flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}>
+              <View
+                style={{ width: 140, flexDirection: 'row', justifyContent: 'flex-end', gap: 8 }}
+              >
                 <ActionButton
                   icon="create-outline"
                   color={tc.accent}
@@ -498,13 +606,33 @@ const MembersTab: React.FC<{
 
         {members.length === 0 && (
           <View style={{ padding: 50, alignItems: 'center' }}>
-            <View style={{ width: 64, height: 64, borderRadius: 18, backgroundColor: tc.accent + '10', justifyContent: 'center', alignItems: 'center', marginBottom: 14 }}>
+            <View
+              style={{
+                width: 64,
+                height: 64,
+                borderRadius: 18,
+                backgroundColor: tc.accent + '10',
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: 14,
+              }}
+            >
               <Ionicons name="people-outline" size={30} color={tc.accent} />
             </View>
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: 15, color: tc.text, marginBottom: 4 }}>
+            <Text
+              style={{ fontFamily: fonts.semiBold, fontSize: 15, color: tc.text, marginBottom: 4 }}
+            >
               No admin members found
             </Text>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, textAlign: 'center', maxWidth: 260 }}>
+            <Text
+              style={{
+                fontFamily: fonts.regular,
+                fontSize: 13,
+                color: tc.textMuted,
+                textAlign: 'center',
+                maxWidth: 260,
+              }}
+            >
               Invite team members to collaborate on managing the platform
             </Text>
           </View>
@@ -515,7 +643,16 @@ const MembersTab: React.FC<{
       {pendingInvites.length > 0 && (
         <View style={{ marginTop: 28 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: '#8B5CF6' + '12', justifyContent: 'center', alignItems: 'center' }}>
+            <View
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 9,
+                backgroundColor: '#8B5CF6' + '12',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
               <Ionicons name="mail-outline" size={16} color="#8B5CF6" />
             </View>
             <View>
@@ -523,7 +660,8 @@ const MembersTab: React.FC<{
                 Pending Invitations
               </Text>
               <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>
-                {pendingInvites.length} invitation{pendingInvites.length !== 1 ? 's' : ''} awaiting response
+                {pendingInvites.length} invitation{pendingInvites.length !== 1 ? 's' : ''} awaiting
+                response
               </Text>
             </View>
           </View>
@@ -535,7 +673,12 @@ const MembersTab: React.FC<{
               borderColor: tc.cardBorder,
               overflow: 'hidden',
               ...(Platform.OS === 'web'
-                ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+                ? {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.05,
+                    shadowRadius: 10,
+                  }
                 : {}),
             }}
           >
@@ -551,7 +694,17 @@ const MembersTab: React.FC<{
                   borderBottomColor: tc.divider,
                 }}
               >
-                <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#8B5CF6' + '12', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                <View
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 18,
+                    backgroundColor: '#8B5CF6' + '12',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: 12,
+                  }}
+                >
                   <Ionicons name="person-outline" size={16} color="#8B5CF6" />
                 </View>
                 <View style={{ flex: 1 }}>
@@ -569,7 +722,17 @@ const MembersTab: React.FC<{
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={{ marginLeft: 14, width: 32, height: 32, borderRadius: 8, backgroundColor: tc.error + '08', borderWidth: 1, borderColor: tc.error + '18', justifyContent: 'center', alignItems: 'center' }}
+                  style={{
+                    marginLeft: 14,
+                    width: 32,
+                    height: 32,
+                    borderRadius: 8,
+                    backgroundColor: tc.error + '08',
+                    borderWidth: 1,
+                    borderColor: tc.error + '18',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
                   onPress={() =>
                     webConfirm('Revoke Invitation', `Revoke invitation for ${invite.email}?`, () =>
                       onRevokeInvite(invite.id),
@@ -589,16 +752,20 @@ const MembersTab: React.FC<{
   );
 };
 
-// ═══════════════════════════════════════════════
-//  ROLES & PERMISSIONS TAB
-// ═══════════════════════════════════════════════
-const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = ({ tc, isDark, width }) => {
+const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = ({
+  tc,
+  isDark,
+  width,
+}) => {
   const isWide = width >= 900;
 
   return (
     <ScrollView showsVerticalScrollIndicator={false}>
-      <Text style={{ fontFamily: fonts.regular, fontSize: 14, color: tc.textMuted, marginBottom: 20 }}>
-        View the default permissions for each administrator role. Custom permissions can be set per member in the Members tab.
+      <Text
+        style={{ fontFamily: fonts.regular, fontSize: 14, color: tc.textMuted, marginBottom: 20 }}
+      >
+        View the default permissions for each administrator role. Custom permissions can be set per
+        member in the Members tab.
       </Text>
 
       {/* Roles Permission Matrix */}
@@ -610,7 +777,12 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
           borderColor: tc.cardBorder,
           overflow: 'hidden',
           ...(Platform.OS === 'web'
-            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+            ? {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 10,
+              }
             : {}),
         }}
       >
@@ -625,7 +797,16 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
             backgroundColor: tc.surfaceAlt,
           }}
         >
-          <Text style={{ flex: 2, fontFamily: fonts.semiBold, fontSize: 11, color: tc.textMuted, letterSpacing: 0.5, textTransform: 'uppercase' as any }}>
+          <Text
+            style={{
+              flex: 2,
+              fontFamily: fonts.semiBold,
+              fontSize: 11,
+              color: tc.textMuted,
+              letterSpacing: 0.5,
+              textTransform: 'uppercase' as any,
+            }}
+          >
             Permission
           </Text>
           {ALL_ROLES.map((role) => (
@@ -679,8 +860,25 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
       </View>
 
       {/* Role Descriptions */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 32, marginBottom: 16 }}>
-        <View style={{ width: 32, height: 32, borderRadius: 9, backgroundColor: tc.accent + '12', justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 10,
+          marginTop: 32,
+          marginBottom: 16,
+        }}
+      >
+        <View
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 9,
+            backgroundColor: tc.accent + '12',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
           <Ionicons name="information-circle-outline" size={16} color={tc.accent} />
         </View>
         <Text style={{ fontFamily: fonts.bold, fontSize: 16, color: tc.text }}>
@@ -724,7 +922,12 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
               borderColor: tc.cardBorder,
               padding: 20,
               ...(Platform.OS === 'web'
-                ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 6 }
+                ? {
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 1 },
+                    shadowOpacity: 0.04,
+                    shadowRadius: 6,
+                  }
                 : {}),
             }}
           >
@@ -745,7 +948,14 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
                 {ADMIN_ROLE_LABELS[item.role]}
               </Text>
             </View>
-            <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textLight, lineHeight: 20 }}>
+            <Text
+              style={{
+                fontFamily: fonts.regular,
+                fontSize: 13,
+                color: tc.textLight,
+                lineHeight: 20,
+              }}
+            >
               {item.desc}
             </Text>
           </View>
@@ -755,9 +965,6 @@ const RolesTab: React.FC<{ tc: ThemeColors; isDark: boolean; width: number }> = 
   );
 };
 
-// ═══════════════════════════════════════════════
-//  ACTIVITY LOG TAB
-// ═══════════════════════════════════════════════
 const ActivityTab: React.FC<{
   logs: AdminActivityLog[];
   tc: ThemeColors;
@@ -765,14 +972,42 @@ const ActivityTab: React.FC<{
 }> = ({ logs, tc, width }) => {
   if (logs.length === 0) {
     return (
-      <View style={{ alignItems: 'center', paddingVertical: 60, backgroundColor: tc.white, borderRadius: 16, borderWidth: 1, borderColor: tc.cardBorder }}>
-        <View style={{ width: 64, height: 64, borderRadius: 18, backgroundColor: tc.accent + '10', justifyContent: 'center', alignItems: 'center', marginBottom: 14 }}>
+      <View
+        style={{
+          alignItems: 'center',
+          paddingVertical: 60,
+          backgroundColor: tc.white,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: tc.cardBorder,
+        }}
+      >
+        <View
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 18,
+            backgroundColor: tc.accent + '10',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginBottom: 14,
+          }}
+        >
           <Ionicons name="time-outline" size={30} color={tc.accent} />
         </View>
         <Text style={{ fontFamily: fonts.semiBold, fontSize: 16, color: tc.text, marginBottom: 4 }}>
           No activity logs yet
         </Text>
-        <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, textAlign: 'center', maxWidth: 280, lineHeight: 19 }}>
+        <Text
+          style={{
+            fontFamily: fonts.regular,
+            fontSize: 13,
+            color: tc.textMuted,
+            textAlign: 'center',
+            maxWidth: 280,
+            lineHeight: 19,
+          }}
+        >
           Actions performed by admins will be recorded and shown here
         </Text>
       </View>
@@ -789,7 +1024,12 @@ const ActivityTab: React.FC<{
           borderColor: tc.cardBorder,
           overflow: 'hidden',
           ...(Platform.OS === 'web'
-            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 10 }
+            ? {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 10,
+              }
             : {}),
         }}
       >
@@ -824,7 +1064,9 @@ const ActivityTab: React.FC<{
 
               {/* Content */}
               <View style={{ flex: 1 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}
+                >
                   <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.text }}>
                     {log.adminName}
                   </Text>
@@ -836,7 +1078,9 @@ const ActivityTab: React.FC<{
                   <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>
                     {formatDate(log.timestamp)}
                   </Text>
-                  <View style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: tc.disabled }} />
+                  <View
+                    style={{ width: 3, height: 3, borderRadius: 1.5, backgroundColor: tc.disabled }}
+                  />
                   <Text style={{ fontFamily: fonts.regular, fontSize: 11, color: tc.textMuted }}>
                     Target: {log.target.length > 20 ? log.target.slice(0, 20) + '…' : log.target}
                   </Text>
@@ -850,9 +1094,6 @@ const ActivityTab: React.FC<{
   );
 };
 
-// ═══════════════════════════════════════════════
-//  INVITE MODAL
-// ═══════════════════════════════════════════════
 const InviteModal: React.FC<{
   visible: boolean;
   onClose: () => void;
@@ -866,7 +1107,20 @@ const InviteModal: React.FC<{
   setRole: (v: AdminRole) => void;
   tc: ThemeColors;
   isDark: boolean;
-}> = ({ visible, onClose, onSubmit, submitting, email, setEmail, fullName, setFullName, role, setRole, tc, isDark }) => (
+}> = ({
+  visible,
+  onClose,
+  onSubmit,
+  submitting,
+  email,
+  setEmail,
+  fullName,
+  setFullName,
+  role,
+  setRole,
+  tc,
+  isDark,
+}) => (
   <Modal visible={visible} transparent animationType="fade">
     <View
       style={{
@@ -885,12 +1139,24 @@ const InviteModal: React.FC<{
           width: '100%',
           maxWidth: 480,
           ...(Platform.OS === 'web'
-            ? { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 30 }
+            ? {
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 8 },
+                shadowOpacity: 0.15,
+                shadowRadius: 30,
+              }
             : {}),
         }}
       >
         {/* Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+          }}
+        >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
             <View
               style={{
@@ -905,7 +1171,9 @@ const InviteModal: React.FC<{
               <Ionicons name="person-add" size={20} color={tc.accent} />
             </View>
             <View>
-              <Text style={{ fontFamily: fonts.bold, fontSize: 18, color: tc.text }}>Invite Admin</Text>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 18, color: tc.text }}>
+                Invite Admin
+              </Text>
               <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}>
                 Add a new team member
               </Text>
@@ -917,7 +1185,9 @@ const InviteModal: React.FC<{
         </View>
 
         {/* Full Name */}
-        <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 6 }}>Full Name</Text>
+        <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 6 }}>
+          Full Name
+        </Text>
         <TextInput
           style={{
             fontFamily: fonts.regular,
@@ -939,7 +1209,9 @@ const InviteModal: React.FC<{
         />
 
         {/* Email */}
-        <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 6 }}>Email Address</Text>
+        <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 6 }}>
+          Email Address
+        </Text>
         <TextInput
           style={{
             fontFamily: fonts.regular,
@@ -963,7 +1235,9 @@ const InviteModal: React.FC<{
         />
 
         {/* Role Select */}
-        <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 8 }}>Role</Text>
+        <Text style={{ fontFamily: fonts.medium, fontSize: 13, color: tc.text, marginBottom: 8 }}>
+          Role
+        </Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
           {ALL_ROLES.map((r) => {
             const isSelected = r === role;
@@ -1009,7 +1283,9 @@ const InviteModal: React.FC<{
             onPress={onClose}
             activeOpacity={0.7}
           >
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.textLight }}>Cancel</Text>
+            <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.textLight }}>
+              Cancel
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={{
@@ -1027,7 +1303,9 @@ const InviteModal: React.FC<{
             {submitting ? (
               <ActivityIndicator color={tc.white} size="small" />
             ) : (
-              <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>Send Invite</Text>
+              <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>
+                Send Invite
+              </Text>
             )}
           </TouchableOpacity>
         </View>
@@ -1036,9 +1314,6 @@ const InviteModal: React.FC<{
   </Modal>
 );
 
-// ═══════════════════════════════════════════════
-//  EDIT MEMBER MODAL
-// ═══════════════════════════════════════════════
 const EditMemberModal: React.FC<{
   visible: boolean;
   member: AdminMember | null;
@@ -1050,7 +1325,18 @@ const EditMemberModal: React.FC<{
   submitting: boolean;
   tc: ThemeColors;
   isDark: boolean;
-}> = ({ visible, member, currentAdminUid, onClose, onChangeRole, onUpdatePermissions, onRemove, submitting, tc, isDark }) => {
+}> = ({
+  visible,
+  member,
+  currentAdminUid,
+  onClose,
+  onChangeRole,
+  onUpdatePermissions,
+  onRemove,
+  submitting,
+  tc,
+  isDark,
+}) => {
   const [editedRole, setEditedRole] = useState<AdminRole>(member?.adminRole ?? 'admin');
   const [editedPerms, setEditedPerms] = useState<AdminPermissions>(
     member?.permissions ?? DEFAULT_ROLE_PERMISSIONS.admin,
@@ -1113,17 +1399,33 @@ const EditMemberModal: React.FC<{
             maxWidth: 520,
             maxHeight: '90%' as any,
             ...(Platform.OS === 'web'
-              ? { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.15, shadowRadius: 30 }
+              ? {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 8 },
+                  shadowOpacity: 0.15,
+                  shadowRadius: 30,
+                }
               : {}),
           }}
         >
           {/* Header */}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 20,
+            }}
+          >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
               <AdminAvatar name={member.fullName} size={44} tc={tc} />
               <View>
-                <Text style={{ fontFamily: fonts.bold, fontSize: 17, color: tc.text }}>{member.fullName}</Text>
-                <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted }}>{member.email}</Text>
+                <Text style={{ fontFamily: fonts.bold, fontSize: 17, color: tc.text }}>
+                  {member.fullName}
+                </Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted }}>
+                  {member.email}
+                </Text>
               </View>
             </View>
             <TouchableOpacity onPress={onClose}>
@@ -1133,7 +1435,9 @@ const EditMemberModal: React.FC<{
 
           <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 400 }}>
             {/* Role Selection */}
-            <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 10 }}>
+            <Text
+              style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text, marginBottom: 10 }}
+            >
               Assign Role
             </Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
@@ -1169,12 +1473,21 @@ const EditMemberModal: React.FC<{
             </View>
 
             {/* Permissions */}
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <View
+              style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12,
+              }}
+            >
               <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.text }}>
                 Permissions
               </Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}>Custom</Text>
+                <Text style={{ fontFamily: fonts.regular, fontSize: 12, color: tc.textMuted }}>
+                  Custom
+                </Text>
                 <Switch
                   value={customPerms}
                   onValueChange={setCustomPerms}
@@ -1247,7 +1560,9 @@ const EditMemberModal: React.FC<{
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.textLight }}>Cancel</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: 14, color: tc.textLight }}>
+                Cancel
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={{
@@ -1265,7 +1580,9 @@ const EditMemberModal: React.FC<{
               {submitting ? (
                 <ActivityIndicator color={tc.white} size="small" />
               ) : (
-                <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>Save Changes</Text>
+                <Text style={{ fontFamily: fonts.bold, fontSize: 14, color: tc.white }}>
+                  Save Changes
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -1275,9 +1592,6 @@ const EditMemberModal: React.FC<{
   );
 };
 
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 const AdminAccessControlScreen: React.FC = () => {
   const { colors: tc, isDark } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -1285,9 +1599,18 @@ const AdminAccessControlScreen: React.FC = () => {
 
   if (ctrl.loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: tc.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: tc.background,
+        }}
+      >
         <ActivityIndicator size="large" color={tc.accent} />
-        <Text style={{ fontFamily: fonts.medium, fontSize: 15, color: tc.textLight, marginTop: 12 }}>
+        <Text
+          style={{ fontFamily: fonts.medium, fontSize: 15, color: tc.textLight, marginTop: 12 }}
+        >
           Loading access control…
         </Text>
       </View>
@@ -1307,16 +1630,39 @@ const AdminAccessControlScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* Page Header */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 28,
+          }}
+        >
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-            <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: tc.accent + '12', justifyContent: 'center', alignItems: 'center' }}>
+            <View
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 14,
+                backgroundColor: tc.accent + '12',
+                justifyContent: 'center',
+                alignItems: 'center',
+              }}
+            >
               <Ionicons name="shield-checkmark" size={22} color={tc.accent} />
             </View>
             <View>
               <Text style={{ fontFamily: fonts.bold, fontSize: 26, color: tc.text }}>
                 Admin Access Control
               </Text>
-              <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted, marginTop: 2 }}>
+              <Text
+                style={{
+                  fontFamily: fonts.regular,
+                  fontSize: 13,
+                  color: tc.textMuted,
+                  marginTop: 2,
+                }}
+              >
                 Manage admin roles, permissions, and team access
               </Text>
             </View>
@@ -1359,7 +1705,9 @@ const AdminAccessControlScreen: React.FC = () => {
               {ctrl.error}
             </Text>
             <TouchableOpacity onPress={ctrl.refresh}>
-              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>Retry</Text>
+              <Text style={{ fontFamily: fonts.semiBold, fontSize: 13, color: tc.accent }}>
+                Retry
+              </Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1376,7 +1724,12 @@ const AdminAccessControlScreen: React.FC = () => {
             marginBottom: 22,
             alignSelf: 'flex-start' as const,
             ...(Platform.OS === 'web'
-              ? { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4 }
+              ? {
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.03,
+                  shadowRadius: 4,
+                }
               : {}),
           }}
         >
@@ -1460,7 +1813,9 @@ const AdminAccessControlScreen: React.FC = () => {
           />
         )}
         {ctrl.activeTab === 'roles' && <RolesTab tc={tc} isDark={isDark} width={width} />}
-        {ctrl.activeTab === 'activity' && <ActivityTab logs={ctrl.activityLogs} tc={tc} width={width} />}
+        {ctrl.activeTab === 'activity' && (
+          <ActivityTab logs={ctrl.activityLogs} tc={tc} width={width} />
+        )}
       </ScrollView>
 
       {/* Invite Modal */}

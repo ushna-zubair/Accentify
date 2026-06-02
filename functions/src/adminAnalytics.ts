@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * adminAnalytics.ts
  *
  * Scheduled Cloud Function that aggregates per-user progress data
@@ -14,8 +20,6 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 
 const db = admin.firestore();
 const REGION = 'us-central1';
-
-// ─── Helpers ───
 
 const DOW_LABELS = ['Mon', 'Tue', 'Wed', 'Thur', 'Fri', 'Sat', 'Sun'];
 
@@ -45,8 +49,6 @@ function formatDateRange(start: Date, end: Date): string {
   const e = end.toLocaleDateString('en-US', { ...opts, year: '2-digit' });
   return `${s} - ${e}`;
 }
-
-// ─── Aggregation Logic ───
 
 interface TopLearner {
   name: string;
@@ -275,7 +277,6 @@ async function aggregate(): Promise<void> {
   );
 }
 
-// ─── Scheduled Function (every 6 hours) ───
 export const scheduledAdminAggregation = onSchedule(
   { schedule: 'every 6 hours', timeZone: 'UTC', region: REGION, timeoutSeconds: 300, memory: '512MiB' },
   async () => {
@@ -283,7 +284,6 @@ export const scheduledAdminAggregation = onSchedule(
   },
 );
 
-// ─── Callable – Manual Trigger ───
 export const runAdminAggregation = onCall(
   { region: REGION, timeoutSeconds: 300, memory: '512MiB' },
   async (request) => {

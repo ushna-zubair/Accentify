@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { getFunctions, httpsCallable } from 'firebase/functions';
@@ -22,7 +28,6 @@ const DEFAULT_DETAIL: UserDetailData = {
   twoFactorMethod: 'none',
 };
 
-// ─── Controller ───
 export const useUserDetailController = (uid: string) => {
   const [detail, setDetail] = useState<UserDetailData>(DEFAULT_DETAIL);
   const [loading, setLoading] = useState(true);
@@ -93,7 +98,9 @@ export const useUserDetailController = (uid: string) => {
   useEffect(() => {
     let ignore = false;
     fetchDetail();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchDetail]);
 
   // ── Toggle edit mode ──
@@ -102,12 +109,9 @@ export const useUserDetailController = (uid: string) => {
   }, []);
 
   // ── Update a single field locally ──
-  const updateField = useCallback(
-    (field: keyof UserDetailData, value: string) => {
-      setDetail((prev) => ({ ...prev, [field]: value }));
-    },
-    [],
-  );
+  const updateField = useCallback((field: keyof UserDetailData, value: string) => {
+    setDetail((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
   // ── Save edits to Firestore ──
   const saveEdits = useCallback(async () => {
@@ -167,8 +171,7 @@ export const useUserDetailController = (uid: string) => {
       setSaving(true);
       setError(null);
 
-      const newStatus: AccountStatus =
-        detail.status === 'active' ? 'deactivated' : 'active';
+      const newStatus: AccountStatus = detail.status === 'active' ? 'deactivated' : 'active';
 
       await updateDoc(doc(db, 'users', uid), {
         status: newStatus,

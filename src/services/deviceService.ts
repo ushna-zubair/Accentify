@@ -1,10 +1,15 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { Platform } from 'react-native';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import Constants from 'expo-constants';
 import * as Application from 'expo-application';
 import { db } from '../config/firebase';
 import type { DevicePlatform } from '../models';
-
 
 let _installId: string | null = null;
 

@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState } from 'react';
 import {
   View,
@@ -20,7 +26,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 const isWeb = Platform.OS === 'web';
 
-// ------- Constants -------
 const THEME_OPTIONS: ThemeOption[] = ['Light', 'Dark'];
 const ACCENT_OPTIONS: AccentColor[] = ['Lavender', 'Orange', 'Blue'];
 const FONT_SIZE_OPTIONS: FontSizeOption[] = ['Small', 'Medium', 'Large'];
@@ -32,20 +37,13 @@ const ACCENT_PILL_COLORS: Record<AccentColor, string> = {
   Blue: '#4285F4',
 };
 
-// ------- Sub-components -------
-
 interface SectionCardProps {
   children: React.ReactNode;
   tc: ThemeColors;
 }
 
 const SectionCard: React.FC<SectionCardProps> = ({ children, tc }) => (
-  <View
-    style={[
-      styles.card,
-      { backgroundColor: tc.surface, borderColor: tc.accent },
-    ]}
-  >
+  <View style={[styles.card, { backgroundColor: tc.surface, borderColor: tc.accent }]}>
     {children}
   </View>
 );
@@ -67,11 +65,7 @@ const CollapsibleHeader: React.FC<CollapsibleHeaderProps> = ({
 }) => (
   <TouchableOpacity style={styles.sectionHeader} onPress={onToggle} activeOpacity={0.7}>
     <Text style={[styles.sectionTitle, { color: tc.text, fontSize: fs.subtitle }]}>{title}</Text>
-    <Ionicons
-      name={expanded ? 'chevron-up' : 'chevron-down'}
-      size={24}
-      color={tc.text}
-    />
+    <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={24} color={tc.text} />
   </TouchableOpacity>
 );
 
@@ -105,7 +99,6 @@ const FontPreview: React.FC<FontPreviewProps> = ({ tc, fs }) => (
   </View>
 );
 
-// ------- Main Screen -------
 type Props = NativeStackScreenProps<SettingsStackParamList, 'AppPreferences'>;
 
 const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
@@ -141,7 +134,13 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.container}
         contentContainerStyle={[
           styles.contentContainer,
-          isWide && { maxWidth: 680, alignSelf: 'center' as any, width: '100%' as any, paddingHorizontal: 32, paddingTop: 28 },
+          isWide && {
+            maxWidth: 680,
+            alignSelf: 'center' as any,
+            width: '100%' as any,
+            paddingHorizontal: 32,
+            paddingTop: 28,
+          },
         ]}
         showsVerticalScrollIndicator={false}
       >
@@ -230,9 +229,7 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
                       onPress={() => setAccentColor(option)}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.accentOptionText, { fontSize: fs.body }]}>
-                        {option}
-                      </Text>
+                      <Text style={[styles.accentOptionText, { fontSize: fs.body }]}>{option}</Text>
                       <RadioCircle selected={isSelected} color="#FFFFFF" />
                     </TouchableOpacity>
                   );
@@ -310,7 +307,6 @@ const AppPreferenceScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-// ------- Styles -------
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -334,7 +330,6 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: fonts.bold,
   },
-  // Card
   card: {
     borderRadius: 16,
     borderWidth: 1.5,

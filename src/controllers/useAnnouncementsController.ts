@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import {
   collection,
@@ -11,10 +17,6 @@ import {
 } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { Announcement } from '../models';
-
-// ═══════════════════════════════════════════════
-//  ANNOUNCEMENTS CONTROLLER
-// ═══════════════════════════════════════════════
 
 export const useAnnouncementsController = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -42,9 +44,7 @@ export const useAnnouncementsController = () => {
         const data = d.data();
         let createdAt = '';
         try {
-          const ts = data.createdAt?.toDate
-            ? data.createdAt.toDate()
-            : new Date(data.createdAt);
+          const ts = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
           createdAt = ts.toISOString();
         } catch {
           createdAt = '';
@@ -71,7 +71,9 @@ export const useAnnouncementsController = () => {
   useEffect(() => {
     let ignore = false;
     fetchAnnouncements();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchAnnouncements]);
 
   // ── Toggle selection ──
@@ -95,14 +97,10 @@ export const useAnnouncementsController = () => {
       setSubmitting(true);
       setError(null);
 
-      const promises = Array.from(selectedIds).map((id) =>
-        deleteDoc(doc(db, 'announcements', id)),
-      );
+      const promises = Array.from(selectedIds).map((id) => deleteDoc(doc(db, 'announcements', id)));
       await Promise.all(promises);
 
-      setAnnouncements((prev) =>
-        prev.filter((a) => !selectedIds.has(a.id)),
-      );
+      setAnnouncements((prev) => prev.filter((a) => !selectedIds.has(a.id)));
       setSelectedIds(new Set());
     } catch (e: unknown) {
       console.error('[Announcements] delete error:', e);
@@ -113,64 +111,61 @@ export const useAnnouncementsController = () => {
   }, [selectedIds]);
 
   // ── Post a new announcement ──
-  const postAnnouncement = useCallback(
-    async (body: string, title?: string) => {
-      if (!body.trim()) return;
+  const postAnnouncement = useCallback(async (body: string, title?: string) => {
+    if (!body.trim()) return;
 
-      try {
-        setSubmitting(true);
-        setError(null);
+    try {
+      setSubmitting(true);
+      setError(null);
 
-        const uid = auth.currentUser?.uid;
-        if (!uid) {
-          setError('You must be signed in to post announcements');
-          return;
-        }
-
-        const announcementTitle = title?.trim() || 'Announcement';
-
-        const docRef = await addDoc(collection(db, 'announcements'), {
-          title: announcementTitle,
-          body: body.trim(),
-          createdBy: uid,
-          createdAt: serverTimestamp(),
-        });
-
-        // Optimistically prepend to list
-        const newAnnouncement: Announcement = {
-          id: docRef.id,
-          title: announcementTitle,
-          body: body.trim(),
-          createdAt: new Date().toISOString(),
-          createdBy: uid,
-        };
-
-        setAnnouncements((prev) => [newAnnouncement, ...prev]);
-        setDraftBody('');
-
-        // ── Deliver notification to all non-admin users via Cloud Function ──
-        try {
-          const { getFunctions, httpsCallable } = await import('firebase/functions');
-          const functions = getFunctions(undefined, 'us-central1');
-          const fanout = httpsCallable(functions, 'sendNotificationFanout');
-          await fanout({
-            title: `📢 ${announcementTitle}`,
-            body: body.trim(),
-            type: 'announcement',
-          });
-        } catch (notifErr) {
-          // Non-critical: announcement was saved, notification delivery failed
-          console.warn('[Announcements] failed to deliver notifications:', notifErr);
-        }
-      } catch (e: unknown) {
-        console.error('[Announcements] post error:', e);
-        setError(e instanceof Error ? e.message : 'Failed to post announcement');
-      } finally {
-        setSubmitting(false);
+      const uid = auth.currentUser?.uid;
+      if (!uid) {
+        setError('You must be signed in to post announcements');
+        return;
       }
-    },
-    [],
-  );
+
+      const announcementTitle = title?.trim() || 'Announcement';
+
+      const docRef = await addDoc(collection(db, 'announcements'), {
+        title: announcementTitle,
+        body: body.trim(),
+        createdBy: uid,
+        createdAt: serverTimestamp(),
+      });
+
+      // Optimistically prepend to list
+      const newAnnouncement: Announcement = {
+        id: docRef.id,
+        title: announcementTitle,
+        body: body.trim(),
+        createdAt: new Date().toISOString(),
+        createdBy: uid,
+      };
+
+      setAnnouncements((prev) => [newAnnouncement, ...prev]);
+      setDraftBody('');
+
+      // ── Deliver notification to all non-admin users via Cloud Function ──
+      try {
+        const { getFunctions, httpsCallable } = await import('firebase/functions');
+        const functions = getFunctions(undefined, 'us-central1');
+        const fanout = httpsCallable(functions, 'sendNotificationFanout');
+        await fanout({
+          title: `📢 ${announcementTitle}`,
+          body: body.trim(),
+          type: 'announcement',
+        });
+      } catch (notifErr) {
+        // Non-critical: announcement was saved, notification delivery failed
+        console.warn('[Announcements] failed to deliver notifications:', notifErr);
+      }
+    } catch (e: unknown) {
+      console.error('[Announcements] post error:', e);
+      setError(e instanceof Error ? e.message : 'Failed to post announcement');
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
 
   return {
     announcements,

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useManageVocabularyController.ts
  *
  * Controller for the AdminManageVocabularyScreen. CRUD over `vocabularyWords`
@@ -99,15 +105,11 @@ export const useManageVocabularyController = () => {
   const [seeding, setSeeding] = useState(false);
   const [seedMessage, setSeedMessage] = useState<string | null>(null);
 
-  // ── Reload ─────────────────────────────────────────────────────────────
   const reload = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [list, c] = await Promise.all([
-        fetchAllVocabularyWords(),
-        countWordsByCefr(),
-      ]);
+      const [list, c] = await Promise.all([fetchAllVocabularyWords(), countWordsByCefr()]);
       setWords(list);
       setCounts(c);
     } catch (e) {
@@ -122,7 +124,6 @@ export const useManageVocabularyController = () => {
     reload();
   }, [reload]);
 
-  // ── Filtering ──────────────────────────────────────────────────────────
   const filteredWords = useMemo(() => {
     const q = search.trim().toLowerCase();
     return words.filter((w) => {
@@ -136,7 +137,6 @@ export const useManageVocabularyController = () => {
     });
   }, [words, cefrFilter, search]);
 
-  // ── Modal control ──────────────────────────────────────────────────────
   const openCreate = useCallback(() => {
     setEditingWord(null);
     setForm({ ...EMPTY_FORM, cefrLevel: cefrFilter === 'all' ? 'A1' : cefrFilter });
@@ -158,7 +158,6 @@ export const useManageVocabularyController = () => {
     setForm((f) => ({ ...f, [k]: v }));
   }, []);
 
-  // ── Save (create or update) ────────────────────────────────────────────
   const save = useCallback(async (): Promise<boolean> => {
     if (!currentUser?.uid) {
       setError('You must be signed in.');
@@ -188,7 +187,6 @@ export const useManageVocabularyController = () => {
     }
   }, [currentUser?.uid, form, editingWord, closeModal, reload]);
 
-  // ── Delete ─────────────────────────────────────────────────────────────
   const remove = useCallback(
     async (wordId: string) => {
       try {
@@ -202,7 +200,6 @@ export const useManageVocabularyController = () => {
     [reload],
   );
 
-  // ── Seed default vocabulary ───────────────────────────────────────────
   const seedDefaults = useCallback(async () => {
     if (!currentUser?.uid) {
       setSeedMessage('You must be signed in.');
@@ -211,10 +208,7 @@ export const useManageVocabularyController = () => {
     setSeeding(true);
     setSeedMessage(null);
     try {
-      const { written } = await upsertVocabularyWords(
-        SEED_VOCABULARY_WORDS,
-        currentUser.uid,
-      );
+      const { written } = await upsertVocabularyWords(SEED_VOCABULARY_WORDS, currentUser.uid);
       setSeedMessage(`Seeded ${written} words across CEFR A1–C2.`);
       await reload();
     } catch (e) {
@@ -225,13 +219,9 @@ export const useManageVocabularyController = () => {
     }
   }, [currentUser?.uid, reload]);
 
-  const totalCount = useMemo(
-    () => CEFR_ORDER.reduce((s, l) => s + (counts[l] ?? 0), 0),
-    [counts],
-  );
+  const totalCount = useMemo(() => CEFR_ORDER.reduce((s, l) => s + (counts[l] ?? 0), 0), [counts]);
 
   return {
-    // data
     words,
     filteredWords,
     counts,
@@ -244,7 +234,6 @@ export const useManageVocabularyController = () => {
     setCefrFilter,
     search,
     setSearch,
-    // modal
     modalOpen,
     editingWord,
     form,

@@ -1,4 +1,9 @@
-// ─── Progress Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 export type LessonStatus = 'completed' | 'in_progress' | 'upcoming';
 
 export interface LessonDay {
@@ -54,7 +59,6 @@ export interface ProgressData {
   weeks: WeeklyProgress[];
 }
 
-// ─── Per-attempt history ───
 export type PronunciationItemType = 'word' | 'sentence';
 
 /** Broader item type covering all attempt-bearing exercises in the app. */
@@ -88,8 +92,13 @@ export interface DailyEntry {
   attempts: PronunciationAttempt[];
 }
 
-// ─── Insights Models ───
-export type EnglishLevel = 'A1 Beginner' | 'A2 Elementary' | 'B1 Intermediate' | 'B2 Upper Intermediate' | 'C1 Fluent' | 'C2 Proficient';
+export type EnglishLevel =
+  | 'A1 Beginner'
+  | 'A2 Elementary'
+  | 'B1 Intermediate'
+  | 'B2 Upper Intermediate'
+  | 'C1 Fluent'
+  | 'C2 Proficient';
 
 export interface InsightsUserData {
   userId: string;

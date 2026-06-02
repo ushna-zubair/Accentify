@@ -1,12 +1,11 @@
-import React, { useState , useMemo} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -22,7 +21,8 @@ type VerificationMethod = 'email' | 'authenticator' | 'pin';
 const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
+  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } =
+    route.params;
   const { completeOnboarding } = useAuth();
   const [selected, setSelected] = useState<VerificationMethod>('authenticator');
   const [loading, setLoading] = useState(false);
@@ -109,7 +109,8 @@ const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) 
 
         {/* Warning Text */}
         <Text style={styles.warningText}>
-          If you lose access to your authenticator,{'\n'}make sure you have an alternate method{'\n'}saved.
+          If you lose access to your authenticator,{'\n'}make sure you have an alternate method
+          {'\n'}saved.
         </Text>
 
         {/* Continue Button */}
@@ -132,107 +133,108 @@ const ChooseVerificationMethodScreen: React.FC<Props> = ({ navigation, route }) 
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  /* ── Header ── */
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.text,
-  },
-  /* ── Subtitle ── */
-  subtitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.text,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginTop: 32,
-    marginBottom: 32,
-  },
-  accentifyText: {
-    color: tc.accent,
-    fontFamily: fonts.bold,
-  },
-  /* ── Methods ── */
-  methodsContainer: {
-    gap: 14,
-    marginBottom: 32,
-  },
-  methodButton: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.white,
-    borderRadius: 999,
-    paddingVertical: 16,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-  },
-  methodButtonSelected: {
-    backgroundColor: tc.accent,
-    borderColor: tc.accent,
-  },
-  methodText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    color: tc.text,
-  },
-  methodTextSelected: {
-    color: tc.white,
-  },
-  /* ── Warning ── */
-  warningText: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  /* ── Continue Button ── */
-  bottomContainer: {
-    marginTop: 'auto',
-    paddingBottom: 32,
-    paddingTop: 20,
-    alignItems: 'center',
-  },
-  continueButton: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  continueButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+    },
+    /* ── Header ── */
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 12,
+      paddingBottom: 8,
+    },
+    backButton: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.text,
+    },
+    /* ── Subtitle ── */
+    subtitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.text,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginTop: 32,
+      marginBottom: 32,
+    },
+    accentifyText: {
+      color: tc.accent,
+      fontFamily: fonts.bold,
+    },
+    /* ── Methods ── */
+    methodsContainer: {
+      gap: 14,
+      marginBottom: 32,
+    },
+    methodButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.white,
+      borderRadius: 999,
+      paddingVertical: 16,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+    },
+    methodButtonSelected: {
+      backgroundColor: tc.accent,
+      borderColor: tc.accent,
+    },
+    methodText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+    },
+    methodTextSelected: {
+      color: tc.white,
+    },
+    /* ── Warning ── */
+    warningText: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 20,
+    },
+    /* ── Continue Button ── */
+    bottomContainer: {
+      marginTop: 'auto',
+      paddingBottom: 32,
+      paddingTop: 20,
+      alignItems: 'center',
+    },
+    continueButton: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    continueButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+  });
 
 export default ChooseVerificationMethodScreen;

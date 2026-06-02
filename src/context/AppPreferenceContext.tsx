@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeOption, AccentColor, FontSizeOption, AppPreferenceState } from '../models';
@@ -59,19 +65,18 @@ export const AppPreferenceProvider: React.FC<{ children: ReactNode }> = ({ child
     [persist],
   );
 
-  const value = useMemo<AppPreferenceContextType>(() => ({
-    ...state,
-    setTheme: (v: ThemeOption) => update({ theme: v }),
-    setAccentColor: (v: AccentColor) => update({ accentColor: v }),
-    setFontSize: (v: FontSizeOption) => update({ fontSize: v }),
-    setHighContrastMode: (v: boolean) => update({ highContrastMode: v }),
-  }), [state, update]);
-
-  return (
-    <AppPreferenceContext.Provider value={value}>
-      {children}
-    </AppPreferenceContext.Provider>
+  const value = useMemo<AppPreferenceContextType>(
+    () => ({
+      ...state,
+      setTheme: (v: ThemeOption) => update({ theme: v }),
+      setAccentColor: (v: AccentColor) => update({ accentColor: v }),
+      setFontSize: (v: FontSizeOption) => update({ fontSize: v }),
+      setHighContrastMode: (v: boolean) => update({ highContrastMode: v }),
+    }),
+    [state, update],
   );
+
+  return <AppPreferenceContext.Provider value={value}>{children}</AppPreferenceContext.Provider>;
 };
 
 export const useAppPreference = (): AppPreferenceContextType => {

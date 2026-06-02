@@ -1,30 +1,16 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  useAudioRecorder,
-  RecordingPresets,
-  AudioModule,
-  setAudioModeAsync,
-} from 'expo-audio';
-import {
-  doc,
-  setDoc,
-  collection,
-  addDoc,
-  Timestamp,
-  increment,
-} from 'firebase/firestore';
+import { useAudioRecorder, RecordingPresets, AudioModule, setAudioModeAsync } from 'expo-audio';
+import { doc, setDoc, collection, addDoc, Timestamp, increment } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
-import type {
-  ConversationTurn,
-  ConversationScenario,
-  ConversationMetricsResult,
-} from '../models';
+import type { ConversationTurn, ConversationScenario, ConversationMetricsResult } from '../models';
 import { onExerciseComplete } from '../services/progressService';
 import { levenshtein, normalize } from '../utils/stringUtils';
-
-// ═══════════════════════════════════════════════
-//  SAMPLE CONVERSATION SCENARIOS
-// ═══════════════════════════════════════════════
 
 const SCENARIOS: Record<string, ConversationScenario> = {
   lesson_1: {
@@ -89,14 +75,14 @@ const SCENARIOS: Record<string, ConversationScenario> = {
       {
         id: 't1',
         speaker: 'partner',
-        text: "Welcome, John. Please have a seat. Tell me a bit about yourself.",
+        text: 'Welcome, John. Please have a seat. Tell me a bit about yourself.',
         audioDuration: 3500,
         completed: false,
       },
       {
         id: 't2',
         speaker: 'learner',
-        text: "Thank you, David. I graduated with a degree in Computer Science and I have three years of experience in cybersecurity.",
+        text: 'Thank you, David. I graduated with a degree in Computer Science and I have three years of experience in cybersecurity.',
         audioDuration: 5000,
         completed: false,
       },
@@ -117,14 +103,14 @@ const SCENARIOS: Record<string, ConversationScenario> = {
       {
         id: 't5',
         speaker: 'partner',
-        text: "Very interesting. Where do you see yourself in five years?",
+        text: 'Very interesting. Where do you see yourself in five years?',
         audioDuration: 2800,
         completed: false,
       },
       {
         id: 't6',
         speaker: 'learner',
-        text: "I see myself leading a security team and contributing to industry best practices in cybersecurity.",
+        text: 'I see myself leading a security team and contributing to industry best practices in cybersecurity.',
         audioDuration: 4800,
         completed: false,
       },
@@ -188,10 +174,6 @@ const SCENARIOS: Record<string, ConversationScenario> = {
   },
 };
 
-// ═══════════════════════════════════════════════
-//  PHASE TYPE
-// ═══════════════════════════════════════════════
-
 export type ConversationPhase =
   | 'partner_speaking'
   | 'waiting_for_learner'
@@ -199,18 +181,11 @@ export type ConversationPhase =
   | 'processing'
   | 'completed';
 
-// ═══════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════
-
 /**
  * Evaluate learner's speech against the expected turn text.
  * Returns metrics (0-100 scale).
  */
-const evaluateResponse = (
-  expected: string,
-  transcript: string,
-): ConversationMetricsResult => {
+const evaluateResponse = (expected: string, transcript: string): ConversationMetricsResult => {
   const expectedWords = expected.split(/\s+/).filter(Boolean);
   const transcriptWords = transcript.split(/\s+/).filter(Boolean);
 
@@ -238,10 +213,7 @@ const evaluateResponse = (
  * Mock STT — returns the target text with some words randomly altered.
  * In production, replace with Whisper / Google STT API call.
  */
-const transcribeAudio = async (
-  _uri: string,
-  targetText: string,
-): Promise<string> => {
+const transcribeAudio = async (_uri: string, targetText: string): Promise<string> => {
   await new Promise((r) => setTimeout(r, 1200));
   const words = targetText.split(/\s+/);
   return words
@@ -255,10 +227,6 @@ const transcribeAudio = async (
     })
     .join(' ');
 };
-
-// ═══════════════════════════════════════════════
-//  FEEDBACK & TIP GENERATION
-// ═══════════════════════════════════════════════
 
 interface ConversationFeedback {
   feedback: string;
@@ -307,16 +275,13 @@ const TIP_TEMPLATES: { minOverall: number; tip: string }[] = [
   },
 ];
 
-const generateFeedback = (
-  avgMetrics: ConversationMetricsResult,
-): ConversationFeedback => {
+const generateFeedback = (avgMetrics: ConversationMetricsResult): ConversationFeedback => {
   const overall = avgMetrics.overall;
   const feedbackEntry =
     FEEDBACK_TEMPLATES.find((f) => overall >= f.minOverall) ??
     FEEDBACK_TEMPLATES[FEEDBACK_TEMPLATES.length - 1];
   const tipEntry =
-    TIP_TEMPLATES.find((t) => overall >= t.minOverall) ??
-    TIP_TEMPLATES[TIP_TEMPLATES.length - 1];
+    TIP_TEMPLATES.find((t) => overall >= t.minOverall) ?? TIP_TEMPLATES[TIP_TEMPLATES.length - 1];
 
   return {
     feedback: feedbackEntry.feedback,
@@ -324,18 +289,11 @@ const generateFeedback = (
   };
 };
 
-// ═══════════════════════════════════════════════
-//  CONTROLLER HOOK
-// ═══════════════════════════════════════════════
-
 export const useConversationExerciseController = (lessonId: string) => {
   // ── Scenario ──
   const scenario = SCENARIOS[lessonId] ?? SCENARIOS['lesson_1'];
 
-  // ── State ──
-  const [turns, setTurns] = useState<ConversationTurn[]>(
-    scenario.turns.map((t) => ({ ...t })),
-  );
+  const [turns, setTurns] = useState<ConversationTurn[]>(scenario.turns.map((t) => ({ ...t })));
   const [currentTurnIndex, setCurrentTurnIndex] = useState(0);
   const [phase, setPhase] = useState<ConversationPhase>('partner_speaking');
   const [timer, setTimer] = useState(scenario.timeLimitSeconds);
@@ -346,7 +304,9 @@ export const useConversationExerciseController = (lessonId: string) => {
   const [error, setError] = useState<string | null>(null);
   const [partnerPlayProgress, setPartnerPlayProgress] = useState(0);
   const [learnerRecordProgress, setLearnerRecordProgress] = useState(0);
-  const [conversationFeedback, setConversationFeedback] = useState<ConversationFeedback | null>(null);
+  const [conversationFeedback, setConversationFeedback] = useState<ConversationFeedback | null>(
+    null,
+  );
 
   // ── Audio recorder (expo-audio) ──
   const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
@@ -355,12 +315,10 @@ export const useConversationExerciseController = (lessonId: string) => {
   const recorderRef = useRef(audioRecorder);
   recorderRef.current = audioRecorder;
 
-  // ── Refs ──
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const playProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordProgressRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // ── Derived ──
   const currentTurn = turns[currentTurnIndex];
   const totalTurns = turns.length;
   const isComplete = phase === 'completed';
@@ -383,7 +341,6 @@ export const useConversationExerciseController = (lessonId: string) => {
     };
   }, []);
 
-  // ── Cleanup ──
   useEffect(() => {
     return () => {
       const r = recorderRef.current;
@@ -415,9 +372,7 @@ export const useConversationExerciseController = (lessonId: string) => {
         if (playProgressRef.current) clearInterval(playProgressRef.current);
         // Mark partner turn complete
         setTurns((prev) =>
-          prev.map((t, i) =>
-            i === currentTurnIndex ? { ...t, completed: true } : t,
-          ),
+          prev.map((t, i) => (i === currentTurnIndex ? { ...t, completed: true } : t)),
         );
         setCompletedTurns((c) => c + 1);
 
@@ -521,11 +476,7 @@ export const useConversationExerciseController = (lessonId: string) => {
 
       // Mark learner turn complete
       setTurns((prev) =>
-        prev.map((t, i) =>
-          i === currentTurnIndex
-            ? { ...t, completed: true, audioUri: uri }
-            : t,
-        ),
+        prev.map((t, i) => (i === currentTurnIndex ? { ...t, completed: true, audioUri: uri } : t)),
       );
       setCompletedTurns(updatedCompletedTurns);
 
@@ -533,16 +484,13 @@ export const useConversationExerciseController = (lessonId: string) => {
       const uid = auth.currentUser?.uid;
       if (uid) {
         try {
-          await addDoc(
-            collection(db, 'users', uid, 'lessons', lessonId, 'conversationTurns'),
-            {
-              turnIndex: currentTurnIndex,
-              expectedText: currentTurn.text,
-              transcript,
-              metrics: turnMetrics,
-              recordedAt: Timestamp.now(),
-            },
-          );
+          await addDoc(collection(db, 'users', uid, 'lessons', lessonId, 'conversationTurns'), {
+            turnIndex: currentTurnIndex,
+            expectedText: currentTurn.text,
+            transcript,
+            metrics: turnMetrics,
+            recordedAt: Timestamp.now(),
+          });
         } catch {
           // Non-critical
         }
@@ -565,10 +513,10 @@ export const useConversationExerciseController = (lessonId: string) => {
       setError('Failed to process recording');
       setPhase('waiting_for_learner');
     }
-  // NOTE: `finishConversation` is referenced via closure but intentionally
-  // omitted from the dep array — it's declared after this hook and listing it
-  // would land in the TDZ. Its own deps are limited to lessonId so the closure
-  // captured here always sees the latest fields it actually uses.
+    // NOTE: `finishConversation` is referenced via closure but intentionally
+    // omitted from the dep array — it's declared after this hook and listing it
+    // would land in the TDZ. Its own deps are limited to lessonId so the closure
+    // captured here always sees the latest fields it actually uses.
   }, [
     audioRecorder,
     currentTurn,
@@ -586,51 +534,51 @@ export const useConversationExerciseController = (lessonId: string) => {
   // interval) that have just queued `setMetrics`/`setCompletedTurns` updates.
   // Reading those values from the closure would write the pre-update values
   // (zero scores, undercounted turn total) to Firestore.
-  const finishConversation = useCallback(async (
-    finalMetrics: ConversationMetricsResult[],
-    finalCompletedTurns: number,
-  ) => {
-    setPhase('completed');
-    if (countdownRef.current) clearInterval(countdownRef.current);
+  const finishConversation = useCallback(
+    async (finalMetrics: ConversationMetricsResult[], finalCompletedTurns: number) => {
+      setPhase('completed');
+      if (countdownRef.current) clearInterval(countdownRef.current);
 
-    // Generate feedback from metrics
-    const avg = computeAverageMetrics(finalMetrics);
-    const fb = generateFeedback(avg);
-    setConversationFeedback(fb);
+      // Generate feedback from metrics
+      const avg = computeAverageMetrics(finalMetrics);
+      const fb = generateFeedback(avg);
+      setConversationFeedback(fb);
 
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
+      const uid = auth.currentUser?.uid;
+      if (!uid) return;
 
-    try {
-      await setDoc(
-        doc(db, 'users', uid, 'lessons', lessonId),
-        {
-          status: 'completed',
-          completedAt: Timestamp.now(),
-          conversationMetrics: avg,
-          feedback: fb.feedback,
-          tip: fb.tip,
-          totalTurns: finalCompletedTurns,
-        },
-        { merge: true },
-      );
+      try {
+        await setDoc(
+          doc(db, 'users', uid, 'lessons', lessonId),
+          {
+            status: 'completed',
+            completedAt: Timestamp.now(),
+            conversationMetrics: avg,
+            feedback: fb.feedback,
+            tip: fb.tip,
+            totalTurns: finalCompletedTurns,
+          },
+          { merge: true },
+        );
 
-      // Update overall progress
-      await setDoc(
-        doc(db, 'users', uid, 'progress', 'summary'),
-        {
-          completedLessons: increment(1),
-          lastActiveAt: Timestamp.now().toDate().toISOString(),
-        },
-        { merge: true },
-      );
+        // Update overall progress
+        await setDoc(
+          doc(db, 'users', uid, 'progress', 'summary'),
+          {
+            completedLessons: increment(1),
+            lastActiveAt: Timestamp.now().toDate().toISOString(),
+          },
+          { merge: true },
+        );
 
-      // Update progress: streak, daily activity, weekly aggregation
-      await onExerciseComplete(uid, 'conversation', { metrics: avg });
-    } catch {
-      // Non-critical
-    }
-  }, [lessonId]);
+        // Update progress: streak, daily activity, weekly aggregation
+        await onExerciseComplete(uid, 'conversation', { metrics: avg });
+      } catch {
+        // Non-critical
+      }
+    },
+    [lessonId],
+  );
 
   // ── Format timer ──
   const formatTimer = useCallback((secs: number): string => {
@@ -649,7 +597,6 @@ export const useConversationExerciseController = (lessonId: string) => {
     currentTurn,
     totalTurns,
     completedTurns,
-    // State
     phase,
     timer,
     formattedTimer: formatTimer(timer),
@@ -662,7 +609,6 @@ export const useConversationExerciseController = (lessonId: string) => {
     // Progress
     partnerPlayProgress,
     learnerRecordProgress,
-    // Actions
     toggleBackgroundNoise,
     toggleCrowdChatter,
     startRecording,
@@ -671,12 +617,8 @@ export const useConversationExerciseController = (lessonId: string) => {
   };
 };
 
-// ── Helper ──
-const computeAverageMetrics = (
-  all: ConversationMetricsResult[],
-): ConversationMetricsResult => {
-  if (!all.length)
-    return { fluency: 0, vocabulary: 0, grammarUsage: 0, turnTaking: 0, overall: 0 };
+const computeAverageMetrics = (all: ConversationMetricsResult[]): ConversationMetricsResult => {
+  if (!all.length) return { fluency: 0, vocabulary: 0, grammarUsage: 0, turnTaking: 0, overall: 0 };
   const sum = all.reduce(
     (a, m) => ({
       fluency: a.fluency + m.fluency,

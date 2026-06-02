@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import * as admin from 'firebase-admin';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 
@@ -33,8 +39,6 @@ export { convertAudioToWav } from './audioConvert';
 const db = admin.firestore();
 
 const REGION = 'us-central1';
-
-// ─── Admin Delete User (soft-delete + disable Auth) ───
 
 export const adminDeleteUser = onCall(
   { region: REGION, secrets: [] },

@@ -1,12 +1,11 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useEffect, useMemo, useRef } from 'react';
-import {
-  Animated,
-  Easing,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator } from 'react-native';
 import { useAppTheme } from '../hooks/useAppTheme';
@@ -163,12 +162,7 @@ export const RecordingControl: React.FC<RecordingControlProps> = ({
 
   return (
     <View style={styles.wrap} accessibilityLiveRegion="polite">
-      <Text
-        style={[
-          styles.label,
-          (isRecording || isProcessing) && styles.labelEmphasis,
-        ]}
-      >
+      <Text style={[styles.label, (isRecording || isProcessing) && styles.labelEmphasis]}>
         {label}
       </Text>
 
@@ -191,13 +185,8 @@ export const RecordingControl: React.FC<RecordingControlProps> = ({
           onPress={onPress}
           disabled={disabled || isProcessing}
           accessibilityRole="button"
-          accessibilityLabel={
-            isRecording ? 'Stop recording' : 'Start recording'
-          }
-          style={[
-            styles.button,
-            (disabled || isProcessing) && styles.buttonDisabled,
-          ]}
+          accessibilityLabel={isRecording ? 'Stop recording' : 'Start recording'}
+          style={[styles.button, (disabled || isProcessing) && styles.buttonDisabled]}
         >
           {isProcessing ? (
             <ActivityIndicator size="small" color={tc.white} />

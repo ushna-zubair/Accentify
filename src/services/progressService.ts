@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * progressService.ts
  *
  * Central service for all progress-related Firestore writes.
@@ -76,10 +82,6 @@ export {
   formatDate,
 } from '../utils/dateUtils';
 
-// ═══════════════════════════════════════════════
-//  STREAK MANAGEMENT
-// ═══════════════════════════════════════════════
-
 /**
  * Update the user's day-streak.
  * - If already active today → no-op.
@@ -101,9 +103,10 @@ export const updateStreak = async (uid: string): Promise<number> => {
       const data = snap.data();
       const rawDate = data.lastActiveDate;
       // Normalize: if it's a Timestamp, convert to YYYY-MM-DD string
-      const lastDate = rawDate && typeof rawDate === 'object' && typeof rawDate.toDate === 'function'
-        ? toDateKey(rawDate.toDate())
-        : (rawDate as string | undefined);
+      const lastDate =
+        rawDate && typeof rawDate === 'object' && typeof rawDate.toDate === 'function'
+          ? toDateKey(rawDate.toDate())
+          : (rawDate as string | undefined);
       const prevStreak = (data.dayStreak as number) ?? 0;
       longestStreak = (data.longestStreak as number) ?? prevStreak;
 
@@ -133,10 +136,6 @@ export const updateStreak = async (uid: string): Promise<number> => {
     return dayStreak;
   });
 };
-
-// ═══════════════════════════════════════════════
-//  DAILY ACTIVITY LOG
-// ═══════════════════════════════════════════════
 
 /**
  * Record that a pronunciation exercise was completed today.
@@ -270,18 +269,12 @@ export const recordPronunciationAttempt = async (
   return { completed, streakUpdated };
 };
 
-// ═══════════════════════════════════════════════
-//  VOCAB SYNONYM-TYPING ATTEMPTS
-// ═══════════════════════════════════════════════
-
 /**
  * Sanitise an item key for Firestore (no /, ., #, $, [, ]).
  * Mirrors the inline sanitisation in `recordPronunciationAttempt`.
  */
 const vocabItemKey = (wordId: string): string =>
-  `vocab__${wordId.trim().toLowerCase()}`
-    .replace(/[/.#$\[\]]/g, '_')
-    .slice(0, 1000);
+  `vocab__${wordId.trim().toLowerCase()}`.replace(/[/.#$\[\]]/g, '_').slice(0, 1000);
 
 /**
  * Persist a single vocabulary synonym-typing attempt across all progress
@@ -321,7 +314,15 @@ export const recordVocabAttempt = async (
 
   let firstTimeCorrect = false;
   try {
-    const itemRef = doc(db, 'users', uid, 'progress', 'items', 'entries', vocabItemKey(input.wordId));
+    const itemRef = doc(
+      db,
+      'users',
+      uid,
+      'progress',
+      'items',
+      'entries',
+      vocabItemKey(input.wordId),
+    );
     await runTransaction(db, async (tx) => {
       const snap = await tx.get(itemRef);
       const prev = snap.exists() ? snap.data() : null;
@@ -430,10 +431,7 @@ export const recordConversationActivity = async (
 /**
  * Record that vocabulary words were practiced today.
  */
-export const recordVocabActivity = async (
-  uid: string,
-  wordsLearned: number,
-): Promise<void> => {
+export const recordVocabActivity = async (uid: string, wordsLearned: number): Promise<void> => {
   const todayKey = toDateKey(new Date());
   const ref = doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey);
 
@@ -466,18 +464,11 @@ export const recordLessonCompletion = async (uid: string): Promise<void> => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  WEEKLY AGGREGATION
-// ═══════════════════════════════════════════════
-
 /**
  * Rebuild the weekly progress document for a given week
  * by reading all daily activity docs within that week.
  */
-export const aggregateWeek = async (
-  uid: string,
-  weekStart: Date,
-): Promise<WeeklyProgress> => {
+export const aggregateWeek = async (uid: string, weekStart: Date): Promise<WeeklyProgress> => {
   const wn = getWeekNumber(weekStart);
   const yr = getWeekYear(weekStart);
   const wId = weekDocId(weekStart);
@@ -566,9 +557,7 @@ export const aggregateWeek = async (
   return weeklyEntry;
 };
 
-// ═══════════════════════════════════════════════
 //  LESSON DAYS (this-week calendar)
-// ═══════════════════════════════════════════════
 
 /**
  * Build the 7-day lesson calendar for the current week
@@ -592,9 +581,7 @@ export const buildLessonDays = async (uid: string): Promise<LessonDay[]> => {
   });
 
   // Only read past/current days (future days have no data)
-  const readableIndexes = dayInfos
-    .map((d, i) => (d.isFuture ? -1 : i))
-    .filter((i) => i >= 0);
+  const readableIndexes = dayInfos.map((d, i) => (d.isFuture ? -1 : i)).filter((i) => i >= 0);
 
   const snapResults = await Promise.all(
     readableIndexes.map((i) =>
@@ -603,7 +590,7 @@ export const buildLessonDays = async (uid: string): Promise<LessonDay[]> => {
   );
 
   // Map snap results back by index
-  const snapByIndex = new Map<number, typeof snapResults[number]>();
+  const snapByIndex = new Map<number, (typeof snapResults)[number]>();
   readableIndexes.forEach((idx, j) => snapByIndex.set(idx, snapResults[j]));
 
   const days: LessonDay[] = dayInfos.map((info, i) => {
@@ -635,10 +622,6 @@ export const buildLessonDays = async (uid: string): Promise<LessonDay[]> => {
   return days;
 };
 
-// ═══════════════════════════════════════════════
-//  FULL PROGRESS FETCH
-// ═══════════════════════════════════════════════
-
 /**
  * Read all progress data for the Progress screen.
  * Returns streak, lesson days, and all weekly entries.
@@ -654,9 +637,7 @@ export const fetchFullProgress = async (uid: string) => {
     getDocs(weeksRef),
   ]);
 
-  const dayStreak = streakSnap.exists()
-    ? (streakSnap.data().dayStreak as number) ?? 0
-    : 0;
+  const dayStreak = streakSnap.exists() ? ((streakSnap.data().dayStreak as number) ?? 0) : 0;
 
   let weeks: WeeklyProgress[] = [];
   if (!weeksSnap.empty) {
@@ -673,9 +654,7 @@ export const fetchFullProgress = async (uid: string) => {
   const curWeekStart = getWeekStart(today);
   const curWn = getWeekNumber(today);
   const curYr = getWeekYear(today);
-  const hasCurrentWeek = weeks.some(
-    (w) => w.weekNumber === curWn && w.year === curYr,
-  );
+  const hasCurrentWeek = weeks.some((w) => w.weekNumber === curWn && w.year === curYr);
 
   if (!hasCurrentWeek) {
     const currentWeek = await aggregateWeek(uid, curWeekStart);
@@ -690,9 +669,7 @@ export const fetchFullProgress = async (uid: string) => {
   };
 };
 
-// ═══════════════════════════════════════════════
 //  CONVENIENCE: one-call after exercise completion
-// ═══════════════════════════════════════════════
 
 /**
  * Call after ANY exercise finishes.
@@ -753,10 +730,6 @@ export const onExerciseComplete = async (
     console.warn('[ProgressService] onExerciseComplete error:', e);
   }
 };
-
-// ═══════════════════════════════════════════════
-//  PRIVATE HELPERS
-// ═══════════════════════════════════════════════
 
 /** Arithmetic mean, rounded to nearest integer. */
 const avg = (nums: number[]): number => {

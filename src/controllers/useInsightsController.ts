@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback } from 'react';
 import {
   collection,
@@ -20,7 +26,6 @@ import type {
   OverallPerformance,
 } from '../models';
 
-// ─── Defaults ───
 const DEFAULT_PRONUNCIATION: PronunciationMetrics = {
   clarity: 0,
   soundAccuracy: 0,
@@ -68,7 +73,6 @@ const DEFAULT_INSIGHTS: InsightsUserData = {
   hasData: false,
 };
 
-// ─── Controller ───
 export const useInsightsController = () => {
   const [insightsData, setInsightsData] = useState<InsightsUserData>(DEFAULT_INSIGHTS);
   const [loading, setLoading] = useState(false);
@@ -103,12 +107,14 @@ export const useInsightsController = () => {
 
       const profileData = profileSnap.data();
       const englishLevel: EnglishLevel =
-        profileData?.studyPlan?.englishLevel ?? profileData?.profile?.englishLevel ?? 'B1 Intermediate';
+        profileData?.studyPlan?.englishLevel ??
+        profileData?.profile?.englishLevel ??
+        'B1 Intermediate';
 
       // 2. Fetch lesson days
       const lessonsSnap = await getDoc(doc(db, 'users', uid, 'progress', 'lessons'));
       const lessonDays: LessonDay[] = lessonsSnap.exists()
-        ? (lessonsSnap.data().days as LessonDay[]) ?? []
+        ? ((lessonsSnap.data().days as LessonDay[]) ?? [])
         : [];
 
       // 3. Fetch latest weekly progress entry
@@ -187,7 +193,6 @@ export const useInsightsController = () => {
   };
 };
 
-// ─── Helpers ───
 function formatWeekLabel(isoDate: string): string {
   try {
     const d = new Date(isoDate);

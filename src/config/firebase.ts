@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { initializeApp } from 'firebase/app';
 import {
   initializeFirestore,
@@ -22,8 +28,16 @@ export const firebaseConfig = {
 
 // Debug: verify config loaded (only in development)
 if (__DEV__ && (!firebaseConfig.apiKey || !firebaseConfig.projectId)) {
-  console.warn('[Firebase] Config missing! apiKey:', !!firebaseConfig.apiKey, 'projectId:', !!firebaseConfig.projectId,
-    'expoConfig:', !!Constants.expoConfig, 'extra keys:', Object.keys(extra));
+  console.warn(
+    '[Firebase] Config missing! apiKey:',
+    !!firebaseConfig.apiKey,
+    'projectId:',
+    !!firebaseConfig.projectId,
+    'expoConfig:',
+    !!Constants.expoConfig,
+    'extra keys:',
+    Object.keys(extra),
+  );
 }
 
 const app = initializeApp(firebaseConfig);
@@ -42,7 +56,6 @@ if (Platform.OS === 'web') {
 }
 
 export { auth };
-
 
 let db: ReturnType<typeof getFirestore>;
 if (Platform.OS === 'web') {

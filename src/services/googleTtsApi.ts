@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Client for Google Cloud Text-to-Speech.
  *
  *   POST https://texttospeech.googleapis.com/v1/text:synthesize?key=...
@@ -40,22 +46,11 @@ function getTtsKey(): string {
 }
 
 export class GoogleTtsError extends Error {
-  readonly code:
-    | 'unauthorized'
-    | 'bad_request'
-    | 'quota'
-    | 'server_error'
-    | 'network'
-    | 'unknown';
+  readonly code: 'unauthorized' | 'bad_request' | 'quota' | 'server_error' | 'network' | 'unknown';
   readonly userMessage: string;
   readonly status?: number;
 
-  constructor(
-    code: GoogleTtsError['code'],
-    userMessage: string,
-    status?: number,
-    cause?: unknown,
-  ) {
+  constructor(code: GoogleTtsError['code'], userMessage: string, status?: number, cause?: unknown) {
     super(userMessage);
     this.name = 'GoogleTtsError';
     this.code = code;
@@ -66,8 +61,7 @@ export class GoogleTtsError extends Error {
 }
 
 function classifyTts(status: number, body: any): GoogleTtsError {
-  const detail =
-    typeof body?.error?.message === 'string' ? body.error.message : undefined;
+  const detail = typeof body?.error?.message === 'string' ? body.error.message : undefined;
   if (status === 401 || status === 403) {
     return new GoogleTtsError(
       'unauthorized',
@@ -122,9 +116,7 @@ export interface GoogleTtsResult {
   audioFormat: 'mp3';
 }
 
-export async function googleTtsSynthesize(
-  input: GoogleTtsInput,
-): Promise<GoogleTtsResult> {
+export async function googleTtsSynthesize(input: GoogleTtsInput): Promise<GoogleTtsResult> {
   const key = getTtsKey();
   const url = `${GOOGLE_TTS_URL}?key=${encodeURIComponent(key)}`;
 

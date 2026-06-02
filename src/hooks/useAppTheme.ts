@@ -1,10 +1,13 @@
-
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
 
 import { useMemo } from 'react';
 import { useAppPreference } from '../context/AppPreferenceContext';
 import { useAccessibility } from '../context/AccessibilityContext';
 import type { ThemeOption, AccentColor, FontSizeOption, ColorBlindMode } from '../models';
-
 
 export interface ThemeColors {
   /** Main screen background */
@@ -71,7 +74,10 @@ export interface ThemeColors {
   tabBarLabel: string;
 }
 
-const LIGHT_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'accentDark' | 'accentBg'> = {
+const LIGHT_BASE: Omit<
+  ThemeColors,
+  'accent' | 'accentLight' | 'accentMuted' | 'accentDark' | 'accentBg'
+> = {
   background: '#FFFFFF',
   surface: '#FFFFFF',
   surfaceAlt: '#F5F5F5',
@@ -100,7 +106,10 @@ const LIGHT_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | '
   tabBarLabel: '#FFFFFF',
 };
 
-const DARK_BASE: Omit<ThemeColors, 'accent' | 'accentLight' | 'accentMuted' | 'accentDark' | 'accentBg'> = {
+const DARK_BASE: Omit<
+  ThemeColors,
+  'accent' | 'accentLight' | 'accentMuted' | 'accentDark' | 'accentBg'
+> = {
   background: '#121212',
   surface: '#1E1E1E',
   surfaceAlt: '#2A2A2A',
@@ -211,7 +220,6 @@ const ACCENT_MAP: Record<AccentColor, { light: AccentScale; dark: AccentScale }>
   },
 };
 
-// ─── Color-blind safe overrides ───────────────────────────────────────────────
 // Red/green pairs are confusable for Deuteranope & Protanope users — use blue/
 // orange instead. Tritanope users confuse blue/yellow — use teal/magenta.
 const COLOR_BLIND_OVERRIDES: Record<ColorBlindMode, Partial<ThemeColors>> = {
@@ -241,22 +249,12 @@ function resolveColors(
 ): ThemeColors {
   const isDark = theme === 'Dark';
   const base = isDark ? { ...DARK_BASE } : { ...LIGHT_BASE };
-  const hcOverrides = highContrast
-    ? isDark
-      ? HIGH_CONTRAST_DARK
-      : HIGH_CONTRAST_LIGHT
-    : {};
-  const accent = isDark
-    ? ACCENT_MAP[accentColor].dark
-    : ACCENT_MAP[accentColor].light;
+  const hcOverrides = highContrast ? (isDark ? HIGH_CONTRAST_DARK : HIGH_CONTRAST_LIGHT) : {};
+  const accent = isDark ? ACCENT_MAP[accentColor].dark : ACCENT_MAP[accentColor].light;
   const cbOverrides = COLOR_BLIND_OVERRIDES[colorBlindMode] ?? {};
 
   return { ...base, ...hcOverrides, ...accent, ...cbOverrides };
 }
-
-// ═══════════════════════════════════════════════
-//  FONT SIZE MAP
-// ═══════════════════════════════════════════════
 
 export interface ThemeFontSizes {
   /** Screen / section title */
@@ -294,10 +292,6 @@ const FONT_SIZE_MAP: Record<FontSizeOption, ThemeFontSizes> = {
     caption: 14,
   },
 };
-
-// ═══════════════════════════════════════════════
-//  HOOK
-// ═══════════════════════════════════════════════
 
 export interface AppTheme {
   /** Resolved semantic color palette */

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useAccessControlController.ts
  *
  * Controller for the Admin Access Control screen.
@@ -40,7 +46,6 @@ export interface PendingInvite {
 export const useAccessControlController = () => {
   const { currentUser, userProfile } = useAuth();
 
-  // ── State ──
   const [activeTab, setActiveTab] = useState<AccessControlTab>('members');
   const [members, setMembers] = useState<AdminMember[]>([]);
   const [activityLogs, setActivityLogs] = useState<AdminActivityLog[]>([]);
@@ -49,13 +54,11 @@ export const useAccessControlController = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Modals
   const [inviteModalVisible, setInviteModalVisible] = useState(false);
   const [editMemberModalVisible, setEditMemberModalVisible] = useState(false);
   const [selectedMember, setSelectedMember] = useState<AdminMember | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Invite form
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteFullName, setInviteFullName] = useState('');
   const [inviteRole, setInviteRole] = useState<AdminRole>('admin');
@@ -63,10 +66,7 @@ export const useAccessControlController = () => {
   // Get current admin info
   const currentAdminUid = currentUser?.uid ?? '';
   const currentAdminName =
-    userProfile?.profile?.fullName ??
-    userProfile?.fullName ??
-    currentUser?.displayName ??
-    'Admin';
+    userProfile?.profile?.fullName ?? userProfile?.fullName ?? currentUser?.displayName ?? 'Admin';
 
   // ── Fetch All Data ──
   const fetchAll = useCallback(async () => {
@@ -94,7 +94,9 @@ export const useAccessControlController = () => {
   useEffect(() => {
     let ignore = false;
     fetchAll();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchAll]);
 
   // ── Filtered members ──
@@ -139,9 +141,7 @@ export const useAccessControlController = () => {
       try {
         setSubmitting(true);
         await updateAdminPermissions(targetUid, permissions, currentAdminUid, currentAdminName);
-        setMembers((prev) =>
-          prev.map((m) => (m.uid === targetUid ? { ...m, permissions } : m)),
-        );
+        setMembers((prev) => prev.map((m) => (m.uid === targetUid ? { ...m, permissions } : m)));
         const logs = await fetchActivityLogs(50);
         setActivityLogs(logs);
       } catch (e: unknown) {
@@ -266,7 +266,6 @@ export const useAccessControlController = () => {
   }, []);
 
   return {
-    // State
     activeTab,
     setActiveTab,
     members: filteredMembers,
@@ -279,7 +278,6 @@ export const useAccessControlController = () => {
     setSearchQuery,
     submitting,
 
-    // Modals
     inviteModalVisible,
     setInviteModalVisible,
     editMemberModalVisible,
@@ -287,7 +285,6 @@ export const useAccessControlController = () => {
     openEditMember,
     closeEditMember,
 
-    // Invite form
     inviteEmail,
     setInviteEmail,
     inviteFullName,
@@ -295,7 +292,6 @@ export const useAccessControlController = () => {
     inviteRole,
     setInviteRole,
 
-    // Actions
     handleChangeRole,
     handleUpdatePermissions,
     handleToggleStatus,

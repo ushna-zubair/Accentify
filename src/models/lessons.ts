@@ -1,4 +1,9 @@
-// ─── Tutor / Lesson Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import type { ImageSourcePropType } from 'react-native';
 import type { LessonStatus } from './progress';
 
@@ -55,8 +60,6 @@ export interface LessonDetailData {
   vocabularyWordIds?: string[];
 }
 
-// ─── Vocab Exercise Models ───
-
 export interface VocabWordPair {
   id: string;
   /** Common / basic English word */
@@ -106,8 +109,6 @@ export interface SpeechRecognitionResult {
   /** Feedback message for the vocab word attempt */
   vocabFeedback: string;
 }
-
-// ─── Pronunciation Exercise Models ───
 
 export interface PronunciationScore {
   clarity: number;
@@ -163,8 +164,6 @@ export interface PronunciationSentence {
   text: string;
   difficulty: 'easy' | 'medium' | 'hard';
 }
-
-// ─── Conversation Exercise Models ───
 
 export interface ConversationTurn {
   id: string;

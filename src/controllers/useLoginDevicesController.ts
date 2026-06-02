@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useLoginDevicesController – Manages login-device sessions stored in Firestore.
  *
  * Firestore path:  users/{uid}/devices/{deviceId}
@@ -52,25 +58,23 @@ const webConfirm = (title: string, message?: string): Promise<boolean> => {
   });
 };
 
-// ─── Helpers ───
-
 /** Format ISO string or Firestore Timestamp into "Feb 28, 2026 · 3:42 PM" */
 const formatDate = (raw: string | Timestamp | undefined): string => {
   if (!raw) return 'Unknown';
   const date = typeof raw === 'string' ? new Date(raw) : raw.toDate();
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }) +
+  return (
+    date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }) +
     ' · ' +
     date.toLocaleTimeString('en-US', {
       hour: 'numeric',
       minute: '2-digit',
-    });
+    })
+  );
 };
-
-// ─── Hook ───
 
 export const useLoginDevicesController = () => {
   const { currentUser } = useAuth();
@@ -135,7 +139,10 @@ export const useLoginDevicesController = () => {
       );
     } catch (e: unknown) {
       // Silently fail — not critical
-      console.warn('[LoginDevices] Failed to record device:', e instanceof Error ? e.message : String(e));
+      console.warn(
+        '[LoginDevices] Failed to record device:',
+        e instanceof Error ? e.message : String(e),
+      );
     }
   }, [currentUser, currentDeviceId]);
 
@@ -178,7 +185,9 @@ export const useLoginDevicesController = () => {
       await recordCurrentDevice();
       await fetchDevices();
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [recordCurrentDevice, fetchDevices]);
 
   return {

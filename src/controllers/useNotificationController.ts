@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import {
   collection,
@@ -11,10 +17,7 @@ import {
 import { db, auth } from '../config/firebase';
 import type { NotificationTab, NotificationItem, NotificationSection } from '../models';
 
-// ------- Default avatar -------
 const DEFAULT_AVATAR = require('../../assets/icon.png');
-
-// ------- Helpers -------
 
 /** Format a Firestore timestamp or ISO string into a human-readable relative time */
 function formatRelativeTime(isoString: string): string {
@@ -104,9 +107,7 @@ export const useNotificationController = () => {
           const data = d.data();
           let createdAt = '';
           try {
-            const ts = data.createdAt?.toDate
-              ? data.createdAt.toDate()
-              : new Date(data.createdAt);
+            const ts = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
             createdAt = ts.toISOString();
           } catch {
             createdAt = new Date().toISOString();
@@ -145,9 +146,7 @@ export const useNotificationController = () => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
 
-    const unreadIds = notifications
-      .filter((n) => n.tab === activeTab && n.unread)
-      .map((n) => n.id);
+    const unreadIds = notifications.filter((n) => n.tab === activeTab && n.unread).map((n) => n.id);
 
     if (unreadIds.length === 0) return;
 
@@ -173,9 +172,7 @@ export const useNotificationController = () => {
 
     try {
       await updateDoc(doc(db, 'users', uid, 'notifications', id), { unread: false });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, unread: false } : n)),
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
     } catch (e: unknown) {
       console.error('[Notifications] markAsRead error:', e);
     }

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Client for the Accentify pronunciation evaluation service hosted on
  * Hugging Face Spaces.
  *
@@ -82,25 +88,49 @@ function classify(status: number, body: any): AccentifyApiError {
   const message = typeof body?.message === 'string' ? body.message : undefined;
 
   if (status === 401 || status === 403) {
-    return new AccentifyApiError('unauthorized', 'Access to the pronunciation service is denied. Please contact support.', status);
+    return new AccentifyApiError(
+      'unauthorized',
+      'Access to the pronunciation service is denied. Please contact support.',
+      status,
+    );
   }
   if (status === 400) {
     const detailLower = detail?.toLowerCase() ?? '';
     if (detailLower.includes('too short')) {
-      return new AccentifyApiError('audio_too_short', 'That recording was too short — try speaking for at least a second.', status);
+      return new AccentifyApiError(
+        'audio_too_short',
+        'That recording was too short — try speaking for at least a second.',
+        status,
+      );
     }
     // "unknown word" and "no valid model tokens" both mean the model's
     // tokenizer can't represent the reference — re-recording won't help; the
     // controller needs to swap the word out.
     if (detailLower.includes('unknown word') || detailLower.includes('no valid model tokens')) {
-      return new AccentifyApiError('unknown_word', 'The model doesn\'t recognize that word yet. Pick a different one.', status);
+      return new AccentifyApiError(
+        'unknown_word',
+        "The model doesn't recognize that word yet. Pick a different one.",
+        status,
+      );
     }
-    return new AccentifyApiError('server_error', detail ?? message ?? 'The recording could not be evaluated.', status);
+    return new AccentifyApiError(
+      'server_error',
+      detail ?? message ?? 'The recording could not be evaluated.',
+      status,
+    );
   }
   if (status >= 500) {
-    return new AccentifyApiError('server_error', 'The pronunciation service is having trouble. Please try again in a moment.', status);
+    return new AccentifyApiError(
+      'server_error',
+      'The pronunciation service is having trouble. Please try again in a moment.',
+      status,
+    );
   }
-  return new AccentifyApiError('unknown', detail ?? message ?? `Request failed (${status}).`, status);
+  return new AccentifyApiError(
+    'unknown',
+    detail ?? message ?? `Request failed (${status}).`,
+    status,
+  );
 }
 
 async function readBody(res: Response): Promise<any> {
@@ -209,8 +239,6 @@ async function postForm<T>(path: string, form: FormData): Promise<T> {
   throw new AccentifyApiError('unknown', 'Request failed after retry.');
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 export interface PromptWordResponse {
   word: string;
   reference: string;
@@ -295,8 +323,6 @@ export interface EvaluateSentenceResponse {
   };
 }
 
-// ─── Endpoint wrappers ────────────────────────────────────────────────────────
-
 export function health(): Promise<unknown> {
   return getJson('/health');
 }
@@ -326,9 +352,7 @@ export function promptWord(level: number = 1): Promise<PromptWordResponse> {
 
 /** GET /prompt_sentence?level=A1 (defaults to A1 if omitted). */
 export function promptSentence(level: string = 'A1'): Promise<PromptSentenceResponse> {
-  return getJson<PromptSentenceResponse>(
-    `/prompt_sentence?level=${encodeURIComponent(level)}`,
-  );
+  return getJson<PromptSentenceResponse>(`/prompt_sentence?level=${encodeURIComponent(level)}`);
 }
 
 /**
@@ -398,7 +422,6 @@ export async function evaluateSentence(input: {
   return raw as EvaluateSentenceResponse;
 }
 
-// ─── AI feedback wrappers ─────────────────────────────────────────────────────
 // /feedback_word and /feedback_sentence live on a SEPARATE HF Space
 // (ushna22-accentify-feedback) and take JSON, not multipart audio. They
 // receive the ARPAbet arrays / per-word alignment from the evaluate_* call
@@ -421,11 +444,7 @@ async function postJsonFeedback<T>(path: string, body: unknown): Promise<T> {
   const { baseUrl, token } = getFeedbackConfig();
   if (!baseUrl) {
     // No feedback host configured — surface as 404 so callers fall back.
-    throw new AccentifyApiError(
-      'unknown',
-      'Feedback service is not configured.',
-      404,
-    );
+    throw new AccentifyApiError('unknown', 'Feedback service is not configured.', 404);
   }
 
   const attempt = async (): Promise<Response> =>
@@ -556,10 +575,7 @@ export async function feedbackSentence(input: {
   overall: FeedbackSentenceOverall;
 }): Promise<string> {
   try {
-    const res = await postJsonFeedback<FeedbackSentenceResponse>(
-      '/feedback_sentence',
-      input,
-    );
+    const res = await postJsonFeedback<FeedbackSentenceResponse>('/feedback_sentence', input);
     if (__DEV__) {
       console.log('[Accentify] /feedback_sentence response:', JSON.stringify(res));
     }

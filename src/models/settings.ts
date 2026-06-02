@@ -1,4 +1,9 @@
-// ─── Accessibility Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import type { ImageSourcePropType } from 'react-native';
 
 export type ColorBlindMode = 'None' | 'Deuteranope' | 'Protanope' | 'Tritanope';
@@ -12,7 +17,6 @@ export interface AccessibilityState {
   reduceAnimation: boolean;
 }
 
-// ─── App Preference Models ───
 export type ThemeOption = 'Light' | 'Dark';
 export type AccentColor = 'Lavender' | 'Orange' | 'Blue';
 export type FontSizeOption = 'Small' | 'Medium' | 'Large';
@@ -24,7 +28,6 @@ export interface AppPreferenceState {
   highContrastMode: boolean;
 }
 
-// ─── Notification Models ───
 export type NotificationTab = 'Direct' | 'Overall';
 
 export interface NotificationItem {
@@ -47,7 +50,6 @@ export interface NotificationSection {
   data: NotificationItem[];
 }
 
-// ─── Login Devices Models ───
 export type DevicePlatform = 'ios' | 'android' | 'web';
 
 export interface LoginDevice {
@@ -67,7 +69,6 @@ export interface LoginDevice {
   isCurrent: boolean;
 }
 
-// ─── Profile Settings Models ───
 export type LearningGoal = 'Pronunciation' | 'Vocabulary' | 'Fluency';
 
 export interface ProfileState {

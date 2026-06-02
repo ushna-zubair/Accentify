@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 export { default as HomeScreen } from './HomeScreen';
 export { default as TutorScreen } from './TutorScreen';
 export { default as ProgressScreen } from './ProgressScreen';

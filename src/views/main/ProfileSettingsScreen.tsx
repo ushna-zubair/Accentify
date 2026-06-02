@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import {
   View,
@@ -17,14 +23,17 @@ import { Ionicons, MaterialCommunityIcons, FontAwesome5, Feather } from '@expo/v
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { fonts } from '../../theme/typography';
 import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
-import { useProfileSettingsController, LEARNING_GOALS, COUNTRIES, TIME_ZONES } from '../../controllers';
+import {
+  useProfileSettingsController,
+  LEARNING_GOALS,
+  COUNTRIES,
+  TIME_ZONES,
+} from '../../controllers';
 import PickerModal from '../../components/PickerModal';
 import type { SettingsStackParamList } from '../../models';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 const isWeb = Platform.OS === 'web';
-
-// ------- Subcomponents -------
 
 interface AccountRowProps {
   label: string;
@@ -48,25 +57,28 @@ const AccountRow: React.FC<AccountRowProps> = ({
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc, 400), [tc]);
   return (
-  <TouchableOpacity
-    style={styles.accountRow}
-    activeOpacity={editable || navigable ? 0.6 : 1}
-    onPress={navigable ? onNavigate : editable ? onEdit : undefined}
-    disabled={!editable && !navigable}
-  >
-    <Text style={styles.accountRowLabel}>{label}</Text>
-    <View style={styles.accountRowRight}>
-      <Text style={styles.accountRowValue}>
-        {secureText ? '••••••••' : value}
-      </Text>
-      {editable && (
-        <Feather name="edit-2" size={16} color={tc.textLight} style={{ marginLeft: 6 }} />
-      )}
-      {navigable && (
-        <Ionicons name="chevron-forward" size={18} color={tc.textLight} style={{ marginLeft: 4 }} />
-      )}
-    </View>
-  </TouchableOpacity>
+    <TouchableOpacity
+      style={styles.accountRow}
+      activeOpacity={editable || navigable ? 0.6 : 1}
+      onPress={navigable ? onNavigate : editable ? onEdit : undefined}
+      disabled={!editable && !navigable}
+    >
+      <Text style={styles.accountRowLabel}>{label}</Text>
+      <View style={styles.accountRowRight}>
+        <Text style={styles.accountRowValue}>{secureText ? '••••••••' : value}</Text>
+        {editable && (
+          <Feather name="edit-2" size={16} color={tc.textLight} style={{ marginLeft: 6 }} />
+        )}
+        {navigable && (
+          <Ionicons
+            name="chevron-forward"
+            size={18}
+            color={tc.textLight}
+            style={{ marginLeft: 4 }}
+          />
+        )}
+      </View>
+    </TouchableOpacity>
   );
 };
 
@@ -78,15 +90,14 @@ const RadioCircle: React.FC<RadioCircleProps> = ({ selected }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc, 400), [tc]);
   return (
-  <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
-    {selected && <View style={styles.radioInner} />}
-  </View>
+    <View style={[styles.radioOuter, selected && styles.radioOuterSelected]}>
+      {selected && <View style={styles.radioInner} />}
+    </View>
   );
 };
 
 type Props = NativeStackScreenProps<SettingsStackParamList, 'ProfileSettings'>;
 
-// ------- Main Screen -------
 const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
   const { colors: tc, isDark } = useAppTheme();
   const { width } = useWindowDimensions();
@@ -119,8 +130,7 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
   } = useProfileSettingsController();
   const { handleScroll } = useTabBarScroll();
 
-  // ------- Goal icon renderer -------
-  const renderGoalIcon = (goal: typeof LEARNING_GOALS[number]) => {
+  const renderGoalIcon = (goal: (typeof LEARNING_GOALS)[number]) => {
     const size = 20;
     const color = tc.accent;
     if (goal.iconSet === 'ionicons')
@@ -130,7 +140,6 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     return <MaterialCommunityIcons name={goal.icon as any} size={size} color={color} />;
   };
 
-  // ------- Loading state -------
   if (isLoading) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -142,7 +151,6 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  // ------- Error state -------
   if (error) {
     return (
       <SafeAreaView style={styles.safeArea}>
@@ -157,7 +165,6 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  // ------- Shared section renderers -------
   const renderProfileCard = () => (
     <View style={styles.profileCard}>
       <TouchableOpacity
@@ -186,7 +193,11 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
       <Text style={styles.profileName}>{profile.username || 'User'}</Text>
       <Text style={styles.profileEmail}>{profile.email}</Text>
       <View style={styles.profileActions}>
-        <TouchableOpacity style={styles.editProfileBtn} activeOpacity={0.7} onPress={startEditUsername}>
+        <TouchableOpacity
+          style={styles.editProfileBtn}
+          activeOpacity={0.7}
+          onPress={startEditUsername}
+        >
           <Feather name="edit-2" size={14} color={tc.accent} />
           <Text style={styles.editProfileBtnText}>Edit Profile</Text>
         </TouchableOpacity>
@@ -213,9 +224,19 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.divider} />
         <AccountRow label="Password" value="" secureText editable onEdit={startEditPassword} />
         <View style={styles.divider} />
-        <AccountRow label="Country" value={profile.country} navigable onNavigate={openCountryPicker} />
+        <AccountRow
+          label="Country"
+          value={profile.country}
+          navigable
+          onNavigate={openCountryPicker}
+        />
         <View style={styles.divider} />
-        <AccountRow label="Time Zone" value={profile.timeZone} navigable onNavigate={openTimeZonePicker} />
+        <AccountRow
+          label="Time Zone"
+          value={profile.timeZone}
+          navigable
+          onNavigate={openTimeZonePicker}
+        />
       </View>
     </>
   );
@@ -301,7 +322,9 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
             )}
             <TextInput
               style={styles.modalInput}
-              placeholder={editingField === 'username' ? 'Enter new username' : 'Enter new password'}
+              placeholder={
+                editingField === 'username' ? 'Enter new username' : 'Enter new password'
+              }
               placeholderTextColor={tc.textMuted}
               secureTextEntry={editingField === 'password'}
               value={fieldValue}
@@ -329,11 +352,13 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     </>
   );
 
-  // ─── Web two-column layout ───
   if (isWide) {
     return (
       <View style={styles.webContainer}>
-        <ScrollView contentContainerStyle={styles.webScrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.webScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           <View style={styles.webHeader}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
               <Ionicons name="arrow-back" size={24} color={tc.text} />
@@ -356,7 +381,6 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  // ─── Mobile Layout ───
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
@@ -383,7 +407,6 @@ const ProfileSettingsScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-// ------- Styles -------
 const createStyles = (tc: ThemeColors, screenWidth: number) => {
   const isWide = isWeb && screenWidth >= 700;
 
@@ -420,7 +443,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       color: tc.text,
     },
 
-    // ─── Web Layout ───
     webContainer: {
       flex: 1,
       backgroundColor: tc.background,
@@ -638,7 +660,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       fontSize: 14,
       color: tc.text,
     },
-    // Modals
     modalOverlay: {
       flex: 1,
       backgroundColor: tc.overlay,

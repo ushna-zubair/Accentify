@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * stringUtils.ts
  *
  * Shared string-comparison helpers used across exercise controllers.
@@ -6,20 +12,11 @@
  * controller doesn't carry its own duplicate copy.
  */
 
-// ═══════════════════════════════════════════════
-//  NORMALISATION
-// ═══════════════════════════════════════════════
-
 /**
  * Strip a word down to lowercase alphanumerics + apostrophes.
  * Used before fuzzy comparison so punctuation doesn't skew distance.
  */
-export const normalize = (w: string): string =>
-  w.toLowerCase().replace(/[^a-z0-9']/g, '');
-
-// ═══════════════════════════════════════════════
-//  LEVENSHTEIN DISTANCE
-// ═══════════════════════════════════════════════
+export const normalize = (w: string): string => w.toLowerCase().replace(/[^a-z0-9']/g, '');
 
 /**
  * Classic dynamic-programming Levenshtein edit distance.
@@ -28,9 +25,7 @@ export const normalize = (w: string): string =>
 export const levenshtein = (a: string, b: string): number => {
   const m = a.length;
   const n = b.length;
-  const dp: number[][] = Array.from({ length: m + 1 }, () =>
-    Array(n + 1).fill(0),
-  );
+  const dp: number[][] = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
   for (let i = 0; i <= m; i++) dp[i][0] = i;
   for (let j = 0; j <= n; j++) dp[0][j] = j;
   for (let i = 1; i <= m; i++) {

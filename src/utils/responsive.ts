@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Accentify – Responsive Scaling Utilities
  *
  * Provides scale functions based on a 375×812 design baseline (iPhone X).
@@ -14,7 +20,6 @@
 import { useWindowDimensions } from 'react-native';
 import { useMemo } from 'react';
 
-// ─── Design baseline (iPhone X) ───
 const BASE_WIDTH = 375;
 const BASE_HEIGHT = 812;
 
@@ -37,13 +42,8 @@ export const verticalScale = (size: number, screenHeight: number): number =>
  * `factor` controls how aggressively the value scales (0 = no scaling, 1 = linear).
  * Default factor 0.5 gives a nice middle-ground.
  */
-export const moderateScale = (
-  size: number,
-  screenWidth: number,
-  factor = 0.5,
-): number => size + (scale(size, screenWidth) - size) * factor;
-
-// ─── Reactive Hook ───
+export const moderateScale = (size: number, screenWidth: number, factor = 0.5): number =>
+  size + (scale(size, screenWidth) - size) * factor;
 
 export interface ResponsiveValues {
   /** Current screen width */
@@ -74,8 +74,7 @@ export const useResponsive = (): ResponsiveValues => {
   return useMemo(() => {
     const s = (size: number) => (width / BASE_WIDTH) * size;
     const vs = (size: number) => (height / BASE_HEIGHT) * size;
-    const ms = (size: number, factor = 0.5) =>
-      size + (s(size) - size) * factor;
+    const ms = (size: number, factor = 0.5) => size + (s(size) - size) * factor;
 
     const horizontalPadding = s(16) * 2;
     const gap = s(12);

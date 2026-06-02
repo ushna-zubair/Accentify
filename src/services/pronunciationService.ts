@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Frontend service for the pronunciation exercise flow.
  *
  * All evaluation goes through the Accentify model service on Hugging Face
@@ -6,14 +12,7 @@
  * endpoint by default; if EXPO_PUBLIC_USE_FIRESTORE_SENTENCES is set, they are
  * pulled from the `pronunciation_sentences` Firestore collection instead.
  */
-import {
-  collection,
-  getDocs,
-  limit as fsLimit,
-  orderBy,
-  query,
-  where,
-} from 'firebase/firestore';
+import { collection, getDocs, limit as fsLimit, orderBy, query, where } from 'firebase/firestore';
 import Constants from 'expo-constants';
 import { db } from '../config/firebase';
 import {
@@ -38,8 +37,6 @@ export function detectAudioEncoding(uri: string): 'wav' | 'm4a' | 'mp3' | 'webm'
   if (lower.endsWith('.webm') || lower.includes('webm')) return 'webm';
   return 'm4a';
 }
-
-// ─── Types ───
 
 export interface PronunciationSentenceDTO {
   id: string;
@@ -81,8 +78,6 @@ export interface TranscribeResult {
   };
 }
 
-// ─── Sentence fetching ───
-
 export function difficultyForCefr(level: string | undefined): 'easy' | 'medium' | 'hard' {
   switch ((level ?? '').toUpperCase()) {
     case 'A1':
@@ -101,8 +96,7 @@ export function difficultyForCefr(level: string | undefined): 'easy' | 'medium' 
 
 function useFirestoreSource(): boolean {
   const extra =
-    (Constants.expoConfig?.extra as Record<string, string | undefined> | undefined) ??
-    {};
+    (Constants.expoConfig?.extra as Record<string, string | undefined> | undefined) ?? {};
   return extra.USE_FIRESTORE_SENTENCES === 'true';
 }
 
@@ -197,8 +191,6 @@ export async function fetchSentences(
   }
   return fetchSentencesFromHF(limit, cefrLevel);
 }
-
-// ─── Result adaptation ───
 
 /** Minimum per-word pronunciation_score that counts the word as "heard well." */
 const WORD_PRONUNCIATION_FLOOR = 0.6;

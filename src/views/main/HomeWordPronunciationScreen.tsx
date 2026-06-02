@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Home-tab entry point for the word-pronunciation exercise. Mirrors the
  * sentence-level HomePronunciationScreen wrapper: passes a default lesson id
  * and lets users drop back to the home screen on exit/completion.

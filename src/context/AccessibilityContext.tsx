@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ColorBlindMode, FontStyleOption, AccessibilityState } from '../models';
@@ -61,20 +67,19 @@ export const AccessibilityProvider: React.FC<{ children: ReactNode }> = ({ child
     [persist],
   );
 
-  const value = useMemo<AccessibilityContextType>(() => ({
-    ...state,
-    setTextToSpeech: (v: boolean) => update({ textToSpeech: v }),
-    setColorBlindMode: (v: ColorBlindMode) => update({ colorBlindMode: v }),
-    setFontStyle: (v: FontStyleOption) => update({ fontStyle: v }),
-    setTranscript: (v: boolean) => update({ transcript: v }),
-    setReduceAnimation: (v: boolean) => update({ reduceAnimation: v }),
-  }), [state, update]);
-
-  return (
-    <AccessibilityContext.Provider value={value}>
-      {children}
-    </AccessibilityContext.Provider>
+  const value = useMemo<AccessibilityContextType>(
+    () => ({
+      ...state,
+      setTextToSpeech: (v: boolean) => update({ textToSpeech: v }),
+      setColorBlindMode: (v: ColorBlindMode) => update({ colorBlindMode: v }),
+      setFontStyle: (v: FontStyleOption) => update({ fontStyle: v }),
+      setTranscript: (v: boolean) => update({ transcript: v }),
+      setReduceAnimation: (v: boolean) => update({ reduceAnimation: v }),
+    }),
+    [state, update],
   );
+
+  return <AccessibilityContext.Provider value={value}>{children}</AccessibilityContext.Provider>;
 };
 
 export const useAccessibility = (): AccessibilityContextType => {

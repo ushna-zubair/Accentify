@@ -1,4 +1,10 @@
-import React, { useState , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -25,7 +31,8 @@ const CODE_LENGTH = 6;
 const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } = route.params;
+  const { profile, appPin, biometricsEnabled, learningGoals, nativeLanguage, englishLevel } =
+    route.params;
   const { completeOnboarding } = useAuth();
   const { code, handleKeyPress, isComplete, value: codeValue } = useCodeInput(CODE_LENGTH);
   const [loading, setLoading] = useState(false);
@@ -88,7 +95,7 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
         }
       } else {
         // Pseudo-random data pattern
-        row.push(((r * 7 + c * 13 + r * c) % 3) === 0);
+        row.push((r * 7 + c * 13 + r * c) % 3 === 0);
       }
     }
     qrCells.push(row);
@@ -138,17 +145,12 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* Step 3 */}
-        <Text style={styles.stepText}>
-          Step 3: Enter code as shown on the{'\n'}application
-        </Text>
+        <Text style={styles.stepText}>Step 3: Enter code as shown on the{'\n'}application</Text>
 
         {/* Code Input Boxes */}
         <View style={styles.codeRow}>
           {code.map((digit, index) => (
-            <View
-              key={index}
-              style={[styles.codeBox, digit !== '' && styles.codeBoxFilled]}
-            >
+            <View key={index} style={[styles.codeBox, digit !== '' && styles.codeBoxFilled]}>
               <Text style={styles.codeDigit}>{digit}</Text>
             </View>
           ))}
@@ -181,126 +183,127 @@ const SetupAuthenticatorScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-  },
-  /* ── Header ── */
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    paddingBottom: 8,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: tc.text,
-  },
-  /* ── Steps ── */
-  stepText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  accentifyText: {
-    color: tc.accent,
-    fontFamily: fonts.bold,
-  },
-  /* ── QR Code ── */
-  qrContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginVertical: 12,
-    padding: 12,
-    backgroundColor: tc.white,
-    borderRadius: 12,
-    alignSelf: 'center',
-  },
-  qrCode: {
-    flexDirection: 'column',
-    overflow: 'hidden',
-  },
-  qrRow: {
-    flexDirection: 'row',
-  },
-  /* ── Code Input ── */
-  codeRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 10,
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  codeBox: {
-    width: 46,
-    height: 50,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  codeBoxFilled: {
-    borderColor: tc.accent,
-    backgroundColor: tc.accentMuted,
-  },
-  codeDigit: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-  },
-  /* ── Mini Keypad ── */
-  miniKeypad: {
-    marginTop: 4,
-    marginBottom: 12,
-  },
-  /* ── Warning ── */
-  warningText: {
-    fontFamily: fonts.medium,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  /* ── Continue Button ── */
-  continueButton: {
-    width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  continueButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+      paddingBottom: 32,
+    },
+    /* ── Header ── */
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 12,
+      paddingBottom: 8,
+    },
+    backButton: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 15,
+      color: tc.text,
+    },
+    /* ── Steps ── */
+    stepText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginTop: 16,
+      marginBottom: 8,
+    },
+    accentifyText: {
+      color: tc.accent,
+      fontFamily: fonts.bold,
+    },
+    /* ── QR Code ── */
+    qrContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginVertical: 12,
+      padding: 12,
+      backgroundColor: tc.white,
+      borderRadius: 12,
+      alignSelf: 'center',
+    },
+    qrCode: {
+      flexDirection: 'column',
+      overflow: 'hidden',
+    },
+    qrRow: {
+      flexDirection: 'row',
+    },
+    /* ── Code Input ── */
+    codeRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      gap: 10,
+      marginTop: 12,
+      marginBottom: 8,
+    },
+    codeBox: {
+      width: 46,
+      height: 50,
+      borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    codeBoxFilled: {
+      borderColor: tc.accent,
+      backgroundColor: tc.accentMuted,
+    },
+    codeDigit: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+    },
+    /* ── Mini Keypad ── */
+    miniKeypad: {
+      marginTop: 4,
+      marginBottom: 12,
+    },
+    /* ── Warning ── */
+    warningText: {
+      fontFamily: fonts.medium,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 20,
+      marginBottom: 20,
+    },
+    /* ── Continue Button ── */
+    continueButton: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    continueButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+  });
 
 export default SetupAuthenticatorScreen;

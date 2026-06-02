@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useManageLessonsController.ts
  *
  * Controller for the Admin Manage Lessons screen.
@@ -62,7 +68,6 @@ export const useManageLessonsController = () => {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // ── Tabs & filters ──
   const [activeTab, setActiveTab] = useState<ManageLessonsTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<LessonCategory | 'all'>('all');
@@ -103,27 +108,25 @@ export const useManageLessonsController = () => {
   useEffect(() => {
     let ignore = false;
     fetchAll();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchAll]);
 
-  // ── Stats ──
   const stats: AdminLessonStats = useMemo(() => computeLessonStats(lessons), [lessons]);
 
   // ── Filtered & sorted ──
   const filteredLessons = useMemo(() => {
     let result = [...lessons];
 
-    // Tab filter
     if (activeTab !== 'all') {
       result = result.filter((l) => l.status === activeTab);
     }
 
-    // Category filter
     if (categoryFilter !== 'all') {
       result = result.filter((l) => l.category === categoryFilter);
     }
 
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -135,7 +138,6 @@ export const useManageLessonsController = () => {
       );
     }
 
-    // Sort
     switch (sortBy) {
       case 'order':
         result.sort((a, b) => a.order - b.order);
@@ -227,12 +229,12 @@ export const useManageLessonsController = () => {
   }, []);
 
   // ── Update form field ──
-  const updateFormField = useCallback(<K extends keyof AdminLessonFormData>(
-    key: K,
-    value: AdminLessonFormData[K],
-  ) => {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updateFormField = useCallback(
+    <K extends keyof AdminLessonFormData>(key: K, value: AdminLessonFormData[K]) => {
+      setFormData((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   // ── Focus tips management ──
   const addFocusTip = useCallback(() => {
@@ -270,7 +272,9 @@ export const useManageLessonsController = () => {
     if (!lessonId.trim()) return;
     setFormData((prev) => ({
       ...prev,
-      prerequisites: prev.prerequisites.includes(lessonId) ? prev.prerequisites : [...prev.prerequisites, lessonId],
+      prerequisites: prev.prerequisites.includes(lessonId)
+        ? prev.prerequisites
+        : [...prev.prerequisites, lessonId],
     }));
   }, []);
 
@@ -288,14 +292,17 @@ export const useManageLessonsController = () => {
     setPairFormVisible(true);
   }, []);
 
-  const openEditPairForm = useCallback((index: number) => {
-    const pair = formData.vocabPairs[index];
-    if (pair) {
-      setEditingPairIndex(index);
-      setPairFormData({ ...pair });
-      setPairFormVisible(true);
-    }
-  }, [formData.vocabPairs]);
+  const openEditPairForm = useCallback(
+    (index: number) => {
+      const pair = formData.vocabPairs[index];
+      if (pair) {
+        setEditingPairIndex(index);
+        setPairFormData({ ...pair });
+        setPairFormVisible(true);
+      }
+    },
+    [formData.vocabPairs],
+  );
 
   const closePairForm = useCallback(() => {
     setPairFormVisible(false);
@@ -303,12 +310,12 @@ export const useManageLessonsController = () => {
     setPairFormData({ ...DEFAULT_VOCAB_PAIR });
   }, []);
 
-  const updatePairField = useCallback(<K extends keyof AdminVocabPairForm>(
-    key: K,
-    value: AdminVocabPairForm[K],
-  ) => {
-    setPairFormData((prev) => ({ ...prev, [key]: value }));
-  }, []);
+  const updatePairField = useCallback(
+    <K extends keyof AdminVocabPairForm>(key: K, value: AdminVocabPairForm[K]) => {
+      setPairFormData((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const savePair = useCallback(() => {
     if (!pairFormData.basicWord.trim() || !pairFormData.vocabWord.trim()) return;
@@ -357,7 +364,12 @@ export const useManageLessonsController = () => {
         setLessons((prev) =>
           prev.map((l) =>
             l.id === editingLesson.id
-              ? { ...l, ...lessonFields, vocabPairCount: vocabPairs.length, updatedAt: new Date().toISOString() }
+              ? {
+                  ...l,
+                  ...lessonFields,
+                  vocabPairCount: vocabPairs.length,
+                  updatedAt: new Date().toISOString(),
+                }
               : l,
           ),
         );
@@ -394,20 +406,17 @@ export const useManageLessonsController = () => {
   }, [formData, editingLesson, adminUid, closeForm]);
 
   // ── Delete ──
-  const handleDelete = useCallback(
-    async (lessonId: string) => {
-      try {
-        setSubmitting(true);
-        await deleteLesson(lessonId);
-        setLessons((prev) => prev.filter((l) => l.id !== lessonId));
-      } catch (e: unknown) {
-        setError(e instanceof Error ? e.message : 'Failed to delete lesson');
-      } finally {
-        setSubmitting(false);
-      }
-    },
-    [],
-  );
+  const handleDelete = useCallback(async (lessonId: string) => {
+    try {
+      setSubmitting(true);
+      await deleteLesson(lessonId);
+      setLessons((prev) => prev.filter((l) => l.id !== lessonId));
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Failed to delete lesson');
+    } finally {
+      setSubmitting(false);
+    }
+  }, []);
 
   // ── Status change ──
   const handleStatusChange = useCallback(
@@ -422,7 +431,9 @@ export const useManageLessonsController = () => {
 
         setLessons((prev) =>
           prev.map((l) =>
-            l.id === lessonId ? { ...l, status: newStatus, updatedAt: new Date().toISOString() } : l,
+            l.id === lessonId
+              ? { ...l, status: newStatus, updatedAt: new Date().toISOString() }
+              : l,
           ),
         );
 
@@ -456,7 +467,6 @@ export const useManageLessonsController = () => {
   );
 
   return {
-    // Data
     lessons: filteredLessons,
     allLessons: lessons,
     stats,
@@ -464,7 +474,6 @@ export const useManageLessonsController = () => {
     error,
     submitting,
 
-    // Tabs & filters
     activeTab,
     setActiveTab,
     searchQuery,
@@ -474,7 +483,6 @@ export const useManageLessonsController = () => {
     sortBy,
     setSortBy,
 
-    // Form
     formVisible,
     editingLesson,
     formData,
@@ -510,7 +518,6 @@ export const useManageLessonsController = () => {
     savePair,
     removePair,
 
-    // Actions
     handleDelete,
     handleStatusChange,
     handleDuplicate,

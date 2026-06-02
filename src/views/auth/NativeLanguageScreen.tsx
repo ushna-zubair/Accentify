@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -76,8 +82,7 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
     if (!searchQuery.trim()) return LANGUAGES;
     const q = searchQuery.trim().toLowerCase();
     return LANGUAGES.filter(
-      (lang) =>
-        lang.name.toLowerCase().includes(q) || lang.nativeName.toLowerCase().includes(q)
+      (lang) => lang.name.toLowerCase().includes(q) || lang.nativeName.toLowerCase().includes(q),
     );
   }, [searchQuery]);
 
@@ -230,183 +235,184 @@ const NativeLanguageScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 16,
-    paddingBottom: 20,
-  },
-  skipText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    color: tc.text,
-  },
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tc.white,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 48,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    marginBottom: 28,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: tc.text,
-    height: '100%',
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-    color: tc.accent,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'left',
-    lineHeight: 18,
-    marginBottom: 28,
-  },
-  languagePicker: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: tc.white,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    height: 52,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-  },
-  languagePickerText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  languagePickerPlaceholder: {
-    color: tc.textMuted,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: tc.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: '90%',
-    maxHeight: '75%',
-    padding: 16,
-  },
-  modalTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.text,
-    marginBottom: 12,
-  },
-  modalSearchInput: {
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.inputBg,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    color: tc.text,
-    fontFamily: fonts.regular,
-    fontSize: 14,
-  },
-  languageOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 4,
-    borderBottomWidth: 1,
-    borderBottomColor: tc.inputBorder,
-  },
-  languageOptionSelected: {
-    backgroundColor: tc.accentMuted,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-  },
-  languageOptionName: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  languageOptionNative: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: tc.textMuted,
-    marginTop: 2,
-  },
-  modalClose: {
-    marginTop: 12,
-    alignSelf: 'center',
-  },
-  modalCloseText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.accent,
-  },
-  bottomContainer: {
-    marginTop: 'auto',
-    paddingBottom: 32,
-    paddingTop: 20,
-    alignItems: 'center',
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    gap: 12,
-    minWidth: 160,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  nextButtonDisabled: {
-    opacity: 0.5,
-  },
-  nextButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 16,
+      paddingBottom: 20,
+    },
+    skipText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+    },
+    searchBar: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.white,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      height: 48,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      marginBottom: 28,
+      gap: 10,
+    },
+    searchInput: {
+      flex: 1,
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      color: tc.text,
+      height: '100%',
+    },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 22,
+      color: tc.accent,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'left',
+      lineHeight: 18,
+      marginBottom: 28,
+    },
+    languagePicker: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: tc.white,
+      borderRadius: 14,
+      paddingHorizontal: 16,
+      height: 52,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+    },
+    languagePickerText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    languagePickerPlaceholder: {
+      color: tc.textMuted,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: tc.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: tc.white,
+      borderRadius: 16,
+      width: '90%',
+      maxHeight: '75%',
+      padding: 16,
+    },
+    modalTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.text,
+      marginBottom: 12,
+    },
+    modalSearchInput: {
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.inputBg,
+      paddingHorizontal: 12,
+      marginBottom: 12,
+      color: tc.text,
+      fontFamily: fonts.regular,
+      fontSize: 14,
+    },
+    languageOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: 4,
+      borderBottomWidth: 1,
+      borderBottomColor: tc.inputBorder,
+    },
+    languageOptionSelected: {
+      backgroundColor: tc.accentMuted,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+    },
+    languageOptionName: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    languageOptionNative: {
+      fontFamily: fonts.regular,
+      fontSize: 12,
+      color: tc.textMuted,
+      marginTop: 2,
+    },
+    modalClose: {
+      marginTop: 12,
+      alignSelf: 'center',
+    },
+    modalCloseText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.accent,
+    },
+    bottomContainer: {
+      marginTop: 'auto',
+      paddingBottom: 32,
+      paddingTop: 20,
+      alignItems: 'center',
+    },
+    nextButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      paddingHorizontal: 32,
+      gap: 12,
+      minWidth: 160,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    nextButtonDisabled: {
+      opacity: 0.5,
+    },
+    nextButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+    arrowCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
 
 export default NativeLanguageScreen;

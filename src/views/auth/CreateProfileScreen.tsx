@@ -1,4 +1,10 @@
-import React, { useEffect, useState , useMemo} from 'react';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -159,7 +165,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   }, []);
 
   const filteredCountries = countries.filter((country) =>
-    country.name.toLowerCase().includes(countryQuery.trim().toLowerCase())
+    country.name.toLowerCase().includes(countryQuery.trim().toLowerCase()),
   );
 
   const handleContinue = async () => {
@@ -192,19 +198,23 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
         setLoading(false);
         Alert.alert(
           'Profile photo failed',
-          'We couldn\'t save your photo. You can continue without it or try again.',
+          "We couldn't save your photo. You can continue without it or try again.",
           [
             { text: 'Try again', style: 'cancel' },
-            { text: 'Continue without photo', onPress: () => navigation.navigate('LearningGoals', {
-              profile: {
-                fullName,
-                nickName,
-                dateOfBirth: formattedDOB,
-                phoneNumber: fullPhoneNumber,
-                gender: selectedGender,
-                profilePictureUrl: '',
-              },
-            }) },
+            {
+              text: 'Continue without photo',
+              onPress: () =>
+                navigation.navigate('LearningGoals', {
+                  profile: {
+                    fullName,
+                    nickName,
+                    dateOfBirth: formattedDOB,
+                    phoneNumber: fullPhoneNumber,
+                    gender: selectedGender,
+                    profilePictureUrl: '',
+                  },
+                }),
+            },
           ],
         );
         return;
@@ -278,10 +288,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
           {navigation.canGoBack() ? (
             <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -311,10 +318,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={() => setImageModalVisible(true)}
-          >
+          <TouchableOpacity style={styles.editButton} onPress={() => setImageModalVisible(true)}>
             <FontAwesome5 name="pen" size={14} color={tc.white} />
           </TouchableOpacity>
         </View>
@@ -333,10 +337,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           leftIcon={<FontAwesome5 name="user-circle" size={18} color={tc.accent} />}
         />
 
-        <TouchableOpacity
-          onPress={() => setShowDatePicker(true)}
-          style={styles.inputTouchable}
-        >
+        <TouchableOpacity onPress={() => setShowDatePicker(true)} style={styles.inputTouchable}>
           <View style={styles.dateInputContainer}>
             <FontAwesome5 name="calendar-alt" size={18} color={tc.accent} />
             <Text style={[styles.inputPlaceholder, !dateOfBirth && styles.placeholderText]}>
@@ -415,25 +416,27 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                 {Array.from({ length: getStartDay(calendarYear, calendarMonth) }).map((_, idx) => (
                   <View key={`empty-${idx}`} style={styles.dayCell} />
                 ))}
-                {Array.from({ length: getDaysInMonth(calendarYear, calendarMonth) }).map((_, idx) => {
-                  const day = idx + 1;
-                  const isSelected =
-                    dateOfBirth &&
-                    dateOfBirth.getFullYear() === calendarYear &&
-                    dateOfBirth.getMonth() === calendarMonth &&
-                    dateOfBirth.getDate() === day;
-                  return (
-                    <TouchableOpacity
-                      key={`day-${day}`}
-                      style={[styles.dayCell, isSelected && styles.dayCellSelected]}
-                      onPress={() => selectDate(day)}
-                    >
-                      <Text style={[styles.dayText, isSelected && styles.dayTextSelected]}>
-                        {day}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+                {Array.from({ length: getDaysInMonth(calendarYear, calendarMonth) }).map(
+                  (_, idx) => {
+                    const day = idx + 1;
+                    const isSelected =
+                      dateOfBirth &&
+                      dateOfBirth.getFullYear() === calendarYear &&
+                      dateOfBirth.getMonth() === calendarMonth &&
+                      dateOfBirth.getDate() === day;
+                    return (
+                      <TouchableOpacity
+                        key={`day-${day}`}
+                        style={[styles.dayCell, isSelected && styles.dayCellSelected]}
+                        onPress={() => selectDate(day)}
+                      >
+                        <Text style={[styles.dayText, isSelected && styles.dayTextSelected]}>
+                          {day}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  },
+                )}
               </View>
 
               <View style={styles.dateModalActions}>
@@ -463,24 +466,13 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setCountryModalVisible(true)}
         >
           <View style={styles.countryBadge}>
-            <Text style={styles.countryFlag}>
-              {getFlagEmoji(selectedCountry?.code || 'AU')}
-            </Text>
-            <Text style={styles.countryBadgeText}>
-              {selectedCountry?.code || 'AU'}
-            </Text>
+            <Text style={styles.countryFlag}>{getFlagEmoji(selectedCountry?.code || 'AU')}</Text>
+            <Text style={styles.countryBadgeText}>{selectedCountry?.code || 'AU'}</Text>
           </View>
           <Text style={styles.countryCode}>
-            {selectedCountry?.callingCode
-              ? `(${selectedCountry.callingCode})`
-              : '(+61)'}
+            {selectedCountry?.callingCode ? `(${selectedCountry.callingCode})` : '(+61)'}
           </Text>
-          <Text
-            style={[
-              styles.countryName,
-              !selectedCountry && styles.placeholderText,
-            ]}
-          >
+          <Text style={[styles.countryName, !selectedCountry && styles.placeholderText]}>
             {selectedCountry?.name || 'Select Country'}
           </Text>
         </TouchableOpacity>
@@ -493,10 +485,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
           leftIcon={<FontAwesome5 name="phone" size={18} color={tc.accent} />}
         />
 
-        <TouchableOpacity
-          onPress={() => setShowGenderModal(true)}
-          style={styles.genderDropdown}
-        >
+        <TouchableOpacity onPress={() => setShowGenderModal(true)} style={styles.genderDropdown}>
           <Text style={[styles.genderText, !selectedGender && styles.placeholderText]}>
             {selectedGender || 'Gender'}
           </Text>
@@ -571,9 +560,7 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                       }}
                     >
                       <View style={styles.countryOptionLeft}>
-                        <Text style={styles.countryOptionFlag}>
-                          {getFlagEmoji(item.code)}
-                        </Text>
+                        <Text style={styles.countryOptionFlag}>{getFlagEmoji(item.code)}</Text>
                         <Text style={styles.countryOptionText}>{item.name}</Text>
                       </View>
                       <Text style={styles.countryOptionCode}>
@@ -647,7 +634,12 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
                       setShowYearPicker(false);
                     }}
                   >
-                    <Text style={[styles.yearOptionText, item === calendarYear && styles.yearOptionTextActive]}>
+                    <Text
+                      style={[
+                        styles.yearOptionText,
+                        item === calendarYear && styles.yearOptionTextActive,
+                      ]}
+                    >
                       {item}
                     </Text>
                     {item === calendarYear && (
@@ -668,391 +660,392 @@ const CreateProfileScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingVertical: 20,
-  },
-  header: {
-    marginBottom: 24,
-  },
-  backRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  backArrow: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.text,
-  },
-  avatarSection: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  avatarPlaceholder: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: tc.accentMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-    overflow: 'hidden',
-  },
-  avatarInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#F5F5F5',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  editButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: tc.success,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'absolute',
-    bottom: 0,
-    right: -6,
-  },
-  inputTouchable: {
-    marginBottom: 16,
-  },
-  datePickerWrap: {
-    marginBottom: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    backgroundColor: tc.white,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-  },
-  dateModalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: 320,
-    padding: 12,
-  },
-  calendarHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  calendarTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 12,
-    color: tc.text,
-  },
-  calendarNav: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.inputBg,
-  },
-  weekRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  weekDay: {
-    width: '14.2%',
-    textAlign: 'center',
-    fontFamily: fonts.semiBold,
-    fontSize: 10,
-    color: tc.textMuted,
-  },
-  daysGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  dayCell: {
-    width: '14.2%',
-    aspectRatio: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 2,
-    borderRadius: 6,
-  },
-  dayCellSelected: {
-    backgroundColor: tc.accent,
-  },
-  dayText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 10,
-    color: tc.text,
-  },
-  dayTextSelected: {
-    color: tc.white,
-  },
-  dateInput: {
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.inputBg,
-    paddingHorizontal: 12,
-    color: tc.text,
-  },
-  dateModalActions: {
-    marginTop: 12,
-    alignItems: 'flex-end',
-  },
-  dateModalButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-  },
-  dateModalButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.accent,
-  },
-  dateInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tc.inputBg,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    borderRadius: 14,
-    height: 56,
-    paddingHorizontal: 16,
-  },
-  inputPlaceholder: {
-    flex: 1,
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: tc.text,
-    marginLeft: 8,
-  },
-  placeholderText: {
-    color: tc.textMuted,
-  },
-  countryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tc.inputBg,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    borderRadius: 14,
-    height: 56,
-    paddingHorizontal: 16,
-    gap: 8,
-    marginBottom: 16,
-  },
-  countryBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    backgroundColor: tc.accent,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  countryFlag: {
-    fontSize: 14,
-  },
-  countryBadgeText: {
-    fontFamily: fonts.bold,
-    color: tc.white,
-    fontSize: 12,
-  },
-  countryCode: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  countryName: {
-    flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.text,
-    textAlign: 'right',
-  },
-  genderDropdown: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: tc.inputBg,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    borderRadius: 14,
-    height: 56,
-    paddingHorizontal: 16,
-    marginBottom: 24,
-  },
-  genderText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: tc.overlay,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: '80%',
-    maxHeight: 300,
-    paddingVertical: 8,
-  },
-  imageModalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: '85%',
-    padding: 16,
-  },
-  imageAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: tc.inputBorder,
-  },
-  imageActionText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.text,
-  },
-  countryModalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: '90%',
-    maxHeight: '80%',
-    padding: 16,
-  },
-  modalTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.text,
-    marginBottom: 12,
-  },
-  searchInput: {
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: tc.inputBorder,
-    backgroundColor: tc.inputBg,
-    paddingHorizontal: 12,
-    marginBottom: 12,
-    color: tc.text,
-  },
-  loadingWrap: {
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  countryOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: tc.inputBorder,
-  },
-  countryOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  countryOptionFlag: {
-    fontSize: 16,
-  },
-  countryOptionText: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.text,
-  },
-  countryOptionCode: {
-    fontSize: 12,
-    color: tc.textMuted,
-  },
-  modalClose: {
-    marginTop: 12,
-    alignSelf: 'center',
-  },
-  modalCloseText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.accent,
-  },
-  genderOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: tc.inputBorder,
-  },
-  genderOptionText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  continueButtonContainer: {
-    marginTop: 20,
-  },
-  emailDisplay: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: tc.inputBg,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    borderRadius: 14,
-    height: 56,
-    paddingHorizontal: 16,
-    marginBottom: 16,
-    opacity: 0.7,
-  },
-  emailDisplayText: {
-    flex: 1,
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.textMuted,
-  },
-  yearModalContent: {
-    backgroundColor: tc.white,
-    borderRadius: 16,
-    width: '70%',
-    maxHeight: 360,
-    padding: 16,
-  },
-  yearOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 44,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: tc.inputBorder,
-  },
-  yearOptionText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  yearOptionTextActive: {
-    fontFamily: fonts.bold,
-    color: tc.accent,
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingHorizontal: 24,
+      paddingVertical: 20,
+    },
+    header: {
+      marginBottom: 24,
+    },
+    backRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    backArrow: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.text,
+    },
+    avatarSection: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    avatarPlaceholder: {
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: tc.accentMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+      overflow: 'hidden',
+    },
+    avatarInner: {
+      width: 60,
+      height: 60,
+      borderRadius: 30,
+      backgroundColor: '#F5F5F5',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarImage: {
+      width: '100%',
+      height: '100%',
+    },
+    editButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: tc.success,
+      alignItems: 'center',
+      justifyContent: 'center',
+      position: 'absolute',
+      bottom: 0,
+      right: -6,
+    },
+    inputTouchable: {
+      marginBottom: 16,
+    },
+    datePickerWrap: {
+      marginBottom: 16,
+      borderRadius: 12,
+      overflow: 'hidden',
+      backgroundColor: tc.white,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+    },
+    dateModalContent: {
+      backgroundColor: tc.white,
+      borderRadius: 16,
+      width: 320,
+      padding: 12,
+    },
+    calendarHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    },
+    calendarTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 12,
+      color: tc.text,
+    },
+    calendarNav: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.inputBg,
+    },
+    weekRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+    },
+    weekDay: {
+      width: '14.2%',
+      textAlign: 'center',
+      fontFamily: fonts.semiBold,
+      fontSize: 10,
+      color: tc.textMuted,
+    },
+    daysGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    dayCell: {
+      width: '14.2%',
+      aspectRatio: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 2,
+      borderRadius: 6,
+    },
+    dayCellSelected: {
+      backgroundColor: tc.accent,
+    },
+    dayText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 10,
+      color: tc.text,
+    },
+    dayTextSelected: {
+      color: tc.white,
+    },
+    dateInput: {
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.inputBg,
+      paddingHorizontal: 12,
+      color: tc.text,
+    },
+    dateModalActions: {
+      marginTop: 12,
+      alignItems: 'flex-end',
+    },
+    dateModalButton: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+    },
+    dateModalButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.accent,
+    },
+    dateInputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.inputBg,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      borderRadius: 14,
+      height: 56,
+      paddingHorizontal: 16,
+    },
+    inputPlaceholder: {
+      flex: 1,
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      color: tc.text,
+      marginLeft: 8,
+    },
+    placeholderText: {
+      color: tc.textMuted,
+    },
+    countryContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.inputBg,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      borderRadius: 14,
+      height: 56,
+      paddingHorizontal: 16,
+      gap: 8,
+      marginBottom: 16,
+    },
+    countryBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      backgroundColor: tc.accent,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    countryFlag: {
+      fontSize: 14,
+    },
+    countryBadgeText: {
+      fontFamily: fonts.bold,
+      color: tc.white,
+      fontSize: 12,
+    },
+    countryCode: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    countryName: {
+      flex: 1,
+      fontFamily: fonts.medium,
+      fontSize: 14,
+      color: tc.text,
+      textAlign: 'right',
+    },
+    genderDropdown: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: tc.inputBg,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      borderRadius: 14,
+      height: 56,
+      paddingHorizontal: 16,
+      marginBottom: 24,
+    },
+    genderText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: tc.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modalContent: {
+      backgroundColor: tc.white,
+      borderRadius: 16,
+      width: '80%',
+      maxHeight: 300,
+      paddingVertical: 8,
+    },
+    imageModalContent: {
+      backgroundColor: tc.white,
+      borderRadius: 16,
+      width: '85%',
+      padding: 16,
+    },
+    imageAction: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: tc.inputBorder,
+    },
+    imageActionText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.text,
+    },
+    countryModalContent: {
+      backgroundColor: tc.white,
+      borderRadius: 16,
+      width: '90%',
+      maxHeight: '80%',
+      padding: 16,
+    },
+    modalTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.text,
+      marginBottom: 12,
+    },
+    searchInput: {
+      height: 44,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: tc.inputBorder,
+      backgroundColor: tc.inputBg,
+      paddingHorizontal: 12,
+      marginBottom: 12,
+      color: tc.text,
+    },
+    loadingWrap: {
+      paddingVertical: 24,
+      alignItems: 'center',
+    },
+    countryOption: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: tc.inputBorder,
+    },
+    countryOptionLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    countryOptionFlag: {
+      fontSize: 16,
+    },
+    countryOptionText: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      color: tc.text,
+    },
+    countryOptionCode: {
+      fontSize: 12,
+      color: tc.textMuted,
+    },
+    modalClose: {
+      marginTop: 12,
+      alignSelf: 'center',
+    },
+    modalCloseText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.accent,
+    },
+    genderOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 14,
+      paddingHorizontal: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: tc.inputBorder,
+    },
+    genderOptionText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    continueButtonContainer: {
+      marginTop: 20,
+    },
+    emailDisplay: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: tc.inputBg,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      borderRadius: 14,
+      height: 56,
+      paddingHorizontal: 16,
+      marginBottom: 16,
+      opacity: 0.7,
+    },
+    emailDisplayText: {
+      flex: 1,
+      fontFamily: fonts.medium,
+      fontSize: 14,
+      color: tc.textMuted,
+    },
+    yearModalContent: {
+      backgroundColor: tc.white,
+      borderRadius: 16,
+      width: '70%',
+      maxHeight: 360,
+      padding: 16,
+    },
+    yearOption: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      height: 44,
+      paddingHorizontal: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: tc.inputBorder,
+    },
+    yearOptionText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    yearOptionTextActive: {
+      fontFamily: fonts.bold,
+      color: tc.accent,
+    },
+  });
 
 export default CreateProfileScreen;

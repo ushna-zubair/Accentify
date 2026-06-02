@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import {
   UserCredential,
@@ -63,10 +69,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  */
 async function hashPin(pin: string): Promise<string> {
   const Crypto = await import('expo-crypto');
-  return await Crypto.digestStringAsync(
-    Crypto.CryptoDigestAlgorithm.SHA256,
-    pin,
-  );
+  return await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, pin);
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -133,97 +136,104 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return result;
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string): Promise<UserRole | null> => {
-    const result = await signInWithEmailAndPassword(auth, email, password);
-    // Update lastLoginAt on the Firestore doc
-    updateDoc(doc(db, 'users', result.user.uid), {
-      lastLoginAt: new Date().toISOString(),
-    }).catch(() => { }); // non-blocking
+  const signIn = useCallback(
+    async (email: string, password: string): Promise<UserRole | null> => {
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      // Update lastLoginAt on the Firestore doc
+      updateDoc(doc(db, 'users', result.user.uid), {
+        lastLoginAt: new Date().toISOString(),
+      }).catch(() => {}); // non-blocking
 
-    // Check if this user has TOTP 2FA enabled — if so, gate access behind the
-    // TOTP challenge screen. We still load the role so the post-challenge route
-    // is ready, but pendingTotpChallenge keeps AppNavigator on the challenge.
-    try {
-      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-      const data = userDoc.data();
-      const twoFAOn = data?.twoFactor?.enabled === true || data?.security?.twoFactorEnabled === true;
-      if (twoFAOn) {
-        setPendingTotpChallenge(true);
+      // Check if this user has TOTP 2FA enabled — if so, gate access behind the
+      // TOTP challenge screen. We still load the role so the post-challenge route
+      // is ready, but pendingTotpChallenge keeps AppNavigator on the challenge.
+      try {
+        const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+        const data = userDoc.data();
+        const twoFAOn =
+          data?.twoFactor?.enabled === true || data?.security?.twoFactorEnabled === true;
+        if (twoFAOn) {
+          setPendingTotpChallenge(true);
+        }
+      } catch {
+        // If the lookup fails, fall through — better to let them in than lock them out.
       }
-    } catch {
-      // If the lookup fails, fall through — better to let them in than lock them out.
-    }
 
-    const role = await fetchUserRole(result.user.uid);
-    return role;
-  }, [fetchUserRole]);
+      const role = await fetchUserRole(result.user.uid);
+      return role;
+    },
+    [fetchUserRole],
+  );
 
   // Called at the END of the multi-step onboarding to write the complete Firestore document
-  const completeOnboarding = useCallback(async (data: OnboardingPayload) => {
-    if (!currentUser) throw new Error('No authenticated user found');
+  const completeOnboarding = useCallback(
+    async (data: OnboardingPayload) => {
+      if (!currentUser) throw new Error('No authenticated user found');
 
-    // PIN stays on this device only — hashed and stored in expo-secure-store.
-    // Never sent to Firestore.
-    if (data.security.appPin) {
-      try {
-        const SecureStore = await import('expo-secure-store');
-        const pinHash = await hashPin(data.security.appPin);
-        await SecureStore.setItemAsync(`appPin:${currentUser.uid}`, pinHash);
-      } catch (err) {
-        console.warn('[Auth] Failed to persist PIN to SecureStore:', err);
+      // PIN stays on this device only — hashed and stored in expo-secure-store.
+      // Never sent to Firestore.
+      if (data.security.appPin) {
+        try {
+          const SecureStore = await import('expo-secure-store');
+          const pinHash = await hashPin(data.security.appPin);
+          await SecureStore.setItemAsync(`appPin:${currentUser.uid}`, pinHash);
+        } catch (err) {
+          console.warn('[Auth] Failed to persist PIN to SecureStore:', err);
+        }
       }
-    }
 
-    const shortId = generateShortId();
+      const shortId = generateShortId();
 
-    // Write the COMPLETE user document — Document ID MUST match the Auth user.uid
-    await setDoc(doc(db, 'users', currentUser.uid), {
-      email: currentUser.email,
-      role: 'learner' as UserRole,
-      authProvider: 'email',
-      shortId,
-      status: 'active',
-      profileComplete: true,
-      emailVerified: currentUser.emailVerified ?? false,
-      termsAccepted: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastLoginAt: new Date().toISOString(),
-      profile: {
-        fullName: data.profile.fullName,
-        nickName: data.profile.nickName,
-        dateOfBirth: data.profile.dateOfBirth,
-        phoneNumber: data.profile.phoneNumber,
-        gender: data.profile.gender,
-        profilePictureUrl: data.profile.profilePictureUrl,
-        country: '',
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
-      },
-      security: {
-        // PIN is stored only on-device in expo-secure-store; presence flag here is purely informational.
-        appPinSet: !!data.security.appPin,
-        biometricsEnabled: data.security.biometricsEnabled,
-        twoFactorEnabled: data.security.twoFactorEnabled,
-        twoFactorMethod: data.security.twoFactorEnabled ? 'email' : 'none',
-        passwordChangedAt: null,
-      },
-      preferences: {
-        tutor_personality: 'friendly coach',
-        accessibility_mode: false,
-        cultural_context: true,
-        notificationsEnabled: true,
-        appLanguage: 'en',
-      },
-      studyPlan: {
-        learningGoals: data.studyPlan.learningGoals,
-        nativeLanguage: data.studyPlan.nativeLanguage,
-        englishLevel: data.studyPlan.englishLevel,
-      },
-    });
+      // Write the COMPLETE user document — Document ID MUST match the Auth user.uid
+      await setDoc(doc(db, 'users', currentUser.uid), {
+        email: currentUser.email,
+        role: 'learner' as UserRole,
+        authProvider: 'email',
+        shortId,
+        status: 'active',
+        profileComplete: true,
+        emailVerified: currentUser.emailVerified ?? false,
+        termsAccepted: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        lastLoginAt: new Date().toISOString(),
+        profile: {
+          fullName: data.profile.fullName,
+          nickName: data.profile.nickName,
+          dateOfBirth: data.profile.dateOfBirth,
+          phoneNumber: data.profile.phoneNumber,
+          gender: data.profile.gender,
+          profilePictureUrl: data.profile.profilePictureUrl,
+          country: '',
+          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? '',
+        },
+        security: {
+          // PIN is stored only on-device in expo-secure-store; presence flag here is purely informational.
+          appPinSet: !!data.security.appPin,
+          biometricsEnabled: data.security.biometricsEnabled,
+          twoFactorEnabled: data.security.twoFactorEnabled,
+          twoFactorMethod: data.security.twoFactorEnabled ? 'email' : 'none',
+          passwordChangedAt: null,
+        },
+        preferences: {
+          tutor_personality: 'friendly coach',
+          accessibility_mode: false,
+          cultural_context: true,
+          notificationsEnabled: true,
+          appLanguage: 'en',
+        },
+        studyPlan: {
+          learningGoals: data.studyPlan.learningGoals,
+          nativeLanguage: data.studyPlan.nativeLanguage,
+          englishLevel: data.studyPlan.englishLevel,
+        },
+      });
 
-    // Fetch role to update context state — triggers AppNavigator to show LearnerNavigator
-    await fetchUserRole(currentUser.uid);
-  }, [currentUser, fetchUserRole]);
+      // Fetch role to update context state — triggers AppNavigator to show LearnerNavigator
+      await fetchUserRole(currentUser.uid);
+    },
+    [currentUser, fetchUserRole],
+  );
 
   const signInWithGoogle = useCallback(async (): Promise<{ isNewUser: boolean }> => {
     let AuthSession: typeof import('expo-auth-session');
@@ -252,8 +262,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const redirectUri = AuthSession.makeRedirectUri({ preferLocalhost: false });
 
     // Generate PKCE code verifier + challenge
-    const codeVerifier = CryptoModule.getRandomBytes(32)
-      .reduce((acc, byte) => acc + byte.toString(16).padStart(2, '0'), '');
+    const codeVerifier = CryptoModule.getRandomBytes(32).reduce(
+      (acc, byte) => acc + byte.toString(16).padStart(2, '0'),
+      '',
+    );
     const codeChallenge = await CryptoModule.digestStringAsync(
       CryptoModule.CryptoDigestAlgorithm.SHA256,
       codeVerifier,
@@ -263,8 +275,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Loaded from app config (app.json extra) so it's not hardcoded in source
     const Constants = (await import('expo-constants')).default;
     const clientId: string | undefined =
-      Constants.expoConfig?.extra?.googleWebClientId
-      ?? Constants.manifest?.extra?.googleWebClientId;
+      Constants.expoConfig?.extra?.googleWebClientId ??
+      Constants.manifest?.extra?.googleWebClientId;
     if (!clientId) {
       throw new Error('googleWebClientId is missing from app.json extra config');
     }
@@ -297,7 +309,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (userSnap.exists()) {
       // Update lastLoginAt
-      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => { });
+      updateDoc(userRef, { lastLoginAt: new Date().toISOString() }).catch(() => {});
       await fetchUserRole(result.user.uid);
       return { isNewUser: false };
     }
@@ -334,7 +346,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .join('');
     const hashedNonce = await Crypto.digestStringAsync(
       Crypto.CryptoDigestAlgorithm.SHA256,
-      rawNonce
+      rawNonce,
     );
 
     const appleCredential = await AppleAuthentication.signInAsync({
@@ -427,7 +439,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (user) {
         await fetchUserRole(user.uid);
         // Record this device in the user's device sessions
-        recordDeviceSession(user.uid).catch(() => { });
+        recordDeviceSession(user.uid).catch(() => {});
       } else {
         setUserRole(null);
         setUserProfile(null);
@@ -454,23 +466,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Merge studyPlan/profile into whatever fetchUserRole already set;
           // don't blow away the role/status that came from the initial fetch.
           if (!prev) return prev;
+
+          const nextEmail = data.email ?? prev.email;
+          const nextStatus = (data.status as AccountStatus) ?? prev.status;
+          const nextProfileComplete = data.profileComplete ?? prev.profileComplete;
+          const nextFullName = data.profile?.fullName ?? prev.fullName;
+          const nextProfileFullName = data.profile?.fullName ?? prev.profile?.fullName;
+          const nextPicUrl = data.profile?.profilePictureUrl ?? prev.profile?.profilePictureUrl;
+          const nextStudyPlan = data.studyPlan
+            ? {
+                learningGoals: data.studyPlan.learningGoals ?? [],
+                nativeLanguage: data.studyPlan.nativeLanguage ?? '',
+                englishLevel: data.studyPlan.englishLevel ?? '',
+              }
+            : prev.studyPlan;
+
+          // Bail out when none of the projected fields actually changed.
+          // Other parts of the app write unrelated keys to this doc (e.g. the
+          // admin dashboard stamps `lastSeen` on load); without this guard
+          // every such write would emit a NEW userProfile object, which
+          // re-runs the dashboard's data fetch (it writes lastSeen again) →
+          // an infinite reload loop / white-screen flicker.
+          const sameGoals =
+            (prev.studyPlan?.learningGoals?.length ?? 0) ===
+            (nextStudyPlan?.learningGoals?.length ?? 0);
+          if (
+            prev.email === nextEmail &&
+            prev.status === nextStatus &&
+            prev.profileComplete === nextProfileComplete &&
+            prev.fullName === nextFullName &&
+            prev.profile?.fullName === nextProfileFullName &&
+            prev.profile?.profilePictureUrl === nextPicUrl &&
+            prev.studyPlan?.englishLevel === nextStudyPlan?.englishLevel &&
+            prev.studyPlan?.nativeLanguage === nextStudyPlan?.nativeLanguage &&
+            sameGoals
+          ) {
+            return prev;
+          }
+
           return {
             ...prev,
-            email: data.email ?? prev.email,
-            status: (data.status as AccountStatus) ?? prev.status,
-            profileComplete: data.profileComplete ?? prev.profileComplete,
-            fullName: data.profile?.fullName ?? prev.fullName,
+            email: nextEmail,
+            status: nextStatus,
+            profileComplete: nextProfileComplete,
+            fullName: nextFullName,
             profile: {
-              fullName: data.profile?.fullName ?? prev.profile?.fullName,
-              profilePictureUrl: data.profile?.profilePictureUrl ?? prev.profile?.profilePictureUrl,
+              fullName: nextProfileFullName,
+              profilePictureUrl: nextPicUrl,
             },
-            studyPlan: data.studyPlan
-              ? {
-                  learningGoals: data.studyPlan.learningGoals ?? [],
-                  nativeLanguage: data.studyPlan.nativeLanguage ?? '',
-                  englishLevel: data.studyPlan.englishLevel ?? '',
-                }
-              : prev.studyPlan,
+            studyPlan: nextStudyPlan,
           };
         });
       },
@@ -483,25 +527,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return unsub;
   }, [currentUser]);
 
-  const value = useMemo<AuthContextType>(() => ({
-    currentUser,
-    userRole,
-    userProfile,
-    loading,
-    pendingTotpChallenge,
-    profileFetchError,
-    signUp,
-    signIn,
-    signOut,
-    fetchUserRole,
-    refreshProfile,
-    completeOnboarding,
-    signInWithGoogle,
-    signInWithApple,
-    sendVerificationEmail,
-    reloadUser,
-    clearTotpChallenge,
-  }), [currentUser, userRole, userProfile, loading, pendingTotpChallenge, profileFetchError, signUp, signIn, signOut, fetchUserRole, refreshProfile, completeOnboarding, signInWithGoogle, signInWithApple, sendVerificationEmail, reloadUser, clearTotpChallenge]);
+  const value = useMemo<AuthContextType>(
+    () => ({
+      currentUser,
+      userRole,
+      userProfile,
+      loading,
+      pendingTotpChallenge,
+      profileFetchError,
+      signUp,
+      signIn,
+      signOut,
+      fetchUserRole,
+      refreshProfile,
+      completeOnboarding,
+      signInWithGoogle,
+      signInWithApple,
+      sendVerificationEmail,
+      reloadUser,
+      clearTotpChallenge,
+    }),
+    [
+      currentUser,
+      userRole,
+      userProfile,
+      loading,
+      pendingTotpChallenge,
+      profileFetchError,
+      signUp,
+      signIn,
+      signOut,
+      fetchUserRole,
+      refreshProfile,
+      completeOnboarding,
+      signInWithGoogle,
+      signInWithApple,
+      sendVerificationEmail,
+      reloadUser,
+      clearTotpChallenge,
+    ],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

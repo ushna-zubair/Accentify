@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * levelService.ts
  *
  * Owns the user's CEFR level (A1..C2) and the auto-promotion logic.
@@ -37,9 +43,7 @@ import { db } from '../config/firebase';
 import { CEFR_ORDER, type CefrLevel } from '../models/vocabulary';
 import { normaliseCefr } from './vocabularyService';
 
-// ═══════════════════════════════════════════════
 //  CONFIG — single source of truth for thresholds
-// ═══════════════════════════════════════════════
 
 export const LEVEL_UP_CONFIG = {
   /** Distinct stretch-band words required to be mastered. */
@@ -55,10 +59,6 @@ export const LEVEL_UP_CONFIG = {
   /** Days that must elapse between two promotions. */
   cooldownDays: 14,
 } as const;
-
-// ═══════════════════════════════════════════════
-//  TYPES
-// ═══════════════════════════════════════════════
 
 export type LevelUpReason =
   | 'stretch_vocab'
@@ -102,10 +102,6 @@ export interface LevelUpProgress {
   cooldownRequired: number;
 }
 
-// ═══════════════════════════════════════════════
-//  CEFR HELPERS
-// ═══════════════════════════════════════════════
-
 /** Return the level immediately above `level`, or null at C2. */
 export const nextCefr = (level: CefrLevel): CefrLevel | null => {
   const idx = CEFR_ORDER.indexOf(level);
@@ -113,18 +109,11 @@ export const nextCefr = (level: CefrLevel): CefrLevel | null => {
   return CEFR_ORDER[idx + 1] as CefrLevel;
 };
 
-// ═══════════════════════════════════════════════
-//  METRIC READS
-// ═══════════════════════════════════════════════
-
 /**
  * Count vocab items at exactly `level` where consecutiveCorrect >= the
  * mastery threshold. Reads `progress/items/entries`.
  */
-async function countMasteredStretchVocab(
-  uid: string,
-  level: CefrLevel,
-): Promise<number> {
+async function countMasteredStretchVocab(uid: string, level: CefrLevel): Promise<number> {
   try {
     const itemsCol = collection(db, 'users', uid, 'progress', 'items', 'entries');
     const q = query(
@@ -225,19 +214,14 @@ async function daysSinceLevelChange(uid: string): Promise<number | null> {
   }
 }
 
-// ═══════════════════════════════════════════════
 //  PERSIST: level snapshot + history
-// ═══════════════════════════════════════════════
 
 /**
  * Mirror the progress snapshot to `users/{uid}/progress/level` so the
  * Progress screen can show "X/Y stretch words mastered" without re-running
  * the full evaluation on every render.
  */
-async function persistLevelSnapshot(
-  uid: string,
-  progress: LevelUpProgress,
-): Promise<void> {
+async function persistLevelSnapshot(uid: string, progress: LevelUpProgress): Promise<void> {
   try {
     const ref = doc(db, 'users', uid, 'progress', 'level');
     await setDoc(
@@ -337,9 +321,7 @@ async function commitPromotion(
   }
 }
 
-// ═══════════════════════════════════════════════
 //  PUBLIC: evaluateLevelUp
-// ═══════════════════════════════════════════════
 
 /**
  * Read every signal, decide whether the user qualifies for the next CEFR
@@ -349,9 +331,7 @@ async function commitPromotion(
  * Safe to call on every exercise completion — it's idempotent: when a gate
  * isn't met or the user is already at C2, it just refreshes the snapshot.
  */
-export const evaluateLevelUp = async (
-  uid: string,
-): Promise<LevelUpProgress> => {
+export const evaluateLevelUp = async (uid: string): Promise<LevelUpProgress> => {
   // 1. Resolve the user's current level.
   let currentLevel: CefrLevel = 'A2';
   try {
@@ -367,13 +347,7 @@ export const evaluateLevelUp = async (
   const next = nextCefr(currentLevel);
 
   // Always read activity so the snapshot is fresh even at the top.
-  const [
-    stretchMastered,
-    wordRoll,
-    sentenceRoll,
-    activeDays,
-    sinceChange,
-  ] = await Promise.all([
+  const [stretchMastered, wordRoll, sentenceRoll, activeDays, sinceChange] = await Promise.all([
     next ? countMasteredStretchVocab(uid, next) : Promise.resolve(0),
     pronunciationRollingAvg(uid, 'word'),
     pronunciationRollingAvg(uid, 'sentence'),
@@ -438,18 +412,14 @@ export const evaluateLevelUp = async (
   return progress;
 };
 
-// ═══════════════════════════════════════════════
 //  PUBLIC: read snapshot for the Progress screen
-// ═══════════════════════════════════════════════
 
 /**
  * Read the most recently persisted snapshot from `progress/level`. Returns
  * null when the user has never triggered an evaluation. The Progress screen
  * calls this on focus and falls back to `evaluateLevelUp` when null.
  */
-export const fetchLevelSnapshot = async (
-  uid: string,
-): Promise<LevelUpProgress | null> => {
+export const fetchLevelSnapshot = async (uid: string): Promise<LevelUpProgress | null> => {
   try {
     const snap = await getDoc(doc(db, 'users', uid, 'progress', 'level'));
     if (!snap.exists()) return null;

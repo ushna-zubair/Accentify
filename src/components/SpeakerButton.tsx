@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -80,11 +86,7 @@ export const SpeakerButton: React.FC<SpeakerButtonProps> = ({
       accessibilityRole="button"
       accessibilityLabel={`Play pronunciation of ${text}`}
     >
-      <Ionicons
-        name={speaking ? 'volume-mute' : 'volume-high'}
-        size={size}
-        color={tc.accent}
-      />
+      <Ionicons name={speaking ? 'volume-mute' : 'volume-high'} size={size} color={tc.accent} />
     </TouchableOpacity>
   );
 };

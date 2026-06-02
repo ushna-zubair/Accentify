@@ -1,11 +1,11 @@
-import React, { useState , useMemo} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -129,112 +129,113 @@ const LearningGoalsScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 16,
-    paddingBottom: 24,
-  },
-  skipText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    color: tc.text,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 22,
-    color: tc.accent,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'left',
-    lineHeight: 18,
-    marginBottom: 28,
-  },
-  goalsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  goalChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 50,
-    backgroundColor: tc.white,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    gap: 8,
-  },
-  goalChipSelected: {
-    backgroundColor: tc.accentMuted,
-    borderColor: tc.accent,
-  },
-  goalIcon: {
-    fontSize: 16,
-  },
-  goalLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.text,
-  },
-  goalLabelSelected: {
-    fontFamily: fonts.semiBold,
-    color: tc.accent,
-  },
-  bottomContainer: {
-    marginTop: 'auto',
-    paddingBottom: 32,
-    paddingTop: 20,
-    alignItems: 'center',
-  },
-  nextButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    gap: 12,
-    minWidth: 160,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  nextButtonDisabled: {
-    opacity: 0.5,
-  },
-  nextButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingTop: 16,
+      paddingBottom: 24,
+    },
+    skipText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+    },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 22,
+      color: tc.accent,
+      textAlign: 'center',
+      marginBottom: 8,
+    },
+    subtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'left',
+      lineHeight: 18,
+      marginBottom: 28,
+    },
+    goalsContainer: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    goalChip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderRadius: 50,
+      backgroundColor: tc.white,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      gap: 8,
+    },
+    goalChipSelected: {
+      backgroundColor: tc.accentMuted,
+      borderColor: tc.accent,
+    },
+    goalIcon: {
+      fontSize: 16,
+    },
+    goalLabel: {
+      fontFamily: fonts.medium,
+      fontSize: 14,
+      color: tc.text,
+    },
+    goalLabelSelected: {
+      fontFamily: fonts.semiBold,
+      color: tc.accent,
+    },
+    bottomContainer: {
+      marginTop: 'auto',
+      paddingBottom: 32,
+      paddingTop: 20,
+      alignItems: 'center',
+    },
+    nextButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      paddingHorizontal: 32,
+      gap: 12,
+      minWidth: 160,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    nextButtonDisabled: {
+      opacity: 0.5,
+    },
+    nextButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+    arrowCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
 
 export default LearningGoalsScreen;

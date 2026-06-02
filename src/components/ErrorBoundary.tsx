@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 
@@ -46,7 +52,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.message}>
             {__DEV__
-              ? this.state.error?.message ?? 'Unknown error'
+              ? (this.state.error?.message ?? 'Unknown error')
               : 'The app ran into an unexpected issue. Please try again.'}
           </Text>
           <TouchableOpacity style={styles.button} onPress={this.handleRetry}>

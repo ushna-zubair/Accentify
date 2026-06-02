@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -22,11 +28,6 @@ import type { AdminStackParamList } from '../../models';
 
 type DetailRoute = RouteProp<AdminStackParamList, 'AdminUserDetail'>;
 
-// ═══════════════════════════════════════════════
-//  SUB-COMPONENTS
-// ═══════════════════════════════════════════════
-
-// ─── Purple Ghost Icon (matches design) ───
 const PurpleGhost: React.FC<{ size?: number }> = ({ size = 80 }) => (
   <Svg width={size} height={size} viewBox="0 0 120 120">
     {/* Body */}
@@ -61,7 +62,6 @@ const PurpleGhost: React.FC<{ size?: number }> = ({ size = 80 }) => (
   </Svg>
 );
 
-// ─── Read-only / Editable Field ───
 interface FieldProps {
   label: string;
   value: string;
@@ -101,7 +101,6 @@ const Field: React.FC<FieldProps> = ({
   );
 };
 
-// ─── Confirmation Modal (matching design) ───
 interface ConfirmModalProps {
   visible: boolean;
   message: string;
@@ -142,10 +141,6 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({ visible, message, onYes, on
   );
 };
 
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
-
 const AdminUserDetailScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -183,24 +178,18 @@ const AdminUserDetailScreen: React.FC = () => {
   };
 
   const handleReset = () => {
-    showConfirm(
-      'Are you sure you want to reset the password for this account?',
-      () => {
-        resetPassword();
-        setConfirmVisible(false);
-      },
-    );
+    showConfirm('Are you sure you want to reset the password for this account?', () => {
+      resetPassword();
+      setConfirmVisible(false);
+    });
   };
 
   const handleDeactivate = () => {
     const action = detail.status === 'active' ? 'deactivate' : 'reactivate';
-    showConfirm(
-      `Are you sure you want to ${action} this account?`,
-      () => {
-        toggleAccountStatus();
-        setConfirmVisible(false);
-      },
-    );
+    showConfirm(`Are you sure you want to ${action} this account?`, () => {
+      toggleAccountStatus();
+      setConfirmVisible(false);
+    });
   };
 
   const handleEditPress = () => {
@@ -234,7 +223,12 @@ const AdminUserDetailScreen: React.FC = () => {
         {/* ── Header (mobile) ── */}
         {!isWide && (
           <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-            <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
+            <TouchableOpacity
+              onPress={() => {
+                if (navigation.canGoBack()) navigation.goBack();
+              }}
+              style={styles.backBtn}
+            >
               <Ionicons name="arrow-back" size={24} color={tc.text} />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>User Management</Text>
@@ -292,7 +286,9 @@ const AdminUserDetailScreen: React.FC = () => {
           {/* Breadcrumb / Back */}
           <View style={styles.webBreadcrumb}>
             <TouchableOpacity
-              onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }}
+              onPress={() => {
+                if (navigation.canGoBack()) navigation.goBack();
+              }}
               style={styles.webBackBtn}
               activeOpacity={0.7}
             >
@@ -311,15 +307,29 @@ const AdminUserDetailScreen: React.FC = () => {
               <View style={styles.webCardHeader}>
                 <View style={styles.webUserAvatar}>
                   <Text style={styles.webAvatarText}>
-                    {detail.fullName.split(' ').map(n => n[0] || '').join('').toUpperCase()}
+                    {detail.fullName
+                      .split(' ')
+                      .map((n) => n[0] || '')
+                      .join('')
+                      .toUpperCase()}
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.webUserName}>{detail.fullName}</Text>
                   <Text style={styles.webUserEmail}>{detail.email}</Text>
                 </View>
-                <View style={[styles.webStatusPill, isActive ? styles.webStatusActive : styles.webStatusInactive]}>
-                  <View style={[styles.webStatusDot, { backgroundColor: isActive ? tc.success : tc.error }]} />
+                <View
+                  style={[
+                    styles.webStatusPill,
+                    isActive ? styles.webStatusActive : styles.webStatusInactive,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.webStatusDot,
+                      { backgroundColor: isActive ? tc.success : tc.error },
+                    ]}
+                  />
                   <Text style={[styles.webStatusText, { color: isActive ? tc.success : tc.error }]}>
                     {isActive ? 'Active' : 'Deactivated'}
                   </Text>
@@ -327,14 +337,54 @@ const AdminUserDetailScreen: React.FC = () => {
               </View>
 
               <View style={styles.webFieldsGrid}>
-                <Field label="Username" value={detail.username} editable={isEditing} onChange={(v) => updateField('username', v)} isWide />
-                <Field label="Full Name" value={detail.fullName} editable={isEditing} onChange={(v) => updateField('fullName', v)} isWide />
-                <Field label="Email" value={detail.email} editable={isEditing} onChange={(v) => updateField('email', v)} isWide />
+                <Field
+                  label="Username"
+                  value={detail.username}
+                  editable={isEditing}
+                  onChange={(v) => updateField('username', v)}
+                  isWide
+                />
+                <Field
+                  label="Full Name"
+                  value={detail.fullName}
+                  editable={isEditing}
+                  onChange={(v) => updateField('fullName', v)}
+                  isWide
+                />
+                <Field
+                  label="Email"
+                  value={detail.email}
+                  editable={isEditing}
+                  onChange={(v) => updateField('email', v)}
+                  isWide
+                />
                 <Field label="User ID" value={detail.userId} isWide />
-                <Field label="Auth Provider" value={detail.authProvider === 'google' ? 'Google' : detail.authProvider === 'apple' ? 'Apple' : 'Email'} isWide />
+                <Field
+                  label="Auth Provider"
+                  value={
+                    detail.authProvider === 'google'
+                      ? 'Google'
+                      : detail.authProvider === 'apple'
+                        ? 'Apple'
+                        : 'Email'
+                  }
+                  isWide
+                />
                 <Field label="Email Verified" value={detail.emailVerified ? 'Yes' : 'No'} isWide />
-                <Field label="2FA" value={detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'} isWide />
-                <Field label="Last Login" value={detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'} isWide />
+                <Field
+                  label="2FA"
+                  value={
+                    detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'
+                  }
+                  isWide
+                />
+                <Field
+                  label="Last Login"
+                  value={
+                    detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'
+                  }
+                  isWide
+                />
               </View>
             </View>
 
@@ -360,12 +410,21 @@ const AdminUserDetailScreen: React.FC = () => {
                 <View style={styles.webStatusMetaRow}>
                   <Text style={styles.webMetaLabel}>Auth Provider</Text>
                   <Text style={styles.webMetaValue}>
-                    {detail.authProvider === 'google' ? 'Google' : detail.authProvider === 'apple' ? 'Apple' : 'Email'}
+                    {detail.authProvider === 'google'
+                      ? 'Google'
+                      : detail.authProvider === 'apple'
+                        ? 'Apple'
+                        : 'Email'}
                   </Text>
                 </View>
                 <View style={styles.webStatusMetaRow}>
                   <Text style={styles.webMetaLabel}>Email Verified</Text>
-                  <Text style={[styles.webMetaValue, { color: detail.emailVerified ? tc.success : tc.warning }]}>
+                  <Text
+                    style={[
+                      styles.webMetaValue,
+                      { color: detail.emailVerified ? tc.success : tc.warning },
+                    ]}
+                  >
                     {detail.emailVerified ? 'Yes' : 'No'}
                   </Text>
                 </View>
@@ -453,7 +512,12 @@ const AdminUserDetailScreen: React.FC = () => {
     <View style={styles.container}>
       {/* ── Header ── */}
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
-        <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
+        <TouchableOpacity
+          onPress={() => {
+            if (navigation.canGoBack()) navigation.goBack();
+          }}
+          style={styles.backBtn}
+        >
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>User Management</Text>
@@ -468,19 +532,51 @@ const AdminUserDetailScreen: React.FC = () => {
         {error && <Text style={styles.errorText}>{error}</Text>}
 
         {/* ── Fields ── */}
-        <Field label="Username" value={detail.username} editable={isEditing} onChange={(v) => updateField('username', v)} />
-        <Field label="Full Name" value={detail.fullName} editable={isEditing} onChange={(v) => updateField('fullName', v)} />
-        <Field label="Email" value={detail.email} editable={isEditing} onChange={(v) => updateField('email', v)} />
+        <Field
+          label="Username"
+          value={detail.username}
+          editable={isEditing}
+          onChange={(v) => updateField('username', v)}
+        />
+        <Field
+          label="Full Name"
+          value={detail.fullName}
+          editable={isEditing}
+          onChange={(v) => updateField('fullName', v)}
+        />
+        <Field
+          label="Email"
+          value={detail.email}
+          editable={isEditing}
+          onChange={(v) => updateField('email', v)}
+        />
         <Field label="User ID" value={detail.userId} />
-        <Field label="Auth Provider" value={detail.authProvider === 'google' ? 'Google' : detail.authProvider === 'apple' ? 'Apple' : 'Email'} />
+        <Field
+          label="Auth Provider"
+          value={
+            detail.authProvider === 'google'
+              ? 'Google'
+              : detail.authProvider === 'apple'
+                ? 'Apple'
+                : 'Email'
+          }
+        />
         <Field label="Email Verified" value={detail.emailVerified ? 'Yes' : 'No'} />
-        <Field label="2FA" value={detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'} />
-        <Field label="Last Login" value={detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'} />
+        <Field
+          label="2FA"
+          value={detail.twoFactorEnabled ? `Enabled (${detail.twoFactorMethod})` : 'Disabled'}
+        />
+        <Field
+          label="Last Login"
+          value={detail.lastLoginAt ? new Date(detail.lastLoginAt).toLocaleString() : 'Never'}
+        />
 
         {/* ── Status & Role ── */}
         <View style={styles.statusSection}>
           <View style={styles.statusRow}>
-            <Text style={[styles.statusBadge, isActive ? styles.statusActive : styles.statusInactive]}>
+            <Text
+              style={[styles.statusBadge, isActive ? styles.statusActive : styles.statusInactive]}
+            >
               {isActive ? '****ACTIVE***ACCOUNT' : '**DEACTIVATED**ACCOUNT'}
             </Text>
             <Text style={styles.sinceText}>{detail.activeSince}</Text>
@@ -488,7 +584,9 @@ const AdminUserDetailScreen: React.FC = () => {
           <View style={styles.roleRow}>
             <Text style={styles.roleLabel}>Role</Text>
             <Text style={styles.roleValue}>
-              {detail.role === 'admin' ? 'Admin' : (
+              {detail.role === 'admin' ? (
+                'Admin'
+              ) : (
                 <>
                   Admin/
                   <Text style={styles.roleHighlight}>{roleLabel}</Text>
@@ -548,10 +646,6 @@ const AdminUserDetailScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
-
 const createStyles = (tc: ThemeColors, screenWidth: number) => {
   const isWide = Platform.OS === 'web' && screenWidth >= 600;
 
@@ -598,7 +692,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       marginBottom: 10,
     },
 
-    // ── Field ──
     fieldWrapper: {
       marginBottom: 14,
     },
@@ -833,10 +926,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number) => {
       fontSize: 18,
       color: tc.text,
     },
-
-    // ═══════════════════════════════════════════
-    //  WEB-SPECIFIC STYLES
-    // ═══════════════════════════════════════════
 
     webScrollContent: {
       paddingHorizontal: 32,

@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../context/AuthContext';
@@ -14,8 +20,6 @@ import {
   type LevelUpProgress,
 } from '../services/levelService';
 import type { ProgressData, WeeklyProgress, LessonDay } from '../models';
-
-// ─── Fallback Data (shown while loading / no user) ───
 
 const generateFallbackLessonDays = (): LessonDay[] => {
   const today = new Date();
@@ -49,8 +53,6 @@ const EMPTY_PROGRESS: ProgressData = {
   currentWeekIndex: 0,
   weeks: [],
 };
-
-// ─── Controller Hook ───
 
 export const useProgressController = () => {
   const { currentUser, refreshProfile } = useAuth();
@@ -156,11 +158,9 @@ export const useProgressController = () => {
   );
 
   // ── Derived getters ──
-  const currentWeek: WeeklyProgress | null =
-    progressData.weeks[selectedWeekIndex] ?? null;
+  const currentWeek: WeeklyProgress | null = progressData.weeks[selectedWeekIndex] ?? null;
 
-  const weekLabel =
-    currentWeek != null ? `Week ${currentWeek.weekNumber}` : '';
+  const weekLabel = currentWeek != null ? `Week ${currentWeek.weekNumber}` : '';
 
   const weekDateLabel = currentWeek?.weekStartDate ?? '';
 

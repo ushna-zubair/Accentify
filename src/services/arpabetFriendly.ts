@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Translates ARPAbet phoneme codes (HH, AO, K, AH, …) into short, plain-English
  * descriptors that learners can read without phonetics training.
  *
@@ -52,8 +58,7 @@ const FRIENDLY_NAMES: Record<string, string> = {
   ZH: 'zh (measure)',
 };
 
-const stripStress = (token: string): string =>
-  token.replace(/\d+$/, '').toUpperCase();
+const stripStress = (token: string): string => token.replace(/\d+$/, '').toUpperCase();
 
 export const friendlySound = (arpabet: string): string => {
   const key = stripStress(arpabet);

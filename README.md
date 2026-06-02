@@ -1,8 +1,10 @@
 # 🎙️ Accentify — AI-Powered Accent & English Learning App
 
-> **Final Year Project** | React Native (Expo) · Firebase · Google Cloud Speech-to-Text
+> **Final Year Project** | React Native (Expo) · Firebase · Custom Hugging Face Space AI Services
 
-Accentify is a cross-platform mobile application (Android, iOS, Web) that helps learners improve their English pronunciation, vocabulary, and conversational fluency using AI-driven speech recognition and personalized study paths.
+Accentify is a cross-platform mobile application (Android, iOS, Web) that helps learners improve their English pronunciation, vocabulary, and conversational fluency using AI-driven speech analysis and personalized study paths.
+
+**Team — Group Aivengers:** Muhammad Ali · Manan Anghan · Adam Sabih · Ushna Zubair · Ahmed
 
 ---
 
@@ -42,7 +44,7 @@ Accentify is a cross-platform mobile application (Android, iOS, Web) that helps 
 
 Accentify solves a real problem faced by non-native English speakers: they lack affordable, personalized, and real-time pronunciation coaching. The app provides:
 
-- **AI-graded pronunciation exercises** — powered by Google Cloud Speech-to-Text
+- **AI-graded pronunciation exercises** — powered by custom Hugging Face Space speech models (wav2vec2 phoneme alignment + Whisper)
 - **Vocabulary building** with phonetic feedback per word
 - **Role-play conversation exercises** against an AI partner
 - **Streak-based progress tracking** with weekly performance charts
@@ -58,9 +60,9 @@ Accentify solves a real problem faced by non-native English speakers: they lack 
 | **Language** | TypeScript 5.9 |
 | **Navigation** | React Navigation 7 (Stack + Bottom Tabs) |
 | **Backend / DB** | Firebase Firestore (NoSQL) |
-| **Authentication** | Firebase Auth (Email, Google, Apple) |
-| **Cloud Functions** | Firebase Cloud Functions (Node.js) |
-| **AI / Speech** | Google Cloud Speech-to-Text (via Cloud Functions) |
+| **Authentication** | Firebase Auth (Email, Google, Apple) + custom TOTP two-factor |
+| **Cloud Functions** | Firebase Cloud Functions (Node.js) — 2FA, admin analytics, notifications |
+| **AI / Speech** | Custom FastAPI microservices on Hugging Face Spaces — wav2vec2 (phoneme CTC) + Whisper (ASR) for pronunciation, an LLM for coaching feedback, and STT→LLM→TTS for conversation |
 | **Storage** | Firebase Cloud Storage (profile pictures, audio) |
 | **State Management** | React Context API |
 | **Testing** | Jest + jest-expo |
@@ -91,8 +93,10 @@ App.tsx
 
 **Data Flow:**
 ```
-View (Screen) → Controller Hook → Service → Firebase / Cloud API
+View (Screen) → Controller Hook → Service → Hugging Face Space (AI) / Firebase (data · auth · functions)
 ```
+
+The system runs across three tiers: the React Native **client**; three stateless **Hugging Face Space** FastAPI microservices that perform the speech work (pronunciation scoring, coaching feedback, and spoken conversation); and a **Firebase** backend for authentication, the Firestore data store, cloud functions, and file storage.
 
 ---
 
@@ -158,7 +162,7 @@ After email verification, new users are walked through a multi-step setup: creat
 ### FR-03 Pronunciation Exercise
 
 **What it does:**
-The learner reads a sentence aloud. The app records audio, sends it to Google Cloud Speech-to-Text via a Cloud Function, and returns a scored result — highlighting which words were correct/incorrect plus scores for clarity, accuracy, fluency, and overall.
+The learner reads a sentence aloud. The app records audio and sends it to the pronunciation **Hugging Face Space**, which evaluates it with wav2vec2 phoneme alignment (and Whisper word-timestamps for sentences) and returns a scored result — highlighting which words were correct/incorrect plus scores for clarity, accuracy, fluency, and overall.
 
 **How it is implemented:**
 
@@ -166,16 +170,16 @@ The learner reads a sentence aloud. The app records audio, sends it to Google Cl
 |---|---|
 | `src/views/main/PronunciationExerciseScreen.tsx` | Exercise UI — waveform, record button, word-by-word feedback |
 | `src/views/main/HomePronunciationScreen.tsx` | Home entry point with practice sentence cards |
-| `src/controllers/usePronunciationExerciseController.ts` | Manages recording state, calls service, parses results |
-| `src/services/pronunciationService.ts` | Calls `getPronunciationSentences` and `transcribeAndEvaluate` Cloud Functions |
+| `src/controllers/usePronunciationExerciseController.ts` | Manages recording state, calls the API service, parses results |
+| `src/services/accentifyApi.ts` | Calls the pronunciation Space — `/prompt_word`, `/prompt_sentence`, `/evaluate_word`, `/evaluate_sentence` |
+| `src/services/pronunciationService.ts` | Maps Space responses into the app's score / word-result shapes |
 | `src/models/lessons.ts` | `PronunciationSentence`, `PronunciationScore`, `WordResult`, `PronunciationAttemptResult` types |
-| `functions/src/` | `transcribeAndEvaluate` — sends audio to Google STT, scores result |
-| `functions/src/` | `getPronunciationSentences` — fetches sentences from Firestore |
+| Hugging Face Space (`accentify-word-level`) | Serves prompts from Firestore and evaluates audio with wav2vec2 + Whisper |
 
 **Key logic:**
-- Audio is recorded using `expo-av` in HIGH_QUALITY preset (AAC/m4a on iOS, AMR-WB on Android)
-- Audio is converted to Base64 and sent to the Cloud Function
-- The Cloud Function calls Google Speech-to-Text with LINEAR16 encoding at 44100 Hz
+- Audio is recorded using `expo-av` and uploaded to the pronunciation Space
+- The Space resamples to 16 kHz, runs wav2vec2 CTC phoneme alignment, maps to ARPAbet, and compares against the reference pronunciation
+- For sentences, Whisper word-timestamps + Needleman-Wunsch alignment produce a word-correctness gate; the overall score is the mean per-word score × word-correctness
 - Word-level `isCorrect` flags are returned and displayed with colour coding
 - Scores (0–100) for `clarity`, `accuracy`, `fluency`, `overall` are stored in Firestore via `progressService`
 
@@ -184,21 +188,22 @@ The learner reads a sentence aloud. The app records audio, sends it to Google Cl
 ### FR-04 Vocabulary Exercise
 
 **What it does:**
-The learner is shown pairs of words (basic ↔ advanced). They listen to pronunciation, practice saying each word, and get per-word phonetic feedback using the same STT pipeline.
+The learner builds vocabulary through a synonym-matching exercise: shown a target word with its definition, they type a synonym, which is accepted on an exact or typo-tolerant (fuzzy) match against a list of accepted synonyms.
 
 **How it is implemented:**
 
 | File | Role |
 |---|---|
-| `src/views/main/VocabExerciseScreen.tsx` | Flashcard-style UI with audio controls and pronunciation feedback |
-| `src/controllers/useVocabExerciseController.ts` | Card navigation, audio recording, STT evaluation |
-| `src/models/lessons.ts` | `VocabWordPair`, `VocabExerciseData`, `SpeechRecognitionResult` types |
-| `src/services/lessonService.ts` | Fetches vocab word pairs for a given lesson from Firestore |
+| `src/views/main/VocabExerciseScreen.tsx` | Synonym-typing exercise UI with instant correct / "not quite" feedback |
+| `src/controllers/useVocabExerciseController.ts` | Card navigation and answer checking |
+| `src/services/vocabularyService.ts` | Fetches vocabulary words and accepted synonyms from Firestore |
+| `src/utils/synonymMatch.ts` | Typo-tolerant fuzzy matching of the typed answer against accepted synonyms |
+| `src/models/vocabulary.ts` | Vocabulary word and exercise types |
 
 **Key logic:**
-- Each `VocabWordPair` has `basicWord`, `vocabWord`, phonetics for both, definitions, and an example sentence
-- The learner records themselves saying both words; each gets separate `isCorrect` and feedback
-- On completion, `progressService.onExerciseComplete('vocab', ...)` is called to update streak and weekly stats
+- Each vocabulary item has a target word, definition, example, a primary synonym, and a list of accepted synonyms
+- The typed answer is accepted on an exact or close (typo-tolerant) match; answers of four or more characters tolerate a single-character typo
+- On completion, the streak and weekly vocabulary stats are updated via `progressService`
 
 ---
 
@@ -276,6 +281,7 @@ The Tutor tab shows a personalised study path — an ordered list of lessons (Pr
 - Each lesson has `category` (pronunciation/vocabulary/conversation), `difficulty` (Easy/Medium/Challenging), and `order`
 - Lesson `status` (completed/in_progress/upcoming) is merged from the learner's progress subcollection
 - Prerequisites system: a lesson can specify `prerequisites` — IDs of lessons that must be completed first
+- The learner's CEFR level (A1–C2) advances automatically once sustained mastery criteria are met — vocabulary breadth, a high recent pronunciation average, regular activity, and a cooldown since the last promotion (see `src/services/levelService.ts`)
 
 ---
 
@@ -653,7 +659,7 @@ export const auth = getAuth(app);
 export default app;
 ```
 
-> See `functions/SETUP.md` for Cloud Functions deployment and Google Speech-to-Text API key setup.
+> See `functions/SETUP.md` for Cloud Functions deployment. The AI services run as Hugging Face Spaces; the app reads their base URLs and access tokens from environment variables (for example `EXPO_PUBLIC_ACCENTIFY_API_URL` and `EXPO_PUBLIC_ACCENTIFY_FEEDBACK_API_URL`).
 
 ---
 

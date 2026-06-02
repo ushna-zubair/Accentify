@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -95,10 +101,7 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <SafeAreaView style={[styles.container, isWideWeb && styles.webContainer]}>
       <ScrollView
-        contentContainerStyle={[
-          styles.scrollContent,
-          isWideWeb && styles.webScrollContent,
-        ]}
+        contentContainerStyle={[styles.scrollContent, isWideWeb && styles.webScrollContent]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -121,7 +124,8 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
 
           <Text style={styles.title}>Forgot Password?</Text>
           <Text style={styles.subtitle}>
-            Enter the email address associated with your account and we'll send you a link to reset your password.
+            Enter the email address associated with your account and we'll send you a link to reset
+            your password.
           </Text>
 
           {/* Email Input */}
@@ -162,157 +166,158 @@ const ForgotPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.white,
-  },
-  webContainer: {
-    backgroundColor: '#F5F6FA',
-  },
-  centeredContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  webScrollContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 40,
-    paddingHorizontal: 16,
-  },
-  webCard: {
-    width: '100%',
-    maxWidth: 480,
-    backgroundColor: tc.white,
-    borderRadius: 24,
-    paddingHorizontal: 36,
-    paddingVertical: 48,
-    alignItems: 'center',
-    ...(Platform.OS === 'web'
-      ? {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 12 },
-        shadowOpacity: 0.08,
-        shadowRadius: 32,
-      }
-      : {}),
-  },
-  innerContent: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 40,
-  },
-  backButton: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-  },
-  /* ── Illustration ── */
-  illustrationContainer: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: tc.accent + '15',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  successIconWrapper: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: tc.accent + '10',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  /* ── Typography ── */
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: tc.text,
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 15,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 32,
-  },
-  emailText: {
-    fontFamily: fonts.bold,
-    color: tc.text,
-  },
-  inputWrapper: {
-    width: '100%',
-    marginBottom: 24,
-  },
-  /* ── Buttons ── */
-  bottomContainer: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  continueButton: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 16,
-    paddingVertical: 18,
-    gap: 12,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  continueButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-  arrowCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backToLoginButton: {
-    marginTop: 16,
-    paddingVertical: 12,
-  },
-  backToLoginText: {
-    fontFamily: fonts.bold,
-    fontSize: 15,
-    color: tc.accent,
-    textDecorationLine: 'underline',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.white,
+    },
+    webContainer: {
+      backgroundColor: '#F5F6FA',
+    },
+    centeredContent: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 24,
+    },
+    scrollContent: {
+      flexGrow: 1,
+    },
+    webScrollContent: {
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+      paddingHorizontal: 16,
+    },
+    webCard: {
+      width: '100%',
+      maxWidth: 480,
+      backgroundColor: tc.white,
+      borderRadius: 24,
+      paddingHorizontal: 36,
+      paddingVertical: 48,
+      alignItems: 'center',
+      ...(Platform.OS === 'web'
+        ? {
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.08,
+            shadowRadius: 32,
+          }
+        : {}),
+    },
+    innerContent: {
+      flex: 1,
+      paddingHorizontal: 24,
+      paddingTop: 12,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 40,
+    },
+    backButton: {
+      width: 32,
+      height: 32,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headerTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+    },
+    /* ── Illustration ── */
+    illustrationContainer: {
+      alignItems: 'center',
+      marginBottom: 32,
+    },
+    iconCircle: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      backgroundColor: tc.accent + '15',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    successIconWrapper: {
+      width: 90,
+      height: 90,
+      borderRadius: 45,
+      backgroundColor: tc.accent + '10',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 24,
+    },
+    /* ── Typography ── */
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 24,
+      color: tc.text,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    subtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 15,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: 32,
+    },
+    emailText: {
+      fontFamily: fonts.bold,
+      color: tc.text,
+    },
+    inputWrapper: {
+      width: '100%',
+      marginBottom: 24,
+    },
+    /* ── Buttons ── */
+    bottomContainer: {
+      marginTop: 16,
+      alignItems: 'center',
+    },
+    continueButton: {
+      width: '100%',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 16,
+      paddingVertical: 18,
+      gap: 12,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    continueButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+    arrowCircle: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    backToLoginButton: {
+      marginTop: 16,
+      paddingVertical: 12,
+    },
+    backToLoginText: {
+      fontFamily: fonts.bold,
+      fontSize: 15,
+      color: tc.accent,
+      textDecorationLine: 'underline',
+    },
+  });
 
 export default ForgotPasswordScreen;

@@ -60,7 +60,7 @@ describe('responsive — moderateScale()', () => {
   });
 
   it('with factor=0.5 gives a dampened scale (halfway between original and linear)', () => {
-    const linear = scale(16, 750);   // 32
+    const linear = scale(16, 750); // 32
     const original = 16;
     const expected = original + (linear - original) * 0.5; // 24
     expect(moderateScale(16, 750, 0.5)).toBeCloseTo(expected);

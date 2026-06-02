@@ -1,5 +1,22 @@
-export { useProfileSettingsController, LEARNING_GOALS, COUNTRIES, TIME_ZONES } from './useProfileSettingsController';
-export { useAdminDashboardController, useAdminMobileDashboardController, MENU_ITEMS, OTHERS_ITEMS, ADMIN_MENU } from './useAdminDashboardController';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+export {
+  useProfileSettingsController,
+  LEARNING_GOALS,
+  COUNTRIES,
+  TIME_ZONES,
+} from './useProfileSettingsController';
+export {
+  useAdminDashboardController,
+  useAdminMobileDashboardController,
+  MENU_ITEMS,
+  OTHERS_ITEMS,
+  ADMIN_MENU,
+} from './useAdminDashboardController';
 export { useNotificationController } from './useNotificationController';
 export { useProgressController } from './useProgressController';
 export { useInsightsController, ENGLISH_LEVELS, DEFAULT_INSIGHTS } from './useInsightsController';
@@ -24,8 +41,5 @@ export {
   EMPTY_FORM as EMPTY_VOCAB_FORM,
   wordToForm,
 } from './useManageVocabularyController';
-export type {
-  VocabCefrFilter,
-  VocabFormState,
-} from './useManageVocabularyController';
+export type { VocabCefrFilter, VocabFormState } from './useManageVocabularyController';
 export { useSupportLogsController } from './useSupportLogsController';

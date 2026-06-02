@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * PlacementQuizScreen.tsx
  *
  * Triggered when a learner picks "Not too sure" on EnglishLevelScreen. Runs
@@ -98,7 +104,14 @@ const PlacementQuizScreen: React.FC<Props> = ({ navigation, route }) => {
   const [input, setInput] = useState('');
   const [bandResults, setBandResults] = useState<
     Record<CefrLevel, { correct: number; total: number }>
-  >({ A1: { correct: 0, total: 0 }, A2: { correct: 0, total: 0 }, B1: { correct: 0, total: 0 }, B2: { correct: 0, total: 0 }, C1: { correct: 0, total: 0 }, C2: { correct: 0, total: 0 } });
+  >({
+    A1: { correct: 0, total: 0 },
+    A2: { correct: 0, total: 0 },
+    B1: { correct: 0, total: 0 },
+    B2: { correct: 0, total: 0 },
+    C1: { correct: 0, total: 0 },
+    C2: { correct: 0, total: 0 },
+  });
   const [showResult, setShowResult] = useState<null | { isCorrect: boolean; answer: string }>(null);
   const [finishing, setFinishing] = useState(false);
 
@@ -236,9 +249,7 @@ const PlacementQuizScreen: React.FC<Props> = ({ navigation, route }) => {
                 { color: showResult.isCorrect ? tc.success : tc.warningDeep },
               ]}
             >
-              {showResult.isCorrect
-                ? 'Correct!'
-                : `Answer: ${showResult.answer}`}
+              {showResult.isCorrect ? 'Correct!' : `Answer: ${showResult.answer}`}
             </Text>
           </View>
         )}

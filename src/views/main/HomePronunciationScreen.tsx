@@ -1,11 +1,17 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Pronunciation exercise screen accessible from the Home tab.
  *
  * Wraps the same controller as the Tutor-stack version but uses
  * HomeStackParamList for navigation and defaults `lessonId` to
  * 'daily_practice' for standalone practice sessions.
  */
-import React, { useRef, useEffect, useState , useMemo} from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -30,28 +36,18 @@ import { fonts } from '../../theme/typography';
 import { useHideTabBar } from '../../context/TabBarVisibilityContext';
 import { RecordingControl } from '../../components/RecordingControl';
 import { SpeakerButton } from '../../components/SpeakerButton';
-import {
-  usePronunciationExerciseController,
-} from '../../controllers/usePronunciationExerciseController';
+import { usePronunciationExerciseController } from '../../controllers/usePronunciationExerciseController';
 import {
   useWavyChatController,
   type WavyChatMessage,
 } from '../../controllers/useWavyChatController';
 import type { HomeStackParamList } from '../../models';
 import { useAuth } from '../../context/AuthContext';
-import {
-  COMPLETE_THRESHOLD_PCT,
-  tierForScore,
-  tierLabel,
-} from '../../config/scoring';
+import { COMPLETE_THRESHOLD_PCT, tierForScore, tierLabel } from '../../config/scoring';
 
 type Props = NativeStackScreenProps<HomeStackParamList, 'HomePronunciation'>;
 
 const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
-
-// ═══════════════════════════════════════════════
-//  HELPERS
-// ═══════════════════════════════════════════════
 
 const getProgressColor = (idx: number, total: number, tc: ThemeColors): string => {
   if (total <= 1) return tc.success;
@@ -61,34 +57,32 @@ const getProgressColor = (idx: number, total: number, tc: ThemeColors): string =
   return tc.error;
 };
 
-// ═══════════════════════════════════════════════
-//  AI MASCOT
-// ═══════════════════════════════════════════════
-
 const AiMascot: React.FC<{ onPress: () => void }> = ({ onPress }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   return (
-  <TouchableOpacity style={mascotStyles.wrap} onPress={onPress} activeOpacity={0.7}>
-    <Svg width={44} height={44} viewBox="0 0 44 44">
-      <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
-      <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
-      <Circle cx={16} cy={19} r={2.5} fill={tc.white} />
-      <Circle cx={28} cy={19} r={2.5} fill={tc.white} />
-      <Path d="M18 26 Q22 30 26 26" stroke={tc.white} strokeWidth={1.5} fill="none" strokeLinecap="round" />
-      <Circle cx={8} cy={14} r={5} fill="#8B6FAE" />
-      <Circle cx={36} cy={14} r={5} fill="#8B6FAE" />
-    </Svg>
-    <View style={mascotStyles.bubble}>
-      <Ionicons name="chatbubble-ellipses" size={14} color={tc.accent} />
-    </View>
-  </TouchableOpacity>
+    <TouchableOpacity style={mascotStyles.wrap} onPress={onPress} activeOpacity={0.7}>
+      <Svg width={44} height={44} viewBox="0 0 44 44">
+        <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
+        <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
+        <Circle cx={16} cy={19} r={2.5} fill={tc.white} />
+        <Circle cx={28} cy={19} r={2.5} fill={tc.white} />
+        <Path
+          d="M18 26 Q22 30 26 26"
+          stroke={tc.white}
+          strokeWidth={1.5}
+          fill="none"
+          strokeLinecap="round"
+        />
+        <Circle cx={8} cy={14} r={5} fill="#8B6FAE" />
+        <Circle cx={36} cy={14} r={5} fill="#8B6FAE" />
+      </Svg>
+      <View style={mascotStyles.bubble}>
+        <Ionicons name="chatbubble-ellipses" size={14} color={tc.accent} />
+      </View>
+    </TouchableOpacity>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  WAVEFORM BAR
-// ═══════════════════════════════════════════════
 
 const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
   const { colors: tc } = useAppTheme();
@@ -104,8 +98,18 @@ const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
       Animated.loop(
         Animated.sequence([
           Animated.delay(i * 40),
-          Animated.timing(anim, { toValue: 1, duration: 400 + Math.random() * 400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0, duration: 400 + Math.random() * 400, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(anim, {
+            toValue: 1,
+            duration: 400 + Math.random() * 400,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
+          Animated.timing(anim, {
+            toValue: 0,
+            duration: 400 + Math.random() * 400,
+            easing: Easing.inOut(Easing.sin),
+            useNativeDriver: true,
+          }),
         ]),
       ),
     );
@@ -125,7 +129,9 @@ const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
                   styles.waveBarSegment,
                   {
                     backgroundColor: tc.successBg,
-                    transform: [{ scaleY: anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) }],
+                    transform: [
+                      { scaleY: anim.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+                    ],
                   },
                 ]}
               />
@@ -139,30 +145,30 @@ const WaveformBar: React.FC<{ active: boolean }> = ({ active }) => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  RESULT ICON
-// ═══════════════════════════════════════════════
-
 const ResultIcon: React.FC<{ isCorrect: boolean }> = ({ isCorrect }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const scaleAnim = useRef(new Animated.Value(0)).current;
   useEffect(() => {
-    Animated.spring(scaleAnim, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      friction: 5,
+      tension: 80,
+      useNativeDriver: true,
+    }).start();
   }, [scaleAnim]);
 
   return (
     <Animated.View
-      style={[styles.resultIconWrap, { backgroundColor: isCorrect ? tc.success : tc.error, transform: [{ scale: scaleAnim }] }]}
+      style={[
+        styles.resultIconWrap,
+        { backgroundColor: isCorrect ? tc.success : tc.error, transform: [{ scale: scaleAnim }] },
+      ]}
     >
       <Ionicons name={isCorrect ? 'checkmark' : 'close'} size={48} color={tc.white} />
     </Animated.View>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  WAVY CHAT OVERLAY
-// ═══════════════════════════════════════════════
 
 const WavyChatOverlay: React.FC<{
   visible: boolean;
@@ -177,11 +183,18 @@ const WavyChatOverlay: React.FC<{
   const slideAnim = useRef(new Animated.Value(0)).current;
   const chatScrollRef = useRef<ScrollView>(null);
 
-  const { messages, inputText, setInputText, isTyping, sendMessage } =
-    useWavyChatController(lessonId, currentSentence);
+  const { messages, inputText, setInputText, isTyping, sendMessage } = useWavyChatController(
+    lessonId,
+    currentSentence,
+  );
 
   useEffect(() => {
-    Animated.spring(slideAnim, { toValue: visible ? 1 : 0, friction: 8, tension: 65, useNativeDriver: true }).start();
+    Animated.spring(slideAnim, {
+      toValue: visible ? 1 : 0,
+      friction: 8,
+      tension: 65,
+      useNativeDriver: true,
+    }).start();
   }, [visible, slideAnim]);
 
   useEffect(() => {
@@ -204,7 +217,14 @@ const WavyChatOverlay: React.FC<{
         chatStyles.overlay,
         {
           height: overlayHeight,
-          transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [overlayHeight, 0] }) }],
+          transform: [
+            {
+              translateY: slideAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [overlayHeight, 0],
+              }),
+            },
+          ],
         },
       ]}
     >
@@ -216,7 +236,13 @@ const WavyChatOverlay: React.FC<{
             <Circle cx={22} cy={22} r={14} fill="#A78BC4" />
             <Circle cx={16} cy={19} r={2.5} fill={tc.white} />
             <Circle cx={28} cy={19} r={2.5} fill={tc.white} />
-            <Path d="M18 26 Q22 30 26 26" stroke={tc.white} strokeWidth={1.5} fill="none" strokeLinecap="round" />
+            <Path
+              d="M18 26 Q22 30 26 26"
+              stroke={tc.white}
+              strokeWidth={1.5}
+              fill="none"
+              strokeLinecap="round"
+            />
           </Svg>
           <View style={chatStyles.headerInfo}>
             <Text style={chatStyles.headerTitle}>Wavy</Text>
@@ -255,7 +281,10 @@ const WavyChatOverlay: React.FC<{
       </ScrollView>
 
       {/* Input */}
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={60}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={60}
+      >
         <View style={chatStyles.inputRow}>
           <TextInput
             style={chatStyles.textInput}
@@ -281,10 +310,20 @@ const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
   const isWavy = message.role === 'wavy';
   return (
     <View>
-      <Text style={[chatStyles.roleLabel, isWavy ? chatStyles.roleLabelLeft : chatStyles.roleLabelRight]}>
+      <Text
+        style={[
+          chatStyles.roleLabel,
+          isWavy ? chatStyles.roleLabelLeft : chatStyles.roleLabelRight,
+        ]}
+      >
         {isWavy ? 'Wavy' : 'You'}
       </Text>
-      <View style={[chatStyles.bubbleRow, isWavy ? chatStyles.bubbleRowLeft : chatStyles.bubbleRowRight]}>
+      <View
+        style={[
+          chatStyles.bubbleRow,
+          isWavy ? chatStyles.bubbleRowLeft : chatStyles.bubbleRowRight,
+        ]}
+      >
         {isWavy && (
           <Svg width={24} height={24} viewBox="0 0 44 44" style={{ marginRight: 6 }}>
             <Circle cx={22} cy={26} r={16} fill="#8B6FAE" />
@@ -301,18 +340,12 @@ const ChatBubble: React.FC<{ message: WavyChatMessage }> = ({ message }) => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
-
 const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const lessonId = route.params?.lessonId ?? 'daily_practice';
   const { userProfile } = useAuth();
-  const englishLevel = (userProfile as any)?.studyPlan?.englishLevel as
-    | string
-    | undefined;
+  const englishLevel = (userProfile as any)?.studyPlan?.englishLevel as string | undefined;
   useHideTabBar();
 
   const {
@@ -346,7 +379,8 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
               key={i}
               style={{ color: wr.isCorrect ? tc.success : tc.error, fontFamily: fonts.semiBold }}
             >
-              {wr.word}{i < result.wordResults.length - 1 ? ' ' : ''}
+              {wr.word}
+              {i < result.wordResults.length - 1 ? ' ' : ''}
             </Text>
           ))}
         </Text>
@@ -389,12 +423,18 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>English Pronunciation</Text>
         <View style={[styles.badge, { backgroundColor: progressColor }]}>
-          <Text style={styles.badgeText}>{currentIndex + 1}/{totalSentences}</Text>
+          <Text style={styles.badgeText}>
+            {currentIndex + 1}/{totalSentences}
+          </Text>
         </View>
       </View>
 
       {/* ═══════ MAIN CONTENT ═══════ */}
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} bounces={false}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        bounces={false}
+      >
         {/* Pronunciation Card */}
         <View style={[styles.card, isResult && styles.cardResult]}>
           <View style={styles.cardTopRow}>
@@ -544,13 +584,17 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
                     <Text style={[styles.wordCorrectnessValue, { color: tc.success }]}>
                       {result.rawWordCorrectness.matched}
                     </Text>
-                    <Text style={[styles.wordCorrectnessLabel, { color: tc.success }]}>Matched</Text>
+                    <Text style={[styles.wordCorrectnessLabel, { color: tc.success }]}>
+                      Matched
+                    </Text>
                   </View>
                   <View style={[styles.wordCorrectnessChip, { backgroundColor: tc.errorBg }]}>
                     <Text style={[styles.wordCorrectnessValue, { color: tc.error }]}>
                       {result.rawWordCorrectness.substituted}
                     </Text>
-                    <Text style={[styles.wordCorrectnessLabel, { color: tc.error }]}>Substituted</Text>
+                    <Text style={[styles.wordCorrectnessLabel, { color: tc.error }]}>
+                      Substituted
+                    </Text>
                   </View>
                   <View style={[styles.wordCorrectnessChip, { backgroundColor: tc.errorBg }]}>
                     <Text style={[styles.wordCorrectnessValue, { color: tc.error }]}>
@@ -575,10 +619,12 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
                 {result.wordResults.map((wr, i) => (
                   <View key={i} style={styles.wordBreakdownRow}>
                     <View style={styles.wordBreakdownLeft}>
-                      <Text style={[
-                        styles.wordBreakdownRef,
-                        { color: wr.isCorrect ? tc.success : tc.error },
-                      ]}>
+                      <Text
+                        style={[
+                          styles.wordBreakdownRef,
+                          { color: wr.isCorrect ? tc.success : tc.error },
+                        ]}
+                      >
                         {wr.word}
                       </Text>
                       {wr.asr && wr.asr !== wr.word.toLowerCase() ? (
@@ -587,35 +633,46 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
                     </View>
                     <View style={styles.wordBreakdownRight}>
                       {wr.op && (
-                        <View style={[
-                          styles.opBadge,
-                          {
-                            backgroundColor: wr.op === 'M' ? tc.successBg
-                              : wr.op === 'S' ? '#FFF3E0'
-                              : tc.errorBg,
-                          },
-                        ]}>
-                          <Text style={[
-                            styles.opBadgeText,
+                        <View
+                          style={[
+                            styles.opBadge,
                             {
-                              color: wr.op === 'M' ? tc.success
-                                : wr.op === 'S' ? '#E65100'
-                                : tc.error,
+                              backgroundColor:
+                                wr.op === 'M'
+                                  ? tc.successBg
+                                  : wr.op === 'S'
+                                    ? '#FFF3E0'
+                                    : tc.errorBg,
                             },
-                          ]}>
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.opBadgeText,
+                              {
+                                color:
+                                  wr.op === 'M' ? tc.success : wr.op === 'S' ? '#E65100' : tc.error,
+                              },
+                            ]}
+                          >
                             {wr.op === 'M' ? 'Match' : wr.op === 'S' ? 'Sub' : 'Del'}
                           </Text>
                         </View>
                       )}
                       {wr.pronunciationScore !== undefined && (
-                        <Text style={[
-                          styles.wordScoreText,
-                          {
-                            color: wr.pronunciationScore >= 0.8 ? tc.success
-                              : wr.pronunciationScore >= 0.6 ? '#FD8E39'
-                              : tc.error,
-                          },
-                        ]}>
+                        <Text
+                          style={[
+                            styles.wordScoreText,
+                            {
+                              color:
+                                wr.pronunciationScore >= 0.8
+                                  ? tc.success
+                                  : wr.pronunciationScore >= 0.6
+                                    ? '#FD8E39'
+                                    : tc.error,
+                            },
+                          ]}
+                        >
                           {(wr.pronunciationScore * 100).toFixed(0)}%
                         </Text>
                       )}
@@ -692,7 +749,9 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
                       disabled={completing}
                       onPress={handleComplete}
                     >
-                      <Text style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted }}>
+                      <Text
+                        style={{ fontFamily: fonts.regular, fontSize: 13, color: tc.textMuted }}
+                      >
                         Finish session now
                       </Text>
                     </TouchableOpacity>
@@ -722,7 +781,10 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
         visible={chatVisible}
         lessonId={lessonId}
         currentSentence={sentence?.text ?? ''}
-        onClose={() => { setChatVisible(false); setChatExpanded(false); }}
+        onClose={() => {
+          setChatVisible(false);
+          setChatExpanded(false);
+        }}
         onExpand={() => setChatExpanded((e) => !e)}
         expanded={chatExpanded}
       />
@@ -738,176 +800,332 @@ const HomePronunciationScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
-
 const CARD_H = 24;
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: tc.accentMuted },
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: { flex: 1, backgroundColor: tc.accentMuted },
 
-  // Loading
-  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingText: { fontFamily: fonts.medium, fontSize: 14, color: tc.accent },
+    loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+    loadingText: { fontFamily: fonts.medium, fontSize: 14, color: tc.accent },
 
-  // Header
-  header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start',
-    paddingHorizontal: CARD_H, paddingTop: Platform.OS === 'android' ? 40 : 12, paddingBottom: 4,
-  },
-  headerTitle: { fontFamily: fonts.bold, fontSize: 22, color: tc.text, maxWidth: SCREEN_W * 0.6 },
-  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
-  badgeText: { fontFamily: fonts.bold, fontSize: 12, color: tc.white },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      paddingHorizontal: CARD_H,
+      paddingTop: Platform.OS === 'android' ? 40 : 12,
+      paddingBottom: 4,
+    },
+    headerTitle: { fontFamily: fonts.bold, fontSize: 22, color: tc.text, maxWidth: SCREEN_W * 0.6 },
+    badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
+    badgeText: { fontFamily: fonts.bold, fontSize: 12, color: tc.white },
 
-  // Scroll
-  scrollContent: { paddingHorizontal: CARD_H, paddingTop: 10, paddingBottom: 16, flexGrow: 1 },
+    // Scroll
+    scrollContent: { paddingHorizontal: CARD_H, paddingTop: 10, paddingBottom: 16, flexGrow: 1 },
 
-  // Card
-  card: {
-    backgroundColor: 'rgba(255,255,255,0.50)', borderRadius: 20, paddingHorizontal: 22, paddingVertical: 24,
-    minHeight: 300, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)',
-  },
-  cardResult: { minHeight: 340 },
-  cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
-  speakerBtn: { marginRight: 6 },
-  cardTextWrap: { paddingHorizontal: 2 },
-  cardSentence: { fontFamily: fonts.semiBold, fontSize: 20, lineHeight: 33, color: tc.text, textAlign: 'center' },
+    card: {
+      backgroundColor: 'rgba(255,255,255,0.50)',
+      borderRadius: 20,
+      paddingHorizontal: 22,
+      paddingVertical: 24,
+      minHeight: 300,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.6)',
+    },
+    cardResult: { minHeight: 340 },
+    cardTopRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 6 },
+    speakerBtn: { marginRight: 6 },
+    cardTextWrap: { paddingHorizontal: 2 },
+    cardSentence: {
+      fontFamily: fonts.semiBold,
+      fontSize: 20,
+      lineHeight: 33,
+      color: tc.text,
+      textAlign: 'center',
+    },
 
-  // Result
-  resultSection: { alignItems: 'center', marginTop: 16 },
-  resultIconWrap: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  successMsg: { fontFamily: fonts.bold, fontSize: 22, color: tc.text, textAlign: 'center', lineHeight: 30 },
+    // Result
+    resultSection: { alignItems: 'center', marginTop: 16 },
+    resultIconWrap: {
+      width: 80,
+      height: 80,
+      borderRadius: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 12,
+    },
+    successMsg: {
+      fontFamily: fonts.bold,
+      fontSize: 22,
+      color: tc.text,
+      textAlign: 'center',
+      lineHeight: 30,
+    },
 
-  // Score sub-card
-  scoreCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 18, paddingHorizontal: 18,
-    marginTop: 14, alignItems: 'center', borderWidth: 1, borderColor: tc.divider,
-  },
-  scoreBig: { fontFamily: fonts.bold, fontSize: 32, color: tc.text, marginTop: 8 },
-  scoreCaption: { fontFamily: fonts.medium, fontSize: 14, color: tc.textLight, marginBottom: 12 },
-  scoreRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', gap: 8 },
-  scorePill: {
-    flex: 1, backgroundColor: tc.accentMuted, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  scorePillLabel: { fontFamily: fonts.medium, fontSize: 11, color: tc.textLight },
-  scorePillValue: { fontFamily: fonts.bold, fontSize: 16, color: tc.accent, marginTop: 2 },
+    // Score sub-card
+    scoreCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 18,
+      paddingVertical: 18,
+      paddingHorizontal: 18,
+      marginTop: 14,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: tc.divider,
+    },
+    scoreBig: { fontFamily: fonts.bold, fontSize: 32, color: tc.text, marginTop: 8 },
+    scoreCaption: { fontFamily: fonts.medium, fontSize: 14, color: tc.textLight, marginBottom: 12 },
+    scoreRow: { flexDirection: 'row', justifyContent: 'space-between', width: '100%', gap: 8 },
+    scorePill: {
+      flex: 1,
+      backgroundColor: tc.accentMuted,
+      borderRadius: 10,
+      paddingVertical: 8,
+      alignItems: 'center',
+    },
+    scorePillLabel: { fontFamily: fonts.medium, fontSize: 11, color: tc.textLight },
+    scorePillValue: { fontFamily: fonts.bold, fontSize: 16, color: tc.accent, marginTop: 2 },
 
-  // Feedback sub-card
-  feedbackCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  feedbackLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
-  feedbackLabel: { fontFamily: fonts.bold, fontSize: 15, color: tc.text },
-  feedbackText: { fontFamily: fonts.regular, fontSize: 14, color: tc.text, lineHeight: 22 },
+    // Feedback sub-card
+    feedbackCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 18,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: tc.divider,
+    },
+    feedbackLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+    feedbackLabel: { fontFamily: fonts.bold, fontSize: 15, color: tc.text },
+    feedbackText: { fontFamily: fonts.regular, fontSize: 14, color: tc.text, lineHeight: 22 },
 
-  // Processing
-  processingWrap: { alignItems: 'center', marginTop: 30, gap: 10 },
-  processingText: { fontFamily: fonts.medium, fontSize: 14, color: tc.accent },
+    // Processing
+    processingWrap: { alignItems: 'center', marginTop: 30, gap: 10 },
+    processingText: { fontFamily: fonts.medium, fontSize: 14, color: tc.accent },
 
-  // Action button
-  actionBtn: { alignSelf: 'center', backgroundColor: tc.accent, borderRadius: 24, paddingHorizontal: 36, paddingVertical: 12, marginTop: 18 },
-  actionBtnText: { fontFamily: fonts.bold, fontSize: 16, color: tc.white },
+    // Action button
+    actionBtn: {
+      alignSelf: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 24,
+      paddingHorizontal: 36,
+      paddingVertical: 12,
+      marginTop: 18,
+    },
+    actionBtnText: { fontFamily: fonts.bold, fontSize: 16, color: tc.white },
 
-  // Bottom
-  bottomArea: { alignItems: 'center', paddingBottom: Platform.OS === 'ios' ? 8 : 12, paddingHorizontal: CARD_H },
+    // Bottom
+    bottomArea: {
+      alignItems: 'center',
+      paddingBottom: Platform.OS === 'ios' ? 8 : 12,
+      paddingHorizontal: CARD_H,
+    },
 
-  // Waveform
-  waveBarOuter: { width: '80%', marginBottom: 14 },
-  waveBarTrack: { height: 22, borderRadius: 11, backgroundColor: tc.accent, overflow: 'hidden', justifyContent: 'center', paddingHorizontal: 6 },
-  waveBarWaveRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-around', height: '100%' },
-  waveBarSegment: { width: 4, height: 14, borderRadius: 2 },
-  waveBarSolid: { height: 4, borderRadius: 2, backgroundColor: tc.success, marginHorizontal: 4 },
+    // Waveform
+    waveBarOuter: { width: '80%', marginBottom: 14 },
+    waveBarTrack: {
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: tc.accent,
+      overflow: 'hidden',
+      justifyContent: 'center',
+      paddingHorizontal: 6,
+    },
+    waveBarWaveRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+      height: '100%',
+    },
+    waveBarSegment: { width: 4, height: 14, borderRadius: 2 },
+    waveBarSolid: { height: 4, borderRadius: 2, backgroundColor: tc.success, marginHorizontal: 4 },
 
-  // Mic
-  micBtn: {
-    width: 62, height: 62, borderRadius: 31, backgroundColor: tc.accent,
-    alignItems: 'center', justifyContent: 'center', elevation: 6,
-    shadowColor: '#000000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.3, shadowRadius: 6,
-  },
-  micBtnRecording: { backgroundColor: tc.error },
-  micBtnDimmed: { backgroundColor: tc.accentDark, opacity: 0.6 },
+    // Mic
+    micBtn: {
+      width: 62,
+      height: 62,
+      borderRadius: 31,
+      backgroundColor: tc.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 6,
+      shadowColor: '#000000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.3,
+      shadowRadius: 6,
+    },
+    micBtnRecording: { backgroundColor: tc.error },
+    micBtnDimmed: { backgroundColor: tc.accentDark, opacity: 0.6 },
 
-  // Labels
-  speakNowText: { fontFamily: fonts.medium, fontSize: 14, color: tc.textLight, marginTop: 6 },
+    speakNowText: { fontFamily: fonts.medium, fontSize: 14, color: tc.textLight, marginTop: 6 },
 
-  // Error
-  errorBar: {
-    position: 'absolute', top: Platform.OS === 'android' ? 36 : 0, left: 0, right: 0,
-    flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingVertical: 8, backgroundColor: tc.errorBg,
-  },
-  errorText: { fontFamily: fonts.regular, fontSize: 13, color: tc.error },
+    errorBar: {
+      position: 'absolute',
+      top: Platform.OS === 'android' ? 36 : 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      backgroundColor: tc.errorBg,
+    },
+    errorText: { fontFamily: fonts.regular, fontSize: 13, color: tc.error },
 
-  // Raw API scores
-  rawScoresCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  rawScoresRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 8 },
-  rawScorePill: {
-    flex: 1, backgroundColor: tc.accentMuted, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  rawScoreValue: { fontFamily: fonts.bold, fontSize: 16, color: tc.accent },
-  rawScoreLabel: { fontFamily: fonts.medium, fontSize: 10, color: tc.textLight, marginTop: 2 },
+    // Raw API scores
+    rawScoresCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 18,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: tc.divider,
+    },
+    rawScoresRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 8 },
+    rawScorePill: {
+      flex: 1,
+      backgroundColor: tc.accentMuted,
+      borderRadius: 10,
+      paddingVertical: 8,
+      alignItems: 'center',
+    },
+    rawScoreValue: { fontFamily: fonts.bold, fontSize: 16, color: tc.accent },
+    rawScoreLabel: { fontFamily: fonts.medium, fontSize: 10, color: tc.textLight, marginTop: 2 },
 
-  // Transcript
-  transcriptCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  transcriptText: {
-    fontFamily: fonts.medium, fontSize: 15, color: tc.text, fontStyle: 'italic', lineHeight: 24,
-  },
+    // Transcript
+    transcriptCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 18,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: tc.divider,
+    },
+    transcriptText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+      fontStyle: 'italic',
+      lineHeight: 24,
+    },
 
-  // Word correctness
-  wordCorrectnessCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  wordCorrectnessRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginTop: 6 },
-  wordCorrectnessChip: {
-    flex: 1, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  wordCorrectnessValue: { fontFamily: fonts.bold, fontSize: 18 },
-  wordCorrectnessLabel: { fontFamily: fonts.medium, fontSize: 10, marginTop: 2 },
-  wordCorrectnessScoreText: {
-    fontFamily: fonts.semiBold, fontSize: 13, color: tc.textLight, textAlign: 'center', marginTop: 10,
-  },
+    // Word correctness
+    wordCorrectnessCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 18,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: tc.divider,
+    },
+    wordCorrectnessRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      gap: 8,
+      marginTop: 6,
+    },
+    wordCorrectnessChip: {
+      flex: 1,
+      borderRadius: 10,
+      paddingVertical: 8,
+      alignItems: 'center',
+    },
+    wordCorrectnessValue: { fontFamily: fonts.bold, fontSize: 18 },
+    wordCorrectnessLabel: { fontFamily: fonts.medium, fontSize: 10, marginTop: 2 },
+    wordCorrectnessScoreText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'center',
+      marginTop: 10,
+    },
 
-  // Per-word breakdown
-  wordBreakdownCard: {
-    backgroundColor: tc.surface, borderRadius: 18, paddingVertical: 14, paddingHorizontal: 18,
-    marginTop: 12, borderWidth: 1, borderColor: tc.divider,
-  },
-  wordBreakdownRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 6, borderBottomWidth: 0.5, borderBottomColor: tc.divider,
-  },
-  wordBreakdownLeft: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap' },
-  wordBreakdownRef: { fontFamily: fonts.semiBold, fontSize: 14 },
-  wordBreakdownAsr: { fontFamily: fonts.regular, fontSize: 12, color: tc.textLight },
-  wordBreakdownRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  opBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
-  opBadgeText: { fontFamily: fonts.bold, fontSize: 10 },
-  wordScoreText: { fontFamily: fonts.bold, fontSize: 13 },
-});
+    // Per-word breakdown
+    wordBreakdownCard: {
+      backgroundColor: tc.surface,
+      borderRadius: 18,
+      paddingVertical: 14,
+      paddingHorizontal: 18,
+      marginTop: 12,
+      borderWidth: 1,
+      borderColor: tc.divider,
+    },
+    wordBreakdownRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 6,
+      borderBottomWidth: 0.5,
+      borderBottomColor: tc.divider,
+    },
+    wordBreakdownLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexWrap: 'wrap',
+    },
+    wordBreakdownRef: { fontFamily: fonts.semiBold, fontSize: 14 },
+    wordBreakdownAsr: { fontFamily: fonts.regular, fontSize: 12, color: tc.textLight },
+    wordBreakdownRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    opBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+    opBadgeText: { fontFamily: fonts.bold, fontSize: 10 },
+    wordScoreText: { fontFamily: fonts.bold, fontSize: 13 },
+  });
 
 const mascotStyles = StyleSheet.create({
-  wrap: { position: 'absolute', bottom: Platform.OS === 'ios' ? 14 : 18, left: 16, flexDirection: 'row', alignItems: 'flex-end' },
+  wrap: {
+    position: 'absolute',
+    bottom: Platform.OS === 'ios' ? 14 : 18,
+    left: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+  },
   bubble: {
-    backgroundColor: '#FFFFFF', borderRadius: 10, padding: 4, marginLeft: -8, marginBottom: 28,
-    elevation: 2, shadowColor: '#000000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 10,
+    padding: 4,
+    marginLeft: -8,
+    marginBottom: 28,
+    elevation: 2,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 2,
   },
 });
 
 const chatStyles = StyleSheet.create({
   overlay: {
-    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#6B4EAB',
-    borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden',
-    elevation: 20, shadowColor: '#000000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.3, shadowRadius: 12,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#6B4EAB',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    overflow: 'hidden',
+    elevation: 20,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
   },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.15)' },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.15)',
+  },
   headerLeft: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   headerInfo: {},
   headerTitle: { fontFamily: fonts.bold, fontSize: 16, color: '#FFFFFF' },
@@ -915,22 +1133,67 @@ const chatStyles = StyleSheet.create({
   headerActions: { flexDirection: 'row', gap: 14, alignItems: 'center' },
   messagesArea: { flex: 1 },
   messagesContent: { paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10 },
-  roleLabel: { fontFamily: fonts.semiBold, fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 3, marginTop: 8 },
+  roleLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 3,
+    marginTop: 8,
+  },
   roleLabelLeft: { textAlign: 'left', marginLeft: 32 },
   roleLabelRight: { textAlign: 'right', marginRight: 4 },
   bubbleRow: { flexDirection: 'row', marginBottom: 4, alignItems: 'flex-end' },
   bubbleRowLeft: { justifyContent: 'flex-start' },
   bubbleRowRight: { justifyContent: 'flex-end' },
-  bubble: { maxWidth: SCREEN_W * 0.65, paddingHorizontal: 14, paddingVertical: 9, borderRadius: 14 },
+  bubble: {
+    maxWidth: SCREEN_W * 0.65,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 14,
+  },
   bubbleWavy: { backgroundColor: 'rgba(255,255,255,0.15)', borderBottomLeftRadius: 4 },
   bubbleUser: { backgroundColor: '#3F66FB', borderBottomRightRadius: 4 },
   bubbleText: { fontFamily: fonts.regular, fontSize: 14, color: '#FFFFFF', lineHeight: 20 },
   typingRow: { marginTop: 6 },
-  typingLabel: { fontFamily: fonts.semiBold, fontSize: 11, color: 'rgba(255,255,255,0.6)', marginBottom: 3, marginLeft: 32 },
-  typingBubble: { backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 14, paddingHorizontal: 18, paddingVertical: 8, alignSelf: 'flex-start', marginLeft: 30 },
-  typingDots: { fontFamily: fonts.bold, fontSize: 18, color: 'rgba(255,255,255,0.5)', letterSpacing: 3 },
-  inputRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.12)' },
-  textInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: Platform.OS === 'ios' ? 10 : 8, fontFamily: fonts.regular, fontSize: 14, color: '#FFFFFF' },
+  typingLabel: {
+    fontFamily: fonts.semiBold,
+    fontSize: 11,
+    color: 'rgba(255,255,255,0.6)',
+    marginBottom: 3,
+    marginLeft: 32,
+  },
+  typingBubble: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14,
+    paddingHorizontal: 18,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+    marginLeft: 30,
+  },
+  typingDots: {
+    fontFamily: fonts.bold,
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.5)',
+    letterSpacing: 3,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.12)',
+  },
+  textInput: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    fontFamily: fonts.regular,
+    fontSize: 14,
+    color: '#FFFFFF',
+  },
   sendBtn: { marginLeft: 10, padding: 6 },
 });
 

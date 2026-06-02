@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useTutorChatController
  *
  * Drives the AI Tutor voice-chat (replaces the legacy lesson catalog as the
@@ -33,16 +39,8 @@ import {
   type ConversationHistoryMessage,
 } from '../services/conversationApi';
 import { useAuth } from '../context/AuthContext';
-import {
-  loadTutorHistory,
-  saveTutorHistory,
-  clearTutorHistory,
-} from '../services/chatStorage';
+import { loadTutorHistory, saveTutorHistory, clearTutorHistory } from '../services/chatStorage';
 import { detectAudioEncoding } from '../services/pronunciationService';
-
-// ═══════════════════════════════════════════════
-//  TYPES
-// ═══════════════════════════════════════════════
 
 export type TutorPhase = 'idle' | 'recording' | 'processing' | 'speaking' | 'error';
 
@@ -55,18 +53,13 @@ export interface TutorMessage {
   timestamp: string;
 }
 
-const createId = (): string =>
-  `tc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+const createId = (): string => `tc_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
 const TUTOR_GREETING =
   "Hi! I'm your AI tutor. Tap the mic and talk to me — I'll listen, then reply with my voice.";
 
 // Reject obvious silence / accidental taps before we hit the API.
 const MIN_RECORDING_MS = 600;
-
-// ═══════════════════════════════════════════════
-//  CONTROLLER
-// ═══════════════════════════════════════════════
 
 const greetingMessage = (): TutorMessage => ({
   id: createId(),
@@ -80,9 +73,7 @@ export const useTutorChatController = () => {
   // The studyPlan field lives on the full Firestore user doc — same `as any`
   // cast other screens use to read it from the lightweight UserProfile type.
   const { userProfile } = useAuth();
-  const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as
-    | string
-    | undefined;
+  const cefrLevel = (userProfile as any)?.studyPlan?.englishLevel as string | undefined;
   const learnerName = userProfile?.fullName;
 
   const [messages, setMessages] = useState<TutorMessage[]>(() => [greetingMessage()]);
@@ -173,8 +164,6 @@ export const useTutorChatController = () => {
     };
   }, []);
 
-  // ─── Helpers ─────────────────────────────────────────────────────────────
-
   const stopAndReleasePlayer = useCallback(() => {
     const p = playerRef.current;
     setPlayingMessageId(null);
@@ -237,8 +226,6 @@ export const useTutorChatController = () => {
     },
     [setPhase, stopAndReleasePlayer],
   );
-
-  // ─── Public actions ──────────────────────────────────────────────────────
 
   const replayMessage = useCallback(
     async (messageId: string) => {
@@ -335,12 +322,10 @@ export const useTutorChatController = () => {
       // and skip the convertAudioToWav Cloud Function round trip the
       // pronunciation pipeline needs.
       const encoding = detectAudioEncoding(uri);
-      const history: ConversationHistoryMessage[] = messagesRef.current.map(
-        (m) => ({
-          role: m.role === 'tutor' ? 'assistant' : 'user',
-          content: m.text,
-        }),
-      );
+      const history: ConversationHistoryMessage[] = messagesRef.current.map((m) => ({
+        role: m.role === 'tutor' ? 'assistant' : 'user',
+        content: m.text,
+      }));
       response = await conversationAudio({
         audioUri: uri,
         encoding,

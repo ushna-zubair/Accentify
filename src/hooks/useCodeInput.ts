@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback } from 'react';
 
 interface UseCodeInputReturn {
@@ -14,7 +20,6 @@ interface UseCodeInputReturn {
   /** Joined string of all digits */
   value: string;
 }
-
 
 export function useCodeInput(length: number): UseCodeInputReturn {
   const [code, setCode] = useState<string[]>(Array(length).fill(''));

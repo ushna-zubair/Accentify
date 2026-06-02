@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState } from 'react';
 import { Alert, ActionSheetIOS, Platform } from 'react-native';
 import { doc, updateDoc } from 'firebase/firestore';
@@ -33,22 +39,53 @@ const webConfirm = (title: string, message?: string): Promise<boolean> => {
   });
 };
 
-// ------- Constants -------
-export const LEARNING_GOALS: { label: LearningGoal; icon: string; iconSet: 'ionicons' | 'fa5' | 'mci' }[] = [
+export const LEARNING_GOALS: {
+  label: LearningGoal;
+  icon: string;
+  iconSet: 'ionicons' | 'fa5' | 'mci';
+}[] = [
   { label: 'Pronunciation', icon: 'mic', iconSet: 'ionicons' },
   { label: 'Vocabulary', icon: 'language', iconSet: 'fa5' },
   { label: 'Fluency', icon: 'chat-processing-outline', iconSet: 'mci' },
 ];
 
 export const COUNTRIES = [
-  'Australia', 'Canada', 'Germany', 'India', 'Japan',
-  'Pakistan', 'United Kingdom', 'United States',
+  'Australia',
+  'Canada',
+  'Germany',
+  'India',
+  'Japan',
+  'Pakistan',
+  'United Kingdom',
+  'United States',
 ];
 
 export const TIME_ZONES = [
-  'GMT-12', 'GMT-11', 'GMT-10', 'GMT-9', 'GMT-8', 'GMT-7', 'GMT-6', 'GMT-5',
-  'GMT-4', 'GMT-3', 'GMT-2', 'GMT-1', 'GMT+0', 'GMT+1', 'GMT+2', 'GMT+3',
-  'GMT+4', 'GMT+5', 'GMT+6', 'GMT+7', 'GMT+8', 'GMT+9', 'GMT+10', 'GMT+11', 'GMT+12',
+  'GMT-12',
+  'GMT-11',
+  'GMT-10',
+  'GMT-9',
+  'GMT-8',
+  'GMT-7',
+  'GMT-6',
+  'GMT-5',
+  'GMT-4',
+  'GMT-3',
+  'GMT-2',
+  'GMT-1',
+  'GMT+0',
+  'GMT+1',
+  'GMT+2',
+  'GMT+3',
+  'GMT+4',
+  'GMT+5',
+  'GMT+6',
+  'GMT+7',
+  'GMT+8',
+  'GMT+9',
+  'GMT+10',
+  'GMT+11',
+  'GMT+12',
 ];
 
 export const useProfileSettingsController = () => {
@@ -72,13 +109,14 @@ export const useProfileSettingsController = () => {
   const [editingField, setEditingField] = useState<'username' | 'password' | null>(null);
   const [fieldValue, setFieldValue] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
-  const [pickerModal, setPickerModal] = useState<{ visible: boolean; type: 'country' | 'timeZone' }>({
+  const [pickerModal, setPickerModal] = useState<{
+    visible: boolean;
+    type: 'country' | 'timeZone';
+  }>({
     visible: false,
     type: 'country',
   });
   const [photoUploading, setPhotoUploading] = useState(false);
-
-  // ------- Photo helpers -------
 
   const pickAndUploadPhoto = async (source: 'camera' | 'library') => {
     if (!currentUser) return;
@@ -141,7 +179,10 @@ export const useProfileSettingsController = () => {
   const handleRemovePhoto = async () => {
     if (!currentUser) return;
 
-    const confirmed = await webConfirm('Remove Photo', 'Are you sure you want to remove your profile photo?');
+    const confirmed = await webConfirm(
+      'Remove Photo',
+      'Are you sure you want to remove your profile photo?',
+    );
     if (!confirmed) return;
 
     setPhotoUploading(true);
@@ -252,9 +293,7 @@ export const useProfileSettingsController = () => {
   const toggleLearningGoal = async (goal: LearningGoal) => {
     if (!currentUser) return;
     const current = mergedProfile.learningGoals;
-    const updated = current.includes(goal)
-      ? current.filter((g) => g !== goal)
-      : [...current, goal];
+    const updated = current.includes(goal) ? current.filter((g) => g !== goal) : [...current, goal];
     try {
       await updateDoc(doc(db, 'users', currentUser.uid), {
         'studyPlan.learningGoals': updated,

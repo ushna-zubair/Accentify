@@ -1,16 +1,12 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
 
-
-import {
-  doc,
-  getDoc,
-  setDoc,
-  increment,
-  Timestamp,
-} from 'firebase/firestore';
+import { doc, getDoc, setDoc, increment, Timestamp } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import type { DashboardData } from '../models';
-
-// ─── Helpers ───
 
 /** Classify an hour into a time-of-day bucket. */
 function timeOfDay(hour: number): 'morning' | 'afternoon' | 'night' {
@@ -18,8 +14,6 @@ function timeOfDay(hour: number): 'morning' | 'afternoon' | 'night' {
   if (hour >= 12 && hour < 18) return 'afternoon';
   return 'night';
 }
-
-// ─── Incremental Counters ───
 
 /**
  * Increment session-level counters on the global stats doc.
@@ -30,28 +24,18 @@ function timeOfDay(hour: number): 'morning' | 'afternoon' | 'night' {
 export async function incrementSessionCounter(): Promise<void> {
   const ref = doc(db, 'admin_analytics', 'global_stats');
   try {
-    await setDoc(
-      ref,
-      { totalSessions: increment(1) },
-      { merge: true },
-    );
+    await setDoc(ref, { totalSessions: increment(1) }, { merge: true });
   } catch {
     // Non-critical – next full aggregation will fix the count
   }
 }
 
 /** Record a practice-time bucket hit (morning / afternoon / night). */
-export async function recordPracticeTime(
-  hour: number,
-): Promise<void> {
+export async function recordPracticeTime(hour: number): Promise<void> {
   const tod = timeOfDay(hour);
   const ref = doc(db, 'admin_analytics', 'global_stats');
   try {
-    await setDoc(
-      ref,
-      { [`practiceActivity.${tod}`]: increment(1) },
-      { merge: true },
-    );
+    await setDoc(ref, { [`practiceActivity.${tod}`]: increment(1) }, { merge: true });
   } catch {
     // Non-critical
   }
@@ -62,9 +46,7 @@ export async function recordPracticeTime(
  * Useful when the collection doesn't exist yet so the dashboard
  * isn't blank on first load.
  */
-export async function seedGlobalStats(
-  defaults: DashboardData,
-): Promise<void> {
+export async function seedGlobalStats(defaults: DashboardData): Promise<void> {
   const ref = doc(db, 'admin_analytics', 'global_stats');
   const snap = await getDoc(ref);
 

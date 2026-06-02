@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * TabBarVisibilityContext
  *
  * Allows screens to signal scroll direction so the bottom tab bar can
@@ -96,9 +102,7 @@ export const TabBarVisibilityProvider: React.FC<{ children: React.ReactNode }> =
   );
 
   return (
-    <TabBarVisibilityContext.Provider value={value}>
-      {children}
-    </TabBarVisibilityContext.Provider>
+    <TabBarVisibilityContext.Provider value={value}>{children}</TabBarVisibilityContext.Provider>
   );
 };
 

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Client wrapper for the convertAudioToWav Cloud Function.
  *
  * The HF pronunciation backend decodes incoming audio via libsndfile, which
@@ -53,9 +59,7 @@ export async function ensureWavUri(
 
   // Unique filename so concurrent attempts can't trample each other and we
   // never reopen a stale converted file from a previous attempt.
-  const fileName = `accentify_${Date.now()}_${Math.floor(
-    Math.random() * 1_000_000,
-  )}.wav`;
+  const fileName = `accentify_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}.wav`;
   const wavFile = new File(Paths.cache, fileName);
   if (wavFile.exists) {
     wavFile.delete();

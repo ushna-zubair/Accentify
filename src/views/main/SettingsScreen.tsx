@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -21,9 +27,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { SettingsStackParamList } from '../../models';
 import type { ThemeColors, ThemeFontSizes } from '../../hooks/useAppTheme';
 
-// ═══════════════════════════════════════════════
-//  WEB ALERT HELPER
-// ═══════════════════════════════════════════════
 const isWeb = Platform.OS === 'web';
 
 function webAlert(title: string, message?: string) {
@@ -46,10 +49,6 @@ function webConfirm(title: string, message: string, onConfirm: () => void) {
     ]);
   }
 }
-
-// ═══════════════════════════════════════════════
-//  SETTINGS ITEM DATA
-// ═══════════════════════════════════════════════
 
 interface SettingsItemData {
   key: string;
@@ -112,10 +111,6 @@ const SETTINGS_ITEMS: SettingsItemData[] = [
   },
 ];
 
-// ═══════════════════════════════════════════════
-//  SUB-COMPONENTS
-// ═══════════════════════════════════════════════
-
 /** Renders the icon for each settings item */
 const SettingsIcon: React.FC<{
   iconSet: string;
@@ -123,14 +118,12 @@ const SettingsIcon: React.FC<{
   size: number;
   color: string;
 }> = ({ iconSet, iconName, size, color }) => {
-  if (iconSet === 'ionicons')
-    return <Ionicons name={iconName as any} size={size} color={color} />;
+  if (iconSet === 'ionicons') return <Ionicons name={iconName as any} size={size} color={color} />;
   if (iconSet === 'mci')
     return <MaterialCommunityIcons name={iconName as any} size={size} color={color} />;
   return <Feather name={iconName as any} size={size} color={color} />;
 };
 
-// ─── Mobile Settings Row ───
 const MobileSettingsItem: React.FC<{
   item: SettingsItemData;
   onPress: () => void;
@@ -146,12 +139,16 @@ const MobileSettingsItem: React.FC<{
       {item.label}
     </Text>
     <View style={mobileStyles.settingsItemIcon}>
-      <SettingsIcon iconSet={item.iconSet} iconName={item.iconName} size={28} color={tc.accentLight} />
+      <SettingsIcon
+        iconSet={item.iconSet}
+        iconName={item.iconName}
+        size={28}
+        color={tc.accentLight}
+      />
     </View>
   </TouchableOpacity>
 );
 
-// ─── Web Settings Card ───
 const WebSettingsCard: React.FC<{
   item: SettingsItemData;
   onPress: () => void;
@@ -159,11 +156,7 @@ const WebSettingsCard: React.FC<{
   fs: ThemeFontSizes;
   styles: ReturnType<typeof createWebStyles>;
 }> = ({ item, onPress, tc, fs, styles }) => (
-  <TouchableOpacity
-    style={styles.card}
-    onPress={onPress}
-    activeOpacity={0.75}
-  >
+  <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
     <View style={styles.cardIconContainer}>
       <SettingsIcon iconSet={item.iconSet} iconName={item.iconName} size={26} color={tc.accent} />
     </View>
@@ -181,10 +174,6 @@ const WebSettingsCard: React.FC<{
     <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
   </TouchableOpacity>
 );
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 const SettingsScreen: React.FC = () => {
   const { signOut } = useAuth();
@@ -244,7 +233,7 @@ const SettingsScreen: React.FC = () => {
           {/* Settings Grid */}
           <View style={[webStyles.grid, { maxWidth: isExtraWide ? 960 : 680 }]}>
             {SETTINGS_ITEMS.map((item) => (
-              <View key={item.key} style={{ width: `${(100 / gridCols) - 2}%` as any }}>
+              <View key={item.key} style={{ width: `${100 / gridCols - 2}%` as any }}>
                 <WebSettingsCard
                   item={item}
                   onPress={() => handleItemPress(item)}
@@ -325,9 +314,7 @@ const SettingsScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
 //  MOBILE STYLES (original look)
-// ═══════════════════════════════════════════════
 
 const mobileStyles = StyleSheet.create({
   safeArea: {
@@ -383,9 +370,7 @@ const mobileStyles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
 //  WEB STYLES (responsive card grid)
-// ═══════════════════════════════════════════════
 
 const createWebStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => {
   const bgColor = isDark ? tc.background : '#F5F6FA';
@@ -401,7 +386,6 @@ const createWebStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) 
       paddingBottom: 48,
     },
 
-    // Header
     headerSection: {
       marginBottom: 28,
     },
@@ -416,14 +400,12 @@ const createWebStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) 
       color: tc.textLight,
     },
 
-    // Grid
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 16,
     },
 
-    // Card
     card: {
       backgroundColor: tc.surface,
       borderRadius: 14,

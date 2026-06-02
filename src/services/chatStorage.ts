@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Persistent storage for the two AI chat surfaces (Wavy Chat + Tutor).
  *
  * - Storage is per-user — falls back to `guest` when no Firebase uid is
@@ -23,11 +29,7 @@ const wavyKey = (uid: string | null | undefined): string =>
 const tutorKey = (uid: string | null | undefined): string =>
   `accentify.chat.tutor.v1.${uid ?? 'guest'}`;
 
-// ─── Wavy Chat (text-only) ────────────────────────────────────────────────────
-
-export async function loadWavyHistory(
-  uid: string | null | undefined,
-): Promise<WavyChatMessage[]> {
+export async function loadWavyHistory(uid: string | null | undefined): Promise<WavyChatMessage[]> {
   try {
     const raw = await AsyncStorage.getItem(wavyKey(uid));
     if (!raw) return [];
@@ -52,17 +54,13 @@ export async function saveWavyHistory(
   }
 }
 
-export async function clearWavyHistory(
-  uid: string | null | undefined,
-): Promise<void> {
+export async function clearWavyHistory(uid: string | null | undefined): Promise<void> {
   try {
     await AsyncStorage.removeItem(wavyKey(uid));
   } catch (e) {
     console.warn('[chatStorage] clearWavyHistory failed:', e);
   }
 }
-
-// ─── Tutor Chat (text + cached audio files) ───────────────────────────────────
 
 /** Returns true if a local file URI still exists on disk. */
 function audioFileExists(uri: string | undefined): boolean {
@@ -74,9 +72,7 @@ function audioFileExists(uri: string | undefined): boolean {
   }
 }
 
-export async function loadTutorHistory(
-  uid: string | null | undefined,
-): Promise<TutorMessage[]> {
+export async function loadTutorHistory(uid: string | null | undefined): Promise<TutorMessage[]> {
   try {
     const raw = await AsyncStorage.getItem(tutorKey(uid));
     if (!raw) return [];
@@ -105,9 +101,7 @@ export async function saveTutorHistory(
   }
 }
 
-export async function clearTutorHistory(
-  uid: string | null | undefined,
-): Promise<void> {
+export async function clearTutorHistory(uid: string | null | undefined): Promise<void> {
   try {
     await AsyncStorage.removeItem(tutorKey(uid));
   } catch (e) {

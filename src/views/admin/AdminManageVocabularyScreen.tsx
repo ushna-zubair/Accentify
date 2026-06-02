@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * AdminManageVocabularyScreen.tsx
  *
  * Admin CRUD over the `vocabularyWords/{wordId}` collection that backs the
@@ -28,7 +34,6 @@ import { useManageVocabularyController } from '../../controllers';
 import type { CefrLevel, VocabularyWord } from '../../models/vocabulary';
 import { CEFR_ORDER } from '../../models/vocabulary';
 
-// ─── Helpers ───
 const webConfirm = (title: string, msg: string, onOk: () => void) => {
   if (Platform.OS === 'web') {
     if (window.confirm(`${title}\n\n${msg}`)) onOk();
@@ -36,10 +41,6 @@ const webConfirm = (title: string, msg: string, onOk: () => void) => {
     onOk();
   }
 };
-
-// ═══════════════════════════════════════════════
-//  STAT CARDS
-// ═══════════════════════════════════════════════
 
 const StatCards: React.FC<{
   total: number;
@@ -53,20 +54,13 @@ const StatCards: React.FC<{
       <Text style={[styles.statLabel, { color: tc.textLight }]}>Total words</Text>
     </View>
     {CEFR_ORDER.map((l) => (
-      <View
-        key={l}
-        style={[styles.statCard, { backgroundColor: tc.surfaceAlt }]}
-      >
+      <View key={l} style={[styles.statCard, { backgroundColor: tc.surfaceAlt }]}>
         <Text style={[styles.statValue, { color: tc.text }]}>{counts[l]}</Text>
         <Text style={[styles.statLabel, { color: tc.textLight }]}>{l}</Text>
       </View>
     ))}
   </View>
 );
-
-// ═══════════════════════════════════════════════
-//  WORD ROW
-// ═══════════════════════════════════════════════
 
 const WordRow: React.FC<{
   word: VocabularyWord;
@@ -80,18 +74,11 @@ const WordRow: React.FC<{
       <View style={styles.wordRowHeader}>
         <Text style={[styles.wordRowWord, { color: tc.text }]}>{word.word}</Text>
         <View style={[styles.cefrBadge, { backgroundColor: tc.accentBg }]}>
-          <Text style={[styles.cefrBadgeText, { color: tc.accentDark }]}>
-            {word.cefrLevel}
-          </Text>
+          <Text style={[styles.cefrBadgeText, { color: tc.accentDark }]}>{word.cefrLevel}</Text>
         </View>
-        <Text style={[styles.posText, { color: tc.textMuted }]}>
-          {word.partOfSpeech}
-        </Text>
+        <Text style={[styles.posText, { color: tc.textMuted }]}>{word.partOfSpeech}</Text>
       </View>
-      <Text
-        style={[styles.synonymsText, { color: tc.textLight }]}
-        numberOfLines={2}
-      >
+      <Text style={[styles.synonymsText, { color: tc.textLight }]} numberOfLines={2}>
         Synonyms: {word.acceptableSynonyms.join(', ')}
       </Text>
       <Text style={[styles.definitionText, { color: tc.textMuted }]} numberOfLines={2}>
@@ -108,10 +95,6 @@ const WordRow: React.FC<{
     </View>
   </View>
 );
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 const AdminManageVocabularyScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
@@ -141,31 +124,24 @@ const AdminManageVocabularyScreen: React.FC = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <StatCards
-          total={ctrl.totalCount}
-          counts={ctrl.counts}
-          styles={styles}
-          tc={tc}
-        />
+        <StatCards total={ctrl.totalCount} counts={ctrl.counts} styles={styles} tc={tc} />
 
         {/* ── Seed action ── */}
-        <View style={[styles.seedCard, { backgroundColor: tc.surface, borderColor: tc.cardBorder }]}>
+        <View
+          style={[styles.seedCard, { backgroundColor: tc.surface, borderColor: tc.cardBorder }]}
+        >
           <View style={{ flex: 1 }}>
-            <Text style={[styles.seedTitle, { color: tc.text }]}>
-              Seed default vocabulary
-            </Text>
+            <Text style={[styles.seedTitle, { color: tc.text }]}>Seed default vocabulary</Text>
             <Text style={[styles.seedSub, { color: tc.textLight }]}>
-              Uploads 300 curated words (50 × A1–C2). Re-running is safe — same
-              IDs are upserted in place.
+              Uploads 300 curated words (50 × A1–C2). Re-running is safe — same IDs are upserted in
+              place.
             </Text>
             {ctrl.seedMessage && (
               <Text
                 style={[
                   styles.seedMessage,
                   {
-                    color: ctrl.seedMessage.startsWith('Seed failed')
-                      ? tc.error
-                      : tc.success,
+                    color: ctrl.seedMessage.startsWith('Seed failed') ? tc.error : tc.success,
                   },
                 ]}
               >
@@ -176,17 +152,12 @@ const AdminManageVocabularyScreen: React.FC = () => {
           <TouchableOpacity
             onPress={ctrl.seedDefaults}
             disabled={ctrl.seeding}
-            style={[
-              styles.seedBtn,
-              { backgroundColor: ctrl.seeding ? tc.disabled : tc.accent },
-            ]}
+            style={[styles.seedBtn, { backgroundColor: ctrl.seeding ? tc.disabled : tc.accent }]}
           >
             {ctrl.seeding ? (
               <ActivityIndicator color={tc.textOnAccent} />
             ) : (
-              <Text style={[styles.seedBtnText, { color: tc.textOnAccent }]}>
-                Run seed
-              </Text>
+              <Text style={[styles.seedBtnText, { color: tc.textOnAccent }]}>Run seed</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -194,10 +165,7 @@ const AdminManageVocabularyScreen: React.FC = () => {
         {/* ── Filters ── */}
         <View style={styles.filterRow}>
           <View
-            style={[
-              styles.searchBox,
-              { backgroundColor: tc.inputBg, borderColor: tc.inputBorder },
-            ]}
+            style={[styles.searchBox, { backgroundColor: tc.inputBg, borderColor: tc.inputBorder }]}
           >
             <Ionicons name="search" size={16} color={tc.textMuted} />
             <TextInput
@@ -229,12 +197,7 @@ const AdminManageVocabularyScreen: React.FC = () => {
                   },
                 ]}
               >
-                <Text
-                  style={[
-                    styles.tabChipText,
-                    { color: active ? tc.textOnAccent : tc.text },
-                  ]}
-                >
+                <Text style={[styles.tabChipText, { color: active ? tc.textOnAccent : tc.text }]}>
                   {f === 'all' ? 'All' : f}
                 </Text>
               </TouchableOpacity>
@@ -244,7 +207,9 @@ const AdminManageVocabularyScreen: React.FC = () => {
 
         {/* ── Error ── */}
         {ctrl.error && (
-          <View style={[styles.errorBanner, { backgroundColor: tc.errorBg, borderColor: tc.error }]}>
+          <View
+            style={[styles.errorBanner, { backgroundColor: tc.errorBg, borderColor: tc.error }]}
+          >
             <Text style={[styles.errorText, { color: tc.error }]}>{ctrl.error}</Text>
             <TouchableOpacity onPress={() => ctrl.setError(null)}>
               <Ionicons name="close" size={18} color={tc.error} />
@@ -311,7 +276,11 @@ const AdminManageVocabularyScreen: React.FC = () => {
               />
 
               <Text style={[styles.fieldLabel, { color: tc.textLight }]}>CEFR level</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabsRow}>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.tabsRow}
+              >
                 {CEFR_ORDER.map((l) => {
                   const active = ctrl.form.cefrLevel === l;
                   return (
@@ -327,10 +296,7 @@ const AdminManageVocabularyScreen: React.FC = () => {
                       ]}
                     >
                       <Text
-                        style={[
-                          styles.tabChipText,
-                          { color: active ? tc.textOnAccent : tc.text },
-                        ]}
+                        style={[styles.tabChipText, { color: active ? tc.textOnAccent : tc.text }]}
                       >
                         {l}
                       </Text>
@@ -389,17 +355,12 @@ const AdminManageVocabularyScreen: React.FC = () => {
                 onPress={ctrl.closeModal}
                 style={[styles.cancelBtn, { borderColor: tc.cardBorder }]}
               >
-                <Text style={{ color: tc.text, fontFamily: fonts.semiBold }}>
-                  Cancel
-                </Text>
+                <Text style={{ color: tc.text, fontFamily: fonts.semiBold }}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={ctrl.save}
                 disabled={ctrl.saving}
-                style={[
-                  styles.saveBtn,
-                  { backgroundColor: ctrl.saving ? tc.disabled : tc.accent },
-                ]}
+                style={[styles.saveBtn, { backgroundColor: ctrl.saving ? tc.disabled : tc.accent }]}
               >
                 {ctrl.saving ? (
                   <ActivityIndicator color={tc.textOnAccent} />
@@ -416,10 +377,6 @@ const AdminManageVocabularyScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  FORM FIELD
-// ═══════════════════════════════════════════════
 
 const FormField: React.FC<{
   label: string;
@@ -451,10 +408,6 @@ const FormField: React.FC<{
     />
   </View>
 );
-
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
 
 const createStyles = (tc: ThemeColors) =>
   StyleSheet.create({
@@ -574,7 +527,6 @@ const createStyles = (tc: ThemeColors) =>
     definitionText: { fontFamily: fonts.regular, fontSize: 12, marginTop: 2 },
     rowActions: { flexDirection: 'row', gap: 4 },
     iconBtn: { padding: 8 },
-    // modal
     modalBackdrop: {
       flex: 1,
       backgroundColor: tc.overlay,

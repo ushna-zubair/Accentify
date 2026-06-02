@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo } from 'react';
 import {
   View,
@@ -20,15 +26,11 @@ import type { SettingsStackParamList } from '../../models';
 
 const isWeb = Platform.OS === 'web';
 
-// ─── Helpers ───
-
 const PLATFORM_ICON: Record<DevicePlatform, { name: string; set: 'ion' | 'mci' }> = {
   ios: { name: 'logo-apple', set: 'ion' },
   android: { name: 'logo-android', set: 'ion' },
   web: { name: 'monitor', set: 'mci' },
 };
-
-// ─── Sub-components ───
 
 interface DeviceCardProps {
   device: LoginDevice;
@@ -74,20 +76,15 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onRevoke, revoking, tc,
             )}
           </View>
 
-          <Text style={styles.meta}>
-            Last active: {device.lastActiveAt}
-          </Text>
+          <Text style={styles.meta}>Last active: {device.lastActiveAt}</Text>
 
           {device.location ? (
             <Text style={styles.meta}>
-              <Ionicons name="location-outline" size={11} color={tc.textMuted} />{' '}
-              {device.location}
+              <Ionicons name="location-outline" size={11} color={tc.textMuted} /> {device.location}
             </Text>
           ) : null}
 
-          {device.ipAddress ? (
-            <Text style={styles.meta}>IP: {device.ipAddress}</Text>
-          ) : null}
+          {device.ipAddress ? <Text style={styles.meta}>IP: {device.ipAddress}</Text> : null}
         </View>
       </View>
 
@@ -113,8 +110,6 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device, onRevoke, revoking, tc,
   );
 };
 
-// ─── Main Screen ───
-
 type Props = NativeStackScreenProps<SettingsStackParamList, 'LoginDevices'>;
 
 const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
@@ -139,7 +134,12 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <Container style={styles.safeArea}>
       {/* Header */}
-      <View style={[styles.header, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any }]}>
+      <View
+        style={[
+          styles.header,
+          isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any },
+        ]}
+      >
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color={tc.text} />
         </TouchableOpacity>
@@ -147,7 +147,12 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
         <View style={{ width: 36 }} />
       </View>
 
-      <Text style={[styles.subtitle, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any }]}>
+      <Text
+        style={[
+          styles.subtitle,
+          isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any },
+        ]}
+      >
         Devices where your account is currently signed in. You can revoke access to any device you
         don't recognize.
       </Text>
@@ -167,7 +172,10 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
           data={devices}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={[styles.listContent, isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any }]}
+          contentContainerStyle={[
+            styles.listContent,
+            isWide && { maxWidth: 780, alignSelf: 'center' as any, width: '100%' as any },
+          ]}
           showsVerticalScrollIndicator={false}
           ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
         />
@@ -176,144 +184,140 @@ const LoginDevicesScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-// ─── Styles ───
-
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    marginBottom: 4,
-  },
-  backButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: tc.surfaceAlt,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    paddingHorizontal: 20,
-    marginBottom: 16,
-    lineHeight: 19,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  // ─── Device Card ───
-  card: {
-    backgroundColor: tc.surface,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: tc.cardBorder,
-    padding: 14,
-  },
-  cardCurrent: {
-    borderColor: tc.accent,
-  },
-  cardBody: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  iconCircle: {
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-    backgroundColor: tc.accentMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconCircleCurrent: {
-    backgroundColor: tc.accent,
-  },
-  infoColumn: {
-    flex: 1,
-    gap: 2,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flexWrap: 'wrap',
-  },
-  deviceName: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    color: tc.text,
-    flexShrink: 1,
-  },
-  currentBadge: {
-    backgroundColor: tc.successBg,
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  currentBadgeText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 10,
-    color: tc.success,
-  },
-  meta: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: tc.textLight,
-    lineHeight: 17,
-  },
-  // ─── Revoke ───
-  revokeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-end',
-    gap: 4,
-    marginTop: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: tc.error,
-  },
-  revokeText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 13,
-    color: tc.error,
-  },
-  // ─── States ───
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  loadingText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.textLight,
-    marginTop: 12,
-  },
-  emptyText: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.textMuted,
-    marginTop: 12,
-    textAlign: 'center',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    safeArea: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 10,
+      marginBottom: 4,
+    },
+    backButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: tc.surfaceAlt,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 20,
+      color: tc.text,
+    },
+    subtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      paddingHorizontal: 20,
+      marginBottom: 16,
+      lineHeight: 19,
+    },
+    listContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 40,
+    },
+    card: {
+      backgroundColor: tc.surface,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: tc.cardBorder,
+      padding: 14,
+    },
+    cardCurrent: {
+      borderColor: tc.accent,
+    },
+    cardBody: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 12,
+    },
+    iconCircle: {
+      width: 46,
+      height: 46,
+      borderRadius: 23,
+      backgroundColor: tc.accentMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    iconCircleCurrent: {
+      backgroundColor: tc.accent,
+    },
+    infoColumn: {
+      flex: 1,
+      gap: 2,
+    },
+    nameRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'wrap',
+    },
+    deviceName: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+      flexShrink: 1,
+    },
+    currentBadge: {
+      backgroundColor: tc.successBg,
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    currentBadgeText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 10,
+      color: tc.success,
+    },
+    meta: {
+      fontFamily: fonts.regular,
+      fontSize: 12,
+      color: tc.textLight,
+      lineHeight: 17,
+    },
+    revokeBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      alignSelf: 'flex-end',
+      gap: 4,
+      marginTop: 10,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: tc.error,
+    },
+    revokeText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 13,
+      color: tc.error,
+    },
+    centered: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 24,
+    },
+    loadingText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.textLight,
+      marginTop: 12,
+    },
+    emptyText: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.textMuted,
+      marginTop: 12,
+      textAlign: 'center',
+    },
+  });
 
 export default LoginDevicesScreen;

@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import {
   View,
@@ -26,26 +32,24 @@ const { width: SCREEN_W } = Dimensions.get('window');
 
 type ConversationRoute = RouteProp<TutorStackParamList, 'ConversationExercise'>;
 
-// ═══════════════════════════════════════════════
 //  BACKGROUND ILLUSTRATION (faded conversation scene)
-// ═══════════════════════════════════════════════
 
 const BackgroundIllustration: React.FC = () => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   return (
-  <View style={bgStyles.container}>
-    <Svg width={200} height={160} viewBox="0 0 220 160" style={{ opacity: 0.15 }}>
-      <Rect x={10} y={40} width={60} height={100} rx={8} fill={tc.accentLight} opacity={0.6} />
-      <Rect x={150} y={50} width={55} height={90} rx={8} fill={tc.accentMuted} opacity={0.6} />
-      <Circle cx={80} cy={55} r={18} fill="#E8BD8A" />
-      <Path d="M68 52 C68 42 92 42 92 52" fill="#7B4DB8" />
-      <Ellipse cx={80} cy={100} rx={22} ry={30} fill="#F5C84C" />
-      <Circle cx={155} cy={65} r={14} fill="#D4A574" />
-      <Ellipse cx={155} cy={105} rx={18} ry={25} fill="#5B7FC7" />
-      <Rect x={55} y={120} width={110} height={6} rx={3} fill={tc.accentLight} />
-    </Svg>
-  </View>
+    <View style={bgStyles.container}>
+      <Svg width={200} height={160} viewBox="0 0 220 160" style={{ opacity: 0.15 }}>
+        <Rect x={10} y={40} width={60} height={100} rx={8} fill={tc.accentLight} opacity={0.6} />
+        <Rect x={150} y={50} width={55} height={90} rx={8} fill={tc.accentMuted} opacity={0.6} />
+        <Circle cx={80} cy={55} r={18} fill="#E8BD8A" />
+        <Path d="M68 52 C68 42 92 42 92 52" fill="#7B4DB8" />
+        <Ellipse cx={80} cy={100} rx={22} ry={30} fill="#F5C84C" />
+        <Circle cx={155} cy={65} r={14} fill="#D4A574" />
+        <Ellipse cx={155} cy={105} rx={18} ry={25} fill="#5B7FC7" />
+        <Rect x={55} y={120} width={110} height={6} rx={3} fill={tc.accentLight} />
+      </Svg>
+    </View>
   );
 };
 
@@ -57,10 +61,6 @@ const bgStyles = StyleSheet.create({
     zIndex: 0,
   },
 });
-
-// ═══════════════════════════════════════════════
-//  AUDIO PROGRESS BAR
-// ═══════════════════════════════════════════════
 
 interface AudioBarProps {
   progress: number;
@@ -89,12 +89,7 @@ const AudioProgressBar: React.FC<AudioBarProps> = ({ progress, color }) => {
   return (
     <View style={barStyles.container}>
       <View style={[barStyles.track, { borderColor: color + '40' }]}>
-        <Animated.View
-          style={[
-            barStyles.fill,
-            { width, backgroundColor: color },
-          ]}
-        />
+        <Animated.View style={[barStyles.fill, { width, backgroundColor: color }]} />
       </View>
     </View>
   );
@@ -112,16 +107,12 @@ const barStyles = StyleSheet.create({
   fill: { height: '100%', borderRadius: 3 },
 });
 
-// ═══════════════════════════════════════════════
 //  WAVEFORM BAR (animated when recording)
-// ═══════════════════════════════════════════════
 
 const WaveformBar: React.FC<{ isActive: boolean }> = ({ isActive }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
-  const waveAnims = useRef(
-    Array.from({ length: 20 }, () => new Animated.Value(0.3)),
-  ).current;
+  const waveAnims = useRef(Array.from({ length: 20 }, () => new Animated.Value(0.3))).current;
 
   useEffect(() => {
     if (isActive) {
@@ -189,9 +180,7 @@ const wfStyles = StyleSheet.create({
   wave: { width: 4, borderRadius: 2 },
 });
 
-// ═══════════════════════════════════════════════
 //  AI MASCOT (purple bear with "..." speech bubble)
-// ═══════════════════════════════════════════════
 
 const AiMascot: React.FC<{ visible: boolean }> = ({ visible }) => {
   const slideAnim = useRef(new Animated.Value(80)).current;
@@ -206,9 +195,7 @@ const AiMascot: React.FC<{ visible: boolean }> = ({ visible }) => {
   }, [visible]);
 
   return (
-    <Animated.View
-      style={[mascotStyles.container, { transform: [{ translateY: slideAnim }] }]}
-    >
+    <Animated.View style={[mascotStyles.container, { transform: [{ translateY: slideAnim }] }]}>
       {/* Speech bubble */}
       <View style={mascotStyles.speechBubble}>
         <Text style={mascotStyles.speechDots}>...</Text>
@@ -306,10 +293,6 @@ const mascotStyles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
-//  CHAT BUBBLE
-// ═══════════════════════════════════════════════
-
 interface ChatBubbleProps {
   turn: ConversationTurn;
   isPartner: boolean;
@@ -341,12 +324,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
         isPartner ? bubbleStyles.partnerAlign : bubbleStyles.learnerAlign,
       ]}
     >
-      <Text
-        style={[
-          bubbleStyles.name,
-          isPartner ? bubbleStyles.nameLeft : bubbleStyles.nameRight,
-        ]}
-      >
+      <Text style={[bubbleStyles.name, isPartner ? bubbleStyles.nameLeft : bubbleStyles.nameRight]}>
         {name}
       </Text>
       <View
@@ -361,11 +339,7 @@ const ChatBubble: React.FC<ChatBubbleProps> = ({
           size={18}
           color={turn.completed || isCurrent ? barColor : tc.textMuted}
         />
-        <AudioProgressBar
-          progress={displayProgress}
-          color={barColor}
-          isActive={isCurrent}
-        />
+        <AudioProgressBar progress={displayProgress} color={barColor} isActive={isCurrent} />
       </View>
     </View>
   );
@@ -399,16 +373,11 @@ const bubbleStyles = StyleSheet.create({
   dimmed: { opacity: 0.45 },
 });
 
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
-
 const ConversationExerciseScreen: React.FC = () => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc), [tc]);
   const route = useRoute<ConversationRoute>();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<TutorStackParamList>>();
   const { lessonId } = route.params;
   useHideTabBar();
 
@@ -480,16 +449,9 @@ const ConversationExerciseScreen: React.FC = () => {
   };
 
   const micDisabled =
-    phase === 'partner_speaking' ||
-    phase === 'processing' ||
-    phase === 'completed';
+    phase === 'partner_speaking' || phase === 'processing' || phase === 'completed';
 
-  const micColor =
-    phase === 'recording'
-      ? tc.error
-      : micDisabled
-        ? tc.disabled
-        : tc.accent;
+  const micColor = phase === 'recording' ? tc.error : micDisabled ? tc.disabled : tc.accent;
 
   // Navigate to completion
   const handleDone = () => {
@@ -571,9 +533,7 @@ const ConversationExerciseScreen: React.FC = () => {
             const isPartner = turn.speaker === 'partner';
             const idx = turns.findIndex((t) => t.id === turn.id);
             const isCurrent = idx === currentTurnIndex;
-            const progress = isPartner
-              ? partnerPlayProgress
-              : learnerRecordProgress;
+            const progress = isPartner ? partnerPlayProgress : learnerRecordProgress;
 
             return (
               <ChatBubble
@@ -596,9 +556,7 @@ const ConversationExerciseScreen: React.FC = () => {
           )}
 
           {/* End conversation label */}
-          {isComplete && (
-            <Text style={styles.endConversationLabel}>End conversation</Text>
-          )}
+          {isComplete && <Text style={styles.endConversationLabel}>End conversation</Text>}
         </View>
 
         {/* ── Feedback Section (shown after completion) ── */}
@@ -607,9 +565,7 @@ const ConversationExerciseScreen: React.FC = () => {
             <View style={styles.feedbackDivider} />
 
             <Text style={styles.feedbackTitle}>Feedback:</Text>
-            <Text style={styles.feedbackBody}>
-              {conversationFeedback.feedback}
-            </Text>
+            <Text style={styles.feedbackBody}>{conversationFeedback.feedback}</Text>
 
             <View style={styles.tipRow}>
               <Text style={styles.tipLabel}>Tip:</Text>
@@ -631,21 +587,13 @@ const ConversationExerciseScreen: React.FC = () => {
             disabled={micDisabled}
             activeOpacity={0.7}
           >
-            <Ionicons
-              name={phase === 'recording' ? 'stop' : 'mic'}
-              size={32}
-              color={tc.white}
-            />
+            <Ionicons name={phase === 'recording' ? 'stop' : 'mic'} size={32} color={tc.white} />
           </TouchableOpacity>
         </Animated.View>
 
         {/* DONE! button (only when complete) */}
         {isComplete && (
-          <TouchableOpacity
-            style={styles.doneBtn}
-            onPress={handleDone}
-            activeOpacity={0.8}
-          >
+          <TouchableOpacity style={styles.doneBtn} onPress={handleDone} activeOpacity={0.8}>
             <Text style={styles.doneBtnText}>DONE!</Text>
           </TouchableOpacity>
         )}
@@ -673,193 +621,189 @@ const ConversationExerciseScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.accentMuted,
+    },
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.accentMuted,
-  },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 54,
+      paddingBottom: 4,
+    },
+    headerLeft: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      flex: 1,
+    },
+    backBtn: { marginRight: 6, marginTop: 2 },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 28,
+      color: tc.text,
+    },
+    togglesRow: { marginTop: 2 },
+    toggleLabel: {
+      fontFamily: fonts.semiBold,
+      fontSize: 11,
+      color: tc.text,
+      lineHeight: 17,
+    },
+    timerBadge: {
+      backgroundColor: tc.success,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+      marginTop: 8,
+    },
+    timerText: {
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      color: tc.white,
+    },
 
-  // ── Header ──
-  header: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 54,
-    paddingBottom: 4,
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    flex: 1,
-  },
-  backBtn: { marginRight: 6, marginTop: 2 },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 28,
-    color: tc.text,
-  },
-  togglesRow: { marginTop: 2 },
-  toggleLabel: {
-    fontFamily: fonts.semiBold,
-    fontSize: 11,
-    color: tc.text,
-    lineHeight: 17,
-  },
-  timerBadge: {
-    backgroundColor: tc.success,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    marginTop: 8,
-  },
-  timerText: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: tc.white,
-  },
+    // ── Main scroll ──
+    mainScroll: {
+      flex: 1,
+    },
+    mainScrollContent: {
+      paddingBottom: 20,
+    },
 
-  // ── Main scroll ──
-  mainScroll: {
-    flex: 1,
-  },
-  mainScrollContent: {
-    paddingBottom: 20,
-  },
+    // ── Chat Area ──
+    chatArea: {
+      marginHorizontal: 12,
+      marginTop: 12,
+      backgroundColor: 'rgba(255,255,255,0.35)',
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+      overflow: 'hidden',
+      padding: 14,
+      minHeight: 200,
+      position: 'relative',
+    },
 
-  // ── Chat Area ──
-  chatArea: {
-    marginHorizontal: 12,
-    marginTop: 12,
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: tc.cardBorder,
-    overflow: 'hidden',
-    padding: 14,
-    minHeight: 200,
-    position: 'relative',
-  },
+    // ── Processing ──
+    processingBubble: {
+      alignSelf: 'center',
+      backgroundColor: tc.accentLight,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      marginTop: 8,
+    },
+    processingText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.accent,
+    },
 
-  // ── Processing ──
-  processingBubble: {
-    alignSelf: 'center',
-    backgroundColor: tc.accentLight,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginTop: 8,
-  },
-  processingText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.accent,
-  },
+    // ── End conversation label ──
+    endConversationLabel: {
+      fontFamily: fonts.medium,
+      fontSize: 16,
+      color: tc.textMuted,
+      textAlign: 'center',
+      marginTop: 16,
+      fontStyle: 'italic',
+    },
 
-  // ── End conversation label ──
-  endConversationLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 16,
-    color: tc.textMuted,
-    textAlign: 'center',
-    marginTop: 16,
-    fontStyle: 'italic',
-  },
+    // ── Feedback Section ──
+    feedbackSection: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      paddingBottom: 8,
+    },
+    feedbackDivider: {
+      height: 1,
+      backgroundColor: tc.divider,
+      marginBottom: 14,
+    },
+    feedbackTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.text,
+      marginBottom: 4,
+    },
+    feedbackBody: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      color: tc.text,
+      lineHeight: 22,
+      marginBottom: 12,
+      paddingLeft: 4,
+    },
+    tipRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+    },
+    tipLabel: {
+      fontFamily: fonts.bold,
+      fontSize: 14,
+      color: tc.text,
+      marginRight: 4,
+    },
+    tipBody: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      color: tc.text,
+      lineHeight: 21,
+      flex: 1,
+    },
 
-  // ── Feedback Section ──
-  feedbackSection: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    paddingBottom: 8,
-  },
-  feedbackDivider: {
-    height: 1,
-    backgroundColor: tc.divider,
-    marginBottom: 14,
-  },
-  feedbackTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.text,
-    marginBottom: 4,
-  },
-  feedbackBody: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.text,
-    lineHeight: 22,
-    marginBottom: 12,
-    paddingLeft: 4,
-  },
-  tipRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  tipLabel: {
-    fontFamily: fonts.bold,
-    fontSize: 14,
-    color: tc.text,
-    marginRight: 4,
-  },
-  tipBody: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.text,
-    lineHeight: 21,
-    flex: 1,
-  },
+    // ── Bottom Area ──
+    bottomArea: {
+      paddingBottom: 24,
+      paddingTop: 8,
+      alignItems: 'center',
+    },
+    errorText: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.error,
+      marginBottom: 6,
+      textAlign: 'center',
+    },
+    speakNowLabel: {
+      fontFamily: fonts.medium,
+      fontSize: 14,
+      color: tc.textLight,
+      marginTop: 6,
+      marginBottom: 4,
+    },
+    micBtn: {
+      width: 64,
+      height: 64,
+      borderRadius: 32,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 4,
+    },
 
-  // ── Bottom Area ──
-  bottomArea: {
-    paddingBottom: 24,
-    paddingTop: 8,
-    alignItems: 'center',
-  },
-  errorText: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.error,
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  speakNowLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 14,
-    color: tc.textLight,
-    marginTop: 6,
-    marginBottom: 4,
-  },
-  micBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-
-  // ── DONE button ──
-  doneBtn: {
-    backgroundColor: tc.accent,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 44,
-    marginTop: 10,
-  },
-  doneBtnText: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: tc.white,
-    letterSpacing: 1,
-  },
-});
+    // ── DONE button ──
+    doneBtn: {
+      backgroundColor: tc.accent,
+      borderRadius: 14,
+      paddingVertical: 12,
+      paddingHorizontal: 44,
+      marginTop: 10,
+    },
+    doneBtnText: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: tc.white,
+      letterSpacing: 1,
+    },
+  });
 
 export default ConversationExerciseScreen;

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Controller for the word-level pronunciation exercise.
  *
  * Mirrors usePronunciationExerciseController but works against the HF
@@ -6,18 +12,9 @@
  * single-word recordings with a phoneme-level breakdown.
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  useAudioRecorder,
-  AudioModule,
-  setAudioModeAsync,
-} from 'expo-audio';
+import { useAudioRecorder, AudioModule, setAudioModeAsync } from 'expo-audio';
 import { WAV2VEC2_RECORDING_OPTIONS } from '../utils/audioRecording';
-import {
-  doc,
-  setDoc,
-  Timestamp,
-  increment,
-} from 'firebase/firestore';
+import { doc, setDoc, Timestamp, increment } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { detectAudioEncoding } from '../services/pronunciationService';
 import {
@@ -33,11 +30,7 @@ import {
   type PhonemeDetail,
 } from '../services/accentifyApi';
 import { ensureWavUri } from '../services/audioConvert';
-import type {
-  PronunciationScore,
-  PronunciationAttemptResult,
-  WordResult,
-} from '../models';
+import type { PronunciationScore, PronunciationAttemptResult, WordResult } from '../models';
 import { onExerciseComplete, recordPronunciationAttempt } from '../services/progressService';
 import { COMPLETE_THRESHOLD_PCT, PRACTICE_THRESHOLD_PCT } from '../config/scoring';
 
@@ -70,12 +63,7 @@ const DEFAULT_WORDS: PromptWordResponse[] = [
   { word: 'TOGETHER', reference: 'T UH G EH DH ER', level: 3 },
 ];
 
-const SUCCESS_MESSAGES = [
-  'Excellent!',
-  'Nailed it!',
-  'Perfect!',
-  'Great job!',
-];
+const SUCCESS_MESSAGES = ['Excellent!', 'Nailed it!', 'Perfect!', 'Great job!'];
 
 const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
@@ -220,10 +208,7 @@ const adaptWordResponse = (
   const lowConfCount = phDetails.filter(
     (p) => (p.confidence ?? 0) < PHONEME_CONFIDENCE_FLOOR,
   ).length;
-  const confidencePenalty = Math.min(
-    MAX_CONFIDENCE_PENALTY,
-    lowConfCount / totalPhonemes,
-  );
+  const confidencePenalty = Math.min(MAX_CONFIDENCE_PENALTY, lowConfCount / totalPhonemes);
   const adjustedScore = rawScore * (1 - confidencePenalty);
   const overall = Math.round(adjustedScore * 100);
   const score: PronunciationScore = {
@@ -243,8 +228,7 @@ const adaptWordResponse = (
   // Always surface coaching feedback when the API returns it. Fall back to the
   // local rule-based tip only when the model didn't say anything AND the
   // attempt wasn't already correct.
-  const feedback =
-    remoteFeedback || (isCorrect ? '' : buildLocalWordFeedback(evalRes));
+  const feedback = remoteFeedback || (isCorrect ? '' : buildLocalWordFeedback(evalRes));
 
   return {
     isCorrect,
@@ -263,10 +247,7 @@ const adaptWordResponse = (
   };
 };
 
-export const useWordPronunciationExerciseController = (
-  lessonId: string,
-  englishLevel?: string,
-) => {
+export const useWordPronunciationExerciseController = (lessonId: string, englishLevel?: string) => {
   const [words, setWords] = useState<PromptWordResponse[]>(DEFAULT_WORDS);
   const [wordsLoading, setWordsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -301,9 +282,7 @@ export const useWordPronunciationExerciseController = (
       try {
         // Mix review/target/stretch by issuing one /prompt_word call per slot
         // at the slot's specific level (instead of all 5 at one level).
-        const results = await Promise.allSettled(
-          slots.map((lvl) => promptWord(lvl)),
-        );
+        const results = await Promise.allSettled(slots.map((lvl) => promptWord(lvl)));
         const fulfilled: PromptWordResponse[] = [];
         for (const r of results) {
           if (r.status === 'fulfilled' && r.value?.word) {
@@ -539,10 +518,7 @@ export const useWordPronunciationExerciseController = (
         // tokenize ("no valid model tokens"/"unknown word"). Re-recording
         // won't help — swap the current word for a fresh one and let the
         // user retry with a word the model can actually score.
-        if (
-          apiErr instanceof AccentifyApiError &&
-          apiErr.code === 'unknown_word'
-        ) {
+        if (apiErr instanceof AccentifyApiError && apiErr.code === 'unknown_word') {
           const replaced = await replaceCurrentWord();
           setError(
             replaced
@@ -594,9 +570,7 @@ export const useWordPronunciationExerciseController = (
     setCompleting(true);
     try {
       const avgScore = computeAverage(allScores);
-      const completedCount = allScores.filter(
-        (s) => s.overall >= COMPLETE_THRESHOLD_PCT,
-      ).length;
+      const completedCount = allScores.filter((s) => s.overall >= COMPLETE_THRESHOLD_PCT).length;
       await setDoc(
         doc(db, 'users', uid, 'lessons', lessonId),
         {

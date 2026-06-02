@@ -85,7 +85,11 @@ describe('Model type contracts', () => {
     });
 
     it('avatar is optional', () => {
-      const withAvatar: TopLearner = { name: 'Alice', sessions: 5, avatar: 'https://example.com/a.png' };
+      const withAvatar: TopLearner = {
+        name: 'Alice',
+        sessions: 5,
+        avatar: 'https://example.com/a.png',
+      };
       expect(withAvatar.avatar).toBeDefined();
 
       const without: TopLearner = { name: 'Charlie', sessions: 3 };
@@ -107,7 +111,12 @@ describe('Model type contracts', () => {
   // ─── Progress metrics ───
   describe('PronunciationMetrics', () => {
     it('has all four metric fields', () => {
-      const m: PronunciationMetrics = { clarity: 80, soundAccuracy: 75, smoothness: 85, rhythmAndTone: 70 };
+      const m: PronunciationMetrics = {
+        clarity: 80,
+        soundAccuracy: 75,
+        smoothness: 85,
+        rhythmAndTone: 70,
+      };
       expect(Object.keys(m)).toHaveLength(4);
       for (const val of Object.values(m)) {
         expect(typeof val).toBe('number');
@@ -119,14 +128,23 @@ describe('Model type contracts', () => {
 
   describe('ConversationMetrics', () => {
     it('has all four metric fields', () => {
-      const m: ConversationMetrics = { fluency: 70, vocabulary: 80, grammarUsage: 65, turnTaking: 90 };
+      const m: ConversationMetrics = {
+        fluency: 70,
+        vocabulary: 80,
+        grammarUsage: 65,
+        turnTaking: 90,
+      };
       expect(Object.keys(m)).toHaveLength(4);
     });
   });
 
   describe('OverallPerformance', () => {
     it('has speechAccuracy, speechFluency, speechConsistency', () => {
-      const p: OverallPerformance = { speechAccuracy: 80, speechFluency: 75, speechConsistency: 85 };
+      const p: OverallPerformance = {
+        speechAccuracy: 80,
+        speechFluency: 75,
+        speechConsistency: 85,
+      };
       expect(p).toHaveProperty('speechAccuracy');
       expect(p).toHaveProperty('speechFluency');
       expect(p).toHaveProperty('speechConsistency');

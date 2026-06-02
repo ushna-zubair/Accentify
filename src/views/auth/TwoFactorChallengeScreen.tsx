@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * TwoFactorChallengeScreen — post-login TOTP challenge.
  *
  * Shown by AppNavigator when `pendingTotpChallenge` is true on AuthContext.

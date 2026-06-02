@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
@@ -16,15 +22,7 @@ import Svg, { Circle, Path } from 'react-native-svg';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import {
-  collection,
-  query,
-  orderBy,
-  limit,
-  getDocs,
-  getDoc,
-  doc,
-} from 'firebase/firestore';
+import { collection, query, orderBy, limit, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db, auth } from '../../config/firebase';
 import { useAuth } from '../../context/AuthContext';
 import { useTabBarScroll } from '../../context/TabBarVisibilityContext';
@@ -53,8 +51,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
   const [completedToday, setCompletedToday] = useState(0);
   const [practiceMinutes, setPracticeMinutes] = useState(0);
   const [practiceItemsToday, setPracticeItemsToday] = useState(0);
-  const dailyGoal =
-    (userProfile as any)?.studyPlan?.dailyGoal ?? DEFAULT_DAILY_GOAL;
+  const dailyGoal = (userProfile as any)?.studyPlan?.dailyGoal ?? DEFAULT_DAILY_GOAL;
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -72,8 +69,16 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         try {
           const ts = data.createdAt?.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
           createdAt = ts.toISOString();
-        } catch { createdAt = ''; }
-        return { id: d.id, title: data.title ?? 'Announcement', body: data.body ?? '', createdAt, createdBy: data.createdBy ?? '' };
+        } catch {
+          createdAt = '';
+        }
+        return {
+          id: d.id,
+          title: data.title ?? 'Announcement',
+          body: data.body ?? '',
+          createdAt,
+          createdBy: data.createdBy ?? '',
+        };
       });
       setAnnouncements(items);
     } catch (e: unknown) {
@@ -89,12 +94,16 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         if (streakSnap.exists()) {
           setDayStreak(streakSnap.data().dayStreak ?? 0);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       // Fetch today's activity
       try {
         const todayKey = new Date().toISOString().split('T')[0];
-        const dailySnap = await getDoc(doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey));
+        const dailySnap = await getDoc(
+          doc(db, 'users', uid, 'progress', 'daily', 'entries', todayKey),
+        );
         if (dailySnap.exists()) {
           const d = dailySnap.data() as any;
           const completed =
@@ -107,9 +116,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
               (d.vocabWordsLearned ?? 0);
           const seconds =
             (d.practiceSeconds as number) ??
-            (d.practiceMinutes != null
-              ? (d.practiceMinutes as number) * 60
-              : practiceItems * 30);
+            (d.practiceMinutes != null ? (d.practiceMinutes as number) * 60 : practiceItems * 30);
           setCompletedToday(completed);
           setPracticeItemsToday(practiceItems);
           setPracticeMinutes(Math.round(seconds / 60));
@@ -118,7 +125,9 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           setPracticeItemsToday(0);
           setPracticeMinutes(0);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     }
   }, []);
 
@@ -150,7 +159,9 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
       const diffD = Math.floor(diffH / 24);
       if (diffD === 1) return 'Yesterday';
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    } catch { return ''; }
+    } catch {
+      return '';
+    }
   };
 
   return (
@@ -160,7 +171,9 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />
+        }
       >
         {/* ── Header / Greeting ── */}
         <View style={styles.header}>
@@ -172,9 +185,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             style={styles.avatarCircle}
             activeOpacity={0.7}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            onPress={() =>
-              (navigation as any).navigate('Settings', { screen: 'ProfileSettings' })
-            }
+            onPress={() => (navigation as any).navigate('Settings', { screen: 'ProfileSettings' })}
             accessibilityRole="button"
             accessibilityLabel="Open profile settings"
           >
@@ -198,10 +209,14 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
                 <View style={styles.announcementContent}>
                   <View style={styles.announcementTopRow}>
-                    <Text style={styles.announcementTitle} numberOfLines={1}>{ann.title}</Text>
+                    <Text style={styles.announcementTitle} numberOfLines={1}>
+                      {ann.title}
+                    </Text>
                     <Text style={styles.announcementTime}>{formatDate(ann.createdAt)}</Text>
                   </View>
-                  <Text style={styles.announcementBody} numberOfLines={2}>{ann.body}</Text>
+                  <Text style={styles.announcementBody} numberOfLines={2}>
+                    {ann.body}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -233,19 +248,17 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
 
           {/* Progress bar — reflects today's completion vs daily goal */}
           {(() => {
-            const pct = dailyGoal > 0
-              ? Math.min(100, Math.round((completedToday / dailyGoal) * 100))
-              : 0;
+            const pct =
+              dailyGoal > 0 ? Math.min(100, Math.round((completedToday / dailyGoal) * 100)) : 0;
             const remaining = Math.max(0, dailyGoal - completedToday);
-            const label = remaining > 0
-              ? `${completedToday}/${dailyGoal} done today • ${practiceMinutes}m practiced`
-              : `Daily goal complete • ${practiceMinutes}m practiced`;
+            const label =
+              remaining > 0
+                ? `${completedToday}/${dailyGoal} done today • ${practiceMinutes}m practiced`
+                : `Daily goal complete • ${practiceMinutes}m practiced`;
             return (
               <>
                 <View style={styles.progressBarBg}>
-                  <View
-                    style={[styles.progressBarFill, { width: `${pct}%` }]}
-                  />
+                  <View style={[styles.progressBarFill, { width: `${pct}%` }]} />
                 </View>
                 <Text style={styles.progressLabel}>{label}</Text>
               </>
@@ -277,9 +290,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
             </View>
             <View style={styles.wavyInfo}>
               <Text style={styles.wavyTitle}>Chat with Wavy</Text>
-              <Text style={styles.wavySubtitle}>
-                Ask questions, practice English, or get help
-              </Text>
+              <Text style={styles.wavySubtitle}>Ask questions, practice English, or get help</Text>
             </View>
             <View style={styles.wavyArrow}>
               <Ionicons name="chatbubble-ellipses" size={22} color="#FFFFFF" />
@@ -345,9 +356,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={styles.exerciseInfo}>
             <Text style={styles.exerciseTitle}>Sentence Pronunciation Practice</Text>
-            <Text style={styles.exerciseDesc}>
-              Read sentences aloud and get AI feedback
-            </Text>
+            <Text style={styles.exerciseDesc}>Read sentences aloud and get AI feedback</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>
@@ -362,9 +371,7 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
           </View>
           <View style={styles.exerciseInfo}>
             <Text style={styles.exerciseTitle}>Vocabulary Builder</Text>
-            <Text style={styles.exerciseDesc}>
-              Type synonyms for words matched to your level
-            </Text>
+            <Text style={styles.exerciseDesc}>Type synonyms for words matched to your level</Text>
           </View>
           <Ionicons name="chevron-forward" size={20} color={tc.textMuted} />
         </TouchableOpacity>
@@ -376,307 +383,307 @@ const HomeMainScreen: React.FC<Props> = ({ navigation }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: Platform.OS === 'android' ? 16 : 8,
-  },
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    scrollContent: {
+      paddingHorizontal: 24,
+      paddingTop: Platform.OS === 'android' ? 16 : 8,
+    },
 
-  // ── Header ──
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  greeting: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: tc.text,
-  },
-  subGreeting: {
-    fontFamily: fonts.regular,
-    fontSize: 14,
-    color: tc.textLight,
-    marginTop: 2,
-  },
-  avatarCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: tc.accentMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 24,
+    },
+    greeting: {
+      fontFamily: fonts.bold,
+      fontSize: 24,
+      color: tc.text,
+    },
+    subGreeting: {
+      fontFamily: fonts.regular,
+      fontSize: 14,
+      color: tc.textLight,
+      marginTop: 2,
+    },
+    avatarCircle: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: tc.accentMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
 
-  // ── Practice Card ──
-  practiceCard: {
-    backgroundColor: tc.accentMuted,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 28,
-    overflow: 'hidden',
-  },
-  practiceCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  practiceCardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  practiceIconWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    backgroundColor: tc.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  practiceInfo: {
-    flex: 1,
-  },
-  practiceTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 17,
-    color: tc.text,
-    marginBottom: 2,
-  },
-  practiceSubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-  },
-  practiceArrow: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
-  progressBarBg: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.6)',
-    marginBottom: 8,
-  },
-  progressBarFill: {
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: tc.accent,
-  },
-  progressLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 12,
-    color: tc.textLight,
-  },
+    // ── Practice Card ──
+    practiceCard: {
+      backgroundColor: tc.accentMuted,
+      borderRadius: 20,
+      padding: 20,
+      marginBottom: 28,
+      overflow: 'hidden',
+    },
+    practiceCardInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16,
+    },
+    practiceCardLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    practiceIconWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 16,
+      backgroundColor: tc.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 14,
+    },
+    practiceInfo: {
+      flex: 1,
+    },
+    practiceTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 17,
+      color: tc.text,
+      marginBottom: 2,
+    },
+    practiceSubtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+    },
+    practiceArrow: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 8,
+    },
+    progressBarBg: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: 'rgba(255,255,255,0.6)',
+      marginBottom: 8,
+    },
+    progressBarFill: {
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: tc.accent,
+    },
+    progressLabel: {
+      fontFamily: fonts.medium,
+      fontSize: 12,
+      color: tc.textLight,
+    },
 
-  // ── Wavy Chat Card ──
-  wavyCard: {
-    backgroundColor: '#6B4EAB',
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 28,
-    overflow: 'hidden',
-  },
-  wavyCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  wavyAvatarWrap: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  wavyInfo: {
-    flex: 1,
-  },
-  wavyTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 16,
-    color: '#FFFFFF',
-    marginBottom: 2,
-  },
-  wavySubtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  wavyArrow: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 8,
-  },
+    // ── Wavy Chat Card ──
+    wavyCard: {
+      backgroundColor: '#6B4EAB',
+      borderRadius: 20,
+      padding: 18,
+      marginBottom: 28,
+      overflow: 'hidden',
+    },
+    wavyCardInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    wavyAvatarWrap: {
+      width: 52,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 14,
+    },
+    wavyInfo: {
+      flex: 1,
+    },
+    wavyTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 16,
+      color: '#FFFFFF',
+      marginBottom: 2,
+    },
+    wavySubtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: 'rgba(255,255,255,0.7)',
+    },
+    wavyArrow: {
+      width: 42,
+      height: 42,
+      borderRadius: 21,
+      backgroundColor: 'rgba(255,255,255,0.15)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginLeft: 8,
+    },
 
-  // ── Section Title ──
-  sectionTitle: {
-    fontFamily: fonts.bold,
-    fontSize: 18,
-    color: tc.text,
-    marginBottom: 14,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 14,
-  },
-  sectionHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+    // ── Section Title ──
+    sectionTitle: {
+      fontFamily: fonts.bold,
+      fontSize: 18,
+      color: tc.text,
+      marginBottom: 14,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 14,
+    },
+    sectionHeaderLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
 
-  // ── Announcements ──
-  announcementsSection: {
-    marginBottom: 24,
-  },
-  announcementCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: tc.surface,
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: tc.cardBorder,
-    borderLeftWidth: 3,
-    borderLeftColor: tc.accent,
-  },
-  announcementIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: tc.accentMuted,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  announcementContent: {
-    flex: 1,
-  },
-  announcementTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  announcementTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 14,
-    color: tc.text,
-    flex: 1,
-    marginRight: 8,
-  },
-  announcementTime: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: tc.textMuted,
-  },
-  announcementBody: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    lineHeight: 18,
-  },
+    // ── Announcements ──
+    announcementsSection: {
+      marginBottom: 24,
+    },
+    announcementCard: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      backgroundColor: tc.surface,
+      borderRadius: 14,
+      padding: 14,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+      borderLeftWidth: 3,
+      borderLeftColor: tc.accent,
+    },
+    announcementIconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      backgroundColor: tc.accentMuted,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    announcementContent: {
+      flex: 1,
+    },
+    announcementTopRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 4,
+    },
+    announcementTitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 14,
+      color: tc.text,
+      flex: 1,
+      marginRight: 8,
+    },
+    announcementTime: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textMuted,
+    },
+    announcementBody: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      lineHeight: 18,
+    },
 
-  // ── Difficulty pill ──
-  difficultyPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  difficultyText: {
-    fontFamily: fonts.medium,
-    fontSize: 11,
-  },
+    // ── Difficulty pill ──
+    difficultyPill: {
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: 8,
+    },
+    difficultyText: {
+      fontFamily: fonts.medium,
+      fontSize: 11,
+    },
 
-  // ── Stats Row ──
-  statsRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 28,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: tc.surface,
-    borderRadius: 16,
-    padding: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: tc.cardBorder,
-  },
-  statIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  statValue: {
-    fontFamily: fonts.bold,
-    fontSize: 20,
-    color: tc.text,
-  },
-  statLabel: {
-    fontFamily: fonts.regular,
-    fontSize: 11,
-    color: tc.textLight,
-    marginTop: 2,
-  },
+    // ── Stats Row ──
+    statsRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 28,
+    },
+    statCard: {
+      flex: 1,
+      backgroundColor: tc.surface,
+      borderRadius: 16,
+      padding: 14,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    },
+    statIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 8,
+    },
+    statValue: {
+      fontFamily: fonts.bold,
+      fontSize: 20,
+      color: tc.text,
+    },
+    statLabel: {
+      fontFamily: fonts.regular,
+      fontSize: 11,
+      color: tc.textLight,
+      marginTop: 2,
+    },
 
-  // ── Exercise Cards ──
-  exerciseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: tc.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: tc.cardBorder,
-  },
-  exerciseIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 14,
-  },
-  exerciseInfo: {
-    flex: 1,
-  },
-  exerciseTitle: {
-    fontFamily: fonts.semiBold,
-    fontSize: 15,
-    color: tc.text,
-    marginBottom: 2,
-  },
-  exerciseDesc: {
-    fontFamily: fonts.regular,
-    fontSize: 12,
-    color: tc.textLight,
-  },
-});
+    // ── Exercise Cards ──
+    exerciseCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: tc.surface,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: tc.cardBorder,
+    },
+    exerciseIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 14,
+    },
+    exerciseInfo: {
+      flex: 1,
+    },
+    exerciseTitle: {
+      fontFamily: fonts.semiBold,
+      fontSize: 15,
+      color: tc.text,
+      marginBottom: 2,
+    },
+    exerciseDesc: {
+      fontFamily: fonts.regular,
+      fontSize: 12,
+      color: tc.textLight,
+    },
+  });
 
 export default HomeMainScreen;

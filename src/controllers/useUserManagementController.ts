@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useEffect, useCallback } from 'react';
 import {
   collection,
@@ -22,7 +28,6 @@ const PAGE_SIZE = 20;
 const functions = getFunctions(undefined, 'us-central1');
 const adminDeleteUser = httpsCallable(functions, 'adminDeleteUser');
 
-// ─── Controller ───
 export const useUserManagementController = () => {
   const [users, setUsers] = useState<ManagedUser[]>([]);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
@@ -72,7 +77,12 @@ export const useUserManagementController = () => {
     try {
       setLoading(true);
       const usersRef = collection(db, 'users');
-      const q = query(usersRef, orderBy('createdAt', 'desc'), startAfter(lastDoc), limit(PAGE_SIZE));
+      const q = query(
+        usersRef,
+        orderBy('createdAt', 'desc'),
+        startAfter(lastDoc),
+        limit(PAGE_SIZE),
+      );
       const snapshot = await getDocs(q);
 
       const fetched: ManagedUser[] = snapshot.docs.map((d) => {
@@ -98,62 +108,65 @@ export const useUserManagementController = () => {
   }, [lastDoc, hasMore, loading]);
 
   // ── Search by short ID ──
-  const searchUser = useCallback(async (id: string) => {
-    if (!id.trim()) {
-      // Reset to full list
-      fetchUsers();
-      return;
-    }
+  const searchUser = useCallback(
+    async (id: string) => {
+      if (!id.trim()) {
+        // Reset to full list
+        fetchUsers();
+        return;
+      }
 
-    try {
-      setLoading(true);
-      setError(null);
+      try {
+        setLoading(true);
+        setError(null);
 
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('shortId', '==', id.trim()));
-      const snapshot = await getDocs(q);
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('shortId', '==', id.trim()));
+        const snapshot = await getDocs(q);
 
-      if (snapshot.empty) {
-        // Fallback: try using it as a UID prefix
-        const docSnap = await getDoc(doc(db, 'users', id.trim()));
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUsers([
-            {
-              uid: docSnap.id,
-              userId: data.shortId ?? docSnap.id.slice(0, 5),
+        if (snapshot.empty) {
+          // Fallback: try using it as a UID prefix
+          const docSnap = await getDoc(doc(db, 'users', id.trim()));
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setUsers([
+              {
+                uid: docSnap.id,
+                userId: data.shortId ?? docSnap.id.slice(0, 5),
+                fullName: data.profile?.fullName ?? data.fullName ?? '',
+                email: data.email ?? '',
+                status: data.status ?? 'active',
+              },
+            ]);
+          } else {
+            setUsers([]);
+            setError('No user found with that ID');
+          }
+        } else {
+          const fetched: ManagedUser[] = snapshot.docs.map((d) => {
+            const data = d.data();
+            return {
+              uid: d.id,
+              userId: data.shortId ?? d.id.slice(0, 5),
               fullName: data.profile?.fullName ?? data.fullName ?? '',
               email: data.email ?? '',
               status: data.status ?? 'active',
-            },
-          ]);
-        } else {
-          setUsers([]);
-          setError('No user found with that ID');
+            };
+          });
+          setUsers(fetched);
         }
-      } else {
-        const fetched: ManagedUser[] = snapshot.docs.map((d) => {
-          const data = d.data();
-          return {
-            uid: d.id,
-            userId: data.shortId ?? d.id.slice(0, 5),
-            fullName: data.profile?.fullName ?? data.fullName ?? '',
-            email: data.email ?? '',
-            status: data.status ?? 'active',
-          };
-        });
-        setUsers(fetched);
-      }
 
-      setHasMore(false);
-      setSelectedUids(new Set());
-    } catch (e: unknown) {
-      console.error('[UserMgmt] searchUser error:', e);
-      setError(e instanceof Error ? e.message : 'Search failed');
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchUsers]);
+        setHasMore(false);
+        setSelectedUids(new Set());
+      } catch (e: unknown) {
+        console.error('[UserMgmt] searchUser error:', e);
+        setError(e instanceof Error ? e.message : 'Search failed');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchUsers],
+  );
 
   // ── Toggle selection ──
   const toggleSelect = useCallback((uid: string) => {
@@ -169,111 +182,103 @@ export const useUserManagementController = () => {
   }, []);
 
   // ── Add user ──
-  const addUser = useCallback(
-    async (fullName: string, email: string) => {
-      if (!fullName.trim() || !email.trim()) {
-        setError('Name and email are required');
-        return;
-      }
+  const addUser = useCallback(async (fullName: string, email: string) => {
+    if (!fullName.trim() || !email.trim()) {
+      setError('Name and email are required');
+      return;
+    }
 
-      try {
-        setLoading(true);
-        setError(null);
+    try {
+      setLoading(true);
+      setError(null);
 
-        const shortId = generateShortId();
-        const newDocRef = doc(collection(db, 'users'));
+      const shortId = generateShortId();
+      const newDocRef = doc(collection(db, 'users'));
 
-        await setDoc(newDocRef, {
-          email: email.trim(),
-          role: 'learner',
-          authProvider: 'email',
-          shortId,
-          status: 'active',
-          profileComplete: false,
-          emailVerified: false,
-          termsAccepted: false,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          lastLoginAt: null,
-          profile: {
-            fullName: fullName.trim(),
-            nickName: '',
-            dateOfBirth: '',
-            phoneNumber: '',
-            gender: '',
-            profilePictureUrl: '',
-            country: '',
-            timeZone: '',
-          },
-          security: {
-            appPinHash: null,
-            biometricsEnabled: false,
-            twoFactorEnabled: false,
-            twoFactorMethod: 'none',
-            passwordChangedAt: null,
-          },
-          preferences: {
-            tutor_personality: 'friendly coach',
-            accessibility_mode: false,
-            cultural_context: true,
-            notificationsEnabled: true,
-            appLanguage: 'en',
-          },
-          studyPlan: {
-            learningGoals: [],
-            nativeLanguage: '',
-            englishLevel: '',
-          },
-        });
-
-        const newUser: ManagedUser = {
-          uid: newDocRef.id,
-          userId: shortId,
+      await setDoc(newDocRef, {
+        email: email.trim(),
+        role: 'learner',
+        authProvider: 'email',
+        shortId,
+        status: 'active',
+        profileComplete: false,
+        emailVerified: false,
+        termsAccepted: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        lastLoginAt: null,
+        profile: {
           fullName: fullName.trim(),
-          email: email.trim(),
-          status: 'active',
-        };
+          nickName: '',
+          dateOfBirth: '',
+          phoneNumber: '',
+          gender: '',
+          profilePictureUrl: '',
+          country: '',
+          timeZone: '',
+        },
+        security: {
+          appPinHash: null,
+          biometricsEnabled: false,
+          twoFactorEnabled: false,
+          twoFactorMethod: 'none',
+          passwordChangedAt: null,
+        },
+        preferences: {
+          tutor_personality: 'friendly coach',
+          accessibility_mode: false,
+          cultural_context: true,
+          notificationsEnabled: true,
+          appLanguage: 'en',
+        },
+        studyPlan: {
+          learningGoals: [],
+          nativeLanguage: '',
+          englishLevel: '',
+        },
+      });
 
-        setUsers((prev) => [newUser, ...prev]);
-      } catch (e: unknown) {
-        console.error('[UserMgmt] addUser error:', e);
-        setError(e instanceof Error ? e.message : 'Failed to add user');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+      const newUser: ManagedUser = {
+        uid: newDocRef.id,
+        userId: shortId,
+        fullName: fullName.trim(),
+        email: email.trim(),
+        status: 'active',
+      };
+
+      setUsers((prev) => [newUser, ...prev]);
+    } catch (e: unknown) {
+      console.error('[UserMgmt] addUser error:', e);
+      setError(e instanceof Error ? e.message : 'Failed to add user');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // ── Edit user ──
-  const editUser = useCallback(
-    async (uid: string, fullName: string, email: string) => {
-      try {
-        setLoading(true);
-        setError(null);
+  const editUser = useCallback(async (uid: string, fullName: string, email: string) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        await updateDoc(doc(db, 'users', uid), {
-          'profile.fullName': fullName.trim(),
-          email: email.trim(),
-          updatedAt: new Date().toISOString(),
-        });
+      await updateDoc(doc(db, 'users', uid), {
+        'profile.fullName': fullName.trim(),
+        email: email.trim(),
+        updatedAt: new Date().toISOString(),
+      });
 
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.uid === uid
-              ? { ...u, fullName: fullName.trim(), email: email.trim() }
-              : u,
-          ),
-        );
-      } catch (e: unknown) {
-        console.error('[UserMgmt] editUser error:', e);
-        setError(e instanceof Error ? e.message : 'Failed to update user');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [],
-  );
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.uid === uid ? { ...u, fullName: fullName.trim(), email: email.trim() } : u,
+        ),
+      );
+    } catch (e: unknown) {
+      console.error('[UserMgmt] editUser error:', e);
+      setError(e instanceof Error ? e.message : 'Failed to update user');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   // ── Delete selected users (server-side: disables Auth + soft-deletes doc) ──
   const deleteSelected = useCallback(async () => {
@@ -300,7 +305,9 @@ export const useUserManagementController = () => {
   useEffect(() => {
     let ignore = false;
     fetchUsers();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchUsers]);
 
   return {

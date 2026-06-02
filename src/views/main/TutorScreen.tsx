@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * TutorScreen — AI voice-chat with the Accentify tutor.
  *
  * Replaces the previous lesson-catalog UI. Users tap the big mic, speak a
@@ -30,9 +36,7 @@ import {
 
 const { width: SCREEN_W } = Dimensions.get('window');
 
-// ═══════════════════════════════════════════════
 //  TUTOR MASCOT (matches Wavy Chat aesthetic)
-// ═══════════════════════════════════════════════
 
 const TutorAvatar: React.FC<{ size?: number }> = ({ size = 28 }) => (
   <Svg width={size} height={size} viewBox="0 0 44 44">
@@ -50,10 +54,6 @@ const TutorAvatar: React.FC<{ size?: number }> = ({ size = 28 }) => (
   </Svg>
 );
 
-// ═══════════════════════════════════════════════
-//  CHAT BUBBLE
-// ═══════════════════════════════════════════════
-
 interface BubbleProps {
   message: TutorMessage;
   onReplay: (id: string) => void;
@@ -65,31 +65,16 @@ const ChatBubble: React.FC<BubbleProps> = ({ message, onReplay, speakingMessageI
   const isSpeaking = speakingMessageId === message.id;
   return (
     <View>
-      <Text
-        style={[
-          styles.roleLabel,
-          isTutor ? styles.roleLabelLeft : styles.roleLabelRight,
-        ]}
-      >
+      <Text style={[styles.roleLabel, isTutor ? styles.roleLabelLeft : styles.roleLabelRight]}>
         {isTutor ? 'Tutor' : 'You'}
       </Text>
-      <View
-        style={[
-          styles.bubbleRow,
-          isTutor ? styles.bubbleRowLeft : styles.bubbleRowRight,
-        ]}
-      >
+      <View style={[styles.bubbleRow, isTutor ? styles.bubbleRowLeft : styles.bubbleRowRight]}>
         {isTutor && (
           <View style={{ marginRight: 8 }}>
             <TutorAvatar size={28} />
           </View>
         )}
-        <View
-          style={[
-            styles.bubble,
-            isTutor ? styles.bubbleTutor : styles.bubbleUser,
-          ]}
-        >
+        <View style={[styles.bubble, isTutor ? styles.bubbleTutor : styles.bubbleUser]}>
           <Text style={styles.bubbleText}>{message.text}</Text>
           {isTutor && message.audioUri && (
             <TouchableOpacity
@@ -103,9 +88,7 @@ const ChatBubble: React.FC<BubbleProps> = ({ message, onReplay, speakingMessageI
                 size={18}
                 color="rgba(255,255,255,0.95)"
               />
-              <Text style={styles.replayLabel}>
-                {isSpeaking ? 'Playing…' : 'Replay'}
-              </Text>
+              <Text style={styles.replayLabel}>{isSpeaking ? 'Playing…' : 'Replay'}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -114,14 +97,10 @@ const ChatBubble: React.FC<BubbleProps> = ({ message, onReplay, speakingMessageI
   );
 };
 
-// ═══════════════════════════════════════════════
 //  THINKING DOTS (animated; shown while waiting on the model)
-// ═══════════════════════════════════════════════
 
 const ThinkingDots: React.FC = () => {
-  const dots = useRef(
-    Array.from({ length: 3 }, () => new Animated.Value(0.3)),
-  ).current;
+  const dots = useRef(Array.from({ length: 3 }, () => new Animated.Value(0.3))).current;
 
   useEffect(() => {
     const anims = dots.map((d, i) =>
@@ -149,14 +128,10 @@ const ThinkingDots: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
 //  WAVEFORM (during recording)
-// ═══════════════════════════════════════════════
 
 const Waveform: React.FC<{ active: boolean }> = ({ active }) => {
-  const bars = useRef(
-    Array.from({ length: 18 }, () => new Animated.Value(0.3)),
-  ).current;
+  const bars = useRef(Array.from({ length: 18 }, () => new Animated.Value(0.3))).current;
 
   useEffect(() => {
     if (!active) {
@@ -204,9 +179,7 @@ const Waveform: React.FC<{ active: boolean }> = ({ active }) => {
   );
 };
 
-// ═══════════════════════════════════════════════
 //  STATUS HINT (above mic)
-// ═══════════════════════════════════════════════
 
 function statusLabel(phase: TutorPhase, recordingMs: number): string {
   switch (phase) {
@@ -226,10 +199,6 @@ function statusLabel(phase: TutorPhase, recordingMs: number): string {
       return 'Tap the mic to talk';
   }
 }
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 // Bottom tab bar geometry from AppNavigator's CustomTabBar:
 //   wrapper height = 56 (bar) + max(insets.bottom, 6) + 12 (gap)
@@ -275,10 +244,7 @@ const TutorScreen: React.FC = () => {
 
   // Auto-scroll on new messages / phase changes.
   useEffect(() => {
-    const t = setTimeout(
-      () => scrollRef.current?.scrollToEnd({ animated: true }),
-      150,
-    );
+    const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 150);
     return () => clearTimeout(t);
   }, [messages.length, phase]);
 
@@ -314,8 +280,7 @@ const TutorScreen: React.FC = () => {
   // not necessarily the most-recent tutor reply.
   const speakingMessageId = phase === 'speaking' ? playingMessageId : null;
 
-  const micIcon =
-    phase === 'recording' ? 'stop' : phase === 'speaking' ? 'mic' : 'mic';
+  const micIcon = phase === 'recording' ? 'stop' : phase === 'speaking' ? 'mic' : 'mic';
   const micDisabled = phase === 'processing';
 
   return (
@@ -368,11 +333,7 @@ const TutorScreen: React.FC = () => {
 
       {/* ── Error toast ── */}
       {error && (
-        <TouchableOpacity
-          style={dyn.errorBar}
-          onPress={dismissError}
-          activeOpacity={0.85}
-        >
+        <TouchableOpacity style={dyn.errorBar} onPress={dismissError} activeOpacity={0.85}>
           <Ionicons name="alert-circle" size={16} color="#FFFFFF" />
           <Text style={dyn.errorText} numberOfLines={3}>
             {error}
@@ -425,10 +386,6 @@ const TutorScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  STATIC STYLES
-// ═══════════════════════════════════════════════
 
 const styles = StyleSheet.create({
   messagesArea: {
@@ -547,9 +504,7 @@ const styles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
 //  DYNAMIC STYLES (theme-aware)
-// ═══════════════════════════════════════════════
 
 const dynStyles = (_tc: ThemeColors) =>
   StyleSheet.create({

@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Muhammad Ali
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * TOTP-based Two-Factor Authentication.
  *
  * Flow:
@@ -27,8 +33,6 @@ const REGION = 'us-central1';
 
 // otplib defaults: 6-digit codes, 30-second window, ±1 step tolerance
 authenticator.options = { window: 1, digits: 6, step: 30 };
-
-// ─── Encryption helpers (AES-256-GCM) ───────────────────────────────────────
 
 interface EncryptedBlob {
   iv: string;    // hex
@@ -75,8 +79,6 @@ function decrypt(blob: EncryptedBlob): string {
   return pt.toString('utf8');
 }
 
-// ─── Firestore paths ────────────────────────────────────────────────────────
-
 const totpDocRef = (uid: string) =>
   db.collection('users').doc(uid).collection('security').doc('totp');
 
@@ -86,8 +88,6 @@ interface TotpDoc {
   createdAt: FirebaseFirestore.Timestamp;
   confirmedAt?: FirebaseFirestore.Timestamp;
 }
-
-// ─── Rate-limiting helper ──────────────────────────────────────────────────
 
 const MAX_FAILED_ATTEMPTS = 5;
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
@@ -136,7 +136,6 @@ async function clearAttempts(uid: string, action: string): Promise<void> {
   await ref.delete().catch(() => {});
 }
 
-// ─── 1. enrollTotp ─────────────────────────────────────────────────────────
 // Generates a fresh secret and returns it + the otpauth URL. The secret is
 // stored encrypted as "pending" — it doesn't take effect until confirmTotpEnrollment.
 
@@ -176,8 +175,6 @@ export const enrollTotp = onCall(
     return { secret, otpauthUrl };
   },
 );
-
-// ─── 2. confirmTotpEnrollment ──────────────────────────────────────────────
 
 export const confirmTotpEnrollment = onCall(
   { region: REGION, secrets: [TOTP_ENCRYPTION_KEY] },
@@ -230,8 +227,6 @@ export const confirmTotpEnrollment = onCall(
   },
 );
 
-// ─── 3. verifyTotpCode (login challenge) ───────────────────────────────────
-
 export const verifyTotpCode = onCall(
   { region: REGION, secrets: [TOTP_ENCRYPTION_KEY] },
   async (request) => {
@@ -262,8 +257,6 @@ export const verifyTotpCode = onCall(
     return { verified: true };
   },
 );
-
-// ─── 4. disableTotp (requires a current code) ──────────────────────────────
 
 export const disableTotp = onCall(
   { region: REGION, secrets: [TOTP_ENCRYPTION_KEY] },

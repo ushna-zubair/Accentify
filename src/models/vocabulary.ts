@@ -1,4 +1,9 @@
-// ─── Vocabulary (synonym-typing exercise) Models ───
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 //
 // These types back the new vocabulary module where the user is shown a word
 // and types a synonym. They are independent of the legacy `VocabWordPair`

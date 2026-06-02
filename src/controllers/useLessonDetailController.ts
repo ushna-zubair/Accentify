@@ -1,11 +1,13 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import { useState, useCallback, useEffect } from 'react';
 import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import type { LessonDetailData, LessonDifficulty, LessonStatus } from '../models';
-
-// ═══════════════════════════════════════════════
-//  SAMPLE LESSON DETAIL DATA
-// ═══════════════════════════════════════════════
 
 const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
   lesson_1: {
@@ -15,10 +17,7 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
       'Practice casual conversation with the AI tutor. You meet your friend Sarah for a drink after work. Learn to make small talk, share updates about your day, and respond naturally to questions.',
     category: 'conversation',
     difficulty: 'Easy',
-    focusTips: [
-      'Use casual and friendly language',
-      'Practice active listening responses',
-    ],
+    focusTips: ['Use casual and friendly language', 'Practice active listening responses'],
     status: 'in_progress',
   },
   lesson_2: {
@@ -42,10 +41,7 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
       'Improve your casual English by hanging out with friends. Engage in everyday conversations with Alex and Joe. Learn slang, idioms, and how to express opinions naturally.',
     category: 'conversation',
     difficulty: 'Medium',
-    focusTips: [
-      'Use natural expressions and idioms',
-      'Practice expressing opinions',
-    ],
+    focusTips: ['Use natural expressions and idioms', 'Practice expressing opinions'],
     status: 'upcoming',
   },
   lesson_4: {
@@ -55,11 +51,7 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
       'Enhance your pronunciation with the AI speech tutor. Practice speaking, get instant feedback, and improve how you sound in real conversations.',
     category: 'pronunciation',
     difficulty: 'Medium',
-    focusTips: [
-      'Clear and Natural Speaking',
-      'Accent and Word Stress',
-      'Real-Time AI Feedback',
-    ],
+    focusTips: ['Clear and Natural Speaking', 'Accent and Word Stress', 'Real-Time AI Feedback'],
     status: 'upcoming',
   },
   lesson_5: {
@@ -69,10 +61,7 @@ const SAMPLE_DETAILS: Record<string, LessonDetailData> = {
       'Expand your vocabulary with the AI tutor. Learn new words, understand their meanings, and practice using them in real-life sentences.',
     category: 'vocabulary',
     difficulty: 'Easy',
-    focusTips: [
-      'Focus on Context',
-      'Understand and Learn Word Differences',
-    ],
+    focusTips: ['Focus on Context', 'Understand and Learn Word Differences'],
     status: 'upcoming',
   },
 };
@@ -86,10 +75,6 @@ const DEFAULT_DETAIL: LessonDetailData = {
   focusTips: [],
   status: 'upcoming',
 };
-
-// ═══════════════════════════════════════════════
-//  CONTROLLER
-// ═══════════════════════════════════════════════
 
 export const useLessonDetailController = (lessonId: string) => {
   const [detail, setDetail] = useState<LessonDetailData>(DEFAULT_DETAIL);
@@ -118,9 +103,7 @@ export const useLessonDetailController = (lessonId: string) => {
           let status: LessonStatus = 'upcoming';
           if (uid) {
             try {
-              const userLessonSnap = await getDoc(
-                doc(db, 'users', uid, 'lessons', lessonId),
-              );
+              const userLessonSnap = await getDoc(doc(db, 'users', uid, 'lessons', lessonId));
               if (userLessonSnap.exists()) {
                 status = (userLessonSnap.data().status as LessonStatus) ?? 'upcoming';
               }
@@ -143,7 +126,10 @@ export const useLessonDetailController = (lessonId: string) => {
       } catch (e: any) {
         // Permission errors are expected if rules aren't deployed yet
         if (e?.code !== 'permission-denied' && !e?.message?.includes('permissions')) {
-          console.warn('[LessonDetail] Firestore fetch warning:', e instanceof Error ? e.message : String(e));
+          console.warn(
+            '[LessonDetail] Firestore fetch warning:',
+            e instanceof Error ? e.message : String(e),
+          );
         }
       }
 
@@ -170,7 +156,9 @@ export const useLessonDetailController = (lessonId: string) => {
   useEffect(() => {
     let ignore = false;
     fetchDetail();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchDetail]);
 
   // ── Start / Continue the lesson ──

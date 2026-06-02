@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * Shared date utilities used across services and controllers.
  *
  * Consolidates date helpers that were previously duplicated in
@@ -36,7 +42,20 @@ export const toDateKey = (d: Date): string =>
 
 /** Format a Date as "MMM-DD-YYYY". */
 export const formatDate = (d: Date): string => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return `${months[d.getMonth()]}-${String(d.getDate()).padStart(2, '0')}-${d.getFullYear()}`;
 };
 
@@ -61,7 +80,12 @@ export const weekDocId = (d: Date): string => {
  */
 export const parseDate = (s: unknown): Date => {
   if (!s) return new Date(0);
-  if (typeof s === 'object' && s !== null && 'toDate' in s && typeof (s as any).toDate === 'function') {
+  if (
+    typeof s === 'object' &&
+    s !== null &&
+    'toDate' in s &&
+    typeof (s as any).toDate === 'function'
+  ) {
     return (s as any).toDate();
   }
   if (typeof s !== 'string') return new Date(0);

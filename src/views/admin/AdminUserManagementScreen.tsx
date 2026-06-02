@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useState, useMemo } from 'react';
 import {
   View,
@@ -22,22 +28,11 @@ import { fonts } from '../../theme/typography';
 import { useUserManagementController } from '../../controllers';
 import type { ManagedUser, AdminStackParamList } from '../../models';
 
-// ═══════════════════════════════════════════════
-//  BREAKPOINTS
-// ═══════════════════════════════════════════════
 const BP_TABLET = 700;
 const BP_DESKTOP = 1024;
 const BP_WIDE = 1280;
 
-// ═══════════════════════════════════════════════
-//  SUB-COMPONENTS
-// ═══════════════════════════════════════════════
-
-// ─── Checkbox ───
-const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({
-  checked,
-  onPress,
-}) => {
+const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({ checked, onPress }) => {
   const { colors: tc } = useAppTheme();
   const styles = useMemo(() => createStyles(tc, 400, false), [tc]);
   return (
@@ -52,10 +47,12 @@ const Checkbox: React.FC<{ checked: boolean; onPress: () => void }> = ({
   );
 };
 
-// ─── Table Header ───
 const TableHeader: React.FC<{ isWide: boolean; isDesktop: boolean }> = ({ isWide, isDesktop }) => {
   const { colors: tc, isDark } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc, isDesktop ? BP_DESKTOP : isWide ? BP_TABLET : 400, isDark), [tc, isWide, isDesktop, isDark]);
+  const styles = useMemo(
+    () => createStyles(tc, isDesktop ? BP_DESKTOP : isWide ? BP_TABLET : 400, isDark),
+    [tc, isWide, isDesktop, isDark],
+  );
   return (
     <View style={styles.tableHeader}>
       <View style={styles.colCheck} />
@@ -79,7 +76,6 @@ const TableHeader: React.FC<{ isWide: boolean; isDesktop: boolean }> = ({ isWide
   );
 };
 
-// ─── Table Row ───
 const TableRow: React.FC<{
   user: ManagedUser;
   selected: boolean;
@@ -90,7 +86,10 @@ const TableRow: React.FC<{
   onEditUser: () => void;
 }> = ({ user, selected, onToggle, isWide, isDesktop, onViewDetail, onEditUser }) => {
   const { colors: tc, isDark } = useAppTheme();
-  const styles = useMemo(() => createStyles(tc, isDesktop ? BP_DESKTOP : isWide ? BP_TABLET : 400, isDark), [tc, isWide, isDesktop, isDark]);
+  const styles = useMemo(
+    () => createStyles(tc, isDesktop ? BP_DESKTOP : isWide ? BP_TABLET : 400, isDark),
+    [tc, isWide, isDesktop, isDark],
+  );
   const initials = user.fullName
     .split(' ')
     .map((w) => w[0])
@@ -108,10 +107,7 @@ const TableRow: React.FC<{
         <Checkbox checked={selected} onPress={onToggle} />
       </View>
       <View style={styles.colId}>
-        <Text
-          style={[styles.cellText, selected && styles.cellTextSelected]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.cellText, selected && styles.cellTextSelected]} numberOfLines={1}>
           {user.userId}
         </Text>
       </View>
@@ -121,36 +117,22 @@ const TableRow: React.FC<{
             <Text style={styles.rowAvatarText}>{initials}</Text>
           </View>
         )}
-        <Text
-          style={[styles.cellTextBold, selected && styles.cellTextSelected]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.cellTextBold, selected && styles.cellTextSelected]} numberOfLines={1}>
           {user.fullName}
         </Text>
       </View>
       <View style={styles.colEmail}>
-        <Text
-          style={[styles.cellText, selected && styles.cellTextSelected]}
-          numberOfLines={1}
-        >
+        <Text style={[styles.cellText, selected && styles.cellTextSelected]} numberOfLines={1}>
           {user.email}
         </Text>
       </View>
       {isWide && (
         <View style={styles.colActions}>
-          <TouchableOpacity
-            style={styles.rowActionBtn}
-            onPress={onViewDetail}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.rowActionBtn} onPress={onViewDetail} activeOpacity={0.7}>
             <Ionicons name="eye-outline" size={16} color={tc.accent} />
             <Text style={styles.rowActionText}>View</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.rowActionBtn}
-            onPress={onEditUser}
-            activeOpacity={0.7}
-          >
+          <TouchableOpacity style={styles.rowActionBtn} onPress={onEditUser} activeOpacity={0.7}>
             <Ionicons name="create-outline" size={16} color={tc.textLight} />
             <Text style={[styles.rowActionText, { color: tc.textLight }]}>Edit</Text>
           </TouchableOpacity>
@@ -160,7 +142,6 @@ const TableRow: React.FC<{
   );
 };
 
-// ─── Add / Edit User Modal ───
 const UserFormModal: React.FC<{
   visible: boolean;
   title: string;
@@ -169,7 +150,15 @@ const UserFormModal: React.FC<{
   loading: boolean;
   onClose: () => void;
   onSubmit: (name: string, email: string) => void;
-}> = ({ visible, title, initialName = '', initialEmail = '', loading: submitting, onClose, onSubmit }) => {
+}> = ({
+  visible,
+  title,
+  initialName = '',
+  initialEmail = '',
+  loading: submitting,
+  onClose,
+  onSubmit,
+}) => {
   const { colors: tc, isDark } = useAppTheme();
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === 'web' && width >= BP_TABLET;
@@ -246,10 +235,6 @@ const UserFormModal: React.FC<{
     </Modal>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  MAIN SCREEN
-// ═══════════════════════════════════════════════
 
 const AdminUserManagementScreen: React.FC = () => {
   const { colors: tc, isDark } = useAppTheme();
@@ -353,16 +338,23 @@ const AdminUserManagementScreen: React.FC = () => {
               <Text style={styles.userAvatarText}>{initials}</Text>
             </View>
             <View style={styles.userCardInfo}>
-              <Text style={[styles.userCardName, isSelected && styles.userCardNameSelected]} numberOfLines={1}>
+              <Text
+                style={[styles.userCardName, isSelected && styles.userCardNameSelected]}
+                numberOfLines={1}
+              >
                 {user.fullName}
               </Text>
-              <Text style={styles.userCardEmail} numberOfLines={1}>{user.email}</Text>
+              <Text style={styles.userCardEmail} numberOfLines={1}>
+                {user.email}
+              </Text>
             </View>
           </View>
           <Checkbox checked={isSelected} onPress={() => toggleSelect(user.uid)} />
         </View>
         <View style={styles.userCardBottom}>
-          <Text style={styles.userCardId} numberOfLines={1}>ID: {user.userId}</Text>
+          <Text style={styles.userCardId} numberOfLines={1}>
+            ID: {user.userId}
+          </Text>
           <View style={styles.userCardActions}>
             <TouchableOpacity
               style={styles.userCardActionBtn}
@@ -391,7 +383,12 @@ const AdminUserManagementScreen: React.FC = () => {
       {/* ── Header ── */}
       {!isWide && (
         <View style={[styles.header, { paddingTop: insets.top + 14 }]}>
-          <TouchableOpacity onPress={() => { if (navigation.canGoBack()) navigation.goBack(); }} style={styles.backBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              if (navigation.canGoBack()) navigation.goBack();
+            }}
+            style={styles.backBtn}
+          >
             <Ionicons name="arrow-back" size={24} color={tc.text} />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>User Management</Text>
@@ -451,9 +448,7 @@ const AdminUserManagementScreen: React.FC = () => {
           {selectedUids.size > 0 && (
             <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete} activeOpacity={0.7}>
               <Ionicons name="trash-outline" size={16} color={tc.white} />
-              <Text style={styles.deleteBtnText}>
-                Delete ({selectedUids.size})
-              </Text>
+              <Text style={styles.deleteBtnText}>Delete ({selectedUids.size})</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -532,7 +527,12 @@ const AdminUserManagementScreen: React.FC = () => {
           <View style={styles.tableCard}>
             <View style={styles.tableContainer}>
               <ScrollView horizontal={!isDesktop} showsHorizontalScrollIndicator={false}>
-                <View style={{ flex: 1, minWidth: isDesktop ? '100%' as unknown as number : undefined }}>
+                <View
+                  style={{
+                    flex: 1,
+                    minWidth: isDesktop ? ('100%' as unknown as number) : undefined,
+                  }}
+                >
                   <TableHeader isWide={isWide} isDesktop={isDesktop} />
                   <ScrollView
                     showsVerticalScrollIndicator={false}
@@ -544,7 +544,9 @@ const AdminUserManagementScreen: React.FC = () => {
                           <Ionicons name="people-outline" size={32} color={tc.textMuted} />
                         </View>
                         <Text style={styles.emptyText}>No users found</Text>
-                        <Text style={styles.emptySubText}>Try a different search or add a new user</Text>
+                        <Text style={styles.emptySubText}>
+                          Try a different search or add a new user
+                        </Text>
                       </View>
                     )}
                     {users.map((user) => (
@@ -576,7 +578,12 @@ const AdminUserManagementScreen: React.FC = () => {
           {/* ── Load More ── */}
           {hasMore && !loading && (
             <TouchableOpacity style={styles.loadMoreBtn} onPress={fetchMore} activeOpacity={0.7}>
-              <Ionicons name="chevron-down" size={16} color={tc.accent} style={{ marginRight: 6 }} />
+              <Ionicons
+                name="chevron-down"
+                size={16}
+                color={tc.accent}
+                style={{ marginRight: 6 }}
+              />
               <Text style={styles.loadMoreText}>Load more users</Text>
             </TouchableOpacity>
           )}
@@ -607,10 +614,6 @@ const AdminUserManagementScreen: React.FC = () => {
   );
 };
 
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
-
 const createStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => {
   const isWeb = Platform.OS === 'web';
   const isWide = isWeb && screenWidth >= BP_TABLET;
@@ -625,7 +628,7 @@ const createStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => 
   const COL_EMAIL_W = isExtraWide ? 300 : isDesktop ? 260 : isWide ? 200 : 180;
   const COL_ACTIONS_W = isDesktop ? 180 : isWide ? 140 : 0;
 
-  const bgColor = isDark ? tc.background : (isWide ? '#F5F6FA' : tc.surfaceAlt);
+  const bgColor = isDark ? tc.background : isWide ? '#F5F6FA' : tc.surfaceAlt;
 
   return StyleSheet.create({
     container: {
@@ -763,7 +766,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => 
       color: tc.textMuted,
     },
 
-    // Stats Bar
     statsBar: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -1070,7 +1072,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => 
       borderColor: tc.accent,
     },
 
-    // Empty state
     emptyRow: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -1116,7 +1117,6 @@ const createStyles = (tc: ThemeColors, screenWidth: number, isDark: boolean) => 
       color: tc.accent,
     },
 
-    // Modal
     modalOverlay: {
       flex: 1,
       backgroundColor: tc.overlay,

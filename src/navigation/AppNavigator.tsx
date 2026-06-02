@@ -1,5 +1,22 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useEffect, useState } from 'react';
-import { AppState, AppStateStatus, Platform, View, Text, TouchableOpacity, StyleSheet, Animated, ActivityIndicator, Image } from 'react-native';
+import {
+  AppState,
+  AppStateStatus,
+  Platform,
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Animated,
+  ActivityIndicator,
+  Image,
+} from 'react-native';
 import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
@@ -27,7 +44,17 @@ import {
 } from '../models';
 
 // Re-export types so existing consumers still work
-export type { ProfileData, StudyPlanData, AuthStackParamList, SettingsStackParamList, HomeStackParamList, LearnerTabParamList, CMSStackParamList, AdminStackParamList, TutorStackParamList };
+export type {
+  ProfileData,
+  StudyPlanData,
+  AuthStackParamList,
+  SettingsStackParamList,
+  HomeStackParamList,
+  LearnerTabParamList,
+  CMSStackParamList,
+  AdminStackParamList,
+  TutorStackParamList,
+};
 
 // Views – Main
 import SettingsStackNavigator from './SettingsStackNavigator';
@@ -118,10 +145,7 @@ const TutorStackNavigator = () => {
       <TutorStack.Screen name="LessonDetail" component={LessonDetailScreen} />
       <TutorStack.Screen name="VocabExercise" component={VocabExerciseScreen} />
       <TutorStack.Screen name="PronunciationExercise" component={PronunciationExerciseScreen} />
-      <TutorStack.Screen
-        name="WordPronunciationExercise"
-        component={TutorWordPronunciationRoute}
-      />
+      <TutorStack.Screen name="WordPronunciationExercise" component={TutorWordPronunciationRoute} />
       <TutorStack.Screen name="ConversationExercise" component={ConversationExerciseScreen} />
       <TutorStack.Screen name="CourseCompletion" component={CourseCompletionScreen} />
     </TutorStack.Navigator>
@@ -159,17 +183,19 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="SetupPin" component={SetupPinScreen} />
       <AuthStack.Screen name="SetupFaceID" component={SetupFaceIDScreen} />
       <AuthStack.Screen name="TwoFactorAuth" component={TwoFactorAuthScreen} />
-      <AuthStack.Screen name="ChooseVerificationMethod" component={ChooseVerificationMethodScreen} />
+      <AuthStack.Screen
+        name="ChooseVerificationMethod"
+        component={ChooseVerificationMethodScreen}
+      />
       <AuthStack.Screen name="SetupAuthenticator" component={SetupAuthenticatorScreen} />
     </AuthStack.Navigator>
   );
 };
 
-// ═══════════════════════════════════════════════
-//  CUSTOM TAB BAR
-// ═══════════════════════════════════════════════
-
-const TAB_ICONS: Record<string, { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }> = {
+const TAB_ICONS: Record<
+  string,
+  { active: keyof typeof Ionicons.glyphMap; inactive: keyof typeof Ionicons.glyphMap }
+> = {
   Home: { active: 'home', inactive: 'home-outline' },
   Tutor: { active: 'bar-chart', inactive: 'bar-chart-outline' },
   Progress: { active: 'star', inactive: 'star-outline' },
@@ -212,12 +238,19 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
       <View style={[tabStyles.bar, { backgroundColor: tabBg }]}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
-          const icons = TAB_ICONS[route.name] ?? { active: 'help-circle', inactive: 'help-circle-outline' };
+          const icons = TAB_ICONS[route.name] ?? {
+            active: 'help-circle',
+            inactive: 'help-circle-outline',
+          };
           const iconName = focused ? icons.active : icons.inactive;
           const label = TAB_LABELS[route.name] ?? route.name;
 
           const onPress = () => {
-            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
             if (!focused && !event.defaultPrevented) {
               navigation.navigate(route.name);
             }
@@ -238,11 +271,7 @@ const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigat
                   focused && [tabStyles.iconWrapActive, { backgroundColor: tabActive }],
                 ]}
               >
-                <Ionicons
-                  name={iconName}
-                  size={18}
-                  color={focused ? '#FFFFFF' : tabInactive}
-                />
+                <Ionicons name={iconName} size={18} color={focused ? '#FFFFFF' : tabInactive} />
               </View>
               <Text
                 style={[
@@ -306,10 +335,6 @@ const tabStyles = StyleSheet.create({
   },
 });
 
-// ═══════════════════════════════════════════════
-//  LEARNER NAVIGATOR
-// ═══════════════════════════════════════════════
-
 const LearnerNavigator = () => {
   // Fire the conversation Space's /health endpoint as soon as the learner
   // lands in the app — by the time they tap Wavy Chat or Tutor, the HF
@@ -337,7 +362,16 @@ const LearnerNavigator = () => {
 };
 
 const AppNavigator: React.FC = () => {
-  const { currentUser, loading, userRole, userProfile, reloadUser, pendingTotpChallenge, profileFetchError, fetchUserRole } = useAuth();
+  const {
+    currentUser,
+    loading,
+    userRole,
+    userProfile,
+    reloadUser,
+    pendingTotpChallenge,
+    profileFetchError,
+    fetchUserRole,
+  } = useAuth();
   const [appState, setAppState] = useState(AppState.currentState);
   const [splashVisible, setSplashVisible] = useState(true);
   const [retrying, setRetrying] = useState(false);
@@ -368,21 +402,29 @@ const AppNavigator: React.FC = () => {
 
   if (loading || splashVisible) {
     return (
-      <View style={{
-        flex: 1, alignItems: 'center', justifyContent: 'center',
-        backgroundColor: '#FFFFFF', // Matching splash background
-      }}>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#FFFFFF', // Matching splash background
+        }}
+      >
         <Image
           source={require('../../assets/logo.png')}
           style={{ width: 180, height: 180, marginBottom: 24 }}
           resizeMode="contain"
         />
-        <Text style={{
-          fontFamily: fonts.bold,
-          fontSize: 20,
-          color: '#6C63FF', // Primary accent
-          letterSpacing: 4,
-        }}>A C C E N T I F Y</Text>
+        <Text
+          style={{
+            fontFamily: fonts.bold,
+            fontSize: 20,
+            color: '#6C63FF', // Primary accent
+            letterSpacing: 4,
+          }}
+        >
+          A C C E N T I F Y
+        </Text>
       </View>
     );
   }
@@ -421,9 +463,7 @@ const AppNavigator: React.FC = () => {
           resizeMode="contain"
         />
         <Text style={offlineStyles.title}>Can't reach the server</Text>
-        <Text style={offlineStyles.subtitle}>
-          Check your internet connection and try again.
-        </Text>
+        <Text style={offlineStyles.subtitle}>Check your internet connection and try again.</Text>
         <TouchableOpacity
           style={offlineStyles.button}
           onPress={onRetry}
@@ -442,7 +482,10 @@ const AppNavigator: React.FC = () => {
 
   // 2. If email is not verified (only for email/password provider), show VerifyEmail in a stack
   // Note: Social providers (Google/Apple) have emailVerified: true by default
-  if (!currentUser.emailVerified && currentUser.providerData.some(p => p.providerId === 'password')) {
+  if (
+    !currentUser.emailVerified &&
+    currentUser.providerData.some((p) => p.providerId === 'password')
+  ) {
     return (
       <AuthStack.Navigator screenOptions={{ headerShown: false }}>
         <AuthStack.Screen
@@ -457,10 +500,7 @@ const AppNavigator: React.FC = () => {
   // 3. If profile setup is not complete (new user), show full AuthStack starting at CreateProfile
   if (!userProfile?.profileComplete) {
     return (
-      <AuthStack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName="CreateProfile"
-      >
+      <AuthStack.Navigator screenOptions={{ headerShown: false }} initialRouteName="CreateProfile">
         <AuthStack.Screen name="CreateProfile" component={CreateProfileScreen} />
         <AuthStack.Screen name="LearningGoals" component={LearningGoalsScreen} />
         <AuthStack.Screen name="NativeLanguage" component={NativeLanguageScreen} />
@@ -469,7 +509,10 @@ const AppNavigator: React.FC = () => {
         <AuthStack.Screen name="SetupPin" component={SetupPinScreen} />
         <AuthStack.Screen name="SetupFaceID" component={SetupFaceIDScreen} />
         <AuthStack.Screen name="TwoFactorAuth" component={TwoFactorAuthScreen} />
-        <AuthStack.Screen name="ChooseVerificationMethod" component={ChooseVerificationMethodScreen} />
+        <AuthStack.Screen
+          name="ChooseVerificationMethod"
+          component={ChooseVerificationMethodScreen}
+        />
         <AuthStack.Screen name="SetupAuthenticator" component={SetupAuthenticatorScreen} />
       </AuthStack.Navigator>
     );

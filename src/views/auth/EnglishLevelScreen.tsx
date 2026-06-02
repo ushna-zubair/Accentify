@@ -1,11 +1,11 @@
-import React, { useState , useMemo} from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
@@ -108,97 +108,98 @@ const EnglishLevelScreen: React.FC<Props> = ({ navigation, route }) => {
   );
 };
 
-const createStyles = (tc: ThemeColors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: tc.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-  },
-  header: {
-    height: 56,
-  },
-  title: {
-    fontFamily: fonts.bold,
-    fontSize: 24,
-    color: tc.text,
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontFamily: fonts.regular,
-    fontSize: 13,
-    color: tc.textLight,
-    textAlign: 'center',
-    lineHeight: 18,
-    marginBottom: 28,
-    paddingHorizontal: 8,
-  },
-  levelsContainer: {
-    gap: 12,
-  },
-  levelCard: {
-    backgroundColor: tc.white,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: tc.inputBorder,
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-  },
-  levelCardSelected: {
-    backgroundColor: tc.accentMuted,
-    borderColor: tc.accent,
-  },
-  levelLabel: {
-    fontFamily: fonts.medium,
-    fontSize: 15,
-    color: tc.text,
-  },
-  levelLabelSelected: {
-    fontFamily: fonts.semiBold,
-    color: tc.accent,
-  },
-  bottomContainer: {
-    marginTop: 'auto',
-    paddingBottom: 32,
-    paddingTop: 20,
-    alignItems: 'center',
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: tc.accent,
-    borderRadius: 999,
-    paddingVertical: 16,
-    paddingHorizontal: 32,
-    gap: 12,
-    minWidth: 180,
-    shadowColor: tc.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  continueButtonDisabled: {
-    opacity: 0.5,
-  },
-  continueButtonText: {
-    fontFamily: fonts.semiBold,
-    fontSize: 16,
-    color: tc.white,
-  },
-  arrowCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: tc.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const createStyles = (tc: ThemeColors) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: tc.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: 24,
+    },
+    header: {
+      height: 56,
+    },
+    title: {
+      fontFamily: fonts.bold,
+      fontSize: 24,
+      color: tc.text,
+      textAlign: 'center',
+      marginBottom: 10,
+    },
+    subtitle: {
+      fontFamily: fonts.regular,
+      fontSize: 13,
+      color: tc.textLight,
+      textAlign: 'center',
+      lineHeight: 18,
+      marginBottom: 28,
+      paddingHorizontal: 8,
+    },
+    levelsContainer: {
+      gap: 12,
+    },
+    levelCard: {
+      backgroundColor: tc.white,
+      borderRadius: 14,
+      borderWidth: 1.5,
+      borderColor: tc.inputBorder,
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+    },
+    levelCardSelected: {
+      backgroundColor: tc.accentMuted,
+      borderColor: tc.accent,
+    },
+    levelLabel: {
+      fontFamily: fonts.medium,
+      fontSize: 15,
+      color: tc.text,
+    },
+    levelLabelSelected: {
+      fontFamily: fonts.semiBold,
+      color: tc.accent,
+    },
+    bottomContainer: {
+      marginTop: 'auto',
+      paddingBottom: 32,
+      paddingTop: 20,
+      alignItems: 'center',
+    },
+    continueButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: tc.accent,
+      borderRadius: 999,
+      paddingVertical: 16,
+      paddingHorizontal: 32,
+      gap: 12,
+      minWidth: 180,
+      shadowColor: tc.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.25,
+      shadowRadius: 8,
+      elevation: 6,
+    },
+    continueButtonDisabled: {
+      opacity: 0.5,
+    },
+    continueButtonText: {
+      fontFamily: fonts.semiBold,
+      fontSize: 16,
+      color: tc.white,
+    },
+    arrowCircle: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: tc.white,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+  });
 
 export default EnglishLevelScreen;

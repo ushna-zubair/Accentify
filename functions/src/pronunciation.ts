@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import * as admin from 'firebase-admin';
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
@@ -7,8 +13,6 @@ import { defineSecret } from 'firebase-functions/params';
 const db = admin.firestore();
 const REGION = 'us-central1';
 const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // 10 MB base64 limit
-
-// ─── Types ───
 
 interface WordResult {
   word: string;
@@ -21,8 +25,6 @@ interface PronunciationScore {
   fluency: number;
   overall: number;
 }
-
-// ─── Helpers ───
 
 /** Strip punctuation, normalize for comparison. */
 const normalize = (w: string): string =>
@@ -104,10 +106,6 @@ const evaluatePronunciation = (
   return { wordResults, score, feedback };
 };
 
-// ═══════════════════════════════════════════════
-//  1. GET PRONUNCIATION SENTENCES
-// ═══════════════════════════════════════════════
-
 /**
  * Fetches pronunciation sentences from Firestore.
  * Falls back to default sentences if the collection is empty.
@@ -168,10 +166,6 @@ export const getPronunciationSentences = onCall(
   },
 );
 
-// ═══════════════════════════════════════════════
-//  2. TRANSCRIBE & EVALUATE PRONUNCIATION
-// ═══════════════════════════════════════════════
-
 /**
  * Accepts base64-encoded audio and the target sentence.
  * Uses Google Cloud Speech-to-Text for transcription,
@@ -187,9 +181,7 @@ export const transcribeAndEvaluate = onCall(
   }
 );
 
-// ═══════════════════════════════════════════════
 //  3. SEED SENTENCES (admin utility)
-// ═══════════════════════════════════════════════
 
 /**
  * Seeds the `pronunciation_sentences` collection with default data.

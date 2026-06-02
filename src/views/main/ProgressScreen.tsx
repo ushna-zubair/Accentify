@@ -1,3 +1,9 @@
+/**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Manan Anghan
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
 import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
@@ -25,15 +31,8 @@ import { fonts } from '../../theme/typography';
 import { useAppTheme, type ThemeColors } from '../../hooks/useAppTheme';
 import { useProgressController } from '../../controllers/useProgressController';
 import { useResponsive, type ResponsiveValues } from '../../utils/responsive';
-import type {
-  LessonDay,
-  VocabularyGrowthPoint,
-} from '../../models';
+import type { LessonDay, VocabularyGrowthPoint } from '../../models';
 import type { LevelUpProgress } from '../../services/levelService';
-
-// ═══════════════════════════════════════════════
-//  CONSTANTS
-// ═══════════════════════════════════════════════
 
 const CHART = {
   red: '#E94F54',
@@ -48,10 +47,6 @@ const CHART = {
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-// ═══════════════════════════════════════════════
-//  SHADOW HELPER
-// ═══════════════════════════════════════════════
-
 const cardShadow = Platform.select({
   ios: {
     shadowColor: '#000',
@@ -63,11 +58,6 @@ const cardShadow = Platform.select({
   default: {},
 });
 
-// ═══════════════════════════════════════════════
-//  SUB-COMPONENTS
-// ═══════════════════════════════════════════════
-
-// ─── Section Header ───
 const SectionHeader: React.FC<{
   icon: string;
   iconSet?: 'ion' | 'mci';
@@ -76,9 +66,24 @@ const SectionHeader: React.FC<{
   tc: ThemeColors;
   right?: React.ReactNode;
 }> = ({ icon, iconSet = 'ion', title, r, tc, right }) => (
-  <View style={[secStyles.row, { paddingHorizontal: r.s(20), marginTop: r.vs(20), marginBottom: r.vs(10) }]}>
+  <View
+    style={[
+      secStyles.row,
+      { paddingHorizontal: r.s(20), marginTop: r.vs(20), marginBottom: r.vs(10) },
+    ]}
+  >
     <View style={secStyles.left}>
-      <View style={[secStyles.iconPill, { width: r.ms(28), height: r.ms(28), borderRadius: r.ms(8), backgroundColor: tc.accentMuted }]}>
+      <View
+        style={[
+          secStyles.iconPill,
+          {
+            width: r.ms(28),
+            height: r.ms(28),
+            borderRadius: r.ms(8),
+            backgroundColor: tc.accentMuted,
+          },
+        ]}
+      >
         {iconSet === 'ion' ? (
           <Ionicons name={icon as any} size={r.ms(15)} color={tc.accent} />
         ) : (
@@ -98,12 +103,31 @@ const secStyles = StyleSheet.create({
   title: { fontFamily: fonts.bold },
 });
 
-// ─── Day Streak Banner ───
-const DayStreakBanner: React.FC<{ streak: number; r: ResponsiveValues; tc: ThemeColors }> = ({ streak, r, tc }) => {
+const DayStreakBanner: React.FC<{ streak: number; r: ResponsiveValues; tc: ThemeColors }> = ({
+  streak,
+  r,
+  tc,
+}) => {
   return (
-    <View style={[dsBannerStyles.wrapper, { marginHorizontal: r.s(20), marginTop: r.vs(16), borderRadius: r.ms(16), padding: r.ms(16), backgroundColor: tc.accent }]}>
+    <View
+      style={[
+        dsBannerStyles.wrapper,
+        {
+          marginHorizontal: r.s(20),
+          marginTop: r.vs(16),
+          borderRadius: r.ms(16),
+          padding: r.ms(16),
+          backgroundColor: tc.accent,
+        },
+      ]}
+    >
       <View style={dsBannerStyles.left}>
-        <View style={[dsBannerStyles.fireCircle, { width: r.ms(56), height: r.ms(56), borderRadius: r.ms(28) }]}>
+        <View
+          style={[
+            dsBannerStyles.fireCircle,
+            { width: r.ms(56), height: r.ms(56), borderRadius: r.ms(28) },
+          ]}
+        >
           <Svg width={r.ms(30)} height={r.ms(30)} viewBox="0 0 24 24" fill="none">
             <Path
               d="M12 2C12 2 7 7 7 12C7 14 8 16 10 17.5V21H14V17.5C16 16 17 14 17 12C17 7 12 2 12 2Z"
@@ -121,9 +145,23 @@ const DayStreakBanner: React.FC<{ streak: number; r: ResponsiveValues; tc: Theme
           <Text style={[dsBannerStyles.label, { fontSize: r.ms(13, 0.3) }]}>Day Streak</Text>
         </View>
       </View>
-      <View style={[dsBannerStyles.badge, { borderRadius: r.ms(12), paddingHorizontal: r.s(12), paddingVertical: r.vs(4), backgroundColor: tc.warningBg }]}>
+      <View
+        style={[
+          dsBannerStyles.badge,
+          {
+            borderRadius: r.ms(12),
+            paddingHorizontal: r.s(12),
+            paddingVertical: r.vs(4),
+            backgroundColor: tc.warningBg,
+          },
+        ]}
+      >
         <Ionicons name="flame" size={r.ms(14)} color={tc.warningDeep} />
-        <Text style={[dsBannerStyles.badgeText, { fontSize: r.ms(11, 0.3), color: tc.warningDeep }]}>Keep it up!</Text>
+        <Text
+          style={[dsBannerStyles.badgeText, { fontSize: r.ms(11, 0.3), color: tc.warningDeep }]}
+        >
+          Keep it up!
+        </Text>
       </View>
     </View>
   );
@@ -137,7 +175,11 @@ const dsBannerStyles = StyleSheet.create({
     ...cardShadow,
   } as any,
   left: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  fireCircle: { backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  fireCircle: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   textCol: {},
   count: { fontFamily: fonts.bold, color: '#FFFFFF', lineHeight: 34 },
   label: { fontFamily: fonts.medium, color: 'rgba(255,255,255,0.85)' },
@@ -145,13 +187,12 @@ const dsBannerStyles = StyleSheet.create({
   badgeText: { fontFamily: fonts.semiBold },
 });
 
-// ─── Lesson Day Item ───
-const LessonDayItem: React.FC<{ item: LessonDay; isActive: boolean; r: ResponsiveValues; tc: ThemeColors }> = ({
-  item,
-  isActive,
-  r,
-  tc,
-}) => {
+const LessonDayItem: React.FC<{
+  item: LessonDay;
+  isActive: boolean;
+  r: ResponsiveValues;
+  tc: ThemeColors;
+}> = ({ item, isActive, r, tc }) => {
   const statusCfg: Record<LessonDay['status'], { icon: string; bg: string; border: string }> = {
     completed: { icon: 'checkmark', bg: tc.success, border: tc.success },
     in_progress: { icon: 'play', bg: tc.accent, border: tc.accent },
@@ -164,7 +205,13 @@ const LessonDayItem: React.FC<{ item: LessonDay; isActive: boolean; r: Responsiv
 
   return (
     <View style={[ldStyles.wrapper, { width: r.ms(54) }]}>
-      <Text style={[ldStyles.dayName, { fontSize: r.ms(11, 0.3), color: tc.textLight }, isActive && { color: tc.accent, fontFamily: fonts.semiBold }]}>
+      <Text
+        style={[
+          ldStyles.dayName,
+          { fontSize: r.ms(11, 0.3), color: tc.textLight },
+          isActive && { color: tc.accent, fontFamily: fonts.semiBold },
+        ]}
+      >
         {dayName}
       </Text>
       <View
@@ -182,7 +229,20 @@ const LessonDayItem: React.FC<{ item: LessonDay; isActive: boolean; r: Responsiv
       >
         <Ionicons name={cfg.icon as any} size={r.ms(18, 0.3)} color={iconColor} />
       </View>
-      {isActive && <View style={[ldStyles.activeDot, { width: r.ms(5), height: r.ms(5), borderRadius: r.ms(3), marginTop: r.vs(4), backgroundColor: tc.accent }]} />}
+      {isActive && (
+        <View
+          style={[
+            ldStyles.activeDot,
+            {
+              width: r.ms(5),
+              height: r.ms(5),
+              borderRadius: r.ms(3),
+              marginTop: r.vs(4),
+              backgroundColor: tc.accent,
+            },
+          ]}
+        />
+      )}
     </View>
   );
 };
@@ -194,7 +254,6 @@ const ldStyles = StyleSheet.create({
   activeDot: {},
 });
 
-// ─── Horizontal Bar Chart (modern style for small cards) ───
 interface HBarChartProps {
   data: { label: string; value: number; color: string }[];
   r: ResponsiveValues;
@@ -210,10 +269,21 @@ const HBarChart: React.FC<HBarChartProps> = ({ data, r, tc }) => {
         const pct = Math.round((item.value / maxVal) * 100);
         return (
           <View key={item.label} style={hbarStyles.row}>
-            <Text style={[hbarStyles.label, { fontSize: r.ms(10, 0.3), width: r.ms(64, 0.3), color: tc.textLight }]} numberOfLines={1}>
+            <Text
+              style={[
+                hbarStyles.label,
+                { fontSize: r.ms(10, 0.3), width: r.ms(64, 0.3), color: tc.textLight },
+              ]}
+              numberOfLines={1}
+            >
               {item.label}
             </Text>
-            <View style={[hbarStyles.track, { height: r.ms(8), borderRadius: r.ms(4), backgroundColor: tc.surfaceAlt }]}>
+            <View
+              style={[
+                hbarStyles.track,
+                { height: r.ms(8), borderRadius: r.ms(4), backgroundColor: tc.surfaceAlt },
+              ]}
+            >
               <View
                 style={[
                   hbarStyles.fill,
@@ -226,7 +296,12 @@ const HBarChart: React.FC<HBarChartProps> = ({ data, r, tc }) => {
                 ]}
               />
             </View>
-            <Text style={[hbarStyles.pct, { fontSize: r.ms(10, 0.3), width: r.ms(30, 0.3), color: tc.text }]}>
+            <Text
+              style={[
+                hbarStyles.pct,
+                { fontSize: r.ms(10, 0.3), width: r.ms(30, 0.3), color: tc.text },
+              ]}
+            >
               {item.value}%
             </Text>
           </View>
@@ -245,7 +320,6 @@ const hbarStyles = StyleSheet.create({
   pct: { fontFamily: fonts.semiBold, textAlign: 'right' },
 });
 
-// ─── Mini Line Chart (Vocabulary Growth) ───
 interface MiniLineChartProps {
   data: VocabularyGrowthPoint[];
   height?: number;
@@ -253,12 +327,7 @@ interface MiniLineChartProps {
   tc: ThemeColors;
 }
 
-const MiniLineChart: React.FC<MiniLineChartProps> = ({
-  data,
-  height = 120,
-  width,
-  tc,
-}) => {
+const MiniLineChart: React.FC<MiniLineChartProps> = ({ data, height = 120, width, tc }) => {
   if (data.length < 2 || width <= 0) return null;
 
   const maxVal = Math.max(...data.map((d) => d.value), 1);
@@ -306,7 +375,13 @@ const MiniLineChart: React.FC<MiniLineChartProps> = ({
           );
         })}
         <Polyline points={fillPath} fill="url(#areaGrad)" stroke="none" />
-        <Polyline points={points} fill="none" stroke={tc.accent} strokeWidth={2} strokeLinejoin="round" />
+        <Polyline
+          points={points}
+          fill="none"
+          stroke={tc.accent}
+          strokeWidth={2}
+          strokeLinejoin="round"
+        />
         {coords.map((c, i) => (
           <React.Fragment key={i}>
             <SvgCircle cx={c.x} cy={c.y} r={dotRadius + 2} fill={tc.surface} />
@@ -337,7 +412,6 @@ const mlcStyles = StyleSheet.create({
   },
 });
 
-// ─── Level Badge ───
 const LevelBadge: React.FC<{
   progress: LevelUpProgress | null;
   r: ResponsiveValues;
@@ -364,7 +438,12 @@ const LevelBadge: React.FC<{
       <View
         style={[
           levelStyles.pill,
-          { backgroundColor: tc.accentMuted, paddingHorizontal: r.s(14), paddingVertical: r.vs(8), borderRadius: r.ms(12) },
+          {
+            backgroundColor: tc.accentMuted,
+            paddingHorizontal: r.s(14),
+            paddingVertical: r.vs(8),
+            borderRadius: r.ms(12),
+          },
         ]}
       >
         <Text style={[levelStyles.pillText, { fontSize: r.ms(22, 0.3), color: tc.accent }]}>
@@ -397,7 +476,6 @@ const levelStyles = StyleSheet.create({
   subText: { fontFamily: fonts.semiBold, marginTop: 2 },
 });
 
-// ─── Next-Level Progress (per-criterion bars) ───
 interface CriterionRow {
   label: string;
   current: number;
@@ -482,11 +560,13 @@ const NextLevelProgress: React.FC<{
           </View>
         );
       })}
-      {progress.daysSinceLastChange !== null && progress.daysSinceLastChange < progress.cooldownRequired && (
-        <Text style={[nlpStyles.cooldown, { color: tc.textMuted, fontSize: r.ms(10, 0.3) }]}>
-          Cooldown: {progress.daysSinceLastChange}/{progress.cooldownRequired} days since last change
-        </Text>
-      )}
+      {progress.daysSinceLastChange !== null &&
+        progress.daysSinceLastChange < progress.cooldownRequired && (
+          <Text style={[nlpStyles.cooldown, { color: tc.textMuted, fontSize: r.ms(10, 0.3) }]}>
+            Cooldown: {progress.daysSinceLastChange}/{progress.cooldownRequired} days since last
+            change
+          </Text>
+        )}
       {progress.eligible && progress.promoted && (
         <Text style={[nlpStyles.cooldown, { color: tc.success, fontSize: r.ms(10, 0.3) }]}>
           You just leveled up. Keep going!
@@ -507,7 +587,6 @@ const nlpStyles = StyleSheet.create({
   cooldown: { fontFamily: fonts.regular, marginTop: 4 },
 });
 
-// ─── Week Pill Selector ───
 const WeekSelector: React.FC<{
   weekLabel: string;
   weekDateLabel: string;
@@ -519,11 +598,25 @@ const WeekSelector: React.FC<{
 }> = ({ weekLabel, weekDateLabel, selectedWeekIndex, totalWeeks, selectWeek, r, tc }) => (
   <View style={[wsStyles.row, { paddingHorizontal: r.s(20), marginBottom: r.vs(12) }]}>
     <View>
-      <Text style={[wsStyles.weekText, { fontSize: r.ms(15, 0.3), color: tc.text }]}>{weekLabel}</Text>
-      <Text style={[wsStyles.dateText, { fontSize: r.ms(11, 0.3), color: tc.textLight }]}>{weekDateLabel}</Text>
+      <Text style={[wsStyles.weekText, { fontSize: r.ms(15, 0.3), color: tc.text }]}>
+        {weekLabel}
+      </Text>
+      <Text style={[wsStyles.dateText, { fontSize: r.ms(11, 0.3), color: tc.textLight }]}>
+        {weekDateLabel}
+      </Text>
     </View>
     {totalWeeks > 1 && (
-      <View style={[wsStyles.nav, { borderRadius: r.ms(10), paddingHorizontal: r.s(4), paddingVertical: r.vs(2), backgroundColor: tc.surfaceAlt }]}>
+      <View
+        style={[
+          wsStyles.nav,
+          {
+            borderRadius: r.ms(10),
+            paddingHorizontal: r.s(4),
+            paddingVertical: r.vs(2),
+            backgroundColor: tc.surfaceAlt,
+          },
+        ]}
+      >
         <TouchableOpacity
           onPress={() => selectWeek(selectedWeekIndex - 1)}
           disabled={selectedWeekIndex === 0}
@@ -564,10 +657,6 @@ const wsStyles = StyleSheet.create({
   navBtn: { alignItems: 'center', justifyContent: 'center' },
   navIndex: { fontFamily: fonts.medium, minWidth: 30, textAlign: 'center' },
 });
-
-// ═══════════════════════════════════════════════
-//  PROGRESS SCREEN
-// ═══════════════════════════════════════════════
 
 const ProgressScreen: React.FC = () => {
   const {
@@ -617,7 +706,12 @@ const ProgressScreen: React.FC = () => {
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: tc.background }]}>
         <ActivityIndicator size="large" color={tc.accent} />
-        <Text style={[styles.loadingText, { fontSize: r.ms(14, 0.3), marginTop: r.vs(12), color: tc.textLight }]}>
+        <Text
+          style={[
+            styles.loadingText,
+            { fontSize: r.ms(14, 0.3), marginTop: r.vs(12), color: tc.textLight },
+          ]}
+        >
           Loading your progress…
         </Text>
       </SafeAreaView>
@@ -627,8 +721,15 @@ const ProgressScreen: React.FC = () => {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: tc.background }]} edges={['top']}>
       {/* Screen Title */}
-      <View style={[styles.screenHeader, { paddingHorizontal: r.s(20), paddingTop: r.vs(8), paddingBottom: r.vs(4) }]}>
-        <Text style={[styles.screenTitle, { fontSize: r.ms(26, 0.3), color: tc.text }]}>Progress</Text>
+      <View
+        style={[
+          styles.screenHeader,
+          { paddingHorizontal: r.s(20), paddingTop: r.vs(8), paddingBottom: r.vs(4) },
+        ]}
+      >
+        <Text style={[styles.screenTitle, { fontSize: r.ms(26, 0.3), color: tc.text }]}>
+          Progress
+        </Text>
       </View>
 
       <ScrollView
@@ -637,7 +738,9 @@ const ProgressScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         onScroll={handleScroll}
         scrollEventThrottle={16}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tc.accent} />
+        }
       >
         {/* ── Streak Banner ── */}
         <DayStreakBanner streak={progressData.dayStreak} r={r} tc={tc} />
@@ -650,7 +753,10 @@ const ProgressScreen: React.FC = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.lessonDayList, { paddingHorizontal: r.s(20), gap: r.s(10) }]}
+          contentContainerStyle={[
+            styles.lessonDayList,
+            { paddingHorizontal: r.s(20), gap: r.s(10) },
+          ]}
         >
           {progressData.lessonDays.map((item) => (
             <LessonDayItem
@@ -664,12 +770,7 @@ const ProgressScreen: React.FC = () => {
         </ScrollView>
 
         {/* ── Weekly Progress ── */}
-        <SectionHeader
-          icon="bar-chart-outline"
-          title="Weekly Progress"
-          r={r}
-          tc={tc}
-        />
+        <SectionHeader icon="bar-chart-outline" title="Weekly Progress" r={r} tc={tc} />
         <WeekSelector
           weekLabel={weekLabel}
           weekDateLabel={weekDateLabel}
@@ -685,9 +786,30 @@ const ProgressScreen: React.FC = () => {
           <View style={[styles.cardsContainer, { paddingHorizontal: hPad }]}>
             {/* Progress to next level — driven by levelService snapshot */}
             {levelProgress && (
-              <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
+              <View
+                style={[
+                  styles.card,
+                  {
+                    borderRadius: r.ms(16),
+                    padding: cardInnerPad,
+                    backgroundColor: tc.surface,
+                    borderColor: tc.cardBorder,
+                  },
+                  cardShadow as any,
+                ]}
+              >
                 <View style={styles.cardHeader}>
-                  <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8), backgroundColor: tc.accentMuted }]}>
+                  <View
+                    style={[
+                      styles.cardIconCircle,
+                      {
+                        width: r.ms(30),
+                        height: r.ms(30),
+                        borderRadius: r.ms(8),
+                        backgroundColor: tc.accentMuted,
+                      },
+                    ]}
+                  >
                     <Ionicons name="trophy-outline" size={r.ms(16)} color={tc.accent} />
                   </View>
                   <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>
@@ -699,7 +821,13 @@ const ProgressScreen: React.FC = () => {
                 {levelProgress.nextLevel ? (
                   <NextLevelProgress progress={levelProgress} r={r} tc={tc} />
                 ) : (
-                  <Text style={{ color: tc.textLight, fontSize: r.ms(12, 0.3), fontFamily: fonts.regular }}>
+                  <Text
+                    style={{
+                      color: tc.textLight,
+                      fontSize: r.ms(12, 0.3),
+                      fontFamily: fonts.regular,
+                    }}
+                  >
                     Keep practicing to stay sharp — there's no higher CEFR band.
                   </Text>
                 )}
@@ -707,23 +835,66 @@ const ProgressScreen: React.FC = () => {
             )}
 
             {/* Pronunciation – full width */}
-            <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, marginTop: r.vs(12), backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
+            <View
+              style={[
+                styles.card,
+                {
+                  borderRadius: r.ms(16),
+                  padding: cardInnerPad,
+                  marginTop: r.vs(12),
+                  backgroundColor: tc.surface,
+                  borderColor: tc.cardBorder,
+                },
+                cardShadow as any,
+              ]}
+            >
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8) }]}>
+                <View
+                  style={[
+                    styles.cardIconCircle,
+                    { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8) },
+                  ]}
+                >
                   <Ionicons name="mic-outline" size={r.ms(16)} color={CHART.red} />
                 </View>
-                <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>Pronunciation</Text>
+                <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>
+                  Pronunciation
+                </Text>
               </View>
               <HBarChart data={pronunciationBars} r={r} tc={tc} />
             </View>
 
             {/* Vocabulary Growth – full width */}
-            <View style={[styles.card, { borderRadius: r.ms(16), padding: cardInnerPad, marginTop: r.vs(12), backgroundColor: tc.surface, borderColor: tc.cardBorder }, cardShadow as any]}>
+            <View
+              style={[
+                styles.card,
+                {
+                  borderRadius: r.ms(16),
+                  padding: cardInnerPad,
+                  marginTop: r.vs(12),
+                  backgroundColor: tc.surface,
+                  borderColor: tc.cardBorder,
+                },
+                cardShadow as any,
+              ]}
+            >
               <View style={styles.cardHeader}>
-                <View style={[styles.cardIconCircle, { width: r.ms(30), height: r.ms(30), borderRadius: r.ms(8), backgroundColor: '#ECFDF5' }]}>
+                <View
+                  style={[
+                    styles.cardIconCircle,
+                    {
+                      width: r.ms(30),
+                      height: r.ms(30),
+                      borderRadius: r.ms(8),
+                      backgroundColor: '#ECFDF5',
+                    },
+                  ]}
+                >
                   <Ionicons name="trending-up" size={r.ms(16)} color={CHART.teal} />
                 </View>
-                <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>Vocab Growth</Text>
+                <Text style={[styles.cardTitle, { fontSize: r.ms(14, 0.3), color: tc.text }]}>
+                  Vocab Growth
+                </Text>
               </View>
               <MiniLineChart
                 data={currentWeek.vocabularyGrowth}
@@ -738,10 +909,6 @@ const ProgressScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-// ═══════════════════════════════════════════════
-//  STYLES
-// ═══════════════════════════════════════════════
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -760,19 +927,16 @@ const styles = StyleSheet.create({
     fontFamily: fonts.medium,
   },
 
-  // ─── Screen Header ───
   screenHeader: {},
   screenTitle: {
     fontFamily: fonts.bold,
   },
 
-  // ─── Lesson Days ───
   lessonDayList: {
     flexDirection: 'row',
     paddingBottom: 4,
   },
 
-  // ─── Cards ───
   cardsContainer: {},
   halfRow: {
     flexDirection: 'row',

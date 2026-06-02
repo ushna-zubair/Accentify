@@ -1,4 +1,10 @@
 /**
+ * Accentify - AI-Powered English Speech & Language Learning Interface
+ * @author Adam Sabih
+ * @team   Group Aivengers (Muhammad Ali, Manan Anghan, Adam Sabih, Ushna Zubair, Ahmed)
+ */
+
+/**
  * useFeedbackReportsController.ts
  *
  * Controller for the Admin Feedback & Reports screen.
@@ -36,13 +42,11 @@ import {
 export const useFeedbackReportsController = () => {
   const { currentUser, userProfile } = useAuth();
 
-  // ── State ──
   const [items, setItems] = useState<FeedbackItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Tabs & filters
   const [activeTab, setActiveTab] = useState<FeedbackTab>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<FeedbackCategory | 'all'>('all');
@@ -59,10 +63,7 @@ export const useFeedbackReportsController = () => {
   // Current admin info
   const currentAdminUid = currentUser?.uid ?? '';
   const currentAdminName =
-    userProfile?.profile?.fullName ??
-    userProfile?.fullName ??
-    currentUser?.displayName ??
-    'Admin';
+    userProfile?.profile?.fullName ?? userProfile?.fullName ?? currentUser?.displayName ?? 'Admin';
 
   // ── Fetch ──
   const fetchAll = useCallback(async () => {
@@ -82,22 +83,21 @@ export const useFeedbackReportsController = () => {
   useEffect(() => {
     let ignore = false;
     fetchAll();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [fetchAll]);
 
-  // ── Stats ──
   const stats: FeedbackStats = useMemo(() => computeFeedbackStats(items), [items]);
 
   // ── Filtered & Sorted Items ──
   const filteredItems = useMemo(() => {
     let result = [...items];
 
-    // Tab filter
     if (activeTab !== 'all') {
       result = result.filter((i) => i.status === activeTab);
     }
 
-    // Category filter
     if (categoryFilter !== 'all') {
       result = result.filter((i) => i.category === categoryFilter);
     }
@@ -107,7 +107,6 @@ export const useFeedbackReportsController = () => {
       result = result.filter((i) => i.priority === priorityFilter);
     }
 
-    // Search
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -120,7 +119,6 @@ export const useFeedbackReportsController = () => {
       );
     }
 
-    // Sort
     if (sortBy === 'newest') {
       result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } else if (sortBy === 'oldest') {
@@ -163,10 +161,16 @@ export const useFeedbackReportsController = () => {
         setSubmitting(true);
         await updateFeedbackStatus(feedbackId, newStatus, currentAdminUid, currentAdminName);
         setItems((prev) =>
-          prev.map((i) => (i.id === feedbackId ? { ...i, status: newStatus, updatedAt: new Date().toISOString() } : i)),
+          prev.map((i) =>
+            i.id === feedbackId
+              ? { ...i, status: newStatus, updatedAt: new Date().toISOString() }
+              : i,
+          ),
         );
         if (selectedItem?.id === feedbackId) {
-          setSelectedItem((prev) => prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : prev);
+          setSelectedItem((prev) =>
+            prev ? { ...prev, status: newStatus, updatedAt: new Date().toISOString() } : prev,
+          );
         }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to update status');
@@ -184,10 +188,14 @@ export const useFeedbackReportsController = () => {
         setSubmitting(true);
         await updateFeedbackPriority(feedbackId, newPriority, currentAdminUid, currentAdminName);
         setItems((prev) =>
-          prev.map((i) => (i.id === feedbackId ? { ...i, priority: newPriority, updatedAt: new Date().toISOString() } : i)),
+          prev.map((i) =>
+            i.id === feedbackId
+              ? { ...i, priority: newPriority, updatedAt: new Date().toISOString() }
+              : i,
+          ),
         );
         if (selectedItem?.id === feedbackId) {
-          setSelectedItem((prev) => prev ? { ...prev, priority: newPriority } : prev);
+          setSelectedItem((prev) => (prev ? { ...prev, priority: newPriority } : prev));
         }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to update priority');
@@ -251,12 +259,17 @@ export const useFeedbackReportsController = () => {
     async (feedbackId: string) => {
       try {
         setSubmitting(true);
-        await updateAdminNotes(feedbackId, adminNotesText.trim(), currentAdminUid, currentAdminName);
+        await updateAdminNotes(
+          feedbackId,
+          adminNotesText.trim(),
+          currentAdminUid,
+          currentAdminName,
+        );
         setItems((prev) =>
           prev.map((i) => (i.id === feedbackId ? { ...i, adminNotes: adminNotesText.trim() } : i)),
         );
         if (selectedItem?.id === feedbackId) {
-          setSelectedItem((prev) => prev ? { ...prev, adminNotes: adminNotesText.trim() } : prev);
+          setSelectedItem((prev) => (prev ? { ...prev, adminNotes: adminNotesText.trim() } : prev));
         }
       } catch (e: unknown) {
         setError(e instanceof Error ? e.message : 'Failed to save notes');
@@ -274,7 +287,9 @@ export const useFeedbackReportsController = () => {
         setSubmitting(true);
         await archiveFeedback(feedbackId, currentAdminUid, currentAdminName);
         setItems((prev) =>
-          prev.map((i) => (i.id === feedbackId ? { ...i, status: 'archived' as FeedbackStatus } : i)),
+          prev.map((i) =>
+            i.id === feedbackId ? { ...i, status: 'archived' as FeedbackStatus } : i,
+          ),
         );
         closeDetail();
       } catch (e: unknown) {
@@ -304,7 +319,6 @@ export const useFeedbackReportsController = () => {
   );
 
   return {
-    // Data
     items: filteredItems,
     allItems: items,
     stats,
@@ -312,7 +326,6 @@ export const useFeedbackReportsController = () => {
     error,
     submitting,
 
-    // Tabs & filters
     activeTab,
     setActiveTab,
     searchQuery,
@@ -335,7 +348,6 @@ export const useFeedbackReportsController = () => {
     setAdminNotesText,
     activityLog,
 
-    // Actions
     handleStatusChange,
     handlePriorityChange,
     handleRespond,
