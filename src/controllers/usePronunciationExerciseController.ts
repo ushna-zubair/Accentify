@@ -156,7 +156,7 @@ export const usePronunciationExerciseController = (lessonId: string, englishLeve
   const [sentences, setSentences] = useState<PronunciationSentence[]>(DEFAULT_SENTENCES);
   const [sentenceIds, setSentenceIds] = useState<(string | undefined)[]>([]);
   const [sentenceSapi, setSentenceSapi] = useState<(string[] | undefined)[]>([]);
-  const [sentencesLoading, setSentencesLoading] = useState(true);
+  const [sentencesLoading, setSentencesLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [phase, setPhase] = useState<PronunciationPhase>('idle');
   const [result, setResult] = useState<PronunciationAttemptResult | null>(null);
@@ -376,11 +376,11 @@ export const usePronunciationExerciseController = (lessonId: string, englishLeve
         rawOverall: evaluation.rawOverall,
       };
 
-      // Coaching feedback comes from a separate HF Space. Wait for it
-      // before rendering so the score and the Coach tip arrive together —
-      // the feedbackHealth warmup ping above is what keeps the cold-start
-      // cost off the critical path.
-      const remote = await feedbackSentence({
+      // Show the result immediately — user doesn't need to wait for the
+      // coaching feedback Space to wake up. Fire it in the background and
+      // patch the result state when it arrives.
+      setResult(attemptResult);
+      feedbackSentence({
         reference_text: sentence.text,
         word_correctness: {
           matched: evaluation.rawWordCorrectness?.matched ?? 0,
@@ -399,11 +399,9 @@ export const usePronunciationExerciseController = (lessonId: string, englishLeve
           pronunciation_score: evaluation.rawOverall?.pronunciation_score ?? 0,
           weighted_overall_score: evaluation.rawOverall?.weighted_overall_score ?? 0,
         },
-      }).catch(() => '');
-      if (remote) {
-        attemptResult.feedback = remote;
-      }
-      setResult(attemptResult);
+      }).then((remote) => {
+        if (remote) setResult((prev) => (prev ? { ...prev, feedback: remote } : prev));
+      }).catch(() => {});
       setAttemptCount((c) => c + 1);
       setAllScores((prev) => [...prev, score]);
       setPhase('result');
