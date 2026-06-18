@@ -27,14 +27,14 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 const isWeb = Platform.OS === 'web';
 
 const THEME_OPTIONS: ThemeOption[] = ['Light', 'Dark'];
-const ACCENT_OPTIONS: AccentColor[] = ['Lavender', 'Orange', 'Blue'];
+const ACCENT_OPTIONS: AccentColor[] = ['Lavender', 'Orange', 'Purple'];
 const FONT_SIZE_OPTIONS: FontSizeOption[] = ['Small', 'Medium', 'Large'];
 
 /** Preview accent colors for the color-picker pills */
 const ACCENT_PILL_COLORS: Record<AccentColor, string> = {
   Lavender: '#3F66FB',
   Orange: '#FD8E39',
-  Blue: '#4285F4',
+  Purple: '#8B5CF6',
 };
 
 interface SectionCardProps {

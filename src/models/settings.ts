@@ -18,7 +18,7 @@ export interface AccessibilityState {
 }
 
 export type ThemeOption = 'Light' | 'Dark';
-export type AccentColor = 'Lavender' | 'Orange' | 'Blue';
+export type AccentColor = 'Lavender' | 'Orange' | 'Purple';
 export type FontSizeOption = 'Small' | 'Medium' | 'Large';
 
 export interface AppPreferenceState {

@@ -202,20 +202,20 @@ const ACCENT_MAP: Record<AccentColor, { light: AccentScale; dark: AccentScale }>
       accentBg: '#2A1F15',
     },
   },
-  Blue: {
+  Purple: {
     light: {
-      accent: '#4285F4',
-      accentLight: '#7AADFF',
-      accentMuted: '#C5DCFF',
-      accentDark: '#2B6AD0',
-      accentBg: '#EBF5FF',
+      accent: '#8B5CF6',
+      accentLight: '#A78BFA',
+      accentMuted: '#DDD6FE',
+      accentDark: '#7C3AED',
+      accentBg: '#F5F3FF',
     },
     dark: {
-      accent: '#5A9AFF',
-      accentLight: '#3D7DE0',
-      accentMuted: '#1A2A4E',
-      accentDark: '#7AB4FF',
-      accentBg: '#151F35',
+      accent: '#A78BFA',
+      accentLight: '#8B5CF6',
+      accentMuted: '#4C1D95',
+      accentDark: '#C4B5FD',
+      accentBg: '#1F1235',
     },
   },
 };
